@@ -710,3 +710,45 @@ fn an_eval_resolves_names_at_run_time_only_when_the_call_was_made_inside_a_with(
         "…and places nothing, because the object may hold any of them: {walked:?}"
     );
 }
+
+#[test]
+fn an_update_expression_resolves_a_name_at_run_time_only_where_it_has_to() {
+    // §13.4.4.1's "evaluate the reference once" is implemented two ways: a run-time resolution when
+    // a `with` is open, and a slot when the compiler already knows which binding is meant. The
+    // second is the fast path and *nothing a program can observe distinguishes them* — the run-time
+    // walk finds exactly the binding the slot names — so mutation coverage reports the choice as
+    // untested and is right to. This is the structural claim instead, which is the same remedy
+    // DR-0018's `any_binding_object` needed for the same reason.
+    let mut heap = Heap::new();
+    let script = parse_script("function f() { var x = 1; x++; }").expect("parses"); // the test is the output
+    let chunk = compile_script(&script, &mut heap).expect("compiles"); // same
+    let body = chunk.function(0).expect("the function body is nested here"); // same
+    assert!(
+        !body
+            .code()
+            .iter()
+            .any(|instruction| matches!(instruction, Instruction::ResolveName(_))),
+        "a name the compiler resolved must not be walked again at run time: {:?}",
+        body.code()
+    );
+
+    // …and inside a `with`, where it must. The same source shape, one scope different.
+    let script = parse_script("function f() { var o = {}; with (o) { x++; } }").expect("parses"); // same
+    let chunk = compile_script(&script, &mut heap).expect("compiles"); // same
+    let body = chunk.function(0).expect("the function body is nested here"); // same
+    assert!(
+        body.code()
+            .iter()
+            .any(|instruction| matches!(instruction, Instruction::ResolveName(_))),
+        "a name inside a `with` has to be resolved at run time: {:?}",
+        body.code()
+    );
+    // Resolved **once** — the whole point of the clause. Two would be the bug this replaced.
+    assert_eq!(
+        body.code()
+            .iter()
+            .filter(|instruction| matches!(instruction, Instruction::ResolveName(_)))
+            .count(),
+        1
+    );
+}

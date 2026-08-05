@@ -606,3 +606,53 @@ fn an_array_blocks_its_newer_methods_from_a_with_and_leaves_the_older_ones_alone
         "function"
     );
 }
+
+#[test]
+fn an_update_expression_resolves_its_name_once_as_a_compound_assignment_does() {
+    // §13.4.4.1 step 1 evaluates the `LeftHandSideExpression` once; steps 2 and 5 read and write
+    // through that reference. So the `@@unscopables` getter runs **once** for `x++`, and a getter
+    // that answers differently the second time cannot move the write to another binding.
+    //
+    // The counting matters more than the value: with two resolutions the answer is often still
+    // right, because a getter that says the same thing twice resolves to the same place. This one
+    // does not, which is what makes the difference visible at all.
+    let counting = "var n = 0; \
+                    var o = { x: 1, get [Symbol.unscopables]() { n++; return null } }; ";
+    for form in ["x++", "++x", "x--", "--x", "x += 1", "x = 5"] {
+        assert_eq!(
+            run(&format!("{counting} with (o) {{ {form}; }} n")),
+            "1",
+            "{form}"
+        );
+    }
+    // …and the program that shows what a second resolution would cost. The getter flips its answer,
+    // so a second look blocks `x` on the inner object and the increment lands on the *outer* one:
+    // `a.x` becomes 5 and `b.x` stays 4, instead of `b.x` becoming 5.
+    assert_eq!(
+        run("var flag = true; var a, b; \
+             with (a = { x: 7 }) { \
+                 with (b = { x: 4, get [Symbol.unscopables]() { return { x: flag = !flag } } }) { \
+                     x++; \
+                 } \
+             } \
+             a.x + ',' + b.x"),
+        "7,5"
+    );
+    // The values themselves, for each form, so that resolving once has not changed what is stored.
+    assert_eq!(run("var o = { x: 1 }; with (o) { x++; } o.x"), "2");
+    assert_eq!(
+        run("var o = { x: 1 }; var seen; with (o) { seen = x++; } seen + ',' + o.x"),
+        "1,2"
+    );
+    assert_eq!(
+        run("var o = { x: 1 }; var seen; with (o) { seen = ++x; } seen + ',' + o.x"),
+        "2,2"
+    );
+    assert_eq!(
+        run("var o = { x: 1 }; var seen; with (o) { seen = x--; } seen + ',' + o.x"),
+        "1,0"
+    );
+    // A name that falls through to an outer binding still works, which is the path that would
+    // break if the reference and the store disagreed about where it resolved.
+    assert_eq!(run("var x = 10; var o = {}; with (o) { x++; } x"), "11");
+}

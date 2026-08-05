@@ -14347,40 +14347,24 @@ language/expressions/optional-chaining/eval-optional-call.js :: it threw an obje
 language/expressions/optional-chaining/eval-optional-call.js (strict) :: it threw an object with no name: fn() returns "global" value from indirect eval Expected SameValue(«"local"», «"global"») to be true
 language/expressions/optional-chaining/optional-call-preserves-this.js :: it threw TypeError: cannot read a property of something that is not an object
 language/expressions/optional-chaining/optional-call-preserves-this.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-language/expressions/postfix-decrement/S11.3.2_A5_T1.js :: it threw an object with no name: #1: scope.x === 1. Actual: undefined
-language/expressions/postfix-decrement/S11.3.2_A5_T2.js :: it threw an object with no name: #1: scope.x === 1. Actual: undefined
-language/expressions/postfix-decrement/S11.3.2_A5_T3.js :: it threw an object with no name: #1: innerScope.x === 1. Actual: undefined
 language/expressions/postfix-decrement/arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/postfix-decrement/bigint.js :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/postfix-decrement/bigint.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/postfix-decrement/eval.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/postfix-decrement/operator-x-postfix-decrement-calls-putvalue-lhs-newvalue-.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/postfix-increment/11.3.1-2-1gs.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/postfix-increment/S11.3.1_A5_T1.js :: it threw an object with no name: #1: scope.x === 3. Actual: undefined
-language/expressions/postfix-increment/S11.3.1_A5_T2.js :: it threw an object with no name: #1: scope.x === 3. Actual: undefined
-language/expressions/postfix-increment/S11.3.1_A5_T3.js :: it threw an object with no name: #1: innerScope.x === 3. Actual: undefined
 language/expressions/postfix-increment/arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/postfix-increment/bigint.js :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/postfix-increment/bigint.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/postfix-increment/eval.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/postfix-increment/operator-x-postfix-increment-calls-putvalue-lhs-newvalue-.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/prefix-decrement/11.4.5-2-2gs.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/prefix-decrement/S11.4.5_A5_T1.js :: it threw an object with no name: #1: scope.x === 1. Actual: undefined
-language/expressions/prefix-decrement/S11.4.5_A5_T2.js :: it threw an object with no name: #1: scope.x === 1. Actual: undefined
-language/expressions/prefix-decrement/S11.4.5_A5_T3.js :: it threw an object with no name: #1: innerScope.x === 1. Actual: undefined
 language/expressions/prefix-decrement/arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/prefix-decrement/bigint.js :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/prefix-decrement/bigint.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/prefix-decrement/eval.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/prefix-decrement/operator-prefix-decrement-x-calls-putvalue-lhs-newvalue-.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/expressions/prefix-increment/S11.4.4_A5_T1.js :: it threw an object with no name: #1: scope.x === 3. Actual: undefined
-language/expressions/prefix-increment/S11.4.4_A5_T2.js :: it threw an object with no name: #1: scope.x === 3. Actual: undefined
-language/expressions/prefix-increment/S11.4.4_A5_T3.js :: it threw an object with no name: #1: innerScope.x === 3. Actual: undefined
 language/expressions/prefix-increment/arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/prefix-increment/bigint.js :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/prefix-increment/bigint.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/prefix-increment/eval.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/prefix-increment/operator-prefix-increment-x-calls-putvalue-lhs-newvalue-.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/right-shift/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/right-shift/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/subtraction/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
@@ -14972,7 +14956,6 @@ language/statements/variable/12.2.1-11.js :: it threw SyntaxError: a sloppy `var
 language/statements/variable/binding-resolution.js :: it threw an object with no name: Expected SameValue(«undefined», «true») to be true
 language/statements/while/tco-body.js (strict) :: it threw RangeError: too much recursion
 language/statements/with/set-mutable-binding-binding-deleted-with-typed-array-in-proto-chain-strict-mode.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/statements/with/unscopables-inc-dec.js :: it threw an object with no name: Expected SameValue(«2», «1») to be true
 language/types/reference/get-value-prop-base-primitive-realm.js :: it threw TypeError: what was called is not a function
 language/types/reference/get-value-prop-base-primitive-realm.js (strict) :: it threw TypeError: what was called is not a function
 language/types/reference/put-value-prop-base-primitive-realm.js :: it threw TypeError: what was called is not a function

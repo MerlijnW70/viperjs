@@ -1139,6 +1139,32 @@ impl Compiler<'_> {
         };
         match &argument.kind {
             ExprKind::Identifier(name) => {
+                // §13.4.4.1 step 1 evaluates the `LeftHandSideExpression` **once**, and steps 2
+                // and 5 read and write through that one reference — exactly as §13.15.2's compound
+                // assignment does, and the identical reason applies. Inside a `with` the
+                // resolution is observable: it runs `HasBinding`, which reads the object's
+                // `@@unscopables`, and a getter that answers differently the second time sends the
+                // write to a different binding entirely. `x++` resolved twice and `x += 1` once,
+                // which is the same clause implemented two ways in one file.
+                //
+                // A slot needs none of it — the compiler resolved that when it compiled — so the
+                // ordinary path below stays the ordinary path.
+                if self.names_are_dynamic() {
+                    let index = self.name(name)?;
+                    self.chunk.emit(Instruction::ResolveName(index));
+                    self.chunk.emit(Instruction::LoadThrough(index));
+                    self.chunk.emit(Instruction::Unary(UnaryOperator::Plus));
+                    if !prefix {
+                        self.chunk.emit(Instruction::Duplicate);
+                    }
+                    self.constant(Value::Number(1.0))?;
+                    self.chunk.emit(Instruction::Binary(step));
+                    self.chunk.emit(Instruction::StoreThrough(index));
+                    if !prefix {
+                        self.chunk.emit(Instruction::Pop);
+                    }
+                    return Ok(());
+                }
                 self.load_name(name)?;
                 self.chunk.emit(Instruction::Unary(UnaryOperator::Plus));
                 // The old value has to outlive the store, and only a postfix one needs it.
