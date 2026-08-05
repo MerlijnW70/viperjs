@@ -132,3 +132,59 @@ lexically declaring `f` in the same list, which §14.2.1's second rule refuses a
 relax. Every browser answers with the second function instead. test262 does not test it, so the
 letter is what praxis implements — this is recorded here only so that a session finding the
 divergence knows it was seen, not decided by default.
+
+## Amended on 2026-08-05: §B.1.2's regular expression grammar is in, and the line is one word wider
+
+**The line as the reversal above wrote it does not decide §B.1.2, and read literally it excludes it.**
+"An Annex B rule is implemented when it is conditioned on strictness and nothing else" — §B.1.2 is
+conditioned on strictness not at all. It replaces a dozen of §22.2.1's productions when the pattern
+carries neither `u` nor `v`, so what decides it is a **flag on the literal**.
+
+That is not a weaker fact than strictness. It is a stronger one: strictness is a property of the
+enclosing code that the compiler works out from a directive prologue, and the Unicode flag is written
+on the pattern itself. The reversal's *reason* covers it exactly — "that is a question the compiler
+can already answer" — and only its wording does not. So the line becomes:
+
+> **An Annex B rule is implemented when the source itself says which reading applies. It stays out
+> when the answer is a fact about the host that the source does not carry.**
+
+That subsumes both earlier statements, keeps B.1's lexical extensions and B.3's block-level functions
+exactly where they are, and puts §B.1.2 in.
+
+**Two further reasons, and the second is the one that would have settled it years earlier.**
+
+Leaving §B.1.2 out is the *B.1* case and not the B.3 one. The original argument turned on what the
+refusal costs: leaving out B.1 means refusing a **token** — `010` is a number in every engine and in
+all the JavaScript written before 2011 — while leaving out B.3 means refusing a **program shape**,
+each of which has a plain equivalent that has always been legal. A regular expression is a token.
+`/}/`, `/a{/`, `/\d-x/` and `/\1/` are written all over the web, they have no B.3-style rewriting
+anyone actually performs, and refusing them makes praxis reject working code rather than decline a
+convenience.
+
+And **one of §B.1.2's productions had already been implemented under this reading, without this
+record saying so.** §B.1.2.1's `QuantifiableAssertion` — the `[~UnicodeMode]` rule that makes
+`/(?=a)*/` a pattern and `/(?=a)*/u` a Syntax Error — landed as part of ordinary conformance work,
+correctly, and by exactly the argument above. The line had therefore already moved in the code while
+this document said it had not, which is the drift shape the project keeps meeting and the reason an
+amendment is worth more here than a code comment.
+
+**What follows from this decision:**
+
+- §B.1.2's replacements for §22.2.1 are implemented, in patterns carrying neither `u` nor `v`:
+  `ExtendedPatternCharacter` (`]`, `{` and `}` as characters) with `InvalidBracedQuantifier` still a
+  Syntax Error, `LegacyOctalEscapeSequence`, `DecimalEscape` conditioned on the group existing,
+  `SourceCharacterIdentityEscape` including the short `\x` and `\u`, `ClassControlLetter` and the
+  `\ [lookahead = c]` fallbacks, `AtomEscape`'s `[+N]` on `\k`, and §B.1.4.1.1's
+  `CharacterRangeOrUnion`. **Worth 32 runs across three commits, no regressions.** Each production
+  carries its rule at the site that implements it in `src/regexp/parser.rs`; `src/regexp/mod.rs`
+  deliberately does not list them, a summary of a dozen sites being a claim nothing checks.
+- The Unicode flag is now the **only** thing in the engine that decides which *grammar* a text is
+  read under. That was already true of the quantified lookahead and is now true of a dozen more
+  productions, so a change in that area needs testing under both settings and not only under one.
+- What is still out of §22.2's Annex B is `legacy-accessors` — `RegExp.$1`, `RegExp.lastMatch` and
+  their nine siblings. Those are the *Legacy RegExp Features* proposal rather than §B.1.2, they are
+  Stage 3, and they are 48 runs. This decision does not reach them.
+- A pattern holding a **lone surrogate** now fails differently rather than being refused: `.source`
+  answers U+FFFD, because the parser reads Rust `char`s and a lone surrogate is not one. That is
+  DR-0004's seam and a slice of its own; it is recorded here because §B.1.2 is what made it
+  reachable, not because this decision has anything to say about it.

@@ -146,7 +146,12 @@ DR-0008 was reversed and §B.3.2, §B.3.3 and §B.3.4 are in, in sloppy code —
 decides which declarations earn the extra `var` binding. That was the last thing between the engine
 and 80%, and the section below is what it cost.
 
-Conformance as of this commit is **83.51% of test262** — 77,796 of 93,161 runs. Treat that number as
+**And §B.1.2's regular expression grammar runs**, which is the *other* half of Annex B and was still
+refused wholesale until DR-0008's second amendment. A pattern carrying neither `u` nor `v` now reads
+`/}/` as a brace, `/\1/` with no group as a legacy octal escape, `/\8/` as an `8`, `/\c1/` as three
+characters and `/[\d-x]/` as a union. See the section below for the shape of it.
+
+Conformance as of this commit is **83.54% of test262** — 77,828 of 93,161 runs. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 320 runs are now *stopped* before anything executes. **One of them was misfiled here for a
 long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
@@ -169,6 +174,7 @@ and mostly are not, which is worth doing once and writing down rather than re-de
 | 238 | `Calling as constructor…` | all `Temporal` |
 | 224 | `expected ';', found an identifier` | `using` / `await using` — explicit resource management, a proposal |
 | 176 + 142 | `DisposableStack`, `AsyncDisposableStack` | the same proposal's library half |
+| 34 | `it did not parse: unexpected character` | **decorators**, a proposal — and the one row here whose reason says nothing at all about what it is. Its paths do |
 
 **Two buckets have been costed and must not be re-costed.**
 
@@ -279,8 +285,10 @@ reader checking.
 Annex B §B.1.2.1 adds one exception, and it is narrower twice over: `QuantifiableAssertion` is
 `(?=…)` and `(?!…)` **only**, and the production is `[~UnicodeMode]`. So `^*` and `*` are refused
 whatever the flags, a lookbehind was never quantifiable, and `/(?=a)*/u` is a SyntaxError where
-`/(?=a)*/` is a pattern. This is the one place left where a flag decides the *grammar* rather than
-the matching.
+`/(?=a)*/` is a pattern. It was written down here as "the one place left where a flag decides the
+*grammar* rather than the matching", which was true of the engine and never of the specification —
+see the §B.1.2 section below, where the other dozen productions turned out to be, and where this
+slice is what showed the line had already moved.
 
 **The comment above the check had gone stale in the way this file keeps meeting**: it said DR-0008
 refused Annex B's syntactic extensions "in both", which was true when it was written and stopped
@@ -292,7 +300,63 @@ engine as `/+/` with `` a *backspace*, so a valid pattern read as praxis wrong
 `+` — a bug that does not exist, and a unit test three lines away said so. The engine's own test
 helpers take a Rust string and have no such layer; when a hand probe and a unit test disagree about
 an escape, **suspect the probe**. It is the third time an escaping layer has manufactured a finding
-here.
+here. It happened a **fourth** time in the §B.1.2 slice below — `printf` in a shell ate a backslash
+level and made `.source` look as though it dropped one — and the fix was the same: write the probe
+with a file tool and feed it to `examples/evaluate` on stdin.
+
+### §B.1.2 is the other half of Annex B, and DR-0008 had already stopped covering it
+
++32 runs across three commits, no regressions, and none of it was hard. What makes it worth reading
+is that **the decision record said this was refused and the code had already stopped refusing it**,
+in one production, correctly, for exactly the reason the record's own amendment gives.
+
+§B.1.2 replaces a dozen of §22.2.1's productions when a pattern carries neither `u` nor `v`. DR-0008
+was reversed for §B.3 on the line "an Annex B rule is in when it is conditioned on strictness and
+nothing else, that being a question the compiler can already answer". §B.1.2 is conditioned on
+strictness not at all — it is conditioned on **a flag written on the literal**, which is a *more*
+static fact, not a weaker one. The reason covered it and the wording did not, so the line is now:
+**an Annex B rule is in when the source itself says which reading applies.** That is DR-0008's
+second amendment; read it before touching that area.
+
+**One shape runs through every production, and naming it once is worth more than the list.** Under
+Annex B a production that *fails to match* is not an error — it hands the same text to the next
+production. praxis refused at each of those points instead:
+
+- `AtomEscape :: DecimalEscape` is conditioned on the number naming a group that exists. Out of
+  range it is not a bad backreference, it is **not that production**, so `/\1/` with no groups is a
+  `\x01` and `/(.)\1/` is still a reference. The group count decides.
+- `LegacyOctalEscapeSequence`'s four productions differ in one thing: how many digits may follow the
+  first. A leading `0`–`3` takes two more, a leading `4`–`7` one — which is what keeps the value in a
+  byte, so **`\400` is a space and a `0`** rather than 0o400. `8` and `9` are in none of the four and
+  fall to the identity escape, which is the whole of `/\8/`.
+- A short `\x` or `\u` is the same idea: `/\xa/` matches `xa`, and `/\u{2}/` is `u` **quantified**,
+  the braces having no other reading without the flag.
+- `\c` not followed by a letter it accepts makes the **backslash alone** the atom and the `c` is read
+  again. Inside a class the accepted set is wider — `ClassControlLetter` adds the digits and `_` — so
+  `[\c0]` is a `\x10` where `\c0` outside one is three characters.
+- `\k` is a named backreference only in a pattern that **has a group name** (`N` in the grammar,
+  which the survey already answers). With none, `/\k<a>/` matches `k<a>`. The same fact takes `k` out
+  of the identity escape, which is what stops the two readings ever meeting over one pattern.
+- §B.1.4.1.1's `CharacterRangeOrUnion` — a range whose end stands for a set is a **union of three**,
+  hyphen included, so `[\d-z]` matches a hyphen. Two plausible wrong readings agree with the right
+  one on most patterns and the hyphen is what tells them apart.
+
+**Two survivors were equivalent mutants, and deleting the argument was the fix.** An `in_class` flag
+threaded to three call sites was unobservable at two of them: the digit fallback can never reach a
+`\c`, and `\q{…}` needs `v`, under which the wider reading does not exist to choose. AGENTS.md
+already records that an equivalent mutant is a signal to change the code rather than to write a test;
+this is the second time, and the shape both times was **a parameter carrying a fact only one caller
+has**. `class_atom` answers it now and the other two do not ask.
+
+**And a bucket that "fails differently" named the next slice again.** Four runs moved off
+`a backreference names no group` onto a real one: a **lone surrogate** in a pattern comes back from
+`.source` as U+FFFD, because the parser reads Rust `char`s and a lone surrogate is not one. That is
+DR-0004's seam, it was invisible while the pattern was refused, and it is unbuilt.
+
+**What is left of Annex B in §22.2 is `legacy-accessors` — `RegExp.$1` and its ten siblings, 48
+runs.** Those are the *Legacy RegExp Features* proposal and not §B.1.2, so the directory name is
+misleading in the way this file warns about: **check a bucket's directory *and* its feature flag
+before costing it.**
 
 ### Two of §20.2.1.1's four kinds were missing, and the lookup answered with the wrong callable
 
@@ -885,6 +949,12 @@ doc says which line to change if data ever arrives.
   and it needs the UCD's emoji sequence tables, which nothing else in the engine wants. It stays
   **refused by name rather than as bad syntax**, deliberately: it is a legal operand, so calling it
   a syntax error would pass every test asserting a pattern must be rejected.
+- **Annex B's regexp grammar is done** — §B.1.2, see the section above and DR-0008's second
+  amendment. What is left in `annexB/built-ins/RegExp/` is `legacy-accessors` (48 runs), which is
+  the *Legacy RegExp Features* proposal and not §B.1.2 at all, and `prototype/compile` (10 runs),
+  which is §B.2.4 and is real. Beside them sit four runs that now fail on **a lone surrogate in a
+  pattern**: `.source` answers U+FFFD because the parser reads Rust `char`s. That is DR-0004's seam
+  and the cheapest real thing left in the area.
 - **The resizable-buffer area is done** — see the shrink section below. What remains beside it
   is `subarray` over an out-of-bounds source, which §23.2.5.1 refuses with a RangeError, and the
   files that use the immutable-`ArrayBuffer` harness, which is a proposal.
