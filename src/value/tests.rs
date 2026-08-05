@@ -778,7 +778,7 @@ fn no_number_can_make_a_conversion_panic() {
 #[test]
 fn adding_two_strings_that_would_be_too_long_throws_a_range_error() {
     // §6.1.4 puts the String type's maximum at 2^53-1 and says nothing about an implementation
-    // with a smaller one; DR-0012 is praxis's, and this is `+` meeting it. Every engine answers a
+    // with a smaller one; DR-0012 is ViperJS's, and this is `+` meeting it. Every engine answers a
     // `RangeError` here, and the alternative is not a longer String — it is allocating until the
     // process dies, which is a wrong answer for every program in it.
     //

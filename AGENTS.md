@@ -1,10 +1,10 @@
-# AGENTS.md — building praxis
+# AGENTS.md — building ViperJS
 
 > Vendor-neutral contributor and agent instructions, following the
 > [AGENTS.md](https://agents.md) standard. The binding charter is **[GOAL.md](GOAL.md)** —
 > read it first; it outranks this file.
 
-**praxis** is an embeddable JavaScript engine in safe Rust, zero runtime dependencies, measured
+**ViperJS** is an embeddable JavaScript engine in safe Rust, zero runtime dependencies, measured
 against test262. You are building it one milestone at a time, and the measure of progress is a
 conformance number, not a feeling of completeness.
 
@@ -215,7 +215,7 @@ Two consequences beyond the parser, each one line and each with a test that fail
   the alternative that matched, and the answer would depend on source order.
 
 **What it exposed is worth naming: six tests moved from `did not parse` to a real gap** — the `d`
-flag's `.indices` array, which praxis does not build at all. That is a next slice with its own
+flag's `.indices` array, which ViperJS does not build at all. That is a next slice with its own
 tests already listed against it.
 
 ### One `?`, and 109 runs: §15.8.4 rejects where the generator clauses throw
@@ -227,7 +227,7 @@ instantiation as a **Completion** and step 3 hands an abrupt one to the promise'
 `async function f(x = x) {}` answers with a rejected promise where `function f(x = x) {}` throws at
 the call, and `async function* g(x = x) {}` throws too.
 
-praxis put the rejecting handler *below* the parameter prologue on the reading that "a throw from a
+ViperJS put the rejecting handler *below* the parameter prologue on the reading that "a throw from a
 parameter default is the caller's to catch" — which is right for two of the three clauses and was
 written in a comment as though it were a rule. Moving it above the prologue for a non-generator
 `async` function is the whole change; the async generator keeps its handler where it was, and that
@@ -242,20 +242,20 @@ because the bucket is keyed on what produced it.**
 ### §10.4.5's internal methods, and the three comments that stated the bug as a rule
 
 +44 runs across `[[Set]]`, `[[DefineOwnProperty]]`, `[[Delete]]` and `[[OwnPropertyKeys]]`, and not
-one of them was a missing feature. Each was a clause praxis had *nearly* right, and **three of the
+one of them was a missing feature. Each was a clause ViperJS had *nearly* right, and **three of the
 four were a doc comment asserting the opposite of the specification** — the shape this file already
 names, in its most expensive form, because a comment that reads like a rule is what stops the next
 reader checking.
 
 - **`[[Set]]` never consulted its Receiver.** §10.4.5.4 step 2.b.i writes the element only when
-  `SameValue(O, Receiver)`; otherwise the write is §10.1.9.2's and lands on the receiver. praxis
+  `SameValue(O, Receiver)`; otherwise the write is §10.1.9.2's and lands on the receiver. ViperJS
   wrote the buffer regardless, above a comment saying "the element belongs to the buffer and no
   receiver can move it elsewhere" — which cites §10.4.5.**5**, the *define*, for a rule the
   `[[Set]]` clause does not have. So `Reflect.set(ta, 0, v, {})` wrote `ta`, gave the plain object
   nothing, and *converted* `v`, which step 2.b.ii also does not.
 - **A define never converted its value.** §10.4.5.5 step 1.f hands it to §10.4.5.16, so
   `Object.defineProperty(ta, 0, {value: {valueOf(){ throw }}})` throws and one holding `"7"` stores
-  a seven. praxis stored `NaN` for everything that was neither Number nor BigInt, under a comment
+  a seven. ViperJS stored `NaN` for everything that was neither Number nor BigInt, under a comment
   reading "a define carries a value that is already a Value, so there is no conversion to run here"
   — true of the datum, false of the clause.
 - **A detached buffer kept its length.** `view_out_of_bounds` answers `false` for one deliberately,
@@ -298,7 +298,7 @@ being true when §B.3 landed. The behaviour it described was still right for `^*
 reason, which is exactly what makes that class of drift invisible.
 
 **And a probe written through a shell can lie about backslashes.** `eval("/\b+/")` reached the
-engine as `/+/` with `` a *backspace*, so a valid pattern read as praxis wrongly accepting
+engine as `/+/` with `` a *backspace*, so a valid pattern read as ViperJS wrongly accepting
 `+` — a bug that does not exist, and a unit test three lines away said so. The engine's own test
 helpers take a Rust string and have no such layer; when a hand probe and a unit test disagree about
 an escape, **suspect the probe**. It is the third time an escaping layer has manufactured a finding
@@ -322,7 +322,7 @@ second amendment; read it before touching that area.
 
 **One shape runs through every production, and naming it once is worth more than the list.** Under
 Annex B a production that *fails to match* is not an error — it hands the same text to the next
-production. praxis refused at each of those points instead:
+production. ViperJS refused at each of those points instead:
 
 - `AtomEscape :: DecimalEscape` is conditioned on the number naming a group that exists. Out of
   range it is not a bad backreference, it is **not that production**, so `/\1/` with no groups is a
@@ -392,14 +392,14 @@ That is one bucket for all four kinds and was not part of this slice.
 ### `arguments` was not iterable, and the bucket that found it was three layers away
 
 +160 runs from one missing property. §10.4.4.4 step 16 and §10.4.4.6 step 7 both give an arguments
-object `%Symbol.iterator%` = `%Array.prototype.values%`, and praxis gave it none — so
+object `%Symbol.iterator%` = `%Array.prototype.values%`, and ViperJS gave it none — so
 `[...arguments]` and `for (x of arguments)` threw `what was called is not a function`, which is
 §7.4.4 asking an object with no `@@iterator` for one. Every other part of the object said array-like.
 
 **How it was found is the reusable part, and it took three steps none of which named it.** The
 bucket said `log.length Expected SameValue(«3», «2»)` across 48 runs of `yield-star-sync-*`. That
 was a *real and different* bug — §7.4.3 step 1.b.iii runs `GetIteratorFromMethod`, whose step 4
-reads `next` once and makes a record, and step 1.b.iv hands the **record** to §27.1.4.1; praxis read
+reads `next` once and makes a record, and step 1.b.iv hands the **record** to §27.1.4.1; ViperJS read
 `next` there and again, so a `next` getter fired twice. Fixing it moved all 48 to
 `what was called is not a function` — 0 newly passing — and only then did reproducing the test's own
 helper by hand show that `[...arguments]` was the thing that threw.
@@ -481,7 +481,7 @@ throws, 9 when a `value` getter throws — and what that decides is whether the 
 walk then calls `return`. It must not: an iterator that failed to produce has not been left
 mid-walk, and §8.6.2 step 4 and §13.15.5.2 step 5 both close only while `[[Done]]` is false.
 
-**The fix is where the flag is written, not a list of the ways out.** praxis set `done` on the two
+**The fix is where the flag is written, not a list of the ways out.** ViperJS set `done` on the two
 ordinary paths — spent, and a value arrived — and a throw from anywhere in between left it false.
 Setting it **before** the call and clearing it only on the path that really produced a value is the
 clause exactly, with no handler around the call and nothing to keep in step: every way out except
@@ -492,7 +492,7 @@ drift apart from the three steps.
 evaluates an assignment target's *reference* before step 2 steps the iterator, and §13.15.5.6 does
 the same between the property name and the read — so `0, [{}[thrower()]] = iterable` calls `next`
 **zero** times and closes once, and `({ [f()]: o[g()] } = src)` calls `f`, then `g`, then reads
-`src`. praxis fetched the value first in both, above a doc saying evaluating the reference earlier
+`src`. ViperJS fetched the value first in both, above a doc saying evaluating the reference earlier
 "is not an option", which was the clause read backwards.
 
 The compiler change is `hoist_reference` and `store_hoisted`: a property reference is two stack
@@ -501,7 +501,7 @@ already knew its own width for compound assignment; this is its second caller.
 
 **And behind *that*, §7.4.9 step 4 — with one exception that cost four regressions to find.** On the
 way out of a throw the original completion wins, so every failure of the close is discarded: the
-`return` throwing, and the getter step 2 reads it with. praxis swallowed those only for an
+`return` throwing, and the getter step 2 reads it with. ViperJS swallowed those only for an
 **awaited** close, under a comment that already said "every failure of the close is discarded".
 Broadening it to every unwinding close turned four `yield*` tests red, and they were right: §15.5.5
 step 7.b.iii.4 closes a source with no `throw` method carrying a **normal** completion, so step 4
@@ -509,7 +509,7 @@ does not fire there, the close's own error is what the program sees, and step 6 
 `return` handed back. That call site is `Check::Plain`, not `Check::Unwind`.
 
 **And a third slice behind that one, +50: a pattern's iterator was closed by a *throw* and by
-nothing else.** §13.15.5.2 step 5 and §8.6.2 step 4 close on **any** abrupt completion; praxis armed
+nothing else.** §13.15.5.2 step 5 and §8.6.2 step 4 close on **any** abrupt completion; ViperJS armed
 a handler, which catches a throw. A `return` is not a throw, and there is a way to write one —
 a default inside the pattern may `yield`, so `[ {} = yield ] = iterable` resumed with `it.return()`
 unwinds straight through a half-run pattern. The fix is the `Crossing::Iterator` entry a `for`-`of`
@@ -538,7 +538,7 @@ ReferenceError; sloppy code is told nothing and step 4 makes the property again.
 makes a refused write a TypeError in strict code, which is §6.2.5.6's rule for every other reference
 and was not applied here.
 
-**The doc named its own gap and was out of date.** It said praxis "does not yet carry a store's
+**The doc named its own gap and was out of date.** It said ViperJS "does not yet carry a store's
 strictness as far as `[[Set]]`" — the strictness is an argument three lines above it. That is the
 fourth comment this session that described a condition which had already passed.
 
@@ -551,7 +551,7 @@ It was two independent faults that had to be fixed together, and each hid the ot
 
 - **The call was not a direct eval at all.** §13.3.6.1 asks how the callee was *written*, and a bare
   `eval` inside a `with` is written the same way as anywhere else — what the `with` adds is
-  §9.1.1.2.10's `WithBaseObject` under it. praxis decided the call's **shape** and its
+  §9.1.1.2.10's `WithBaseObject` under it. ViperJS decided the call's **shape** and its
   **directness** with one `match`, and `(true, _) => CallMethod` threw the second away. So the text
   ran as an *indirect* eval, in the global scope. The two questions are independent and the table
   has four rows now.
@@ -598,7 +598,7 @@ and there is no Rust `?` to place. **Same clause, two engines, two shapes.**
 +20 runs, and no new logic at all — three calls, each swapped for the mediated form.
 `__defineGetter__` and `__defineSetter__` define with `DefinePropertyOrThrow`, which is §10.1.6
 **or** §10.5.6; `__lookupGetter__` and `__lookupSetter__` walk with `[[GetOwnProperty]]` and
-`[[GetPrototypeOf]]`, both `?`. praxis read and wrote the heap directly, which walks **past** a
+`[[GetPrototypeOf]]`, both `?`. ViperJS read and wrote the heap directly, which walks **past** a
 Proxy — so a trap that threw was never called, one that refused was never heard, and one that
 answered a descriptor of its own was never asked.
 
@@ -646,12 +646,12 @@ Four things it turns on, each of which a plausible implementation gets wrong:
 resolving a nested class's strings skipped a negated one, which cannot hold any because `class_set`
 refuses one that could. Deleting it was the fix, for the fourth time this session.
 
-### §23.2.5.1's step 7 and step 8 are alternatives, and praxis ran both
+### §23.2.5.1's step 7 and step 8 are alternatives, and ViperJS ran both
 
 +24 runs. A view over a **resizable** buffer with no explicit length takes step 7 and tracks it;
 everything else takes step 8. They are different branches, and step 7 has no modulo rule — so a
 ten-byte resizable buffer is an `Int32Array` of two, where the same ten bytes fixed are a
-RangeError. praxis worked the lengths out first and decided `tracking` afterwards, so step 8's
+RangeError. ViperJS worked the lengths out first and decided `tracking` afterwards, so step 8's
 checks ran over a tracking view and refused it outright.
 
 **Why step 7 needs no modulo rule is the part worth keeping**: a tracking view's length is
@@ -826,11 +826,11 @@ conversion runs the program's own `toString`, which is free to shrink the buffer
 
 ### 79.38% to 81.26% in sixteen slices, and what they have in common
 
-None of them was a feature. Every one was a clause praxis had *nearly* right, and fifteen of the
+None of them was a feature. Every one was a clause ViperJS had *nearly* right, and fifteen of the
 sixteen were found by bucketing the failures rather than by reading a list of what is missing.
 
 **Three of the twelve are one shape**, and it is the one worth carrying: *a clause names a
-completion, a flag or a step that praxis collapsed into one path serving two callers.* §9.1.1.4.17's
+completion, a flag or a step that ViperJS collapsed into one path serving two callers.* §9.1.1.4.17's
 `D`, §7.4.9's completion and §27.6.3.8's `Await` are all that — and each of the three cost between
 22 and 116 runs while being one condition or one instruction.
 
@@ -879,7 +879,7 @@ completion, a flag or a step that praxis collapsed into one path serving two cal
     therefore never EMPTY, so `eval("1; if (true) ;")` is `undefined`. Three forms really are
     empty and had to stay so, which is why the list is exact rather than "most statements".
 14. **§6.2.5.6 step 6** (+46) — strict code may not create a global by assigning to an undeclared
-    name. The instruction's own comment said praxis "does not yet carry a strictness through to
+    name. The instruction's own comment said ViperJS "does not yet carry a strictness through to
     here"; it had for some time.
 15. **§13.10.2 step 2** (+74) — `instanceof` asks the right operand what it means. Its doc said
     the step would arrive "when Symbols arrive"; they had.
@@ -909,7 +909,7 @@ more than the clause did, and each is a shape that recurs:
   taken. It is `parser::LabelledFunction`, an argument to `parse_statement` rather than a field —
   a field would have had an initial value no input could reach, which mutation coverage caught.
 - **A `switch` was instantiating no functions at all**, and neither was a labelled declaration in a
-  block. §14.12.4 step 3 hands the whole `CaseBlock` to `BlockDeclarationInstantiation`; praxis
+  block. §14.12.4 step 3 hands the whole `CaseBlock` to `BlockDeclarationInstantiation`; ViperJS
   opened the environment, made no slot, and left the statement doing nothing because hoisting was
   supposed to have done it. `switch (x) { case 1: function f() {} }` bound nothing, silently.
 - **The global path is not `at_global_scope`.** That question answers two at once — the var scope is
@@ -931,12 +931,12 @@ doc says which line to change if data ever arrives.
 ### What is left, in the order the numbers put it
 
 - **A sloppy `var` or function declaration inside a direct `eval` in a function — 95 runs** (75 for
-  a `var`, 20 for a function), and the largest thing praxis refuses by name. **Attempted 2026-08-04 and reverted: 0 fixed, 18
+  a `var`, 20 for a function), and the largest thing ViperJS refuses by name. **Attempted 2026-08-04 and reverted: 0 fixed, 18
   regressed, net −103 runs.** Do not re-derive the design — it was built, it works by hand, and it
   is not the blocker. §19.2.1.1's `varEnv` was recorded on the frame and each var-declared name
   sorted by comparing its resolved depth against it; `function f(){ var x = 1; eval("var x = 2");
   return x }` gave 2 and `{ let y; eval("var y") }` was a SyntaxError, both correctly.
-  **What it lost on is that praxis puts a function's parameters, its `arguments`, its `var`s *and*
+  **What it lost on is that ViperJS puts a function's parameters, its `arguments`, its `var`s *and*
   its body's `let`s in one environment, where §10.2.11 has up to three.** A depth comparison cannot
   then tell "bound in the variable environment" (nothing to create) from "bound in a scope between
   here and it" (§19.2.1.3 step 5.d.ii.1's SyntaxError) — both are the same number, and the
@@ -966,7 +966,7 @@ doc says which line to change if data ever arrives.
     only the error paths, which is the trap: a `normalize` that returned its receiver would pass
     them and be a silently wrong answer for the other three.
   - **`Function.prototype.toString` of anything built from source — ~16 runs.** §20.2.3.5 wants the
-    source text and praxis answers `function anonymous() { [native code] }` for every function there
+    source text and ViperJS answers `function anonymous() { [native code] }` for every function there
     is, dynamic or not. It needs a span and the source retained on every `Chunk`.
   - **`[[IsHTMLDDA]]` — 50 runs.** §B.3.6's three carve-outs (`ToBoolean`, `IsLooselyEqual`,
     `typeof`) are small; what is not small is that the slot belongs to a *host* object, so the

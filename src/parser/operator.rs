@@ -133,7 +133,7 @@ pub(super) fn assignment_operator(kind: TokenKind) -> Option<AssignmentOperator>
 ///
 /// `f()` is invalid too, and that one is a decision rather than a reading: §8.6.4 lets a host
 /// answer `web-compat` for a `CallExpression` in sloppy code, which is what browsers do and why
-/// `f() = 1` throws at run time there instead of failing to parse. praxis is not one — see
+/// `f() = 1` throws at run time there instead of failing to parse. ViperJS is not one — see
 /// DR-0009, which also records what refusing it costs.
 ///
 /// Parentheses need no mention, and that is not an oversight. Because a bracketed expression is

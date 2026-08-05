@@ -13,7 +13,7 @@ engine at somebody else's library is what showed it — see `lab/NOTES.md`'s `ru
 three.js writes `import { clamp } from './MathUtils.js'` in `src/math/Vector3.js` and
 `import { warn } from '../utils.js'` in `src/math/Quaternion.js`. A relative specifier means a
 different file depending on **which module wrote it**, and two directories that both say
-`./index.js` mean two different files. praxis has nowhere to put that:
+`./index.js` mean two different files. ViperJS has nowhere to put that:
 
 - `load(specifier)` is not told who is importing, so a host cannot resolve a relative specifier
   even for a dynamic `import()`. It can only guess, and guessing consistently is impossible.
@@ -24,7 +24,7 @@ three.js's math tree happens to be one directory, which is why it links at all. 
 does not, and the target embedder GOAL.md §1 names — "an edge runtime, a plugin host, a game" —
 is loading from directories on the first day.
 
-**The specification already has the parameter praxis is missing.** §16.2.1.7 is
+**The specification already has the parameter ViperJS is missing.** §16.2.1.7 is
 `HostLoadImportedModule(referrer, specifier, hostDefined, payload)`. The referrer is the first
 argument, and it is there for exactly this reason.
 

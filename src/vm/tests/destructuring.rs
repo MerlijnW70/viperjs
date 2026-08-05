@@ -743,7 +743,7 @@ fn a_step_that_throws_leaves_the_iterator_spent_and_unclosed() {
 fn a_destructuring_target_is_resolved_before_the_value_is_fetched() {
     // §13.15.5.5 step 1 — the target's *reference* is evaluated before step 2 steps the iterator.
     // So a target that throws leaves the iterator untouched: `next` is never called, and
-    // §13.15.5.2 step 5 closes an iterator that was asked for nothing. praxis stepped first, which
+    // §13.15.5.2 step 5 closes an iterator that was asked for nothing. ViperJS stepped first, which
     // is one `next` too many and one `return` too few.
     assert_eq!(
         run("var nexts = 0, closed = 0; \
@@ -755,7 +755,7 @@ fn a_destructuring_target_is_resolved_before_the_value_is_fetched() {
              nexts + ',' + closed"),
         "0,1"
     );
-    // §13.15.5.6 — three things in a fixed order for an object pattern, and praxis had the last
+    // §13.15.5.6 — three things in a fixed order for an object pattern, and ViperJS had the last
     // two the other way round: the property **name**, then the target's reference, then the read.
     assert_eq!(
         run("var log = []; \
@@ -789,7 +789,7 @@ fn a_destructuring_target_is_resolved_before_the_value_is_fetched() {
 fn a_close_on_the_way_out_of_a_throw_keeps_the_original_error() {
     // §7.4.9 step 4 — the completion being carried out wins, so everything the close itself can
     // fail at is discarded: the `return` throwing when called, and the getter step 2 reads it
-    // with. praxis swallowed those only for an **awaited** close, above a comment that already
+    // with. ViperJS swallowed those only for an **awaited** close, above a comment that already
     // said "every failure of the close is discarded".
     assert_eq!(
         run(
@@ -842,7 +842,7 @@ fn a_close_on_the_way_out_of_a_throw_keeps_the_original_error() {
 
 #[test]
 fn a_jump_out_of_a_pattern_closes_its_iterator_as_a_throw_does() {
-    // §13.15.5.2 step 5 and §8.6.2 step 4 close on **any** abrupt completion, and praxis armed a
+    // §13.15.5.2 step 5 and §8.6.2 step 4 close on **any** abrupt completion, and ViperJS armed a
     // handler — which catches a throw and nothing else. A `return` jumping out of a pattern is not
     // a throw, and there is a way to write one: a default inside the pattern may `yield`, so
     // resuming that suspension with `it.return()` unwinds straight through the half-run pattern.

@@ -1,4 +1,4 @@
-//! Running test262 against praxis, and the number that may only go up.
+//! Running test262 against ViperJS, and the number that may only go up.
 //!
 //! # What this is for
 //!

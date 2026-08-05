@@ -1,6 +1,6 @@
 # conformance/ — the oracle
 
-Everything here exists to answer one question honestly: **how much of JavaScript does praxis
+Everything here exists to answer one question honestly: **how much of JavaScript does ViperJS
 actually implement?** Not our test suite — TC39's, the same one V8, JavaScriptCore and
 SpiderMonkey are measured by.
 
@@ -153,7 +153,7 @@ is still a red build. It is the *gains* that need corroborating.
 ## What is excluded, and why
 
 - `staging/` — proposals that have not landed. Not normative, so failing them says nothing.
-- `intl402/` — ECMA-402, a different specification. praxis implements ECMA-262.
+- `intl402/` — ECMA-402, a different specification. ViperJS implements ECMA-262.
 - `*_FIXTURE.js` — imported *by* module tests rather than run. `INTERPRETING.md` names them.
 
 ## A test that will not stop

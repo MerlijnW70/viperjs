@@ -6,7 +6,7 @@
 //! bind functions of its own.
 //!
 //! ```
-//! use praxis::api::Engine;
+//! use viperjs::api::Engine;
 //!
 //! let mut engine = Engine::new();
 //! let answer = engine.eval("1 + 1").expect("it runs");
@@ -81,10 +81,10 @@ pub struct Engine {
 /// what a `throw` does: the failure becomes the script's to catch.
 ///
 /// ```
-/// use praxis::api::{Engine, Host};
-/// use praxis::heap::{Heap, NativeCall};
-/// use praxis::value::{Completion, Value};
-/// use praxis::vm::Vm;
+/// use viperjs::api::{Engine, Host};
+/// use viperjs::heap::{Heap, NativeCall};
+/// use viperjs::value::{Completion, Value};
+/// use viperjs::vm::Vm;
 ///
 /// fn shout(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
 ///     let mut host = Host::new(vm, heap);
@@ -390,7 +390,7 @@ impl Engine {
     /// script cannot catch it, no `finally` runs, and §9.5's job queue is not drained.
     ///
     /// ```
-    /// use praxis::api::{Engine, Error};
+    /// use viperjs::api::{Engine, Error};
     /// use std::time::Duration;
     ///
     /// let mut engine = Engine::new();

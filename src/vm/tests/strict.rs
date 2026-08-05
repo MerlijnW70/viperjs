@@ -123,7 +123,7 @@ fn a_strict_function_keeps_the_receiver_it_was_given() {
 fn strict_code_may_not_create_a_global_by_assigning_to_an_undeclared_name() {
     // §6.2.5.6 `PutValue` step 6 — a reference that resolves to nothing is created on the global
     // object in **sloppy** code and is a ReferenceError in strict. This is the rule people reach
-    // for strict mode to get, and praxis silently created the global instead.
+    // for strict mode to get, and ViperJS silently created the global instead.
     assert_eq!(
         run(
             "'use strict'; var e = 'none'; try { neverDeclared = 1 } catch (x) { e = x.constructor.name } e"

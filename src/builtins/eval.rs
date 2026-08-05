@@ -19,7 +19,7 @@
 //!
 //! Because a script's top-level `var` is *already* a property of the global object and its
 //! top-level `let` is already a slot in the script's own environment — §16.1.7's split, which
-//! praxis implements for ordinary scripts. §19.2.1.1's indirect mode asks for exactly that: `var`
+//! ViperJS implements for ordinary scripts. §19.2.1.1's indirect mode asks for exactly that: `var`
 //! into the global scope where it outlives the eval, `let` into a scope that is discarded with it.
 //! So compiling the text as a Script and running it with a fresh environment *is* the semantics,
 //! and there is no special case anywhere in the compiler.
@@ -47,9 +47,9 @@ pub(super) fn eval(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Compl
 ///
 /// Split from the entry point above because the two errors it can answer with are the interesting
 /// part, and both are **SyntaxError**: §19.2.1.1 step 8 says a text that is not a Script throws
-/// one, and praxis decides some of §22.2.1's early errors in the compiler rather than the parser —
+/// one, and ViperJS decides some of §22.2.1's early errors in the compiler rather than the parser —
 /// so a compile refusal has to arrive as the same error a parse refusal does, or a program could
-/// tell where praxis happens to have put the check.
+/// tell where ViperJS happens to have put the check.
 fn perform(vm: &mut Vm, heap: &mut Heap, text: &str) -> Completion<Value> {
     let script = match crate::parser::parse_script(text) {
         Ok(script) => script,
@@ -62,7 +62,7 @@ fn perform(vm: &mut Vm, heap: &mut Heap, text: &str) -> Completion<Value> {
         Err(error) => return Err(syntax_error(vm, heap, &error.message())),
     };
     // §19.2.1.1 step 12 — a *new* declarative environment, and its parent is the global scope and
-    // not the caller's. `None` is how praxis spells the global scope for a script, which is what
+    // not the caller's. `None` is how ViperJS spells the global scope for a script, which is what
     // makes a name the eval'd code does not declare resolve to a property of the global object.
     let environment =
         heap.new_named_environment(None, chunk.locals(), std::rc::Rc::clone(chunk.bindings()));
@@ -76,7 +76,7 @@ fn perform(vm: &mut Vm, heap: &mut Heap, text: &str) -> Completion<Value> {
 /// distinction that type draws, and this is a case on the other side of it.
 ///
 /// Shared with the direct mode — [`crate::vm`] — so that the two report a text that will not parse
-/// the same way. §19.2.1.1 step 8 makes no distinction between them and neither should praxis.
+/// the same way. §19.2.1.1 step 8 makes no distinction between them and neither should ViperJS.
 pub(crate) fn syntax_error(vm: &mut Vm, heap: &mut Heap, message: &str) -> Abrupt {
     Abrupt::Thrown(
         vm.realm()

@@ -29,7 +29,7 @@
 //! # Annex B, and why they are here at all
 //!
 //! Normative optional, and every browser has them because the web does. DR-0008's position is that
-//! praxis implements Annex B where strictness alone decides it; these need no host flag and no
+//! ViperJS implements Annex B where strictness alone decides it; these need no host flag and no
 //! strictness, so they cost two functions and a table.
 
 use super::define_method;

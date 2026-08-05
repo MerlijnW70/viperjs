@@ -156,7 +156,7 @@ impl Compiler<'_> {
                     false => Vec::new(),
                 };
                 for (at, property) in pattern.properties.iter().enumerate() {
-                    // §13.15.5.6 — three things in a fixed order, and praxis had the last two the
+                    // §13.15.5.6 — three things in a fixed order, and ViperJS had the last two the
                     // other way round. The property **name** is step 1 and a computed one is an
                     // expression; the target's *reference* is `KeyedDestructuringAssignmentEvaluation`
                     // step 1.a; and only then does step 2's `GetV` read the source. So

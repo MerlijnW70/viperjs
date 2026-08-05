@@ -1,7 +1,7 @@
 //! Evaluate expressions and print what they came to — the tool the differential sweep drives.
 //!
 //! Reads one script per line from standard input and writes one answer per line: the result
-//! written the way `String(x)` writes it, or a line beginning `!` for source praxis cannot yet
+//! written the way `String(x)` writes it, or a line beginning `!` for source ViperJS cannot yet
 //! read. Printing the refusals rather than skipping them is the point — a sweep that quietly
 //! dropped what the engine could not do would report agreement it had not earned.
 //!
@@ -9,11 +9,11 @@
 //! echo "1 + '1'" | cargo run --example evaluate
 //! ```
 
-use praxis::compile::compile_script;
-use praxis::heap::Heap;
-use praxis::parser::parse_script;
-use praxis::vm::{Outcome, Vm};
 use std::io::{self, BufRead, Write};
+use viperjs::compile::compile_script;
+use viperjs::heap::Heap;
+use viperjs::parser::parse_script;
+use viperjs::vm::{Outcome, Vm};
 
 fn main() {
     let input = io::stdin();

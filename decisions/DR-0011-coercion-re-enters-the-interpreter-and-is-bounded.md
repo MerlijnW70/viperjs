@@ -29,7 +29,7 @@ alternative is one Rust call that returns a value. The second is the boring impl
 
 Because the resource is different. A JavaScript call costs a `Frame`, and ten thousand of those
 are ordinary in ordinary code. A coercion costs a **Rust frame**, and the host's stack is not
-ours to spend: praxis runs inside somebody else's binary, on a thread whose stack size it did not
+ours to spend: ViperJS runs inside somebody else's binary, on a thread whose stack size it did not
 choose. Two hundred is a depth no hand-written program reaches and a depth no plausible stack
 cannot hold.
 

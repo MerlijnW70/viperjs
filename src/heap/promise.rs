@@ -16,7 +16,7 @@
 //!
 //! §27.2.6 lists it and nothing in the language reads it. Its one use is §27.2.1.7 step 7's
 //! `HostPromiseRejectionTracker`, which is how a host reports a rejection nothing was waiting for
-//! — and praxis has no such host hook, so the slot would be written and never read. It comes back
+//! — and ViperJS has no such host hook, so the slot would be written and never read. It comes back
 //! with the tracker, and until then leaving it out is the difference between six slots and five
 //! honest ones.
 //!

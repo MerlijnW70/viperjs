@@ -1,4 +1,4 @@
-//! Embedding praxis: run a script, bind a host function, read the answer back.
+//! Embedding ViperJS: run a script, bind a host function, read the answer back.
 //!
 //! ```text
 //! cargo run --example embed
@@ -8,10 +8,10 @@
 //! here: give the script a function of its own, run source, read a value out, call back in, and
 //! keep a value alive across a collection.
 
-use praxis::api::{Engine, Error, Host};
-use praxis::heap::{Heap, NativeCall};
-use praxis::value::{Completion, Value};
-use praxis::vm::Vm;
+use viperjs::api::{Engine, Error, Host};
+use viperjs::heap::{Heap, NativeCall};
+use viperjs::value::{Completion, Value};
+use viperjs::vm::Vm;
 
 fn main() {
     let mut engine = Engine::new();

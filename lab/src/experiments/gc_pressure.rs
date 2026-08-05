@@ -7,19 +7,19 @@
 //!
 //! Takes a test262 file, prepends the harness includes it needs, and runs it with a wall clock.
 
-use praxis::compile::compile_script;
-use praxis::heap::Heap;
-use praxis::parser::parse_script;
-use praxis::vm::{Outcome, Vm};
 use std::path::Path;
 use std::time::Instant;
+use viperjs::compile::compile_script;
+use viperjs::heap::Heap;
+use viperjs::parser::parse_script;
+use viperjs::vm::{Outcome, Vm};
 
 /// The harness files every one of these tests includes, in the order test262 loads them.
 const INCLUDES: [&str; 3] = ["assert.js", "sta.js", "regExpUtils.js"];
 
 pub fn run(argument: Option<&str>) -> std::process::ExitCode {
     let Some(file) = argument else {
-        eprintln!("usage: cargo run -p praxis-lab -- gc-pressure <path to a test262 file>");
+        eprintln!("usage: cargo run -p viperjs-lab -- gc-pressure <path to a test262 file>");
         eprintln!("       (TEST262 names the checkout, for the harness includes)");
         return std::process::ExitCode::FAILURE;
     };

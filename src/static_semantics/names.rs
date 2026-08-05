@@ -19,8 +19,8 @@ use crate::ast::{Binding, BindingPattern, Stmt, StmtKind};
 /// looked at: they are their own scopes, and their names are their own problem.
 ///
 /// ```
-/// use praxis::parser::parse_script;
-/// use praxis::static_semantics::lexically_declared_names;
+/// use viperjs::parser::parse_script;
+/// use viperjs::static_semantics::lexically_declared_names;
 ///
 /// let script = parse_script("let a; var b; { let c; }").expect("this parses");
 /// let names: Vec<_> = lexically_declared_names(&script.body)
@@ -109,12 +109,12 @@ fn collect_lexical(body: &[Stmt], top_level: bool) -> Vec<DeclaredName<'_>> {
 /// Error §14.2.1 makes it, and test262 has a file for all sixteen pairings.
 ///
 /// ```
-/// use praxis::parser::parse_script;
-/// use praxis::static_semantics::function_declared_names;
+/// use viperjs::parser::parse_script;
+/// use viperjs::static_semantics::function_declared_names;
 ///
 /// let script = parse_script("{ function f() {} a: function g() {} function* h() {} let i; }")
 ///     .expect("this parses");
-/// let praxis::ast::StmtKind::Block(block) = &script.body[0].kind else { panic!("a block") };
+/// let viperjs::ast::StmtKind::Block(block) = &script.body[0].kind else { panic!("a block") };
 /// let names: Vec<_> = function_declared_names(block)
 ///     .iter()
 ///     .map(|declared| declared.name)
@@ -177,8 +177,8 @@ fn declared(function: &crate::ast::Function) -> Option<DeclaredName<'_>> {
 /// blocks, both branches of an `if`, and loop bodies — everything that contains a statement.
 ///
 /// ```
-/// use praxis::parser::parse_script;
-/// use praxis::static_semantics::var_declared_names;
+/// use viperjs::parser::parse_script;
+/// use viperjs::static_semantics::var_declared_names;
 ///
 /// let script = parse_script("var a; { var b; } if (x) var c; else var d; let e;")
 ///     .expect("this parses");

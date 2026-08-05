@@ -2,7 +2,7 @@
 //!
 //! A `ModuleSpecifier` is text. Whether it names a file, a URL, a database row or an entry in a map
 //! the embedder built is the host's business and nothing the specification will ever settle — the
-//! same division DR-0014 makes for the local time zone: praxis implements the clause and the host
+//! same division DR-0014 makes for the local time zone: ViperJS implements the clause and the host
 //! supplies the fact.
 //!
 //! # Why a trait, when a graph was enough before

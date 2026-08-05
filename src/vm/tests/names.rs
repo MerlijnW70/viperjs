@@ -190,7 +190,7 @@ fn the_name_property_has_the_attributes_every_built_in_property_has() {
 fn a_method_is_not_a_constructor_and_has_no_prototype() {
     // §15.4.5 and §15.7.14 — a `MethodDefinition` is made by `OrdinaryFunctionCreate` *without*
     // `MakeConstructor`, so it has neither `[[Construct]]` nor the `prototype` object one would
-    // inherit from. praxis gave every non-arrow function both, which was a silent wrong answer: `new
+    // inherit from. ViperJS gave every non-arrow function both, which was a silent wrong answer: `new
     // o.m()` produced an object where the specification asks for a TypeError.
     assert_eq!(
         run("(function () { var o = { m() {} }; \
@@ -322,7 +322,7 @@ fn a_declarations_name_is_the_scopes_and_an_expressions_name_is_its_own() {
 
 #[test]
 fn assigning_to_a_function_expressions_own_name_is_refused_and_says_so_only_in_strict_code() {
-    // §9.1.1.1.5, and the reason praxis's mutability is three answers rather than a flag.
+    // §9.1.1.1.5, and the reason ViperJS's mutability is three answers rather than a flag.
     // §15.2.5 step 5 creates the binding with `CreateImmutableBinding(name, **false**)` — the only
     // production in the language that passes `false` — so step 2 does not force the throw and step
     // 5.b asks the *assignment* instead.
@@ -521,7 +521,7 @@ fn a_class_element_with_a_computed_key_is_named_the_same_way() {
 #[test]
 fn a_computed_key_is_converted_once_and_before_the_value_beside_it() {
     // §13.2.5.5 — evaluating a `PropertyName` *is* `ToPropertyKey`, and the clause does it before
-    // the value. praxis converted at the define instead, which put a key's own `toString` after the
+    // the value. ViperJS converted at the define instead, which put a key's own `toString` after the
     // value's expression and ran it again for anything else that looked at the key.
     assert_eq!(
         run(

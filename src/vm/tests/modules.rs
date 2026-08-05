@@ -1470,7 +1470,7 @@ fn import_meta_is_one_ordinary_object_per_module() {
 fn import_meta_belongs_to_the_module_the_code_was_written_in() {
     // The half that cannot be answered by asking what is running. §10.2.1.1 gives a call its
     // **callee's** `[[ScriptOrModule]]`, so a function declared in one module and called from
-    // another answers with the module it was *written* in. praxis walks out of the environment the
+    // another answers with the module it was *written* in. ViperJS walks out of the environment the
     // code is closed over, and a closure's chain ends where it was written — the same fact.
     assert_eq!(
         run_graph(

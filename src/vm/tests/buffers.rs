@@ -105,7 +105,7 @@ fn a_view_is_a_window_and_two_of_them_see_each_others_writes() {
 
 #[test]
 fn the_endianness_is_the_formats_and_not_the_machines() {
-    // §25.3.4's default is **big**-endian, which is the opposite of every machine praxis runs on.
+    // §25.3.4's default is **big**-endian, which is the opposite of every machine ViperJS runs on.
     // Deliberately: a `DataView` exists for data that came from a file or a socket, and the byte
     // order such data has is the one the *format* chose. A default that matched the machine would
     // make the same program correct on one and wrong on another.

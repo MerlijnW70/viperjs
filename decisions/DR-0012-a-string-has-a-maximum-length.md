@@ -14,7 +14,7 @@ it, and no two agree: V8 allows about 2^29 elements, SpiderMonkey about 2^30, Ja
 The specification does not say what an implementation with a smaller maximum should do when a
 program asks for more. This record is that decision.
 
-## What praxis does
+## What ViperJS does
 
 **`MAX_STRING_LENGTH` is 2^28 - 1 code units**, and an operation that would make a longer String
 throws a **RangeError** instead.

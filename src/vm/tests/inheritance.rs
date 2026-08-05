@@ -618,7 +618,7 @@ fn deleting_a_property_of_super_is_a_reference_error_after_the_key_has_run() {
 
 #[test]
 fn super_reaches_the_right_home_from_every_synthesised_body_in_a_class() {
-    // praxis compiles four things as bodies of their own that the specification writes as inline
+    // ViperJS compiles four things as bodies of their own that the specification writes as inline
     // code: a static block, a static field's initialiser, and a derived class's instance field
     // initialisers. Each therefore needs a `[[HomeObject]]` it did not get from being defined on
     // anything, and each needs a *different* one — which is why they are four rows and not one.

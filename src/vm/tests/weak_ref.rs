@@ -1,6 +1,6 @@
 //! §26.1's `WeakRef` and §26.2's `FinalizationRegistry` as a script sees them.
 //!
-//! Which, again, is not weakly: praxis collects when its embedder says to, so `deref` answers the
+//! Which, again, is not weakly: ViperJS collects when its embedder says to, so `deref` answers the
 //! same thing throughout any one script. What is testable here is the surface — which values may
 //! be held, which arguments are refused, and the brands. The rows about a target actually going
 //! away are in `heap::collect`.

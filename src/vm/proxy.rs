@@ -2,7 +2,7 @@
 //!
 //! # Why these live here and not in the heap
 //!
-//! Every other exotic object in praxis is exotic in the *heap*: a String object's characters and a
+//! Every other exotic object in ViperJS is exotic in the *heap*: a String object's characters and a
 //! TypedArray's elements are answered without an interpreter, so `Heap::own_property` can
 //! synthesise them. A Proxy cannot be. Its answer to `[[Get]]` is whatever a JavaScript function
 //! says, so the operation needs the machine that runs JavaScript — and that is why the thirteen
@@ -196,7 +196,7 @@ impl Vm {
         let (trap, handler, target) = match trapped {
             // §10.5.9 step 6 — `Return ? target.[[Set]](P, V, Receiver)`, and the `Return` is the
             // whole of it. A proxy with no `set` trap is not a proxy that always succeeds; it is one
-            // whose answer is the target's. praxis ran the write and reported `true` regardless, so
+            // whose answer is the target's. ViperJS ran the write and reported `true` regardless, so
             // `Reflect.set(new Proxy(sealed, {}), 'x', 1)` said the write happened when nothing had
             // been written anywhere.
             //

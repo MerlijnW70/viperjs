@@ -169,7 +169,7 @@ use std::collections::HashMap;
 /// §6.1.4 defines the String type as sequences "up to a maximum length of 2^53 - 1 elements", a
 /// figure no implementation can reach: at two bytes an element it names sixteen petabytes. The
 /// specification does not say what an engine with a smaller limit should do, and each of them
-/// picks a different number — so this one is praxis's, and DR-0012 is where it is argued rather
+/// picks a different number — so this one is ViperJS's, and DR-0012 is where it is argued rather
 /// than merely stated.
 ///
 /// 2^28-1 units is 512 MiB of `u16` at the limit: past anything a program means to build, and
@@ -219,7 +219,7 @@ const fn string_fits(left: usize, right: usize) -> bool {
 /// reported footprint. So the budget carries that factor as headroom, and what a runaway actually
 /// costs before it is stopped is a few hundred megabytes rather than a few hundred gigabytes.
 ///
-/// Generous for what praxis can currently run — an engine with no collection policy cannot execute
+/// Generous for what ViperJS can currently run — an engine with no collection policy cannot execute
 /// a long program under any budget — and the number to raise first when there is one. When there
 /// is an embedding API this becomes something the host sets; a constant is what it can be while
 /// there is nobody to ask.
@@ -485,7 +485,7 @@ impl Heap {
     ///
     /// §6.1.4 puts the String type's maximum at 2^53-1 elements and says nothing about what an
     /// implementation with a smaller one should do; every engine imposes a smaller one and every
-    /// engine throws a `RangeError`. DR-0012 records praxis's, and this is the door it is enforced
+    /// engine throws a `RangeError`. DR-0012 records ViperJS's, and this is the door it is enforced
     /// at — the *only* door, because concatenation is the only operation that makes a String longer
     /// than the two things it was made from. Every other String on this heap is a piece of the
     /// source text or a number's spelling, and neither can outgrow the program that asked for it.

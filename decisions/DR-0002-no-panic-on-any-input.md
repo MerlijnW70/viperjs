@@ -2,11 +2,11 @@
 id: DR-0002
 title: No input may panic — script text is data, never a trusted caller
 status: enforced
-invariant: forbid-unsafe src/lib.rs src/bin/praxis.rs
+invariant: forbid-unsafe src/lib.rs src/bin/viper.rs
 ---
 
 Every failure a script author can cause is a `Result`. Not a panic, not an abort, not a
-`process::exit`. This is the invariant that decides whether praxis can be embedded at all.
+`process::exit`. This is the invariant that decides whether ViperJS can be embedded at all.
 
 The reasoning is about *whose* bug it is. An embedder runs untrusted script inside their own
 process — that is the entire use case. If a 10⁶-deep nested array literal unwinds through their
@@ -28,7 +28,7 @@ Concretely this forbids, in production paths:
 case by case. Together they are what makes "embed this in your binary" a reasonable request.
 
 **It is listed per crate root, and that is not bookkeeping.** `#![forbid(unsafe_code)]` is an
-attribute on *a* crate root and covers nothing outside it, so `src/bin/praxis.rs` — a second crate
+attribute on *a* crate root and covers nothing outside it, so `src/bin/viper.rs` — a second crate
 root, not a module of the library — could have contained `unsafe` and compiled cleanly with the
 library's attribute untouched. The invariant above names every root for that reason, and the gate
 refused the command line's first commit until it did. A `src/bin/` or a second `[[bin]]` added later

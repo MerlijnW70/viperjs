@@ -71,7 +71,7 @@ fn the_short_and_long_spellings_name_the_same_set() {
 #[test]
 fn the_names_are_matched_exactly_and_not_folded() {
     // UTS #18 suggests an implementation may ignore case and underscores; §22.2.1 does not, and
-    // its tables are of exact strings. Accepting more would make praxis take patterns no other
+    // its tables are of exact strings. Accepting more would make ViperJS take patterns no other
     // engine does, which is a wrong answer in the direction nobody checks.
     assert!(lookup("uppercase_letter").is_none());
     assert!(lookup("ALPHABETIC").is_none());
@@ -135,7 +135,7 @@ fn membership_is_decided_at_the_edges_of_every_range() {
 #[test]
 fn a_property_of_strings_is_not_a_code_point_property() {
     // §22.2.1's `\p{RGI_Emoji}` and its six siblings match a *sequence* — with the `v` flag they
-    // are valid and praxis has no shape for them, so the parser refuses them as unbuilt rather
+    // are valid and ViperJS has no shape for them, so the parser refuses them as unbuilt rather
     // than as invalid. Here the only claim is that `lookup` does not quietly answer with some
     // *code point* set of the same name, which would match one character and call it an emoji.
     for name in super::OF_STRINGS {

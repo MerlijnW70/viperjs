@@ -1,6 +1,6 @@
 //! What the compiler refuses, and where it says so.
 //!
-//! Two kinds of test. Most run source and check the refusal it earns — the list of what praxis
+//! Two kinds of test. Most run source and check the refusal it earns — the list of what ViperJS
 //! cannot do yet, kept honest by being asserted rather than written in a comment. The rest build
 //! a syntax tree *by hand*, because the parser will not produce one: a private name outside a
 //! class, an optional chain as a bare member, an expression nested past the limit. A guard for a
@@ -46,7 +46,7 @@ fn an_operator_is_emitted_after_both_of_its_operands() {
 #[test]
 fn a_construct_that_is_not_implemented_yet_says_so_and_says_where() {
     // The parser accepted every one of these. Refusing with a span is the difference between
-    // "praxis cannot do this yet" and a wrong answer nobody notices.
+    // "ViperJS cannot do this yet" and a wrong answer nobody notices.
     // The example has to be replaced each time one of them lands — a `class` was here, then a
     // generator, then an `await`, then `import('x')` until §13.3.10 arrived, then a destructuring
     // rest parameter until §15.1 did, then `import.meta` until §13.3.12 did.

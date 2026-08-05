@@ -814,7 +814,7 @@ fn the_indices_array_names_its_groups_the_same_way_the_match_does() {
 #[test]
 fn a_match_results_extra_properties_are_the_ones_a_script_could_have_written() {
     // §22.2.7.2 builds these with `CreateDataPropertyOrThrow`, so all three attributes are true —
-    // **including enumerable**, which praxis had as `false` for every one of them. The difference
+    // **including enumerable**, which ViperJS had as `false` for every one of them. The difference
     // is not academic: with the installation attributes instead, `Object.keys` of a match answers
     // only its indices and a `for`-`in` over one finds no `index` at all.
     assert_eq!(

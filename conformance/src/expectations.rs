@@ -208,7 +208,7 @@ const SUITE: &str = "# test262 ";
 
 /// The lines at the top of the file, which are there for whoever opens it next.
 const HEADER: &str = "\
-# Every line here is a test262 failure praxis has not fixed yet, and a claim that the failure is
+# Every line here is a test262 failure ViperJS has not fixed yet, and a claim that the failure is
 # understood. The file may only shrink: a listed test that starts passing fails the run until its
 # line is deleted, and an unlisted test that starts failing fails the run.
 #
@@ -309,7 +309,7 @@ mod tests {
     fn a_file_that_is_not_there_is_no_expectations_and_one_that_will_not_open_is_an_error() {
         // The first run of a new checkout has no file, and starting from nothing is right — every
         // failure is then a regression, which is exactly what `--bless` is for.
-        let missing = std::env::temp_dir().join("praxis-conformance-no-such-file.txt");
+        let missing = std::env::temp_dir().join("ViperJS-conformance-no-such-file.txt");
         let _ = std::fs::remove_file(&missing);
         assert!(
             Expectations::read(&missing)
@@ -321,7 +321,7 @@ mod tests {
         // could not be opened would turn every recorded failure into a regression and every run
         // into a red one for a reason that is not about the engine at all. A directory is the
         // portable way to have a path that exists and cannot be read as a file.
-        let directory = std::env::temp_dir().join("praxis-conformance-not-a-file");
+        let directory = std::env::temp_dir().join("ViperJS-conformance-not-a-file");
         std::fs::create_dir_all(&directory).expect("a writable temp dir"); // the test needs one
         assert!(Expectations::read(&directory).is_err());
         let _ = std::fs::remove_dir_all(&directory);

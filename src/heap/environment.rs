@@ -152,7 +152,7 @@ pub struct Environment {
     /// is no fixed set of names to have: what the scope contains is whatever the object has *at
     /// the moment a name is looked up*, so `with (o) { a }` after `delete o.a` reads outwards.
     ///
-    /// The `[[IsWithEnvironment]]` flag §9.1.1.2 also carries is not here, because praxis has no
+    /// The `[[IsWithEnvironment]]` flag §9.1.1.2 also carries is not here, because ViperJS has no
     /// other use for one: the global scope is spelled `None` for a parent (see
     /// [`Heap::new_environment`]) rather than as an object environment record, so every one of
     /// these is a `with`'s and every one consults `@@unscopables`.
@@ -253,7 +253,7 @@ impl Heap {
         })
     }
 
-    /// §14.11's scope: `object`'s properties **and** `size` slots of praxis's own.
+    /// §14.11's scope: `object`'s properties **and** `size` slots of ViperJS's own.
     ///
     /// The slots are the compiler's temporaries — see [`crate::compile::Instruction::PushWithScope`]
     /// for why one record holds both, and why nothing can tell.

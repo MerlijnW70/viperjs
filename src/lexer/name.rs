@@ -27,7 +27,7 @@ use std::borrow::Cow;
 /// space and all, because that is what is written there. The lexer is where a name is judged.
 ///
 /// ```
-/// use praxis::lexer::{Goal, Lexer, TokenKind, identifier_value};
+/// use viperjs::lexer::{Goal, Lexer, TokenKind, identifier_value};
 ///
 /// // A raw string, so the source really does contain a backslash: this spells `abc` the
 /// // long way round, and the value comes back as if it had been spelled plainly.

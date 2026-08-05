@@ -548,7 +548,7 @@ impl Compiler<'_> {
                 Ok(())
             }
             // §13.3.10 — the specifier is an expression, which is the whole point of the form. The
-            // second argument is §13.3.10's `options`, and praxis has no import attribute it acts
+            // second argument is §13.3.10's `options`, and ViperJS has no import attribute it acts
             // on: it is evaluated for its effects and dropped, because a getter written there must
             // still run.
             ExprKind::ImportCall { specifier, options } => {
@@ -605,7 +605,7 @@ impl Compiler<'_> {
                 continue;
             }
             // B.3.1 — `__proto__: v` sets the prototype rather than making a property, and this is
-            // the one Annex B rule praxis implements (DR-0008 says why). The production is exactly
+            // the one Annex B rule ViperJS implements (DR-0008 says why). The production is exactly
             // `PropertyName : AssignmentExpression`, so every other way of writing the same spelling
             // is an ordinary property and those exclusions are the whole difficulty:
             //

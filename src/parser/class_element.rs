@@ -220,7 +220,7 @@ impl Parser<'_> {
     /// hard to take at face value.
     ///
     /// So both parameters are dropped here, and `class C { a = await; }` reads `await` as the
-    /// name it is. This is the only place praxis knowingly reads the grammar against its text;
+    /// name it is. This is the only place ViperJS knowingly reads the grammar against its text;
     /// M5's test262 run is the thing that settles it, and the test below is written so that the
     /// day it changes, it changes on purpose.
     fn parse_field_initializer(&mut self) -> Result<Option<Box<Expr>>, ParseError> {

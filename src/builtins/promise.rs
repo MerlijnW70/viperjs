@@ -401,7 +401,7 @@ pub(crate) fn perform_then(
         }),
     }
     // Step 12 sets `[[PromiseIsHandled]]`, which this engine does not keep: nothing reads it
-    // without `HostPromiseRejectionTracker`, and praxis has no such hook. See `heap::promise`.
+    // without `HostPromiseRejectionTracker`, and ViperJS has no such hook. See `heap::promise`.
     Ok(Value::Undefined)
 }
 

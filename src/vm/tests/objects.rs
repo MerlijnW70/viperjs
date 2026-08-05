@@ -728,7 +728,7 @@ fn a_spread_in_an_object_literal_copies_own_enumerable_properties() {
 
 #[test]
 fn the_proto_key_in_a_literal_sets_the_prototype_and_only_in_one_spelling() {
-    // B.3.1 — the one Annex B rule praxis implements, and DR-0008 says why: it is not conditioned on
+    // B.3.1 — the one Annex B rule ViperJS implements, and DR-0008 says why: it is not conditioned on
     // strictness, and leaving it out was a *silent wrong answer* rather than a refusal, the grammar
     // already accepting `__proto__: x` as an ordinary property definition.
     assert_eq!(

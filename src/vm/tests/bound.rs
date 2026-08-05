@@ -147,7 +147,7 @@ fn bind_refuses_what_is_not_callable_and_answers_a_new_object_each_time() {
         "true"
     );
     // §20.2.3.2 step 8 — the name is the target's with `bound ` in front. This row said `"bound "`
-    // while praxis gave an ordinary function no `name` of its own, and its comment said so; §10.2.9
+    // while ViperJS gave an ordinary function no `name` of its own, and its comment said so; §10.2.9
     // has since arrived, which is what a test that asserts the *absence* of a feature is for.
     assert_eq!(
         run("var f = function foo() {}; f.bind(null).name"),
@@ -164,7 +164,7 @@ fn bind_refuses_what_is_not_callable_and_answers_a_new_object_each_time() {
     );
     // §20.2.3.2 steps 5 and 6 — the length is what a caller still has to supply: the target's,
     // less the arguments already bound, and never below zero. Every row here is a built-in,
-    // because praxis gives an ordinary function no `length` of its own to subtract from yet.
+    // because ViperJS gives an ordinary function no `length` of its own to subtract from yet.
     assert_eq!(
         run("Function.prototype.call.bind(Array.prototype.join).length"),
         "1"
@@ -298,7 +298,7 @@ fn a_dynamic_function_is_assembled_before_it_is_parsed() {
 #[test]
 fn instanceof_asks_the_right_operand_what_it_means() {
     // §13.10.2 step 2 — the operator looks up `%Symbol.hasInstance%` on its right operand and,
-    // finding one, **calls it and believes it**. praxis went straight to the prototype walk, so an
+    // finding one, **calls it and believes it**. ViperJS went straight to the prototype walk, so an
     // object saying what `instanceof` means for it was ignored or refused.
     assert_eq!(
         run(
@@ -426,7 +426,7 @@ fn the_default_has_instance_is_a_method_that_cannot_be_replaced() {
 #[test]
 fn a_bound_function_answers_instanceof_for_what_it_was_bound_to() {
     // §7.3.22 step 2 — a bound function hands the question to its `[[BoundTargetFunction]]`, so
-    // `x instanceof f.bind()` is `x instanceof f`. praxis reached step 4 instead and threw,
+    // `x instanceof f.bind()` is `x instanceof f`. ViperJS reached step 4 instead and threw,
     // because a bound function has no `prototype` of its own.
     assert_eq!(
         run("function F() {} var b = F.bind(null); \

@@ -5,7 +5,7 @@ status: prose-only
 ---
 
 A generator and an `async` function both need one thing: an execution that can be **parked** and
-revived later. praxis can do that because `Frame` (`src/vm/call.rs`) is a plain record — a chunk, an
+revived later. ViperJS can do that because `Frame` (`src/vm/call.rs`) is a plain record — a chunk, an
 instruction index, a `this`, a `new.target`, an environment id, and two stack marks. Nothing in it
 borrows, so a parked execution is a value the heap can hold and the collector can trace. That is
 `Suspended` (`src/vm/suspend.rs`): the record plus the two stack *slices* the marks already

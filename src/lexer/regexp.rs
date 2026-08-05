@@ -42,7 +42,7 @@ pub struct RegExpParts {
 /// it means knowing which slashes were escaped and which were inside a character class.
 ///
 /// ```
-/// use praxis::lexer::{Goal, Lexer, TokenKind, regexp_parts};
+/// use viperjs::lexer::{Goal, Lexer, TokenKind, regexp_parts};
 ///
 /// let source = r"/ab\/[/]c/gi";
 /// let token = Lexer::new(source).next_token(Goal::RegExp).expect("this lexes");

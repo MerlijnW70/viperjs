@@ -1,8 +1,8 @@
 //! Where the interpreter's time and its allocations actually go, per source shape.
 //!
 //! ```text
-//! cargo run -p praxis-lab --release -- hot-shapes           # every shape
-//! cargo run -p praxis-lab --release -- hot-shapes <name>    # one shape
+//! cargo run -p viperjs-lab --release -- hot-shapes           # every shape
+//! cargo run -p viperjs-lab --release -- hot-shapes <name>    # one shape
 //! ```
 //!
 //! # The question
@@ -37,15 +37,15 @@
 //! # What this cannot see
 //!
 //! Anything below the instruction dispatch. There is no profiler here and `lab` cannot instrument
-//! `praxis`, so a row that is slow says "this shape is slow" and never "this function is slow".
+//! `ViperJS`, so a row that is slow says "this shape is slow" and never "this function is slow".
 //! Attribution beyond that is by subtraction, and the shapes are chosen to make the subtractions
 //! meaningful — see the pairs above.
 
-use praxis::compile::compile_script;
-use praxis::heap::Heap;
-use praxis::parser::parse_script;
-use praxis::vm::Vm;
 use std::time::{Duration, Instant};
+use viperjs::compile::compile_script;
+use viperjs::heap::Heap;
+use viperjs::parser::parse_script;
+use viperjs::vm::Vm;
 
 /// How many times each shape's body runs. Large enough that the loop dominates the fixed cost of
 /// parsing and compiling, small enough that the slowest row finishes in a few seconds.
@@ -135,7 +135,7 @@ pub fn run(argument: Option<&str>) -> std::process::ExitCode {
         None => SHAPES.iter().collect(),
     };
     if chosen.is_empty() {
-        eprintln!("praxis-lab: no shape named `{}`", argument.unwrap_or(""));
+        eprintln!("viperjs-lab: no shape named `{}`", argument.unwrap_or(""));
         eprintln!(
             "shapes: {}",
             SHAPES.iter().map(|s| s.name).collect::<Vec<_>>().join(", ")
@@ -203,13 +203,18 @@ fn measure(body: &str) -> Option<(Duration, usize, usize, bool)> {
     let before = heap.footprint();
     let started = Instant::now();
     let mut vm = Vm::new(&mut heap);
+    // **Explicitly off.** This table measures what a shape *allocates*; DR-0023 turned the
+    // collector on by default, and inheriting that would make every row the difference between
+    // what the shape took and what a collection happened to give back — a different question, and
+    // one `reuse_check` below asks properly. Left implicit it silently rewrote this table.
+    vm.set_collection_growth(None);
     let outcome = vm.run(&chunk, &mut heap);
     let elapsed = started.elapsed();
     // **A thrown completion is `Ok`**, and the first run of this experiment reported the shapes
     // that exhausted DR-0013's budget as the *fastest* of the ten — they stopped early. That is
     // the finding rather than a nuisance, so it is carried out rather than filtered: a row that
     // did not finish is a row whose time means nothing and whose footprint means everything.
-    let finished = matches!(outcome, Ok(praxis::vm::Outcome::Value(_)));
+    let finished = matches!(outcome, Ok(viperjs::vm::Outcome::Value(_)));
     let grew = heap.footprint().saturating_sub(before);
     // …and then collect, with the chunk as the root. This column does **not** say what a collection
     // can reclaim, though it was read that way once and the reading became this notebook's headline.
@@ -305,6 +310,10 @@ fn reuse_of(body: &str) -> Option<(usize, usize)> {
     let chunk = compile_script(&script, &mut heap).ok()?;
     let start = heap.footprint();
     let mut vm = Vm::new(&mut heap);
+    // The question here is whether a **manual** collection makes slots reusable. With DR-0023's
+    // schedule left on, the loop collects for itself as well, both runs keep an arbitrary amount,
+    // and the verdict flipped to `tombstoned` for arenas that demonstrably reuse.
+    vm.set_collection_growth(None);
     vm.run(&chunk, &mut heap).ok()?;
     vm.collect(&chunk, &mut heap);
     let after_first = heap.footprint();
@@ -353,10 +362,10 @@ the call ceiling, with a schedule and without:"
             let outcome = vm.run(&chunk, &mut heap);
             let elapsed = started.elapsed();
             row.push(match outcome {
-                Ok(praxis::vm::Outcome::Value(_)) => {
+                Ok(viperjs::vm::Outcome::Value(_)) => {
                     format!("ok {elapsed:?}, {} KiB", heap.footprint() / 1024)
                 }
-                Ok(praxis::vm::Outcome::Thrown(_)) => format!("THREW after {elapsed:?}"),
+                Ok(viperjs::vm::Outcome::Thrown(_)) => format!("THREW after {elapsed:?}"),
                 _ => "stopped".to_string(),
             });
         }
@@ -399,7 +408,7 @@ threshold sweep — 2,000,000 calls:"
             Some(bytes) => format!("{} KiB grown", bytes / 1024),
         };
         let result = match outcome {
-            Ok(praxis::vm::Outcome::Value(_)) => format!("{elapsed:?}"),
+            Ok(viperjs::vm::Outcome::Value(_)) => format!("{elapsed:?}"),
             _ => format!("THREW after {elapsed:?}"),
         };
         println!(
@@ -444,7 +453,7 @@ walk cost against a large live set — 500,000 calls over a held array:"
             Some(bytes) => format!("{} KiB grown", bytes / 1024),
         };
         let result = match outcome {
-            Ok(praxis::vm::Outcome::Value(_)) => format!("{elapsed:?}"),
+            Ok(viperjs::vm::Outcome::Value(_)) => format!("{elapsed:?}"),
             _ => format!("THREW after {elapsed:?}"),
         };
         println!(

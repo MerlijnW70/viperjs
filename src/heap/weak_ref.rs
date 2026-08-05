@@ -26,7 +26,7 @@
 //!
 //! §26.2 lets an implementation call it "at any time" and permits it never to be called at all.
 //! Choosing a moment means deciding when to collect, which §9.10's note leaves entirely to the
-//! implementation and which praxis has not decided — collection is driven by the embedder. So a
+//! implementation and which ViperJS has not decided — collection is driven by the embedder. So a
 //! registry here holds its cells, drops the ones whose target has gone, and calls nothing. That is
 //! a conforming choice rather than a gap, and it is the only one available until there is a
 //! measured answer to when collection should happen.

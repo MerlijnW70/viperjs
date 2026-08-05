@@ -83,7 +83,7 @@ impl Vm {
                     return Ok(());
                 }
                 // §7.1's abstract operations say nothing about memory, and DR-0013's budget is
-                // what praxis answers with instead.
+                // what ViperJS answers with instead.
                 //
                 // The collector is **not** run from here, and that was a measurement rather than an
                 // oversight — but the measurement's premise has since changed and it has not been
@@ -2095,7 +2095,7 @@ impl Vm {
             // §9.1.1.1.5 — a declarative binding is not deletable, whatever it is: a
             // `var`, a parameter, a `let`, a function's own slot. The one exception the
             // specification has is §19.2.1.1's direct eval, whose `var`s *are*, and
-            // praxis does not make those deletable either — which is a gap, not this
+            // ViperJS does not make those deletable either — which is a gap, not this
             // instruction's business, and it is the same answer it gave before a `with`
             // could be written around it.
             crate::vm::dynamic::Resolved::Slot { .. } => false,

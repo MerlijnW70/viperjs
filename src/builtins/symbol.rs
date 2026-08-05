@@ -18,7 +18,7 @@
 //! `Symbol.iterator` by identity, not by name, and a script that shadows the property must not be
 //! able to change what the loop reaches for.
 //!
-//! Every one of them is installed even though praxis acts on only some of them yet. A well-known
+//! Every one of them is installed even though ViperJS acts on only some of them yet. A well-known
 //! Symbol that exists but is never consulted is a property a script can put a method under and see
 //! ignored; one that does not exist at all is a `TypeError` on the line that mentions it, which is
 //! a worse answer to give and a harder one to grow out of.

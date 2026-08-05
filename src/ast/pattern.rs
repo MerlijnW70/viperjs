@@ -23,7 +23,7 @@
 //! §13.15.5.1 says a `DestructuringAssignmentTarget` that is not itself a pattern is a Syntax
 //! Error unless its `AssignmentTargetType` is **simple** — where §13.15.1 refuses only *invalid*.
 //! The difference is the `web-compat` case of §8.6.4, so `f() = 1` is a runtime error on a web
-//! host and `[f()] = 1` is a Syntax Error on every host. praxis refuses both, being no web host,
+//! host and `[f()] = 1` is a Syntax Error on every host. ViperJS refuses both, being no web host,
 //! but the two are refused for different reasons and the second would still be refused if it were.
 
 use super::{Expr, PropertyKey};

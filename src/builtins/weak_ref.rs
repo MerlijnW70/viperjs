@@ -3,11 +3,11 @@
 //! # What a program can actually observe
 //!
 //! Very little, and deliberately. `deref` answers the target until the collector has taken it, and
-//! praxis collects only when its embedder says to — so within any one script it answers the same
+//! ViperJS collects only when its embedder says to — so within any one script it answers the same
 //! thing every time, which is what §9.10.4's note requires of an engine that *does* collect
 //! part-way through. The cleanup callback is never called at all; §26.2 permits that outright, and
 //! the alternative needs a decision about when to collect that §9.10's note leaves to the
-//! implementation and that praxis has not made. See [`crate::heap::Weak`] for the longer version.
+//! implementation and that ViperJS has not made. See [`crate::heap::Weak`] for the longer version.
 //!
 //! So what is left to get right is the surface: which values may be held, which arguments are
 //! refused, and the brand checks.

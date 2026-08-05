@@ -547,7 +547,7 @@ fn an_async_generator_awaits_the_value_it_yields_and_an_ordinary_one_does_not() 
 fn a_functions_prototype_is_chosen_by_both_of_the_words_in_front_of_it() {
     // §27.3.3, §27.4.3 and §27.7.3 — each of the four kinds has an object of its own, and
     // `Object.getPrototypeOf` is the only route to any of the three that are not
-    // `%Function.prototype%`. praxis asked only whether a function was a generator, which sent an
+    // `%Function.prototype%`. ViperJS asked only whether a function was a generator, which sent an
     // `async function*` to %GeneratorFunction.prototype% and an `async function` to
     // %Function.prototype% — two of the four wrong, and invisible until something asked.
     assert_eq!(
@@ -753,7 +753,7 @@ fn a_parameter_that_throws_rejects_the_promise_rather_than_the_call() {
 #[test]
 fn wrapping_a_sync_iterator_reads_its_next_once() {
     // §7.4.3 step 1.b.iii runs `GetIteratorFromMethod`, whose step 4 reads `next` **once** and
-    // makes a record of it; step 1.b.iv hands that record to §27.1.4.1. praxis read it there and
+    // makes a record of it; step 1.b.iv hands that record to §27.1.4.1. ViperJS read it there and
     // again, so a sync iterator with a `next` *getter* saw two calls for one `yield*` — and the
     // doc said the read belonged there, "which is what makes this an Iterator Record rather than a
     // pair of lookups repeated per step". It was the pair of lookups it described.

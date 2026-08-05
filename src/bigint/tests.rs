@@ -345,7 +345,7 @@ fn comparison_orders_by_sign_first_and_then_by_magnitude() {
 
 #[test]
 fn a_result_past_what_this_engine_will_hold_is_refused_rather_than_attempted() {
-    // §6.1.6.2 bounds nothing and no implementation can honour that, so the ceiling is praxis's —
+    // §6.1.6.2 bounds nothing and no implementation can honour that, so the ceiling is ViperJS's —
     // and the answer at it is a refusal rather than an allocation that never returns.
     let huge = big("2").exponentiate(&big("100")).expect("finite"); // in range
     assert_eq!(big("2").exponentiate(&huge), Err(Error::TooLarge));

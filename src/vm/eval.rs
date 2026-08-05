@@ -14,7 +14,7 @@
 //!
 //! # What makes it possible
 //!
-//! DR-0018. praxis resolves a name to a depth and an index when it compiles, and the source of an
+//! DR-0018. ViperJS resolves a name to a depth and an index when it compiles, and the source of an
 //! eval only exists at run time — so the compiler that handles it never saw the scopes it has to
 //! resolve into. Environments therefore carry what the source called their slots, and this walks
 //! the running chain, hands the compiler the names level by level, and lets it resolve exactly as
@@ -101,7 +101,7 @@ impl Vm {
     /// Syntax Error at the top of a script, from identical text.
     ///
     /// `super.a` is granted by the running function having a **home object**, which is
-    /// `HasSuperBinding` said in praxis's terms — and it is right for an arrow too, because
+    /// `HasSuperBinding` said in ViperJS's terms — and it is right for an arrow too, because
     /// `Instruction::InheritHome` copies the enclosing method's onto one when it is made.
     ///
     /// `new.target` is granted by there being a **non-arrow** function running. §19.2.1.1 step 3.a
@@ -171,7 +171,7 @@ impl Vm {
         }
     }
 
-    /// §19.2.1.1 step 12's `varEnv`, as far as praxis can follow it — see [`EvalVars`].
+    /// §19.2.1.1 step 12's `varEnv`, as far as ViperJS can follow it — see [`EvalVars`].
     ///
     /// The question is only ever "is there a function between here and the script", because a
     /// script's variable scope is the global object and a function's is an environment whose size

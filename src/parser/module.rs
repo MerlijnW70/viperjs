@@ -50,13 +50,13 @@ use crate::span::Span;
 /// The first Syntax Error, with the span of the text that caused it.
 ///
 /// ```
-/// use praxis::parser::parse_module;
+/// use viperjs::parser::parse_module;
 ///
 /// assert!(parse_module("import a from \"b\"; await a;").is_ok());
 /// assert!(parse_module("await;").is_err(), "`await` is never a name in a module");
 /// assert!(parse_script_would_take_it());
 /// fn parse_script_would_take_it() -> bool {
-///     praxis::parser::parse_script("await;").is_ok()
+///     viperjs::parser::parse_script("await;").is_ok()
 /// }
 /// ```
 pub fn parse_module(source: &str) -> Result<Module, ParseError> {

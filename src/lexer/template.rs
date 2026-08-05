@@ -76,7 +76,7 @@ pub struct TemplateValue {
 /// The `TV` and `TRV` of a template component, or `None` if `span` does not cover one.
 ///
 /// ```
-/// use praxis::lexer::{template_value, Goal, Lexer, TemplatePart, TokenKind};
+/// use viperjs::lexer::{template_value, Goal, Lexer, TemplatePart, TokenKind};
 ///
 /// // A well-formed escape cooks; the raw value keeps it as written.
 /// let source = r"`a\n`";

@@ -134,7 +134,7 @@ pub(super) fn within_budget(heap: &Heap) -> Completion<()> {
 /// other array-like, so `Array.prototype.map.call({length: 1})` is not affected by anything the
 /// object's `constructor` says.
 ///
-/// The realm check in step 4 is not written: praxis has one realm, so "the constructor came from
+/// The realm check in step 4 is not written: ViperJS has one realm, so "the constructor came from
 /// another realm" is a condition no program here can produce.
 pub(super) fn array_species_create(
     vm: &mut Vm,

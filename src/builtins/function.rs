@@ -32,7 +32,7 @@ pub fn call(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
 /// # Why every function answers the `[native code]` form
 ///
 /// Step 2 answers a function's `[[SourceText]]` — but only when `HostHasSourceTextAvailable` says
-/// so, and a host is allowed to say no. praxis says no for everything: a compiled chunk does not
+/// so, and a host is allowed to say no. ViperJS says no for everything: a compiled chunk does not
 /// keep the text it came from, and retaining it would mean holding every script alive for as long
 /// as any function in it. So step 3's `NativeFunction` form is what comes back, for a function
 /// written in JavaScript as much as for a built-in.

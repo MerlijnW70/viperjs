@@ -19,7 +19,7 @@ error in both modes. The other is to support the legacy behaviour: in sloppy cod
 parses and throws a `ReferenceError` when it runs, which is what browsers have always done and
 what the web depends on. Strict code is `invalid` either way — the host option does not reach it.
 
-praxis takes the first, for the reason DR-0008 takes the same side of the same question: this is
+ViperJS takes the first, for the reason DR-0008 takes the same side of the same question: this is
 not a web browser, and "unless the host is a web browser or otherwise supports X" is a sentence
 whose default answer here is no. Taking the second would mean carrying a *runtime* error for a
 shape that has no meaning — `f() = 1` cannot succeed under any circumstances, so the only thing

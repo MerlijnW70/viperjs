@@ -9,7 +9,7 @@ Every local-time operation in §21.4 goes through `LocalTZA(t, isUTC)`, and ther
 compute it from arithmetic: it is a property of the machine, and on most machines a function of the
 date as well, because of daylight saving.
 
-praxis cannot ask. `std::time::SystemTime` reports UTC and nothing else — that is the whole of what
+ViperJS cannot ask. `std::time::SystemTime` reports UTC and nothing else — that is the whole of what
 the standard library offers. The local offset lives behind `GetTimeZoneInformation` on Windows and
 `localtime_r` on Unix, and reaching either one costs a dependency (DR-0001 forbids it) or an
 `extern "C"` declaration, which is `unsafe` (DR-0002 forbids that). There is no third door.

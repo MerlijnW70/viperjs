@@ -68,10 +68,10 @@ impl Report {
 
 /// Whether a path under `test/` is a test this harness should run.
 ///
-/// Three things there are not tests praxis can be measured against:
+/// Three things there are not tests ViperJS can be measured against:
 ///
 /// - `staging/` — proposals that have not landed. Not normative, and failing them says nothing.
-/// - `intl402/` — ECMA-402, a different specification. praxis implements ECMA-262.
+/// - `intl402/` — ECMA-402, a different specification. ViperJS implements ECMA-262.
 /// - `_FIXTURE.js` — imported *by* module tests rather than run. `INTERPRETING.md` names them.
 pub fn is_test(path: &Path) -> bool {
     let name = path.file_name().unwrap_or_default().to_string_lossy();
@@ -405,7 +405,7 @@ mod tests {
     fn what_is_not_a_test_is_not_run() {
         assert!(is_test(Path::new("test/language/block-scope.js")));
         // `staging/` is proposals that have not landed, so failing them says nothing about
-        // conformance to the specification praxis implements.
+        // conformance to the specification ViperJS implements.
         assert!(!is_test(Path::new("test/staging/sm/anything.js")));
         // ECMA-402 is a different specification.
         assert!(!is_test(Path::new("test/intl402/DateTimeFormat/x.js")));
@@ -446,7 +446,7 @@ mod tests {
 
     #[test]
     fn the_suite_revision_is_read_out_of_git_in_each_of_the_shapes_it_takes() {
-        let root = std::env::temp_dir().join("praxis-conformance-revision");
+        let root = std::env::temp_dir().join("ViperJS-conformance-revision");
         let git = root.join(".git");
         let _ = std::fs::remove_dir_all(&root);
         std::fs::create_dir_all(git.join("refs/heads")).expect("a writable temp dir"); // the test needs one

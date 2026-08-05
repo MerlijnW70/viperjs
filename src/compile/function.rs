@@ -217,7 +217,7 @@ impl Compiler<'_> {
                 strict: match strict {
                     Strict::Yes => true,
                     Strict::No => false,
-                    // A body praxis synthesises — a field initialiser, a static block — has no source
+                    // A body ViperJS synthesises — a field initialiser, a static block — has no source
                     // of its own and so no directive: it is exactly as strict as what encloses it.
                     Strict::Inherited => self.chunk.strict,
                 },
@@ -337,7 +337,7 @@ impl Compiler<'_> {
         // one depends on what that name turns out to hold, which only the interpreter can see, so
         // the instruction carries the question rather than an answer.
         let direct_eval = matches!(&callee.kind, ExprKind::Identifier(name) if name == "eval");
-        // §10.2.11 step 19 makes an arguments object for every non-arrow function, and praxis skips
+        // §10.2.11 step 19 makes an arguments object for every non-arrow function, and ViperJS skips
         // it when the compiler saw nothing read the name. A direct eval can read it — the source
         // does not exist yet, so there is nothing to have seen — and a slot nothing filled would
         // answer `undefined` where the specification has an object. Whether this body has such a
@@ -501,7 +501,7 @@ pub(super) struct Nesting<'a> {
     ///
     /// Passed in rather than inherited from the enclosing compiler, because a body may *add*
     /// strictness with a directive of its own and the parser has already worked out the union. The
-    /// one exception is a body praxis synthesises, which has no source to have a directive in and
+    /// one exception is a body ViperJS synthesises, which has no source to have a directive in and
     /// takes the enclosing answer — the callers that pass `Strict::Inherited`.
     strict: bool,
     /// What §10.2.9 calls the function, if the position it was written in says.
@@ -560,7 +560,7 @@ impl<'a> Naming<'a> {
 
 /// Whether a body is strict code, or takes the enclosing answer — §11.2.1.
 ///
-/// Three values rather than a `bool`, because a body praxis *synthesises* has no source to carry a
+/// Three values rather than a `bool`, because a body ViperJS *synthesises* has no source to carry a
 /// directive and must not be read as sloppy: a field initialiser inside a class is strict because the
 /// class is, and nothing in the tree says so on its behalf.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

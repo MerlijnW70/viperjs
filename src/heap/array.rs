@@ -122,7 +122,7 @@ impl Heap {
             return DefineOutcome::Refused;
         }
         // §10.4.2.4 step 12 — a length that is not *smaller* deletes nothing, and the clause says
-        // so before it says anything about deleting. praxis went without the check for a while, on
+        // so before it says anything about deleting. ViperJS went without the check for a while, on
         // the grounds that no index can be at or above an array's own length so the walk finds
         // nothing anyway. True, and still wrong: the walk is over every key the object has, so a
         // `push` that only ever grows paid a pass over the array it was appending to. Ten thousand

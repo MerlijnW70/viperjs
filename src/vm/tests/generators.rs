@@ -21,7 +21,7 @@ fn calling_a_generator_function_runs_none_of_its_body() {
     // The arguments **are** bound at the call, which is what makes two generators from one
     // function independent — see `a_generator_keeps_the_this_and_the_arguments_of_the_call`.
     //
-    // A parameter *default* is not, and that is a known divergence rather than a claim: praxis
+    // A parameter *default* is not, and that is a known divergence rather than a claim: ViperJS
     // compiles defaults into the top of the body, so `function* g(a = side()) {}` runs `side` at
     // the first resumption where §15.5.4 runs it at the call. Fixing it means splitting the
     // prologue from the body so the call can run the first and park at the second, and it is

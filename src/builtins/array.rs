@@ -139,7 +139,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
 /// The reason is that `with` is a reserved word, so no code has ever referred to a binding by that
 /// name and there is nothing for it to shadow.
 ///
-/// **It is not conditioned on what praxis implements.** The list is what the clause says whether or
+/// **It is not conditioned on what ViperJS implements.** The list is what the clause says whether or
 /// not the method beside it exists, because a script reads the object rather than calling through
 /// it.
 ///

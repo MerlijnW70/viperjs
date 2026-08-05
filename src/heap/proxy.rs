@@ -2,7 +2,7 @@
 //!
 //! # Why a Proxy is not a wrapper
 //!
-//! Every other exotic object in praxis answers *more* than an ordinary one: a String object has
+//! Every other exotic object in ViperJS answers *more* than an ordinary one: a String object has
 //! characters, a TypedArray has elements, an Array has a live `length`. A Proxy answers **less** on
 //! its own — it has no properties of its own at all — and instead hands each of §6.1.7.2's internal
 //! methods to a function the handler supplies, falling back to the target when there is none.

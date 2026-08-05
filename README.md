@@ -1,6 +1,6 @@
 <div align="center">
 
-# praxis
+# ViperJS
 
 **An embeddable JavaScript engine in safe Rust, with zero runtime dependencies.**
 
@@ -16,6 +16,10 @@ It runs about **84% of test262** — classes, generators, `async`/`await`, ES mo
 `BigInt`, TypedArrays, and its own regular-expression engine. No `unsafe`, no crates, and no input
 makes it panic.
 
+> Three names, so that none of them surprises you: the **project** is ViperJS, the **crate** is
+> `viperjs`, and the **command** is `viper`. The repository is still called `praxis`, which is what
+> this was called before the rename — the git history says so and is left alone.
+
 ## Run some JavaScript right now
 
 A Rust toolchain and nothing else. No build script, no C compiler, no submodules.
@@ -23,7 +27,7 @@ A Rust toolchain and nothing else. No build script, no C compiler, no submodules
 ```sh
 git clone https://github.com/MerlijnW70/praxis && cd praxis
 cargo build --release
-./target/release/praxis -e "[1,2,3].map(n => n * n).join(',')"
+./target/release/viper -e "[1,2,3].map(n => n * n).join(',')"
 ```
 
 ```
@@ -33,10 +37,10 @@ cargo build --release
 Run a file, pipe one in, or type at a prompt:
 
 ```sh
-praxis script.js          # run a file
-cat script.js | praxis    # or pipe it
-praxis                    # a prompt, if stdin is a terminal
-praxis --help             # every option, which is not many
+viper script.js          # run a file
+cat script.js | viper    # or pipe it
+viper                    # a prompt, if stdin is a terminal
+viper --help             # every option, which is not many
 ```
 
 The host binds exactly one function, `print`. There is no `require`, no `fs` and no `console` —
@@ -57,11 +61,11 @@ print([...Array(10).keys()].map(fib).join(','));
 Untrusted input? `--time-budget` is DR-0022's bound, and a script **cannot catch it**:
 
 ```sh
-praxis --time-budget 100 -e "try { while (true) {} } catch (e) { 'caught' }"
+viper --time-budget 100 -e "try { while (true) {} } catch (e) { 'caught' }"
 ```
 
 ```
-praxis: the run was stopped: it spent its time budget
+viper: the run was stopped: it spent its time budget
 ```
 
 Exit status is `0` ran, `1` the script threw or would not parse, `2` the arguments made no sense.
@@ -71,10 +75,10 @@ Exit status is `0` ran, `1` the script threw or would not parse, `2` the argumen
 The whole surface fits on a screen. Run the real thing with `cargo run --example embed`:
 
 ```rust
-use praxis::api::{Engine, Error, Host};
-use praxis::heap::{Heap, NativeCall};
-use praxis::value::{Completion, Value};
-use praxis::vm::Vm;
+use viperjs::api::{Engine, Error, Host};
+use viperjs::heap::{Heap, NativeCall};
+use viperjs::value::{Completion, Value};
+use viperjs::vm::Vm;
 
 fn print(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let mut host = Host::new(vm, heap);
@@ -190,7 +194,7 @@ trade on offer.
 ## Building and testing
 
 ```sh
-cargo build --release      # the library and the `praxis` binary
+cargo build --release      # the library and the `viper` binary
 cargo test                 # the engine's tests, the CLI's, and the CLI as a process
 cargo test --workspace     # and the conformance harness and the lab
 cargo run --example embed  # the embedding tour
@@ -198,7 +202,7 @@ cargo run --example embed  # the embedding tour
 
 There is also `cargo run --release --example evaluate`, which reads **one script per line** and
 answers one per line. That is not a worse CLI — it is a differential-sweep tool, built to be fed a
-list of expressions and diffed against another engine's answers. Use `praxis` to run programs.
+list of expressions and diffed against another engine's answers. Use `viper` to run programs.
 
 Needs a toolchain with edition 2024 support; built with 1.97.
 

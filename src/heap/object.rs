@@ -543,7 +543,7 @@ impl Object {
     /// Give it that slot — what §20.5.1.1 and §20.5.6.1.1 do when they make an error.
     ///
     /// Separate from making the object because every error is built the ordinary way first and
-    /// then marked: praxis makes four kinds of error object in three places, and a constructor
+    /// then marked: ViperJS makes four kinds of error object in three places, and a constructor
     /// that took a flag would be a flag three callers could pass wrongly.
     pub fn make_error(&mut self) {
         self.error_data = true;

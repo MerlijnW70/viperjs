@@ -17,7 +17,7 @@
 //! - `array_sort` — §23.1.3.30 and §23.1.3.34, and the order that compares spellings.
 //! - `array_copy` — §23.1.3's change-copies, and the index that throws rather than clamps.
 //! - `array_flat` — §23.1.3's flattening, and the nesting that would exhaust a stack.
-//! - `annex_b` — the three clauses of Annex B praxis has: §B.2.2, §B.2.3 and §B.3.3.
+//! - `annex_b` — the three clauses of Annex B ViperJS has: §B.2.2, §B.2.3 and §B.3.3.
 //! - `species` — §7.3.23, and what a copying method answers *with*.
 //! - `set_ops` — §24.2.4's seven, and the size that decides which side is walked.
 //! - `shared` — §25.2's buffer and §25.4's `Atomics`, and the two brands that refuse each other.

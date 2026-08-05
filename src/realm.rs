@@ -302,7 +302,7 @@ impl Realm {
         let async_generator_prototype = heap.new_object(Some(async_iterator_prototype));
         let async_generator_function_prototype = heap.new_object(Some(function_prototype));
         // §27.7.3 — and the plain async function's, which is the fourth of the four and was the
-        // one praxis did not have. An ordinary object whose `[[Prototype]]` is %Function.prototype%,
+        // one ViperJS did not have. An ordinary object whose `[[Prototype]]` is %Function.prototype%,
         // exactly as the three above are: an `async function` is still a function.
         let async_function_prototype = heap.new_object(Some(function_prototype));
         // §10.2.4.1 %ThrowTypeError% — a function whose whole behaviour is to refuse, made here
@@ -894,7 +894,7 @@ fn define(heap: &mut Heap, object: ObjectId, name: &str, value: Value) {
 /// The specification's own name for it is a percent-delimited intrinsic, because no script can
 /// name it: it appears only where a clause puts it, as the getter and setter of a property that
 /// exists to be unreadable. `arguments.callee` on a function with a default parameter is the one
-/// place praxis reaches for it so far.
+/// place ViperJS reaches for it so far.
 fn refuse(
     _vm: &mut crate::vm::Vm,
     _heap: &mut Heap,

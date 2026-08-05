@@ -231,7 +231,7 @@ impl Vm {
     /// is a conversion, and this converts its *argument* while borrowing the machine.
     ///
     /// `undefined` and `null` have none, which is step 1 and 2's TypeError. A String has one and
-    /// praxis cannot make it yet: §10.4.3's String exotic object has an own property per index,
+    /// ViperJS cannot make it yet: §10.4.3's String exotic object has an own property per index,
     /// which is a second exotic object and a slice of its own.
     pub(crate) fn object_for(&mut self, value: Value, heap: &mut Heap) -> Completion<Value> {
         let wrapped = match value {

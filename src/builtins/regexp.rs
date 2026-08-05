@@ -401,7 +401,7 @@ fn test(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
 ///
 /// # Why this is here when DR-0008 leaves Annex B out
 ///
-/// DR-0008 is about Annex B's *syntactic* extensions — the grammar praxis will not grow. This is a
+/// DR-0008 is about Annex B's *syntactic* extensions — the grammar ViperJS will not grow. This is a
 /// **built-in**, and a built-in is a property on an object rather than a way of writing a program:
 /// leaving it out would refuse a method the web depends on for no reason the decision record gives.
 ///

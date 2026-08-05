@@ -62,7 +62,7 @@ fn a_wrapper_constructor_converts_when_called_and_wraps_when_constructed() {
 
 #[test]
 fn a_method_of_one_kind_will_not_read_the_other_kind() {
-    // §20.3.3's `thisBooleanValue` and §21.1.3's `thisNumberValue`. praxis keeps one slot holding
+    // §20.3.3's `thisBooleanValue` and §21.1.3's `thisNumberValue`. ViperJS keeps one slot holding
     // the primitive and lets the *value* say which kind it is, so this is the row that proves the
     // two are still told apart.
     assert_eq!(run("new Number(5).valueOf()"), "5");
@@ -88,7 +88,7 @@ fn a_method_of_one_kind_will_not_read_the_other_kind() {
     assert_eq!(run("Number.prototype.toFixed(2)"), "0.00");
     assert_eq!(run("Boolean.prototype.valueOf()"), "false");
     assert_eq!(run("Boolean.prototype.toString()"), "false");
-    // §22.1.3 says the same of `String.prototype`, whose primitive is the empty String — praxis
+    // §22.1.3 says the same of `String.prototype`, whose primitive is the empty String — ViperJS
     // has always made that one a String exotic object, which is what carries it.
     assert_eq!(run("String.prototype.valueOf()"), "");
     assert_eq!(run("String.prototype.length"), "0");
@@ -208,7 +208,7 @@ fn the_number_predicates_do_not_convert_and_that_is_the_point_of_them() {
 
 #[test]
 fn reading_a_property_of_a_primitive_finds_its_prototype() {
-    // §7.3.2 `GetV` — a primitive is wrapped and the read goes to the wrapper. praxis consults
+    // §7.3.2 `GetV` — a primitive is wrapped and the read goes to the wrapper. ViperJS consults
     // the prototype directly instead, which is the same answer because a Number wrapper and a
     // Boolean wrapper have no own properties at all.
     assert_eq!(run("typeof (1).toString"), "function");

@@ -1,10 +1,10 @@
-//! `praxis` — run JavaScript from a command line.
+//! `viper` — run JavaScript from a command line.
 //!
 //! ```text
-//! praxis script.js              run a file
-//! praxis -e "1 + 1"             run one expression
-//! cat script.js | praxis        run standard input
-//! praxis                        a prompt, if standard input is a terminal
+//! viper script.js              run a file
+//! viper -e "1 + 1"             run one expression
+//! cat script.js | viper        run standard input
+//! viper                        a prompt, if standard input is a terminal
 //! ```
 //!
 //! # Why the engine ships one at all
@@ -27,20 +27,20 @@
 //! with no way to say anything is hard to evaluate — everything else is the host's to provide, and
 //! this host provides nothing.
 //!
-//! Modules are not run here either. [`praxis::api::Engine`] evaluates Script code, and a Module is
+//! Modules are not run here either. [`viperjs::api::Engine`] evaluates Script code, and a Module is
 //! a different goal symbol needing a resolver; `--module` would be a flag that lies. When the
 //! embedding surface grows one, this gains the flag.
 
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
-use praxis::api::{Engine, Error, Host};
-use praxis::heap::{Heap, NativeCall};
-use praxis::value::{Completion, Value};
-use praxis::vm::Vm;
 use std::io::{IsTerminal, Read, Write};
 use std::process::ExitCode;
 use std::time::Duration;
+use viperjs::api::{Engine, Error, Host};
+use viperjs::heap::{Heap, NativeCall};
+use viperjs::value::{Completion, Value};
+use viperjs::vm::Vm;
 
 /// What the command line asked for.
 ///
@@ -76,7 +76,7 @@ struct Asked {
 /// Read the arguments — everything after the program's own name.
 ///
 /// `interactive` is whether standard input is a terminal, which is the one thing that decides what
-/// a bare `praxis` means: a prompt when a person is typing, and "read the pipe" when something else
+/// a bare `viper` means: a prompt when a person is typing, and "read the pipe" when something else
 /// is. Passed in rather than asked here so that the answer is a *test's* to choose.
 ///
 /// Nothing here allocates a parser or reaches for a crate. Five options is not a grammar, and
@@ -120,7 +120,7 @@ fn read_arguments(arguments: &[String], interactive: bool) -> Asked {
     }
     Asked {
         // Nothing named: a person at a terminal gets a prompt, and a pipe gets read. The second is
-        // the case that makes `cat script.js | praxis` work and `examples/evaluate` not.
+        // the case that makes `cat script.js | viper` work and `examples/evaluate` not.
         command: command.unwrap_or(match interactive {
             true => Command::Prompt,
             false => Command::Stdin,
@@ -141,13 +141,13 @@ impl Asked {
 
 /// The usage text, which is also the documentation.
 const USAGE: &str = "\
-praxis — an embeddable JavaScript engine, on a command line
+viper — ViperJS, an embeddable JavaScript engine, on a command line
 
 usage:
-  praxis <file>              run a file as a Script
-  praxis -e <source>         run source given here
-  praxis -                   run standard input, even from a terminal
-  praxis                     run standard input, or prompt if it is a terminal
+  viper <file>              run a file as a Script
+  viper -e <source>         run source given here
+  viper -                   run standard input, even from a terminal
+  viper                     run standard input, or prompt if it is a terminal
 
 options:
   -e, --eval <source>        source to run
@@ -169,7 +169,7 @@ exit status: 0 ran, 1 the script threw or would not parse, 2 the arguments made 
 fn print(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let mut host = Host::new(vm, heap);
     let text = host.text(call.argument(0))?;
-    // A closed pipe is not this program's problem — `praxis big.js | head` is an ordinary thing to
+    // A closed pipe is not this program's problem — `viper big.js | head` is an ordinary thing to
     // write, and the script goes on running as it would with any other host.
     let _ = writeln!(std::io::stdout(), "{text}");
     Ok(Value::Undefined)
@@ -188,18 +188,18 @@ fn main() -> ExitCode {
             ExitCode::SUCCESS
         }
         Command::Version => {
-            println!("praxis {}", env!("CARGO_PKG_VERSION"));
+            println!("viper {}", env!("CARGO_PKG_VERSION"));
             ExitCode::SUCCESS
         }
         Command::Bad(why) => {
-            eprintln!("praxis: {why}");
+            eprintln!("viper: {why}");
             eprint!("{USAGE}");
             ExitCode::from(2)
         }
         Command::File(path) => match std::fs::read_to_string(&path) {
             Ok(source) => run(&mut engine, &source, Show::Nothing),
             Err(why) => {
-                eprintln!("praxis: {path}: {why}");
+                eprintln!("viper: {path}: {why}");
                 ExitCode::from(2)
             }
         },
@@ -209,7 +209,7 @@ fn main() -> ExitCode {
             match std::io::stdin().read_to_string(&mut source) {
                 Ok(_) => run(&mut engine, &source, Show::Nothing),
                 Err(why) => {
-                    eprintln!("praxis: could not read standard input: {why}");
+                    eprintln!("viper: could not read standard input: {why}");
                     ExitCode::from(2)
                 }
             }
@@ -243,16 +243,13 @@ fn run(engine: &mut Engine, source: &str, show: Show) -> ExitCode {
             // The answer exists and describing it threw — a `toString` of its own that failed.
             // The run still succeeded, so this is a message rather than a status.
             Err(error) => {
-                eprintln!(
-                    "praxis: could not describe the answer: {}",
-                    describe(&error)
-                );
+                eprintln!("viper: could not describe the answer: {}", describe(&error));
                 ExitCode::SUCCESS
             }
         },
         Ok(_) => ExitCode::SUCCESS,
         Err(error) => {
-            eprintln!("praxis: {}", describe(&error));
+            eprintln!("viper: {}", describe(&error));
             ExitCode::FAILURE
         }
     }
@@ -266,7 +263,7 @@ fn describe(error: &Error) -> String {
         Error::Interrupted => "the run was stopped: it spent its time budget".to_string(),
         Error::Collected => "a value was read after the collector had freed it".to_string(),
         // DR-0002: a script cannot cause this, so it is a bug report and says so.
-        Error::Engine(fault) => format!("internal error, which is a bug in praxis: {fault:?}"),
+        Error::Engine(fault) => format!("internal error, which is a bug in ViperJS: {fault:?}"),
     }
 }
 
@@ -294,7 +291,7 @@ fn prompt_line(line: &str) -> Option<&str> {
 /// was *at the end of input* or somewhere a second line could not fix.
 fn prompt(engine: &mut Engine) -> ExitCode {
     println!(
-        "praxis {} — one line is one script, ^D to leave",
+        "ViperJS {} — one line is one script, ^D to leave",
         env!("CARGO_PKG_VERSION")
     );
     let input = std::io::stdin();
@@ -310,7 +307,7 @@ fn prompt(engine: &mut Engine) -> ExitCode {
             }
             Ok(_) => {}
             Err(why) => {
-                eprintln!("praxis: {why}");
+                eprintln!("viper: {why}");
                 return ExitCode::FAILURE;
             }
         }
@@ -334,8 +331,8 @@ mod tests {
     #[test]
     fn a_bare_invocation_prompts_at_a_terminal_and_reads_the_pipe_otherwise() {
         // The one decision that cannot be made from the arguments alone, and the reason
-        // `read_arguments` is handed the answer rather than asking: `cat x.js | praxis` has to
-        // read, and a person typing `praxis` has to be given a prompt rather than a silent hang.
+        // `read_arguments` is handed the answer rather than asking: `cat x.js | ViperJS` has to
+        // read, and a person typing `ViperJS` has to be given a prompt rather than a silent hang.
         assert_eq!(read(&[], true).command, Command::Prompt);
         assert_eq!(read(&[], false).command, Command::Stdin);
         // …and `-` says "the pipe" out loud, which is what makes it reachable from a terminal.
@@ -370,7 +367,7 @@ mod tests {
             Command::Source("1 + 1".to_string())
         );
         assert!(matches!(read(&["-e"], false).command, Command::Bad(_)));
-        // The source is taken as *source*, not re-read as an option — `praxis -e "-h"` runs a
+        // The source is taken as *source*, not re-read as an option — `ViperJS -e "-h"` runs a
         // script, and consuming the argument is what makes that true.
         assert_eq!(
             read(&["-e", "-h"], false).command,

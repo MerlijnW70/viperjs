@@ -32,7 +32,7 @@
 //!
 //! # What is not here: Annex B
 //!
-//! Several rules read "…unless the host is a web browser or otherwise supports X". praxis is not
+//! Several rules read "…unless the host is a web browser or otherwise supports X". ViperJS is not
 //! a web browser, and DR-0008 has the argument — the short version being that Annex B.1's
 //! *lexical* extensions are implemented, because a token is a token, and B.3's *syntactic* ones
 //! are not.

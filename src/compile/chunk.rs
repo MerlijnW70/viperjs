@@ -191,7 +191,7 @@ pub struct ImportEntry {
     pub slot: Option<u32>,
 }
 
-/// One `export` — §16.2.1.3's `ExportEntry`, in the one shape praxis resolves.
+/// One `export` — §16.2.1.3's `ExportEntry`, in the one shape ViperJS resolves.
 #[derive(Debug, Clone)]
 pub struct ExportEntry {
     /// The name other modules ask for.
@@ -674,7 +674,7 @@ pub enum Instruction {
     ///
     /// `with (o) { eval("x") }` is still a **direct** eval — §13.3.6.1 asks how the callee was
     /// *written*, and a bare `eval` inside a `with` is written the same way as one anywhere else.
-    /// What the `with` adds is a receiver, and praxis decided the call's shape and its directness
+    /// What the `with` adds is a receiver, and ViperJS decided the call's shape and its directness
     /// with one `match`: a receiver made it `CallMethod` and the direct-eval question was dropped.
     /// So the text ran as an **indirect** eval, in the global scope, and read the wrong variables
     /// without refusing anything.
@@ -746,7 +746,7 @@ pub enum Instruction {
     ThrowSuperDelete,
     /// Give the function on top of the stack the running function's `[[HomeObject]]`.
     ///
-    /// For the bodies praxis synthesises to stand in for inline code — a derived class's instance
+    /// For the bodies ViperJS synthesises to stand in for inline code — a derived class's instance
     /// field initialisers, which §15.7.14 runs from `super()` rather than on entry. Written inline
     /// those statements would see the constructor's home; as a body of their own they have none, so
     /// this is what an arrow's capture does, for a function that is not an arrow and needs its own
@@ -765,7 +765,7 @@ pub enum Instruction {
     NewPrivateName(u32),
     /// `{__proto__: v}` — B.3.1, which sets the prototype instead of making a property.
     ///
-    /// An **Annex B** rule and the one praxis implements, for the reasons in DR-0008: it is not
+    /// An **Annex B** rule and the one ViperJS implements, for the reasons in DR-0008: it is not
     /// conditioned on strictness, and leaving it out is a silent wrong answer rather than a refusal —
     /// the grammar already accepts `__proto__: x`, so there is nothing to reject.
     ///
@@ -970,7 +970,7 @@ pub enum Instruction {
     ///
     /// The operand names a [`Scope`] exactly as [`Instruction::PushScope`] does, and for the same
     /// reason: the compiler still needs a level of its own for the temporaries a body's statements
-    /// make. §9.1.1.2's record has only the object; praxis's has the object *and* those slots, and
+    /// make. §9.1.1.2's record has only the object; ViperJS's has the object *and* those slots, and
     /// nothing can tell — a temporary is spelled with a `%` no source can write, and the name walk
     /// that a `with` body's identifiers go through asks the object and never the slots.
     ///

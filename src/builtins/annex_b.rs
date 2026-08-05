@@ -5,7 +5,7 @@
 //! They predate §6.2.6's property descriptors. `__defineGetter__` was how an accessor was made
 //! before `Object.defineProperty` existed, and Annex B records it as "normative optional" because
 //! the web has too much code using it for a browser to remove. DR-0008 already takes the position
-//! that praxis implements Annex B's *lexical* extensions; these are library ones, and they cost
+//! that ViperJS implements Annex B's *lexical* extensions; these are library ones, and they cost
 //! four short functions.
 //!
 //! # What they are not

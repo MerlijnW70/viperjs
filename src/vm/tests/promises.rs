@@ -942,7 +942,7 @@ fn number_holds_the_same_two_parsers_the_global_does() {
 #[test]
 fn a_combinator_that_gives_up_part_way_closes_the_iterable() {
     // §27.2.4.1 step 8.a and its three siblings — an abrupt walk closes the iterator unless the
-    // iterator is where it went wrong. praxis had no such step at all, so `Promise.all` over an
+    // iterator is where it went wrong. ViperJS had no such step at all, so `Promise.all` over an
     // iterable whose `C.resolve` throws left it open; and a `resolve` that throws is the first
     // thing that happens after a value has been taken.
     let combinator = |name: &str| {

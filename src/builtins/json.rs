@@ -40,7 +40,7 @@ use crate::vm::Vm;
 /// there is somebody who knows how much stack there actually is.
 pub(super) const MAX_JSON_DEPTH: u32 = 64;
 
-/// The refusal all three share — §25.5 has no error for this, so praxis picks one and explains it.
+/// The refusal all three share — §25.5 has no error for this, so ViperJS picks one and explains it.
 ///
 /// A **RangeError** rather than a SyntaxError, even from the reader. The text is perfectly good
 /// JSON; what ran out is this engine's willingness to descend, which is a resource question and is
@@ -128,7 +128,7 @@ fn parse(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
 /// runs at every node and may put anything it likes where it was called, so what this descends
 /// through is a graph the script builds as the walk goes — see [`MAX_JSON_DEPTH`]. That is not a
 /// hypothetical: test262's `reviver-array-length-coerce-err.js` hands back a Proxy on every call and
-/// walked praxis off the end of the stack.
+/// walked ViperJS off the end of the stack.
 ///
 /// **Level 0 is the wrapper, which is not part of the document**, so the document's own root is
 /// level 1 and the cap is reached one level later than the reader's. That is what makes a text the

@@ -284,7 +284,7 @@ fn a_parameter_is_in_a_dead_zone_until_it_is_bound() {
     // §10.2.11 step 21 — with no duplicate names every parameter's binding is created
     // *uninitialised*, and `IteratorBindingInitialization` fills it as the parameter is bound. So
     // the bindings all exist before any default runs, and a default that reads one not yet bound
-    // reads nothing. praxis had the *call* write straight into the named slots, so there was never
+    // reads nothing. ViperJS had the *call* write straight into the named slots, so there was never
     // anything uninitialised and both of these ran.
     assert_eq!(
         run(

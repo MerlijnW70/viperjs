@@ -1,4 +1,4 @@
-//! The three clauses of Annex B praxis implements, which have nothing to do with each other.
+//! The three clauses of Annex B ViperJS implements, which have nothing to do with each other.
 //!
 //! - **§B.2.2** — `Object.prototype`'s four accessor methods.
 //! - **§B.2.3** — `String.prototype`'s thirteen that wrap a string in an HTML tag.
@@ -675,7 +675,7 @@ fn each_of_the_thirteen_is_an_ordinary_method_of_string_prototype() {
 fn annex_bs_accessor_helpers_go_through_the_internal_methods() {
     // §B.2.2.1 defines with `DefinePropertyOrThrow`, which is §10.1.6 **or** §10.5.6 — so a Proxy's
     // `defineProperty` trap runs for `p.__defineGetter__('x', f)` exactly as it does for
-    // `Object.defineProperty`. praxis wrote through the heap, which walks past a Proxy: a trap that
+    // `Object.defineProperty`. ViperJS wrote through the heap, which walks past a Proxy: a trap that
     // threw was never called, and one that refused was never heard.
     assert_eq!(
         run(

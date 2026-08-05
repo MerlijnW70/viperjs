@@ -75,7 +75,7 @@ pub enum ErrorKind {
     /// A construct the compiler does not handle yet, named as the specification names it.
     ///
     /// Not a syntax error: the parser accepted it and the tree is well-formed. This is the engine
-    /// saying what it has not been taught, and it exists so that the answer to "does praxis
+    /// saying what it has not been taught, and it exists so that the answer to "does ViperJS
     /// support X" is a message with a span rather than a wrong value.
     Unsupported(&'static str),
     /// More than `u32::MAX` constants in one chunk.
@@ -133,13 +133,13 @@ pub fn compile_script(script: &Script, heap: &mut Heap) -> Result<Chunk, Compile
 /// written directly in a script cannot delete anything.
 ///
 /// ```
-/// use praxis::compile::{Deletable, Instruction, compile_eval, compile_script};
-/// use praxis::heap::Heap;
-/// use praxis::parser::parse_script;
+/// use viperjs::compile::{Deletable, Instruction, compile_eval, compile_script};
+/// use viperjs::heap::Heap;
+/// use viperjs::parser::parse_script;
 ///
 /// let mut heap = Heap::default();
 /// let script = parse_script("var x = 1;").expect("this parses");
-/// let deletable = |chunk: &praxis::compile::Chunk| {
+/// let deletable = |chunk: &viperjs::compile::Chunk| {
 ///     chunk.code().iter().find_map(|instruction| match instruction {
 ///         Instruction::DeclareGlobal { deletable, .. } => Some(*deletable),
 ///         _ => None,
@@ -723,7 +723,7 @@ pub enum EvalVars {
     /// a ReferenceError — so the eval's own environment is a place they can go that is sized when
     /// its chunk is compiled.
     Own,
-    /// A sloppy `var` inside a function, which praxis refuses by name.
+    /// A sloppy `var` inside a function, which ViperJS refuses by name.
     ///
     /// §19.2.1.1 would add the binding to the *caller's* function scope, whose slot count was fixed
     /// when that function was compiled. No name list makes a `Vec` longer, so this is the one shape
@@ -804,7 +804,7 @@ pub fn compile_direct_eval(
             }
             // A **function declaration** at the top level is var-scoped too and is not one of those
             // names: `VarDeclaredNames` and `TopLevelVarDeclaredNames` differ on exactly this
-            // production, and praxis computes the first. Left out, `eval("function h(){}")` inside
+            // production, and ViperJS computes the first. Left out, `eval("function h(){}")` inside
             // a function would put `h` in a slot that goes away with the eval — a name the caller
             // asked for and cannot find, which is a wrong answer that runs.
             if let Some(statement) = script

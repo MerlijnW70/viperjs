@@ -30,7 +30,7 @@ use crate::span::Span;
 /// one containing an escape that the lexer would have rejected.
 ///
 /// ```
-/// use praxis::lexer::{Goal, Lexer, TokenKind, string_value};
+/// use viperjs::lexer::{Goal, Lexer, TokenKind, string_value};
 ///
 /// let source = r#""café""#;
 /// let token = Lexer::new(source).next_token(Goal::Div).expect("this lexes");

@@ -4,7 +4,7 @@
 //!
 //! `[1, 2, 3].values().map(f)` returns *immediately*, having called `f` not at all. What comes back
 //! is an iterator that will call it once per `next`, and the specification models that as a
-//! generator with internal slots. praxis has no generators yet, so the state a generator would keep
+//! generator with internal slots. ViperJS has no generators yet, so the state a generator would keep
 //! in its frame is kept here explicitly: what it is drawing from, what it does to what it draws,
 //! and how far it has got.
 //!

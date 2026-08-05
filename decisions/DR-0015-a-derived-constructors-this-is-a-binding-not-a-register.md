@@ -4,7 +4,7 @@ title: A derived constructor's `this` is a binding, not a register
 status: prose-only
 ---
 
-Every function in praxis gets its `this` from a register: the call decides it, `LoadThis` pushes it,
+Every function in ViperJS gets its `this` from a register: the call decides it, `LoadThis` pushes it,
 and a frame puts the caller's back on the way out. That works because `this` cannot change during a
 call — it is decided once, at entry, and read as many times as the body likes.
 
@@ -66,7 +66,7 @@ benchmark, on the same terms as everything else there.
 
 Base constructors, methods and every plain function keep the register — giving them all a `%this`
 slot would mean the call filling one per entry for a binding nothing reads. So `this` has two
-representations in praxis, and the compiler picks. That is a genuine cost and it is bounded by being
+representations in ViperJS, and the compiler picks. That is a genuine cost and it is bounded by being
 one flag with one propagation rule, which mirrors `[[ThisMode]]`:
 
 > A body is compiled with `this` as a binding if it is a derived constructor, **or** if it is an

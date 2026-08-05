@@ -1544,7 +1544,7 @@ fn a_tracking_view_is_out_of_bounds_when_its_offset_is_past_the_buffer() {
     // throwing, so a program can still ask what became of it. **Both answer zero**, which this row
     // used to deny: §23.2.3.3 step 4 returns `+0` for an out-of-bounds view rather than the stored
     // offset, exactly as §23.2.3.2 and §23.2.3.18 do for the two lengths. The old row asserted `4`
-    // — what praxis did, worded as though the clause only promised *an* answer — and the
+    // — what ViperJS did, worded as though the clause only promised *an* answer — and the
     // conformance suite is what caught it.
     assert_eq!(
         run("var rab = new ArrayBuffer(8, {maxByteLength: 16}); \
@@ -1593,7 +1593,7 @@ fn a_tracking_view_is_out_of_bounds_when_its_offset_is_past_the_buffer() {
         run("var t = new Uint8Array(new ArrayBuffer(8), 4); Array.from(t.keys()).length"),
         "4"
     );
-    // §25.3's `DataView` is the same rule over the same window, and praxis shares the code.
+    // §25.3's `DataView` is the same rule over the same window, and ViperJS shares the code.
     assert_eq!(
         run("var rab = new ArrayBuffer(8, {maxByteLength: 16}); \
              var d = new DataView(rab, 4); rab.resize(2); \
@@ -1769,7 +1769,7 @@ fn a_detached_buffer_leaves_a_view_with_no_indices_at_all() {
 
 #[test]
 fn a_write_through_another_receiver_never_reaches_the_buffer() {
-    // §10.4.5.4 step 2.b.i — the element is written only when `SameValue(O, Receiver)`. praxis took
+    // §10.4.5.4 step 2.b.i — the element is written only when `SameValue(O, Receiver)`. ViperJS took
     // this path before consulting the receiver at all, on a comment that said "the element belongs
     // to the buffer and no receiver can move it elsewhere" — which is the *define* clause's rule,
     // not this one.
@@ -1860,7 +1860,7 @@ fn a_tracking_view_takes_a_different_branch_from_a_fixed_one() {
     // §23.2.5.1 step 7 and step 8 are alternatives, not one branch with a flag. A view over a
     // **resizable** buffer with no explicit length tracks it, and step 7 has no modulo rule — so a
     // ten-byte resizable buffer is an `Int32Array` of two, where the same ten bytes fixed are a
-    // RangeError. praxis ran step 8's checks over both and refused the first outright.
+    // RangeError. ViperJS ran step 8's checks over both and refused the first outright.
     assert_eq!(
         run(
             "var rab = new ArrayBuffer(10, { maxByteLength: 20 }); var ta = new Int32Array(rab); \

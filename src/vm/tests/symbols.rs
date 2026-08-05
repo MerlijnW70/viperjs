@@ -187,7 +187,7 @@ fn the_well_known_symbols_exist_and_are_the_same_ones_every_time() {
 
 #[test]
 fn to_string_tag_renames_what_object_prototype_to_string_reports() {
-    // §20.1.3.6 step 15 — the first well-known Symbol praxis acts on, and the supported way for a
+    // §20.1.3.6 step 15 — the first well-known Symbol ViperJS acts on, and the supported way for a
     // script to name its own type here.
     assert_eq!(
         run(

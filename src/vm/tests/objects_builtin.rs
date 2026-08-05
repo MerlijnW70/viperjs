@@ -110,7 +110,7 @@ fn a_descriptor_field_may_be_inherited_because_6_2_6_5_asks_has_property() {
 fn a_descriptor_field_may_be_a_getter_because_6_2_6_5_asks_get() {
     // The other half of the same sentence. §6.2.6.5 reads each field with `HasProperty` and then
     // **`Get`**, and `Get` calls an accessor — so a descriptor may compute its own fields. Reading
-    // the property table instead finds the accessor and has nothing to do with it; praxis used to
+    // the property table instead finds the accessor and has nothing to do with it; ViperJS used to
     // refuse outright, which turned a legal descriptor into a TypeError.
     assert_eq!(
         run("var o = {}; Object.defineProperty(o, 'x', { get value() { return 5; } }); o.x"),

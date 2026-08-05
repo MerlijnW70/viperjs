@@ -244,7 +244,7 @@ fn a_block_entered_twice_makes_its_lexical_bindings_twice() {
     // §14.2.2 — a block's Declarative Environment Record is made when the block is *entered*, so a
     // loop body entered three times has made three of them and the closures made in each hold
     // three different bindings. This is the one thing everybody knows ES2015 changed, and until
-    // this slice praxis refused it rather than answering `2,2,2`.
+    // this slice ViperJS refused it rather than answering `2,2,2`.
     assert_eq!(
         run(
             "var f = []; for (var i = 0; i < 3; i++) { let x = i; f.push(function () { return x; }); }              f[0]() + ',' + f[1]() + ',' + f[2]()"

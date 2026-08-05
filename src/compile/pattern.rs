@@ -147,7 +147,7 @@ impl Compiler<'_> {
     ///
     /// `0, [{}[thrower()]] = iterable` must call `next` **zero** times: the target throws while the
     /// iterator is still untouched, so §13.15.5.2 step 5 closes it and nothing was ever asked of
-    /// it. praxis stepped first, and the doc on [`Compiler::assign_target`] said evaluating the
+    /// it. ViperJS stepped first, and the doc on [`Compiler::assign_target`] said evaluating the
     /// reference earlier "is not an option" — it is what the clause requires, and the two orders
     /// are told apart by any target with an effect in it.
     ///

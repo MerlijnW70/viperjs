@@ -2,15 +2,15 @@
 
 use crate::Negative;
 use crate::frontmatter::Frontmatter;
-use praxis::compile::ErrorKind;
-use praxis::compile::{compile_module, compile_script};
-use praxis::heap::Heap;
-use praxis::parser::{parse_module, parse_script};
-use praxis::vm::{Graph, Outcome as VmOutcome, Vm};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::Duration;
+use viperjs::compile::ErrorKind;
+use viperjs::compile::{compile_module, compile_script};
+use viperjs::heap::Heap;
+use viperjs::parser::{parse_module, parse_script};
+use viperjs::vm::{Graph, Outcome as VmOutcome, Vm};
 
 /// What happened when a test was run.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -300,7 +300,7 @@ const HOST: &str = "var $262 = { global: globalThis, detachArrayBuffer: function
 /// The host's `$DONE`, in the terms §INTERPRETING.md gives it.
 ///
 /// test262 ships `harness/doneprintHandle.js`, which spells the same thing in terms of a host
-/// `print`. This is that with the printing taken out: praxis has no `print` and inventing one would
+/// `print`. This is that with the printing taken out: ViperJS has no `print` and inventing one would
 /// be a second host function to explain, where what is actually needed is somewhere to put one
 /// word. No test in the suite includes `doneprintHandle.js` itself, so nothing is being overridden.
 ///
@@ -331,7 +331,7 @@ const PROBE: &str = "$__status;";
 ///
 /// §16's early errors are reported by the parser for most of the grammar and by the compiler for
 /// §22.2.1's patterns, and test262 calls the phase either `parse` or `early`. Both mean "before
-/// anything ran", which is the only distinction praxis draws — so both are accepted here and
+/// anything ran", which is the only distinction ViperJS draws — so both are accepted here and
 /// neither is checked against the other.
 fn judge_early(negative: Option<&Negative>, why: &str) -> Verdict {
     judge_before_running(negative, why, &["parse", "early"])
@@ -383,13 +383,13 @@ struct Beside {
     directory: PathBuf,
 }
 
-impl praxis::vm::ModuleLoader for Beside {
+impl viperjs::vm::ModuleLoader for Beside {
     fn load(
         &mut self,
         _referrer: Option<&str>,
         specifier: &str,
         heap: &mut Heap,
-    ) -> Result<(String, Rc<praxis::compile::Chunk>), String> {
+    ) -> Result<(String, Rc<viperjs::compile::Chunk>), String> {
         let path = self
             .directory
             .join(specifier.replace('/', std::path::MAIN_SEPARATOR_STR));
@@ -426,8 +426,8 @@ fn gather(graph: &mut Graph, from: &str, beside: &Path, heap: &mut Heap) -> Resu
                 .exports()
                 .iter()
                 .filter_map(|export| match &export.from {
-                    praxis::compile::ExportSource::Indirect { specifier, .. } => Some(specifier),
-                    praxis::compile::ExportSource::Local(_) => None,
+                    viperjs::compile::ExportSource::Indirect { specifier, .. } => Some(specifier),
+                    viperjs::compile::ExportSource::Local(_) => None,
                 }),
         )
         .chain(chunk.star_exports())
@@ -458,9 +458,9 @@ fn gather(graph: &mut Graph, from: &str, beside: &Path, heap: &mut Heap) -> Resu
 /// than by two copies of everything below.
 enum Goal {
     /// §16.1's `Script`.
-    Script(praxis::ast::Script),
+    Script(viperjs::ast::Script),
     /// §16.2's `Module`.
-    Module(praxis::ast::Module),
+    Module(viperjs::ast::Module),
 }
 
 /// Run a whole program and decide what its frontmatter says about the result.
@@ -485,13 +485,13 @@ fn evaluate(
         Ok(parsed) => parsed,
         Err(error) => {
             // §16's early errors are reported by the parser, and test262 calls that phase either
-            // `parse` or `early`. Both mean "before anything ran", which is what praxis's parser
+            // `parse` or `early`. Both mean "before anything ran", which is what ViperJS's parser
             // decides — so both are accepted here and the distinction between them is not one
             // this engine draws.
             return judge_early(negative, &error.kind.to_string());
         }
     };
-    // A construct praxis cannot compile is not a failure of the *test*: nothing was run, so
+    // A construct ViperJS cannot compile is not a failure of the *test*: nothing was run, so
     // nothing can be said about what it would have done. Counting these as failures would fill
     // the expectations file with the same sentence thousands of times and hide the real ones.
     //
@@ -533,7 +533,7 @@ fn evaluate(
     }));
     // §16.2.1.7 `HostLoadImportedModule` is the host's, and this host is a directory: a specifier
     // is a path beside the test. Everything it reaches is read, parsed and compiled here, and the
-    // engine is handed a graph it can link — see `praxis::vm::Graph`.
+    // engine is handed a graph it can link — see `viperjs::vm::Graph`.
     //
     // *Every* module goes through this, including one that imports nothing: linking a graph of one
     // is what §16.2.1.6 says to do, and a second path for the empty case would be a branch whose
@@ -640,9 +640,9 @@ fn reported(vm: &mut Vm, heap: &mut Heap) -> Verdict {
 /// An error's *constructor name* is what the frontmatter names, and reading it back needs the
 /// `name` its prototype carries. Anything that is not an object with one is described by what it
 /// is instead, which is what a test that threw a string should say.
-fn describe(thrown: praxis::value::Value, heap: &mut Heap) -> String {
-    use praxis::heap::{PropertyKey, PropertyKind};
-    use praxis::value::Value;
+fn describe(thrown: viperjs::value::Value, heap: &mut Heap) -> String {
+    use viperjs::heap::{PropertyKey, PropertyKind};
+    use viperjs::value::Value;
 
     let Value::Object(object) = thrown else {
         let what = thrown.type_of(heap);
@@ -674,7 +674,7 @@ fn describe(thrown: praxis::value::Value, heap: &mut Heap) -> String {
 /// next, and seventeen thousand lines reading `it threw ReferenceError` say nothing at all —
 /// where `ReferenceError: Object is not defined` names the builtin that is missing and sorts
 /// itself into a bucket.
-fn explain(thrown: praxis::value::Value, heap: &mut Heap) -> String {
+fn explain(thrown: viperjs::value::Value, heap: &mut Heap) -> String {
     let kind = describe(thrown, heap);
     match message(thrown, heap) {
         Some(message) if !message.is_empty() => format!("{kind}: {message}"),
@@ -686,9 +686,9 @@ fn explain(thrown: praxis::value::Value, heap: &mut Heap) -> String {
 ///
 /// Own rather than inherited, because §20.5.3.3 puts an empty `message` on `Error.prototype` and
 /// an inherited empty string is the absence of a message rather than a message.
-fn message(thrown: praxis::value::Value, heap: &mut Heap) -> Option<String> {
-    use praxis::heap::{PropertyKey, PropertyKind};
-    use praxis::value::Value;
+fn message(thrown: viperjs::value::Value, heap: &mut Heap) -> Option<String> {
+    use viperjs::heap::{PropertyKey, PropertyKind};
+    use viperjs::value::Value;
 
     let Value::Object(object) = thrown else {
         return None;
@@ -708,7 +708,7 @@ fn message(thrown: praxis::value::Value, heap: &mut Heap) -> Option<String> {
 ///
 /// Lossy because a failure message is prose: a lone surrogate in an error's `name` should print as
 /// a replacement character rather than lose the whole sentence explaining what went wrong.
-fn text(heap: &Heap, id: praxis::heap::StringId) -> String {
+fn text(heap: &Heap, id: viperjs::heap::StringId) -> String {
     String::from_utf16_lossy(heap.string(id).unwrap_or(&[]))
 }
 
@@ -915,11 +915,11 @@ Promise.resolve().then(function () { $DONE(); });"
 
     /// A checkout with a hand-written harness, so that what gets prepended is observable.
     ///
-    /// The real `assert.js` needs globals praxis has not built, so a test about *assembly* would
+    /// The real `assert.js` needs globals ViperJS has not built, so a test about *assembly* would
     /// be drowned by one skip reason. These stand in for it and are small enough that what each
     /// file contributes can be seen in the verdict.
     fn checkout(name: &str) -> PathBuf {
-        let root = std::env::temp_dir().join(format!("praxis-conformance-{name}"));
+        let root = std::env::temp_dir().join(format!("ViperJS-conformance-{name}"));
         let _ = std::fs::remove_dir_all(&root);
         std::fs::create_dir_all(root.join("harness")).expect("a writable temp dir"); // the test needs one
         std::fs::create_dir_all(root.join("test")).expect("writable"); // same
@@ -1154,7 +1154,7 @@ flags: [module]
     }
 
     #[test]
-    fn a_pattern_the_specification_forbids_is_judged_and_one_praxis_lacks_is_not() {
+    fn a_pattern_the_specification_forbids_is_judged_and_one_viperjs_lacks_is_not() {
         let root = checkout("patterns");
         // §22.2.1's early errors are the compiler's, not the parser's, and they are still early:
         // a test asserting that a pattern must be rejected is *passed* by rejecting it.
@@ -1182,7 +1182,7 @@ var r = /(/;",
             matches!(&unexpected[0].verdict, Verdict::Failed(why) if why.contains("did not parse")),
             "{unexpected:?}"
         );
-        // A pattern praxis has not *built* is still skipped, and that difference is the whole
+        // A pattern ViperJS has not *built* is still skipped, and that difference is the whole
         // point of the split: judging it would pass every negative test the proposal ships —
         // which asserts that particular malformed modifier groups are rejected — while every
         // positive one failed. An engine implementing none of it would be credited with half.

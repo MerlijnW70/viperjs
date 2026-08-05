@@ -8,7 +8,7 @@
 //! requires an unshared buffer and `SharedArrayBuffer.prototype.byteLength` a shared one, so
 //! neither answers about the other however alike the bytes are.
 //!
-//! praxis runs one agent, so the memory model of §25.4.1 has nothing to order: every operation is
+//! ViperJS runs one agent, so the memory model of §25.4.1 has nothing to order: every operation is
 //! already the only one happening. That does **not** make `Atomics` decorative — the operations
 //! have arithmetic and coercion of their own, they refuse the wrong element kinds, and they read
 //! and write in ways `ta[i]` does not.
@@ -16,7 +16,7 @@
 //! # Why `Atomics` accepts an ordinary `ArrayBuffer`
 //!
 //! Since ES2020 every operation here works on an unshared buffer too — only `wait` requires a
-//! shared one, and `wait` needs agents praxis has not got. §25.4.3's `ValidateIntegerTypedArray`
+//! shared one, and `wait` needs agents ViperJS has not got. §25.4.3's `ValidateIntegerTypedArray`
 //! asks about the *element kind* rather than about sharing, which is the check these actually make.
 
 use super::{define_method, define_value, key};
@@ -385,7 +385,7 @@ fn compare_exchange(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comp
 
 /// §25.4.3.8 `Atomics.isLockFree`.
 ///
-/// Answers about a *width* rather than about a buffer. praxis has one agent, so every width it
+/// Answers about a *width* rather than about a buffer. ViperJS has one agent, so every width it
 /// supports is lock-free in the only sense the question has — but the answer must still be the
 /// same for a given width every time it is asked, which §25.4.3.8's note requires.
 fn is_lock_free(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {

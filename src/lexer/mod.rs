@@ -200,7 +200,7 @@ impl Goal {
 /// Turns source text into tokens.
 ///
 /// ```
-/// use praxis::lexer::{Goal, Lexer, TokenKind};
+/// use viperjs::lexer::{Goal, Lexer, TokenKind};
 ///
 /// let tokens = Lexer::new("{ /* hi */ }").tokens(Goal::Div).expect("this source lexes");
 /// let kinds: Vec<_> = tokens.iter().map(|t| t.kind).collect();

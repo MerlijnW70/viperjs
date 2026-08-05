@@ -35,8 +35,8 @@ use crate::span::Span;
 /// Parse `source` as a `Script` (§16.1).
 ///
 /// ```
-/// use praxis::ast::StmtKind;
-/// use praxis::parser::parse_script;
+/// use viperjs::ast::StmtKind;
+/// use viperjs::parser::parse_script;
 ///
 /// let script = parse_script("a = 1\nb = 2").expect("this parses");
 /// assert_eq!(script.body.len(), 2, "a line break ends a statement");

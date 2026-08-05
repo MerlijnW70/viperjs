@@ -1,7 +1,7 @@
 //! §14.11 — `with`, the one scope whose bindings are an object's properties.
 //!
 //! Every row here is about a name meaning something the compiler could not have known. That is the
-//! whole construct: praxis resolves a name to a depth and an index when it compiles, and inside one
+//! whole construct: ViperJS resolves a name to a depth and an index when it compiles, and inside one
 //! of these it cannot, because the answer depends on what the object holds at the moment of the
 //! read. §9.4.2's walk happens on every access instead — see `crate::vm::dynamic`.
 
@@ -324,7 +324,7 @@ fn a_write_a_binding_refuses_inside_a_with_is_refused_the_same_way_it_would_be_o
 #[test]
 fn a_compound_assignment_writes_through_the_reference_it_read() {
     // §13.15.2 evaluates the target **reference**, reads through it, evaluates the value, and
-    // writes back through the *same* reference. praxis resolved the name twice, which is the same
+    // writes back through the *same* reference. ViperJS resolved the name twice, which is the same
     // answer for a slot and a different one inside a `with`: a getter may delete the property
     // between the two, and the second resolution then finds whatever the name means without it.
     //
@@ -397,7 +397,7 @@ fn a_resolved_reference_is_abandoned_by_a_throw_and_survives_a_yield() {
 
 #[test]
 fn a_with_binding_is_looked_for_again_when_it_is_written_through() {
-    // §9.1.1.2.5 `SetMutableBinding` is four steps and praxis had one of them. Step 2 asks
+    // §9.1.1.2.5 `SetMutableBinding` is four steps and ViperJS had one of them. Step 2 asks
     // `HasProperty` **again**, because everything between resolving the reference and writing
     // through it is a program: `with (o) { x += 1 }` where `o`'s `x` getter deletes `x` reads a
     // binding that is gone by the time the write happens, and step 3 tells strict code so.
@@ -450,7 +450,7 @@ fn a_with_binding_is_looked_for_again_when_it_is_written_through() {
 fn an_eval_written_inside_a_with_is_still_a_direct_one() {
     // §13.3.6.1 asks how the callee was **written**, and a bare `eval` inside a `with` is written
     // the same way as one anywhere else. What the `with` adds is §9.1.1.2.10's `WithBaseObject`
-    // under the callee — and praxis decided the call's *shape* and its *directness* with one
+    // under the callee — and ViperJS decided the call's *shape* and its *directness* with one
     // `match`, so a receiver made it an ordinary method call and the direct-eval question was
     // thrown away. The text then ran as an **indirect** eval, in the global scope, reading the
     // wrong variables and refusing nothing.

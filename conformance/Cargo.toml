@@ -3,9 +3,9 @@ name = "conformance"
 version = "0.1.0"
 edition = "2024"
 publish = false
-description = "Runs test262 against praxis and holds the ratchet that may only shrink."
+description = "Runs test262 against ViperJS and holds the ratchet that may only shrink."
 
 # The harness may depend on the engine. Nothing may depend on the harness — it is not part of
 # what an embedder gets, and `cargo test` at the root does not touch it.
 [dependencies]
-praxis = { path = ".." }
+viperjs = { path = ".." }

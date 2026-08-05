@@ -6,7 +6,7 @@ status: prose-only
 
 Annex B is titled "Additional ECMAScript Features for Web Browsers" and is normative optional: a
 conforming implementation may take it or leave it, and one that is not a web browser is expected to
-leave it. praxis is not a web browser — GOAL.md names the hosts it is for, and none of them is one
+leave it. ViperJS is not a web browser — GOAL.md names the hosts it is for, and none of them is one
 — so the default answer to every "unless the host is a web browser or otherwise supports X" is no.
 
 That answer is not applied uniformly, and the line is between B.1 and B.3.
@@ -52,7 +52,7 @@ choose between at run time.
 
 And leaving it out is not a refusal. B.3.1 extends no grammar: `__proto__: x` is already a
 well-formed property definition, so there is nothing to reject without rejecting a legal property
-name. What praxis did instead was make an ordinary property called `__proto__` and carry on — a
+name. What ViperJS did instead was make an ordinary property called `__proto__` and carry on — a
 **silent wrong answer**, which is the one outcome this project ranks below a refusal. Every other
 B.3 shape is refused with a span; this one was mis-compiled.
 
@@ -95,7 +95,7 @@ remaining path to 80%. That is the cost this record asked to be shown.
 strictness as well as on the host, so implementing one means implementing *two* behaviours for the
 same source and choosing between them at run time." The first half is true and the second does not
 follow. Strictness is a **static** property: the compiler knows it when it reads the directive
-prologue, and praxis already implements two behaviours for one source on exactly those terms — B.1's
+prologue, and ViperJS already implements two behaviours for one source on exactly those terms — B.1's
 legacy octal is refused in strict code and read in sloppy, `delete x` is an early error in one and an
 answer in the other, and `with` is a Syntax Error in one and a scope in the other. None of those is
 behind a flag and none made the conformance number depend on configuration. B.3 conditioned on
@@ -130,7 +130,7 @@ need a fact about the host that the source does not carry.
 gets the `var` binding. Read as written neither does: replacing either with `var f` leaves the other
 lexically declaring `f` in the same list, which §14.2.1's second rule refuses and B.3.3.5 does not
 relax. Every browser answers with the second function instead. test262 does not test it, so the
-letter is what praxis implements — this is recorded here only so that a session finding the
+letter is what ViperJS implements — this is recorded here only so that a session finding the
 divergence knows it was seen, not decided by default.
 
 ## Amended on 2026-08-05: §B.1.2's regular expression grammar is in, and the line is one word wider
@@ -158,7 +158,7 @@ refusal costs: leaving out B.1 means refusing a **token** — `010` is a number 
 all the JavaScript written before 2011 — while leaving out B.3 means refusing a **program shape**,
 each of which has a plain equivalent that has always been legal. A regular expression is a token.
 `/}/`, `/a{/`, `/\d-x/` and `/\1/` are written all over the web, they have no B.3-style rewriting
-anyone actually performs, and refusing them makes praxis reject working code rather than decline a
+anyone actually performs, and refusing them makes ViperJS reject working code rather than decline a
 convenience.
 
 And **one of §B.1.2's productions had already been implemented under this reading, without this

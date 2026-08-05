@@ -610,7 +610,7 @@ fn an_optional_call_gives_up_one_link_later_than_an_optional_member() {
 
 #[test]
 fn a_function_stringifies_in_the_native_code_form_whatever_it_was_written_as() {
-    // §20.2.3.5 step 2 answers a function's source text *when the host has it*, and praxis's host
+    // §20.2.3.5 step 2 answers a function's source text *when the host has it*, and ViperJS's host
     // does not: a compiled chunk does not keep the text it came from. So step 3's `NativeFunction`
     // form comes back for every function, which the clause allows and which is a real limitation
     // rather than a reading of it.
@@ -652,7 +652,7 @@ fn a_function_stringifies_in_the_native_code_form_whatever_it_was_written_as() {
 #[test]
 fn a_hoisted_declaration_sees_every_sibling_whichever_order_they_are_written_in() {
     // §10.2.11 creates the binding for every `functionsToInitialize` and *then* instantiates the
-    // function objects. praxis declared each name immediately before compiling that function's
+    // function objects. ViperJS declared each name immediately before compiling that function's
     // body, so a body compiled first resolved a later sibling outwards — out of the function, out
     // to the global object, and into a ReferenceError at run time.
     //

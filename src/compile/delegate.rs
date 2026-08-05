@@ -15,7 +15,7 @@
 //! # What is missing, and why it is not here
 //!
 //! Step 7.c is the *return* completion: `gen.return(v)` on a generator suspended inside a `yield*`
-//! forwards to the inner iterator's `return`. praxis has no return completion to forward — see the
+//! forwards to the inner iterator's `return`. ViperJS has no return completion to forward — see the
 //! divergence recorded beside `yield` — so this compiles steps 7.a and 7.b, and 7.c arrives with
 //! the machinery it needs.
 

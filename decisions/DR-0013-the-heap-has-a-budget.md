@@ -13,7 +13,7 @@ engine has to stop before the allocator does.
 
 ## Why the collector is not the answer here
 
-praxis has a mark-sweep collector. Nothing calls it — `collect.rs` says so, and defers the
+ViperJS has a mark-sweep collector. Nothing calls it — `collect.rs` says so, and defers the
 question of *when* to a later milestone. The obvious reading is that this record should be that
 decision instead. It should not, and the measurement is why.
 
@@ -27,7 +27,7 @@ A collection policy is worth having and is not this. Bounding the arena needs sl
 reuse needs the generation counter DR-0010 costed out, and none of that is required to stop a
 script from killing the host.
 
-## What praxis does
+## What ViperJS does
 
 **`MAX_HEAP_BYTES` is 64 MiB.** Between instructions, the interpreter asks `Heap::footprint`, and
 a script that has spent the budget is thrown a **RangeError** it can catch.
@@ -53,7 +53,7 @@ measured at 98 MB to 241 MB of real memory before being stopped, rather than 86 
 
 Two things follow, and both are deliberate. The budget is a bound on the *shape* of failure —
 a script that allocates in a loop is stopped — rather than a precise ceiling. And the number is
-low compared to a real engine's heap, which is honest: without a collection policy praxis cannot
+low compared to a real engine's heap, which is honest: without a collection policy ViperJS cannot
 run a long program under any budget, and this is the first number to raise when it has one.
 
 ## The invariant
@@ -79,7 +79,7 @@ leaves the hole, and the arena only grows."* **DR-0019 reuses the slot** — a f
 generation on every handle, in `src/heap/arena.rs` — so "bounding the arena needs slot reuse, slot
 reuse needs the generation counter DR-0010 costed out" names a prerequisite that has since been met.
 
-**Nothing in "What praxis does" changes, and that is the point of writing this as a note rather than
+**Nothing in "What ViperJS does" changes, and that is the point of writing this as a note rather than
 an amendment.** `MAX_HEAP_BYTES`, the between-instructions check and the RangeError are all
 untouched, because `Heap::footprint` counts `slots.len()` — a high-water mark that reuse stops
 *growing* and does not refund. A budget measured that way answers the same for the same program.

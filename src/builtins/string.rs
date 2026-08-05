@@ -354,7 +354,7 @@ fn to_upper_case(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
 /// and encoded again, and the result may be longer than what went in.
 ///
 /// The locale-sensitive variants share this. §22.1.3.26 permits an implementation with no locale
-/// data to answer the locale-independent mapping, and praxis has none — so `toLocaleUpperCase` is
+/// data to answer the locale-independent mapping, and ViperJS has none — so `toLocaleUpperCase` is
 /// `toUpperCase` under a second name rather than a second, subtly different answer.
 fn recased(
     vm: &mut Vm,

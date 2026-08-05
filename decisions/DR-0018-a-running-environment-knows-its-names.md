@@ -4,7 +4,7 @@ title: A running environment knows its names, because direct `eval` asks at run 
 status: prose-only
 ---
 
-praxis resolves a name to a **slot** when it compiles. `binding("x")` walks the compiler's scope
+ViperJS resolves a name to a **slot** when it compiles. `binding("x")` walks the compiler's scope
 chain and emits `LoadVariable(depth, index)`; the interpreter follows `depth` parent links and
 indexes the slots. That is why an environment is a `Vec<Option<Value>>` and a parent link and
 nothing else — the names were used up at compile time and never needed again.
@@ -56,7 +56,7 @@ name and cannot be resolved to, which is the same answer the padding produced wi
 to be wrong about.
 
 **And every name in the list is in scope for the whole life of the environment.** That is the half
-this record originally left implicit and the half praxis did not satisfy — see below, and see the
+this record originally left implicit and the half ViperJS did not satisfy — see below, and see the
 note at the end of that section for how it was settled. A list that held a name which is in scope
 for only part of the environment would need a position to be read against, and an eval has no
 position to offer.
@@ -71,7 +71,7 @@ carries on outwards, which is the same answer it would get for a scope that decl
 Written above as though a level's names could simply be read off the compiler's `locals` at the end
 of compiling it. They cannot, and reading the compiler rather than assuming is what turned it up.
 
-A lexical scope in praxis does not always get an environment. `leave_scope` "takes every local
+A lexical scope in ViperJS does not always get an environment. `leave_scope` "takes every local
 declared since `mark` out of scope, **without giving its slot back**" — it sets `live = false` and
 leaves the entry where it is. Compiled code is right about this because `resolve` consults `live`
 *at the position it is compiling*: after `switch (1) { case 1: let a = 1; }` the name `a` no longer
@@ -88,7 +88,7 @@ other six do not: `for`-`in`, `for`-`of`, `switch`, `try`, a class body, and `fo
 
 **So the implementation is to stop flattening, not to describe the flattening.** Each of those six
 is a scope the specification already gives a record of its own — §14.12.4 for a switch, §14.15.3
-for a catch, §15.7.1 for a class body, §14.7.5.7 for the two `for` heads — so praxis is already
+for a catch, §15.7.1 for a class body, §14.7.5.7 for the two `for` heads — so ViperJS is already
 non-conforming there in a way that happens to be unobservable, and eval is what would observe it.
 Giving them environments is owed regardless; doing it first is what makes the name list truthful.
 
@@ -114,7 +114,7 @@ re-reading this.
 ## What this does not settle
 
 **A sloppy `var` inside a direct eval still has nowhere to go.** §19.2.1.1 puts it in the caller's
-*variable* environment, and at the top level of a script that is the global object — which praxis
+*variable* environment, and at the top level of a script that is the global object — which ViperJS
 already does, so it works. Inside a function it is a binding added to a scope whose slot count was
 fixed when the function was compiled, and no name list makes a `Vec` longer. That case is refused
 by name until environments can grow, and the refusal is checkable in advance: the compiler already

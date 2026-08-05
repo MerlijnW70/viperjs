@@ -858,7 +858,7 @@ impl Reader<'_> {
         self.at += 1;
         if crate::unicode_property::OF_STRINGS.contains(&spelled.as_str()) {
             // §22.2.1's early errors, and all three are the specification refusing rather than
-            // praxis not having built something — so they are `Error::at`, which is a `BadPattern`
+            // ViperJS not having built something — so they are `Error::at`, which is a `BadPattern`
             // and a real answer about the text, and not `unsupported`, which is a gap and is
             // skipped. Getting that backwards passes every one of these tests for the wrong reason.
             //
@@ -2392,12 +2392,12 @@ mod tests {
         );
         assert_eq!(unicode(r"\p{Nope}"), Err("this is not a Unicode property"));
         assert_eq!(unicode(r"\p{}"), Err("this is not a Unicode property"));
-        // A **property of strings** is a thing praxis has not built rather than a name the
+        // A **property of strings** is a thing ViperJS has not built rather than a name the
         // specification rejects, and the two are refused differently on purpose — see
         // `regexp::Error::unimplemented`.
         // §22.2.1 — a property of strings is legal *only* in a `v` pattern, positive and outside a
         // negated class. The other three positions are the specification refusing, so they are a
-        // real answer about the text rather than a gap praxis has yet to fill.
+        // real answer about the text rather than a gap ViperJS has yet to fill.
         assert_eq!(
             unicode(r"\p{RGI_Emoji}"),
             Err("a property of strings needs the v flag")

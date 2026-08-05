@@ -23,7 +23,7 @@
 //! # What is deliberately not here
 //!
 //! An *unmapped* arguments object. §10.4.4 makes one for a strict function, or one whose parameter
-//! list is not simple, and praxis has neither: the interpreter tracks no strictness yet, and
+//! list is not simple, and ViperJS has neither: the interpreter tracks no strictness yet, and
 //! default, rest and destructuring parameters are refused. Every arguments object it can build is
 //! a mapped one, so there is one path here rather than two.
 
@@ -75,7 +75,7 @@ pub struct ArgumentsMap {
 impl ArgumentsMap {
     /// A map over the first `parameters` indices of a call in `environment`.
     pub(super) fn new(environment: EnvironmentId, parameters: usize) -> Self {
-        // Index `n` is parameter `n`, because praxis gives a function's parameters the first slots
+        // Index `n` is parameter `n`, because ViperJS gives a function's parameters the first slots
         // of its environment in order — so the map is an identity rather than a table of names.
         let slots = (0..parameters).map(|at| u32::try_from(at).ok()).collect();
         Self { environment, slots }

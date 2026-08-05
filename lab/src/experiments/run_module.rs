@@ -1,7 +1,7 @@
 //! Run a real module graph off the disk, and see how far a library gets.
 //!
 //! ```text
-//! cargo run -p praxis-lab --release -- run-module <entry.js> [expression]
+//! cargo run -p viperjs-lab --release -- run-module <entry.js> [expression]
 //! ```
 //!
 //! # The question
@@ -24,15 +24,15 @@
 //!
 //! Anything a browser supplies. A module that touches `document`, `WebGL2RenderingContext` or
 //! `performance` throws a ReferenceError, and that is the correct answer rather than a gap — those
-//! are host objects and praxis is not a host. Pure computation is what this is pointed at.
+//! are host objects and ViperJS is not a host. Pure computation is what this is pointed at.
 
-use praxis::compile::compile_module;
-use praxis::heap::Heap;
-use praxis::parser::parse_module;
-use praxis::vm::{Graph, Outcome, Vm};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::Instant;
+use viperjs::compile::compile_module;
+use viperjs::heap::Heap;
+use viperjs::parser::parse_module;
+use viperjs::vm::{Graph, Outcome, Vm};
 
 /// `a/b/../c` as `a/c`, without asking the filesystem — the file may not exist and the error for
 /// that belongs to the read rather than to the resolution.
@@ -59,7 +59,7 @@ fn normalise(path: &Path) -> PathBuf {
 /// `./index.js` collided.
 pub fn run(entry: Option<&str>, _probe: Option<&str>) -> std::process::ExitCode {
     let Some(entry) = entry else {
-        eprintln!("usage: cargo run -p praxis-lab --release -- run-module <entry.js>");
+        eprintln!("usage: cargo run -p viperjs-lab --release -- run-module <entry.js>");
         return std::process::ExitCode::FAILURE;
     };
     let root = normalise(&std::env::current_dir().unwrap_or_default().join(entry));
@@ -119,13 +119,13 @@ struct FromDisk {
     loaded: Rc<std::cell::Cell<usize>>,
 }
 
-impl praxis::vm::ModuleLoader for FromDisk {
+impl viperjs::vm::ModuleLoader for FromDisk {
     fn load(
         &mut self,
         referrer: Option<&str>,
         specifier: &str,
         heap: &mut Heap,
-    ) -> Result<(String, Rc<praxis::compile::Chunk>), String> {
+    ) -> Result<(String, Rc<viperjs::compile::Chunk>), String> {
         // The referrer is a *file*, so what a relative specifier is relative to is its directory.
         let base = referrer
             .map(|from| normalise(Path::new(from)))
@@ -149,8 +149,8 @@ fn key(path: &Path) -> String {
 }
 
 /// What a thrown value says about itself, using only what the embedding surface exposes.
-fn describe(heap: &mut Heap, value: praxis::value::Value) -> String {
-    let praxis::value::Value::Object(id) = value else {
+fn describe(heap: &mut Heap, value: viperjs::value::Value) -> String {
+    let viperjs::value::Value::Object(id) = value else {
         return value
             .to_string(heap)
             .ok()
@@ -160,12 +160,12 @@ fn describe(heap: &mut Heap, value: praxis::value::Value) -> String {
     let mut parts = Vec::new();
     for name in ["name", "message"] {
         let key =
-            praxis::heap::PropertyKey::from_units(heap, &name.encode_utf16().collect::<Vec<_>>());
+            viperjs::heap::PropertyKey::from_units(heap, &name.encode_utf16().collect::<Vec<_>>());
         let held = heap
             .object(id)
             .and_then(|found| found.get_own_property(key))
             .map(|property| property.kind);
-        if let Some(praxis::heap::PropertyKind::Data { value, .. }) = held
+        if let Some(viperjs::heap::PropertyKind::Data { value, .. }) = held
             && let Ok(text) = value.to_string(heap)
             && let Some(units) = heap.string(text)
         {

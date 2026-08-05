@@ -2,7 +2,7 @@
 //!
 //! # Why this is ours to write
 //!
-//! A regular expression engine is the one substantial algorithm praxis cannot borrow: the charter
+//! A regular expression engine is the one substantial algorithm ViperJS cannot borrow: the charter
 //! forbids runtime dependencies, and ECMAScript's flavour is not any library's. Backreferences and
 //! lookbehind put it outside what a finite automaton can decide, `lastIndex` is observable state a
 //! program may write to mid-loop, and §22.2.2's semantics are specified as a *backtracking* matcher

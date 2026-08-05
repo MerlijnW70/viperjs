@@ -50,7 +50,7 @@ pub enum Error {
     /// `>>>` fills from the left with zeros, which needs a width; a BigInt has none. The
     /// specification does not define it rather than defining it as `>>`.
     NoUnsignedShift,
-    /// A result too large to hold — praxis's limit, not the language's.
+    /// A result too large to hold — ViperJS's limit, not the language's.
     ///
     /// §6.1.6.2 puts no bound on a BigInt, and no implementation can honour that. `2n ** (2n **
     /// 40n)` is a number nothing can write down, and asking for it should be a refusal rather than
@@ -58,7 +58,7 @@ pub enum Error {
     TooLarge,
 }
 
-/// The most limbs a BigInt may have — praxis's ceiling on §6.1.6.2's unbounded integer.
+/// The most limbs a BigInt may have — ViperJS's ceiling on §6.1.6.2's unbounded integer.
 ///
 /// 2^20 limbs is four megabytes of magnitude — a thirty-three-million-bit integer, or ten million
 /// decimal digits. Past what any program means to compute, and *inside* DR-0013's sixty-four

@@ -66,7 +66,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::time::Instant;
 
-use praxis::span::line_col;
+use viperjs::span::line_col;
 
 /// Which goal symbol to parse under.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -412,7 +412,7 @@ fn parse(source: &str, path: &Path, options: &Options, scope: PackageType) -> Ou
     // and not about the code; read as a module it fails wherever the real trouble is. Reporting
     // the first reading's error instead sends a reader to line 1 of 1,338 of react's files, and
     // that is how long it took to notice.
-    let mut furthest: Option<praxis::parser::ParseError> = None;
+    let mut furthest: Option<viperjs::parser::ParseError> = None;
     for (name, as_module) in readings {
         match guarded(source, *as_module) {
             Err(()) => return Outcome::Panicked,
@@ -473,12 +473,12 @@ fn parse(source: &str, path: &Path, options: &Options, scope: PackageType) -> Ou
 /// The engine forbids `unsafe` and every parse is a pure function of a `&str`, so nothing here can
 /// be left half-built by an unwind — the guard is about *reporting* the panic rather than about
 /// surviving it.
-fn guarded(source: &str, as_module: bool) -> Result<Result<(), praxis::parser::ParseError>, ()> {
+fn guarded(source: &str, as_module: bool) -> Result<Result<(), viperjs::parser::ParseError>, ()> {
     catch_unwind(AssertUnwindSafe(|| {
         if as_module {
-            praxis::parser::parse_module(source).map(|_| ())
+            viperjs::parser::parse_module(source).map(|_| ())
         } else {
-            praxis::parser::parse_script(source).map(|_| ())
+            viperjs::parser::parse_script(source).map(|_| ())
         }
     }))
     .map_err(|_| ())
@@ -509,7 +509,7 @@ fn window(line: &str, column: usize, width: usize) -> (String, usize) {
 }
 
 /// Where an error was, with the offending line if it can be found.
-fn locate(source: &str, error: praxis::parser::ParseError) -> Where {
+fn locate(source: &str, error: viperjs::parser::ParseError) -> Where {
     let at = line_col(source, error.span.start);
     // `lines` and `line_col` agree about CRLF, but a span can still point at the end of input,
     // where there is no line to show. The caret is worth having only when there is.
@@ -531,14 +531,14 @@ fn print_tree(source: &str, path: &Path, options: &Options) {
         Goal::Module => true,
         Goal::Script => false,
         Goal::FromExtension => {
-            extension(path) == Some("mjs") || praxis::parser::parse_script(source).is_err()
+            extension(path) == Some("mjs") || viperjs::parser::parse_script(source).is_err()
         }
     };
     if as_module {
-        if let Ok(module) = praxis::parser::parse_module(source) {
+        if let Ok(module) = viperjs::parser::parse_module(source) {
             println!("{module:#?}");
         }
-    } else if let Ok(script) = praxis::parser::parse_script(source) {
+    } else if let Ok(script) = viperjs::parser::parse_script(source) {
         println!("{script:#?}");
     }
 }
@@ -771,7 +771,7 @@ mod tests {
 
     #[test]
     fn the_nearest_manifest_wins_and_every_directory_on_the_way_is_remembered() {
-        let root = std::env::temp_dir().join("praxis-scope-test");
+        let root = std::env::temp_dir().join("ViperJS-scope-test");
         let _ = std::fs::remove_dir_all(&root);
         let inner = root.join("packages").join("inner").join("src");
         std::fs::create_dir_all(&inner).expect("a temp tree");

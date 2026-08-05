@@ -1,12 +1,12 @@
 [package]
-name = "praxis"
+name = "viperjs"
 version = "0.1.0"
 edition = "2024"
 description = "An embeddable JavaScript engine in safe Rust, with zero runtime dependencies."
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/MerlijnW70/praxis"
 homepage = "https://github.com/MerlijnW70/praxis"
-documentation = "https://docs.rs/praxis"
+documentation = "https://docs.rs/viperjs"
 readme = "README.md"
 authors = ["MerlijnW70"]
 keywords = ["javascript", "ecmascript", "interpreter", "engine", "embeddable"]
@@ -20,8 +20,8 @@ rust-version = "1.88"
 # merely absent. The three legal files are named explicitly for that reason — a crate that ships
 # without its licence and its copyright notice is the one omission that actually matters. The
 # lab and the vendored suite are simply not on the list.
-include = ["/src", "/examples", "/Cargo.toml", "/README.md", "/CHANGELOG.md", "/GOAL.md",
-           "/LICENSE-MIT", "/LICENSE-APACHE", "/COPYRIGHT"]
+include = ["/src", "/examples", "/tests", "/Cargo.toml", "/README.md", "/CHANGELOG.md",
+           "/GOAL.md", "/LICENSE-MIT", "/LICENSE-APACHE", "/COPYRIGHT"]
 
 # ZERO runtime dependencies, forever (GOAL.md non-negotiable #2). This table stays empty.
 # If you believe you need a crate, stop and say so — do not add one.
@@ -42,6 +42,6 @@ opt-level = 3
 lto = "thin"
 
 [profile.test]
-# The suite is run far more often than it is debugged, and nothing here steps through a test
-# binary — so skip the debuginfo and the link cost that comes with it.
+# Mutation testing runs the suite once per mutant, so test-build time dominates a run.
+# Nothing here debugs the test binary — skip the debuginfo and its link cost.
 debug = 0

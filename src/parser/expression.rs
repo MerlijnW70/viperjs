@@ -665,7 +665,7 @@ mod tests {
     fn a_call_is_never_an_assignment_target_however_the_assignment_is_written() {
         // §8.6.4 gives a host two conformant answers for a `CallExpression`, and DR-0009 records
         // which one this is. `web-compat` would make `f() = 1` parse in sloppy code and throw at
-        // run time, as browsers do; praxis is not a web host and returns `invalid` in both modes.
+        // run time, as browsers do; ViperJS is not a web host and returns `invalid` in both modes.
         //
         // The shapes are the ones test262 has a test for, each of them flagged `onlyStrict`
         // there because only the strict half is host-independent.

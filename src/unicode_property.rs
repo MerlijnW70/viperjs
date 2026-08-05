@@ -60,7 +60,7 @@ impl Property {
 
 /// §22.2.1's *properties of strings* — the `v`-flag names that match sequences, not code points.
 ///
-/// Listed rather than resolved because praxis does not have them: `\p{RGI_Emoji}` matches a
+/// Listed rather than resolved because ViperJS does not have them: `\p{RGI_Emoji}` matches a
 /// *string* of several code points, which the matcher here has no shape for. Naming them keeps the
 /// refusal honest — they are a feature this engine lacks, not a name the specification rejects,
 /// and only the first of those may be judged as an early error.

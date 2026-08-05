@@ -5,7 +5,7 @@
 //! Because a `DataView` exists for data that came from somewhere else — a file, a socket, a
 //! format — and such data has an endianness the *format* chose, not the machine. So every read and
 //! write takes `littleEndian` as its own argument, defaulting to **big**-endian, which is the
-//! opposite of every machine praxis runs on and is deliberate: network byte order is big-endian,
+//! opposite of every machine ViperJS runs on and is deliberate: network byte order is big-endian,
 //! and a default that matched the machine would make a program correct on one and wrong on another.
 //!
 //! That is the one place §25.3 and §23.2 disagree. A TypedArray uses the *platform's* order and has
@@ -223,7 +223,7 @@ fn get_value(
     let view = view_of(heap, call.this_value)?;
     let at = super::buffer::to_index(vm, heap, call.argument(0))?;
     // §25.3.4's default is **big**-endian, so an absent argument is `false` — the opposite of the
-    // machine praxis runs on, and the reason every read says which it wants.
+    // machine ViperJS runs on, and the reason every read says which it wants.
     let little = call.argument(1).to_boolean(heap);
     // Step 5 — asked *now*, because converting the index above can have detached the buffer.
     if detached(heap, view.buffer) {

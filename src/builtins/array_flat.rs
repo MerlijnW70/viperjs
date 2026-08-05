@@ -25,7 +25,7 @@
 //! # Species
 //!
 //! §23.1.3.13 step 5 is `ArraySpeciesCreate` and [`flat`] calls it, so `class C extends Array {}`
-//! flattens into a `C`. This section used to say praxis made an ordinary Array here and in `map`,
+//! flattens into a `C`. This section used to say ViperJS made an ordinary Array here and in `map`,
 //! `filter` and `slice`, and that the operation was unimplemented; it is `array_species_create` in
 //! `super::array_methods`, and all four go through it.
 

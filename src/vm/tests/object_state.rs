@@ -71,7 +71,7 @@ fn freezing_and_sealing_are_two_depths_of_the_same_operation() {
 fn an_array_method_throws_where_an_assignment_would_be_silent() {
     // §23.1.3 spells every write `Set(O, key, value, true)`, and that `true` is the whole
     // difference. An assignment to a frozen array is refused quietly; a method that would have to
-    // make the same write says so instead — and praxis discarded that answer until this row.
+    // make the same write says so instead — and ViperJS discarded that answer until this row.
     assert_eq!(
         run(
             "(function () { var a = [1, 2]; Object.freeze(a); try { a.push(3); return 'no throw'; } \

@@ -27,7 +27,7 @@ it. It is the slot.
 
 ## Compaction is not available, and the reason is DR-0011
 
-Moving a live value and rewriting every handle to it requires enumerating every handle. praxis
+Moving a live value and rewriting every handle to it requires enumerating every handle. ViperJS
 cannot: a handle is `Copy`, it lives in `Value`s on the operand stack, in `Vec<Value>` arguments,
 and — the case that closes the question — in **Rust locals of a native that re-entered the
 interpreter**. DR-0011 makes that re-entry ordinary: a coercion calls `valueOf`, which runs a

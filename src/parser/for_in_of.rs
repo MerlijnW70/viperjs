@@ -232,7 +232,7 @@ mod tests {
         assert!(parse_script("for ((a.b) of c);").is_ok());
         // A call is refused here for the same reason `f() = 1` is refused: §8.6.4 gives a
         // `CallExpression` an AssignmentTargetType of `invalid`, and only returns `web-compat`
-        // instead under a Normative Optional taken by hosts that are web browsers. praxis is not
+        // instead under a Normative Optional taken by hosts that are web browsers. ViperJS is not
         // one — GOAL.md is explicit about the hosts it is for — so it takes the default, which is
         // also what every host must do in strict code. V8 accepts `for (f() in b)`; this is the
         // divergence, and it is deliberate.

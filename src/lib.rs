@@ -1,4 +1,4 @@
-//! **praxis** — an embeddable JavaScript engine in safe Rust, with zero runtime dependencies.
+//! **ViperJS** — an embeddable JavaScript engine in safe Rust, with zero runtime dependencies.
 //!
 //! The public surface is deliberately tiny and will grow one milestone at a time (see
 //! `AGENTS.md`). Nothing here is stable until the crate reaches 1.0.
@@ -34,7 +34,7 @@ mod unicode_property_table;
 pub mod value;
 pub mod vm;
 
-/// The engine version, as reported to embedders (`praxis::VERSION`).
+/// The engine version, as reported to embedders (`viperjs::VERSION`).
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Two things about the comments that no compiler checks — see the module for why they are tests.

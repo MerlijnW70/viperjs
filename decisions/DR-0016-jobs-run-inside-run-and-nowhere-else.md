@@ -6,7 +6,7 @@ status: prose-only
 
 §9.5 says a promise job runs "when there is no running execution context". That is a statement
 about the *host*, not about the engine: the specification hands the job back and the host decides
-when the stack is empty. praxis has to make that decision, and this is it.
+when the stack is empty. ViperJS has to make that decision, and this is it.
 
 **A script's jobs are drained at the end of `Vm::run`, before it returns.** After the last
 instruction, before the stack-balance check, before the completion value is handed back.

@@ -31,7 +31,7 @@
 //!
 //! The third is implemented and its exemption is declined. `catch (e) { var e; }` is refused
 //! here and accepted by every browser, and DR-0008 is the argument: Annex B.3's syntactic
-//! extensions are not implemented, praxis being no web browser. This was the other way round for
+//! extensions are not implemented, ViperJS being no web browser. This was the other way round for
 //! three slices, on the narrower ground that test262's main tree cannot be asserting the refusal
 //! — which is true, and is not the question. The exemption names a `BindingIdentifier` anyway, so
 //! `catch ([e]) { var e; }` would be refused on every host.
@@ -145,7 +145,7 @@ impl Parser<'_> {
                 });
             }
             // Rule 3, which reads `VarDeclaredNames` and so descends. Annex B.3.4 exempts a
-            // `BindingIdentifier` parameter on a web browser, and DR-0008 declines it: praxis is
+            // `BindingIdentifier` parameter on a web browser, and DR-0008 declines it: ViperJS is
             // not one, and B.3's syntactic extensions are not implemented.
             if let Some(shadow) = var_declared_names(&body)
                 .iter()
@@ -307,7 +307,7 @@ mod tests {
 
     #[test]
     fn a_var_may_not_reuse_the_catch_parameters_name_and_nor_may_a_lexical_one() {
-        // §14.15.1's third rule, whose Annex B.3.4 exemption DR-0008 declines — praxis being no
+        // §14.15.1's third rule, whose Annex B.3.4 exemption DR-0008 declines — ViperJS being no
         // web browser. Every browser accepts all three of these; this is what that costs.
         assert_eq!(
             script_error("try {} catch (e) { var e; }").kind,

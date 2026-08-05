@@ -33,7 +33,7 @@ use crate::span::Span;
 /// answering with the `f64` nearby would be worse than answering nothing.
 ///
 /// ```
-/// use praxis::lexer::{Goal, Lexer, TokenKind, numeric_value};
+/// use viperjs::lexer::{Goal, Lexer, TokenKind, numeric_value};
 ///
 /// let source = "0x1_F";
 /// let token = Lexer::new(source).next_token(Goal::Div).expect("this lexes");
@@ -85,7 +85,7 @@ pub fn numeric_value(source: &str, span: Span) -> Option<f64> {
 /// derivation, the scanner refuses it, and no span reaching here can hold one.
 ///
 /// ```
-/// use praxis::lexer::{Goal, Lexer, TokenKind, bigint_digits};
+/// use viperjs::lexer::{Goal, Lexer, TokenKind, bigint_digits};
 ///
 /// let source = "0x1_Fn";
 /// let token = Lexer::new(source).next_token(Goal::Div).expect("this lexes");

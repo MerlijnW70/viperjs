@@ -3,7 +3,7 @@
 //! # What the host does and what this does
 //!
 //! §16.2.1.7's `HostLoadImportedModule` is the embedder's: a specifier is text, and only the host
-//! knows whether it names a file, a URL or an entry in a map it built itself. praxis therefore
+//! knows whether it names a file, a URL or an entry in a map it built itself. ViperJS therefore
 //! takes a graph that is already *resolved and compiled* — every module in it, under the specifier
 //! the modules that import it wrote — and does the two things that are the language's:
 //!
@@ -76,7 +76,7 @@ impl Graph {
 pub enum LinkError {
     /// The host supplied no module for a specifier something imported.
     ///
-    /// §16.2.1.7 leaves this to the host, so praxis cannot say more than which text failed. A
+    /// §16.2.1.7 leaves this to the host, so ViperJS cannot say more than which text failed. A
     /// SyntaxError is what a host reports for a specifier it cannot resolve.
     Unresolved(String),
     /// §16.2.1.6.3 `ResolveExport` found nothing — the module is there and the name is not.
@@ -242,7 +242,7 @@ impl Vm {
     /// §16.2.1.5.3 — evaluate an asynchronous module, and do not return until it has settled.
     ///
     /// The specification threads `[[PendingAsyncDependencies]]` through the graph so that each
-    /// module resumes when the ones it imports have finished. praxis evaluates a graph inside one
+    /// module resumes when the ones it imports have finished. ViperJS evaluates a graph inside one
     /// call, so the same order is reached by draining the queue here: the next module's body cannot
     /// start until this one's promise has an answer, which is exactly what waiting means.
     ///

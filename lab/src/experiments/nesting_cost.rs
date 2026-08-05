@@ -1,8 +1,8 @@
 //! How much stack a nesting level costs, per shape, and where the array literal's goes.
 //!
 //! ```text
-//! cargo run -p praxis-lab -- nesting-cost              # every shape
-//! cargo run -p praxis-lab -- nesting-cost <shape>      # one shape
+//! cargo run -p viperjs-lab -- nesting-cost              # every shape
+//! cargo run -p viperjs-lab -- nesting-cost <shape>      # one shape
 //! ```
 //!
 //! # Why it forks
@@ -13,7 +13,7 @@
 //!
 //! # Why the shapes are what they are
 //!
-//! The engine cannot be instrumented from out here — `lab` depends on `praxis` and not the other
+//! The engine cannot be instrumented from out here — `lab` depends on `ViperJS` and not the other
 //! way round — so the cost of an individual function is reached by *subtraction*. Each shape is
 //! chosen to walk a known segment of the parser's call graph, and the differences between them
 //! are what attribute the bytes:
@@ -35,7 +35,7 @@
 //!
 //! ```text
 //! sed -i 's/MAX_NESTING_DEPTH: u32 = 64/MAX_NESTING_DEPTH: u32 = 1_000_000/' ../src/parser/mod.rs
-//! cargo run -p praxis-lab -- nesting-cost
+//! cargo run -p viperjs-lab -- nesting-cost
 //! git checkout ../src/parser/mod.rs
 //! ```
 //!
@@ -205,8 +205,8 @@ fn trial(name: &str, depth: usize) -> ExitCode {
             // not the stack. Saying which happened is the whole reason this returns a code rather
             // than a boolean.
             matches!(
-                praxis::parser::parse_script(&source),
-                Err(error) if error.kind == praxis::parser::ParseErrorKind::TooDeeplyNested
+                viperjs::parser::parse_script(&source),
+                Err(error) if error.kind == viperjs::parser::ParseErrorKind::TooDeeplyNested
             )
         })
         .expect("a thread");

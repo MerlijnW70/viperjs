@@ -125,7 +125,7 @@ fn a_function_declaration_may_not_name_a_global_property_it_could_not_write() {
     // by step 6. `globalThis.x = 1` cannot show that — it makes a property both tests accept.
     //
     // Asserted as "was it allowed" rather than by reading the binding afterwards, because
-    // §9.1.1.4.16's *storage* is a separate gap: it redefines the property where praxis still
+    // §9.1.1.4.16's *storage* is a separate gap: it redefines the property where ViperJS still
     // assigns to it, so a non-writable one keeps its old value. That is a bug about
     // `CreateGlobalFunctionBinding` and not about `CanDeclareGlobalFunction`, and a row that
     // conflated the two would go green when either was fixed.

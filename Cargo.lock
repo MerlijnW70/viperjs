@@ -6,16 +6,16 @@ version = 4
 name = "conformance"
 version = "0.1.0"
 dependencies = [
- "praxis",
+ "viperjs",
 ]
 
 [[package]]
-name = "praxis"
+name = "viperjs"
 version = "0.1.0"
 
 [[package]]
-name = "praxis-lab"
+name = "viperjs-lab"
 version = "0.0.0"
 dependencies = [
- "praxis",
+ "viperjs",
 ]

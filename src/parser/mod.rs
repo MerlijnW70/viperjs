@@ -247,8 +247,8 @@ pub const MAX_NESTING_DEPTH: u32 = 64;
 /// Useful where an expression is all there is — and, more often, in tests about one.
 ///
 /// ```
-/// use praxis::ast::ExprKind;
-/// use praxis::parser::parse_expression;
+/// use viperjs::ast::ExprKind;
+/// use viperjs::parser::parse_expression;
 ///
 /// let expr = parse_expression("(1)").expect("this parses");
 /// assert_eq!(expr.kind, ExprKind::Number(1.0));
@@ -494,7 +494,7 @@ impl<'a> Parser<'a> {
 
     /// The name of a `PrivateIdentifier` token, without its `#`, recorded as a reference.
     ///
-    /// §12.7's `StringValue` of one *includes* the `#`; praxis keeps the name alone, the `#`
+    /// §12.7's `StringValue` of one *includes* the `#`; ViperJS keeps the name alone, the `#`
     /// being punctuation of the production rather than part of the name. The two spellings are
     /// never mixed, so nothing has to strip it back off.
     pub(super) fn private_name(&mut self, token: Token) -> Result<Box<str>, ParseError> {

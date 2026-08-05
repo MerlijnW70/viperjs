@@ -138,7 +138,7 @@ fn case_is_mapped_over_code_points_and_may_change_the_length() {
     assert_eq!(run("'\\ud800'.toUpperCase().length"), "1");
     assert_eq!(run("'\\ud800'.toUpperCase().charCodeAt(0)"), "55296");
     // §22.1.3.26 lets an implementation without locale data answer the locale-independent
-    // mapping, and praxis has none — so these are the same function's answer, deliberately.
+    // mapping, and ViperJS has none — so these are the same function's answer, deliberately.
     assert_eq!(run("'abc'.toLocaleUpperCase()"), "ABC");
     assert_eq!(run("'ABC'.toLocaleLowerCase()"), "abc");
 }
@@ -202,7 +202,7 @@ fn a_string_can_be_built_from_code_points_or_from_a_raw_template() {
 fn comparing_two_strings_is_consistent_even_without_a_locale() {
     // §22.1.3.12 specifies the *sign* and leaves the order to the implementation when there is no
     // locale data — so these rows assert what the specification requires and not what any one
-    // engine answers. praxis compares code units, which is the order `<` already uses.
+    // engine answers. ViperJS compares code units, which is the order `<` already uses.
     assert_eq!(run("'abc'.localeCompare('abc')"), "0");
     assert_eq!(run("'abc'.localeCompare('abd') < 0"), "true");
     assert_eq!(run("'abd'.localeCompare('abc') > 0"), "true");

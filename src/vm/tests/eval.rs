@@ -38,8 +38,8 @@ fn eval_answers_anything_that_is_not_a_string_unchanged() {
 }
 
 #[test]
-fn source_that_is_not_a_script_is_a_syntax_error_wherever_praxis_notices() {
-    // §19.2.1.1 step 8. The interesting half is that praxis decides some early errors in the
+fn source_that_is_not_a_script_is_a_syntax_error_wherever_viperjs_notices() {
+    // §19.2.1.1 step 8. The interesting half is that ViperJS decides some early errors in the
     // *compiler* rather than the parser — §22.2.1's regular-expression ones — so both refusals have
     // to arrive as the same error. A program can otherwise tell where the check happens to live.
     assert_eq!(
@@ -199,7 +199,7 @@ fn evals_that_have_finished_do_not_count_against_the_next_one() {
 #[test]
 fn a_direct_eval_resolves_into_the_scopes_its_caller_is_running_in() {
     // §19.2.1.1 step 12 — the evaluated source's outer scope is the caller's *running* lexical
-    // environment. praxis resolves a name to a depth and an index when it compiles, and this source
+    // environment. ViperJS resolves a name to a depth and an index when it compiles, and this source
     // did not exist then; DR-0018's name list on each environment is what makes it reachable.
     assert_eq!(run("(function () { var a = 1; return eval('a'); })()"), "1");
     assert_eq!(
@@ -207,7 +207,7 @@ fn a_direct_eval_resolves_into_the_scopes_its_caller_is_running_in() {
         "2"
     );
     // A parameter, and the `arguments` object — which §10.2.11 makes for every non-arrow function
-    // and praxis skips when nothing read the name. A direct eval may read it and the compiler
+    // and ViperJS skips when nothing read the name. A direct eval may read it and the compiler
     // cannot have seen that, so the call site asks for one.
     assert_eq!(run("(function (p) { return eval('p'); })('in')"), "in");
     assert_eq!(
@@ -506,7 +506,7 @@ fn a_direct_eval_may_say_what_the_execution_around_it_may_say() {
         "SyntaxError"
     );
 
-    // Step 5.f — `super(…)` needs a derived constructor. praxis grants it to the parser and the
+    // Step 5.f — `super(…)` needs a derived constructor. ViperJS grants it to the parser and the
     // *compiler* then says it has not built it, which is the ordinary division here: the grammar
     // admits the construct and the refusal names what is missing. Before this it was refused as
     // "`super` is only allowed inside a method", which diagnosed the wrong thing.

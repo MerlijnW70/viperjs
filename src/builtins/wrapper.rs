@@ -11,7 +11,7 @@
 //! # Why one slot serves both
 //!
 //! §20.3 calls it `[[BooleanData]]` and §21.1 calls it `[[NumberData]]`, and a method of one may
-//! not read the other's — `Boolean.prototype.valueOf.call(new Number(1))` is a TypeError. praxis
+//! not read the other's — `Boolean.prototype.valueOf.call(new Number(1))` is a TypeError. ViperJS
 //! keeps one slot holding the primitive, and *the value says which*: a `Value::Boolean` is a
 //! `[[BooleanData]]` and can be nothing else. So the rule is enforced by matching on what is
 //! there rather than by three fields that could each be set wrongly.

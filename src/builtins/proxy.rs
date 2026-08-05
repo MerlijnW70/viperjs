@@ -4,7 +4,7 @@
 //!
 //! Only the two ways to make one. Every internal method a proxy overrides is in
 //! [`crate::vm::Vm`], because a trap is JavaScript and answering `[[Get]]` therefore needs the
-//! interpreter — see that module for why that is the one exotic object praxis could not put in the
+//! interpreter — see that module for why that is the one exotic object ViperJS could not put in the
 //! heap's dispatch.
 //!
 //! # Why `Proxy` has no prototype property

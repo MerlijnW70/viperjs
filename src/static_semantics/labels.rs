@@ -83,8 +83,8 @@ pub enum LabelProblemKind {
 /// would be a diagnostic nobody could act on twice in a row.
 ///
 /// ```
-/// use praxis::parser::parse_script;
-/// use praxis::static_semantics::{first_label_problem, LabelProblemKind};
+/// use viperjs::parser::parse_script;
+/// use viperjs::static_semantics::{first_label_problem, LabelProblemKind};
 ///
 /// let script = parse_script("a: while (1) continue a;").expect("this parses");
 /// assert_eq!(first_label_problem(&script.body), None);

@@ -313,7 +313,7 @@ fn the_reviver_walks_what_was_parsed_and_may_remove_from_it() {
 #[test]
 fn json_that_nests_past_the_cap_is_refused_rather_than_running_out_of_stack() {
     // DR-0002 — a stack overflow is not a failure any `Result` can rescue and it takes the
-    // embedder's process with it. §25.5 puts no limit on nesting, so the refusal is praxis's and
+    // embedder's process with it. §25.5 puts no limit on nesting, so the refusal is ViperJS's and
     // is reported as a RangeError: the text is perfectly good JSON, and what ran out is this
     // engine's willingness to descend.
     //
@@ -412,7 +412,7 @@ fn a_reviver_that_puts_something_deeper_where_the_walk_is_going_is_answered_rath
     // It gets §25.5.1.1's own answer now: step 2.b.ii reads the array's `length`, and this one is
     // answered by a proxy with something whose `valueOf` throws. Before the array branch existed
     // that read never happened, the walk went into the *function object* behind `valueOf`, and
-    // praxis ran off the end of the stack instead.
+    // ViperJS ran off the end of the stack instead.
     assert_eq!(
         run(
             "var uncoercible = { valueOf: function () { throw 'boom'; } };              var badLength = new Proxy([], { get: function (_, name) {                  if (name === 'length') { return uncoercible; } } });              (function () { try { JSON.parse('[0,0]', function () { this[1] = badLength; });                  return 'ran'; } catch (e) { return typeof e === 'string' ? e : e.constructor.name; } })()"
@@ -423,7 +423,7 @@ fn a_reviver_that_puts_something_deeper_where_the_walk_is_going_is_answered_rath
 
 #[test]
 fn the_reviver_walks_an_array_by_index_and_an_object_by_its_enumerable_names() {
-    // §25.5.1.1 steps 2.b and 2.c are two different walks, and praxis used to do neither: it asked
+    // §25.5.1.1 steps 2.b and 2.c are two different walks, and ViperJS used to do neither: it asked
     // every value for its own keys. Both halves of that are observable, and reaching them needs
     // the value to be *in place* when the walk arrives — a reviver's return value replaces a
     // property and is not descended into, so each row puts its subject where the walk is going.

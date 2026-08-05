@@ -6,7 +6,7 @@ thinking**. You cannot explore a value representation, race two parser designs, 
 slow a naive property lookup really is, if every keystroke owes a test.
 
 So: the lab. It is a workspace member, not a dependency. Nothing here is probed, linted, or
-released, and the engine cannot import it — the arrow points `lab -> praxis`, never back.
+released, and the engine cannot import it — the arrow points `lab -> ViperJS`, never back.
 
 ## The rules (there are only three)
 
@@ -23,9 +23,9 @@ released, and the engine cannot import it — the arrow points `lab -> praxis`, 
 ## Workflow
 
 ```
-cargo run -p praxis-lab                          # list experiments
-cargo run -p praxis-lab --release -- hot-shapes  # run one
-cargo test -p praxis-lab                         # lab has its own tests, held to no standard
+cargo run -p viperjs-lab                          # list experiments
+cargo run -p viperjs-lab --release -- hot-shapes  # run one
+cargo test -p viperjs-lab                         # lab has its own tests, held to no standard
 ```
 
 `--release` for anything that measures: a debug build measures the debug build.

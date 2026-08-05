@@ -4,7 +4,7 @@
 //!
 //! §21.3.2 marks most of these **implementation-approximated**: `cos`, `cbrt`, `atan2` and their
 //! kind need only be close, and two conforming engines may differ in the last bit. Checked against
-//! V8 over 1551 rows, praxis differs from it in 47 — every one a last-bit difference in exactly
+//! V8 over 1551 rows, ViperJS differs from it in 47 — every one a last-bit difference in exactly
 //! those functions, and none in a function whose result the specification fixes.
 //!
 //! So the rows below are the ones where the answer is *exact*: the constants, the roundings, the

@@ -1,6 +1,6 @@
 # GOAL.md — the binding charter
 
-**praxis** is an embeddable JavaScript engine written in safe Rust with zero runtime
+**ViperJS** is an embeddable JavaScript engine written in safe Rust with zero runtime
 dependencies, whose conformance is measured continuously against test262 and may only improve.
 
 This file is binding. Every change must comply with it; where `AGENTS.md` and this file

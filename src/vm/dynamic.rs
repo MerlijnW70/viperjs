@@ -2,7 +2,7 @@
 //!
 //! # Why a name inside a `with` cannot be a slot
 //!
-//! praxis resolves a name to a depth and an index when it compiles, and everything about the
+//! ViperJS resolves a name to a depth and an index when it compiles, and everything about the
 //! engine's speed and most of its simplicity comes from that (see [`crate::heap::environment`]).
 //! §14.11 makes one construct where it is not possible: the scope a `with` opens holds whatever
 //! its object holds *at the moment a name is looked up*, so `with (o) { a }` reads `o.a` before a
@@ -266,7 +266,7 @@ impl Vm {
                 }
                 // Step 4's `S` — a write the object refuses is a TypeError in strict code, which
                 // is the rule §6.2.5.6 applies to every other reference. This doc used to say
-                // praxis "does not yet carry a store's strictness as far as `[[Set]]`"; the
+                // ViperJS "does not yet carry a store's strictness as far as `[[Set]]`"; the
                 // strictness is the argument three lines up.
                 let accepted = self.set_property_key(base, key, value, heap)?;
                 if strict && matches!(accepted, Value::Boolean(false)) {

@@ -1,5 +1,5 @@
 [package]
-name = "praxis-lab"
+name = "viperjs-lab"
 version = "0.0.0"
 edition = "2024"
 publish = false
@@ -8,6 +8,6 @@ publish = false
 # implementation to differential-test against, a plotting helper. Nothing here ships, and the
 # engine must never depend on this crate (the dependency arrow points lab -> engine, only).
 [dependencies]
-praxis = { path = ".." }
+viperjs = { path = ".." }
 
 [dev-dependencies]

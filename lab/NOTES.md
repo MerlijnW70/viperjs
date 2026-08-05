@@ -128,7 +128,7 @@ only check here that can catch a silently wrong answer.
 ## direct-eval-var — is the 128-run refusal really three cases, one of them free?
 
 **Date:** 2026-08-04
-**Question:** `a sloppy var inside a direct eval in a function` is the largest thing praxis refuses
+**Question:** `a sloppy var inside a direct eval in a function` is the largest thing ViperJS refuses
 by name. A recorded plan said most of it needs **no** growable environment: a name the caller's
 variable scope already has needs no slot, and a name shadowed by a lexical binding between
 `lexEnv` and `varEnv` is a SyntaxError §19.2.1.3 owes anyway. **Is that split real?**
@@ -145,14 +145,14 @@ threw before, a bare `var x` leaves the slot alone, and `{ let y; eval("var y") 
 SyntaxError. What it does **not** do is win a single test, and it breaks the `declare-arguments`
 family outright.
 
-**Why, and it is the part worth keeping:** praxis puts a function's parameters, its `arguments`,
+**Why, and it is the part worth keeping:** ViperJS puts a function's parameters, its `arguments`,
 its `var`s *and* its body's `let`s in **one environment**, where §10.2.11 has up to three. So a
 depth comparison cannot tell "bound in the variable environment" from "bound in a scope between
 here and it" — they are the same number. The `declare-arguments` tests are exactly that
 distinction: they expect a SyntaxError because `arguments` is bound in a scope the walk passes
 *through*, and with one environment the check reads it as the destination and accepts.
 
-So the split is real in the specification and not expressible against praxis's environments. **The
+So the split is real in the specification and not expressible against ViperJS's environments. **The
 prerequisite is §10.2.11's environment split — a parameter scope separate from the variable scope
 when the parameter list has expressions — and that is a bigger slice than the one it unblocks.**
 
@@ -166,9 +166,9 @@ ones you did not is exactly what a conformance number is for.
 **Date:** 2026-08-04
 **Question:** `examples/parse` sweeps a repository and answers "does it parse", which is the front
 end only. §16.2's linker, the namespace objects and the live bindings are runtime, and had never
-been pointed at a graph written by somebody who had never heard of praxis. **Does a real library
+been pointed at a graph written by somebody who had never heard of ViperJS. **Does a real library
 link and run, and what breaks first?**
-**Setup:** `cargo run -p praxis-lab --release -- run-module <entry.js>`, against a three.js
+**Setup:** `cargo run -p viperjs-lab --release -- run-module <entry.js>`, against a three.js
 checkout at 1,640 files and 736,000 lines. The host walks each chunk's `imports()`, reads and
 compiles what they name, and hands the whole graph to `Vm::run_module_graph`.
 
@@ -232,7 +232,7 @@ milestone, and `gc-pressure` had already left two numbers pointing at the interp
 chasing them: `for (let i …)` costing 4.2 us/iteration over `for (var i …)`, and `a[0] = i`
 costing 1.9 us and 17 MiB/million. **Which of the two proposals do those numbers actually
 support?**
-**Setup:** `cargo run -p praxis-lab --release -- hot-shapes`. Twelve source shapes, 100,000
+**Setup:** `cargo run -p viperjs-lab --release -- hot-shapes`. Twelve source shapes, 100,000
 passes each, chosen so that every interesting quantity is a *difference between two rows that
 differ in one thing*. Each row reports time per pass, arena retained per pass, and — the column
 that settles it — arena retained per pass **after a full collection**.
@@ -259,7 +259,7 @@ GC proposal answered for the second time and by a different route than `gc-press
 unreclaimable arena. Against DR-0013's 64 MiB budget that is **about 900,000 calls before any
 program dies**, whatever it does with the results — and a `for (let …)` whose body closes over the
 binding retains 671 B/pass, so it dies at about 100,000. Four of the twelve shapes cannot run a
-million passes at all. This limits every praxis program, not the `property-escapes` tests
+million passes at all. This limits every ViperJS program, not the `property-escapes` tests
 specially, and it is why that bucket is the shape it is.
 
 **Two corrections to this notebook's own record.** `gc-pressure`'s "`for (let i …)` vs
@@ -282,7 +282,7 @@ where the memory is doing work.
 **Verdict: PARKED as an optimisation question; ESCALATED as a limit.** Neither "optimise the
 compiler" nor "improve the GC" is the next thing. **DR-0010 slot reuse with generation-tagged
 handles** is, and AGENTS.md already calls it "a decision record, not a patch". This experiment is
-the number that record was missing: without it, praxis cannot call a function a million times.
+the number that record was missing: without it, ViperJS cannot call a function a million times.
 
 **Cost:** about an hour. Most of it was one harness bug worth repeating — `Outcome::Thrown` is
 `Ok`, so the first run reported the four shapes that *exhausted the heap* as the four fastest.
@@ -397,7 +397,7 @@ that the test was the answer.
 `built-ins/RegExp/property-escapes`. The recorded plan said they were blocked on the GC schedule,
 which was blocked on DR-0010 slot reuse. Is that true — would a collector plus reusable slots make
 them pass?
-**Setup:** `cargo run -p praxis-lab -- gc-pressure <test262 file>`, which prepends the harness
+**Setup:** `cargo run -p viperjs-lab -- gc-pressure <test262 file>`, which prepends the harness
 includes and runs a whole file with a wall clock. Measured on a 9950X (32 threads, 64 GB DDR5),
 `--release`. Three engine builds: as-is; collect-when-exhausted; and collect-when-exhausted with
 `footprint` counting only *live* slots, which simulates slot reuse without building it. Per-test
@@ -455,7 +455,7 @@ Two findings worth more than the bucket was:
 **Question:** `MAX_NESTING_DEPTH` is 64 because the array literal cliffs at 71 levels in one
 mebibyte, against 152 for a parenthesis and 327 for a block. Is the literal's parse expensive
 enough to be worth restructuring, and would doing so buy a materially higher cap?
-**Setup:** `cargo run -p praxis-lab -- nesting-cost`. For each of eight shapes it bisects the
+**Setup:** `cargo run -p viperjs-lab -- nesting-cost`. For each of eight shapes it bisects the
 deepest nesting that survives a 1 MiB thread, one child process per candidate — a stack overflow
 aborts, so an in-process bisection is not possible. The engine cannot be instrumented from the
 lab, so per-function cost is reached by subtraction: each shape walks a known segment of the call
