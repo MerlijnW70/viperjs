@@ -636,6 +636,71 @@ fn a_name_is_a_slot_the_compiler_chose_and_only_a_with_makes_it_a_walk() {
 }
 
 #[test]
+fn a_body_holding_a_direct_eval_resolves_its_names_at_run_time() {
+    // §19.2.1.1 — a direct `eval` may add a `var` to this body's own variable scope, so a name
+    // here cannot be pinned to a slot: the binding it should find may not exist until the eval
+    // runs. Every read becomes a run-time lookup, exactly as inside a `with`.
+    //
+    // **Structural, because it has to be.** Turning the flag on is behaviour-preserving — DR-0018's
+    // name lists make the walk find precisely the binding a slot would have named — so no program
+    // distinguishes the two and mutation coverage cannot kill it. The same argument the `with` test
+    // below makes, reached from the other cause.
+    //
+    // It is also what proves the *second pass* ran at all: the first compiles `x` before it has
+    // met the `eval`, so a chunk with `LoadVariable` in it is one that was never compiled again.
+    let reads = |source: &str| {
+        let mut heap = Heap::new();
+        let script = parse_script(source).expect("the source parses"); // a compiler test needs a tree
+        let chunk = compile_script(&script, &mut heap).expect("compiles"); // likewise
+        let body = chunk
+            .function(0)
+            .expect("the script declares one function")
+            .clone();
+        body.code()
+            .iter()
+            .filter(|instruction| {
+                matches!(
+                    instruction,
+                    Instruction::LoadVariable(_, _) | Instruction::LoadName(_)
+                )
+            })
+            .cloned()
+            .collect::<Vec<_>>()
+    };
+    // Without an eval the local is a slot, which is the ordinary path and the fast one.
+    let placed = reads("function f() { var x = 1; return x; }");
+    assert!(
+        placed
+            .iter()
+            .all(|instruction| matches!(instruction, Instruction::LoadVariable(_, _))),
+        "a body with no eval keeps its slots: {placed:?}"
+    );
+    // With one — and the `eval` is written *after* the read, so only a second pass can have known.
+    let dynamic = reads("function f() { var x = 1; var got = x; eval(''); return got; }");
+    assert!(
+        dynamic
+            .iter()
+            .any(|instruction| matches!(instruction, Instruction::LoadName(_))),
+        "a body holding a direct eval asks at run time: {dynamic:?}"
+    );
+    assert!(
+        !dynamic
+            .iter()
+            .any(|instruction| matches!(instruction, Instruction::LoadVariable(_, _))),
+        "no name is left pinned to a slot: {dynamic:?}"
+    );
+    // The detection stops at a function boundary: a nested body's eval adds to its *own* variable
+    // scope, so the outer body's names are not at risk from it and stay placed.
+    let nested = reads("function f() { var x = 1; function g() { eval(''); } return x; }");
+    assert!(
+        nested
+            .iter()
+            .all(|instruction| matches!(instruction, Instruction::LoadVariable(_, _))),
+        "a nested eval does not make the enclosing body dynamic: {nested:?}"
+    );
+}
+
+#[test]
 fn an_eval_resolves_names_at_run_time_only_when_the_call_was_made_inside_a_with() {
     // The third structural claim, and it is here for the reason the second one is: forcing
     // `with_depth` on is **behaviour-preserving**, because DR-0018's name lists make the run-time

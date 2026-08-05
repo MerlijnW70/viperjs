@@ -902,6 +902,18 @@ struct Compiler<'a> {
     arguments_slot: Option<u32>,
     /// Whether anything actually read it.
     uses_arguments: bool,
+    /// Whether a **direct** `eval` was compiled in this body, nested functions aside.
+    ///
+    /// Learned rather than looked for: the compiler visits every expression there is, so a flag it
+    /// sets on the way cannot miss a production. [`crate::compile::function`]'s two passes are what
+    /// turn it into an answer the first pass needed.
+    saw_direct_eval: bool,
+    /// Whether a direct `eval` can reach the scopes this body resolves through — §19.2.1.1.
+    ///
+    /// Inherited from the body this one is written inside, and set on the second pass for a body
+    /// that turned out to contain one. Distinct from [`Compiler::saw_direct_eval`], which is about
+    /// *this* body's own text: a nested arrow inherits the first and answers `false` to the second.
+    inside_eval: bool,
     /// How many locals existed when each enclosing *scope* began, innermost last.
     ///
     /// What a declaration needs and [`Compiler::resolve`] cannot give it. Resolving a name walks
@@ -1180,6 +1192,8 @@ impl<'a> Compiler<'a> {
             breaks: Vec::new(),
             arguments_slot: None,
             uses_arguments: false,
+            saw_direct_eval: false,
+            inside_eval: false,
             scope_marks: Vec::new(),
             continues: Vec::new(),
             saw_top_level_await: false,
@@ -1734,6 +1748,14 @@ impl<'a> Compiler<'a> {
 
     /// Whether a name here has to be resolved at run time — §14.11, and the whole of what it costs.
     pub(super) fn names_are_dynamic(&self) -> bool {
+        self.with_depth > 0 || self.inside_eval
+    }
+
+    /// Whether a `with` is what makes them dynamic — §14.11 alone, without §19.2.1.1's reason.
+    ///
+    /// The two causes are passed to a nested body separately, because they are separately true and
+    /// a body told the wrong one would carry a claim about its own source that is not so.
+    pub(super) fn inside_with(&self) -> bool {
         self.with_depth > 0
     }
 

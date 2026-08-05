@@ -224,7 +224,11 @@ impl Compiler<'_> {
                 naming,
                 lexical,
                 this_binding,
-                inside_with: self.names_are_dynamic(),
+                // Each cause is passed on as itself. `names_are_dynamic()` is their union and is
+                // what the answer is *used* for, but handing it over here would tell a nested body
+                // it is inside a `with` when it is only inside a function holding an `eval`.
+                inside_with: self.inside_with(),
+                inside_eval: self.inside_eval,
                 lexical_new_target: self.chunk.lexical_new_target,
             },
             span,
@@ -343,6 +347,7 @@ impl Compiler<'_> {
         // answer `undefined` where the specification has an object. Whether this body has such a
         // slot at all is a separate question, and one this flag does not decide.
         self.uses_arguments |= direct_eval;
+        self.saw_direct_eval |= direct_eval;
         // Four cases and not three. A receiver decides the *shape* of the call and the bare name
         // decides whether it may be a direct eval; the two are independent, and folding them into
         // `(true, _)` threw the second away for every `eval` written inside a `with`.
@@ -455,6 +460,7 @@ impl Compiler<'_> {
 ///
 /// Two shapes rather than two compilers, because everything before the body is the same for both
 /// and the parameter rules written twice would be a refusal no test could reach.
+#[derive(Clone)]
 pub(super) enum Body<'a> {
     /// A statement list: a function's body, or an arrow's `a => { … }`.
     Statements(&'a [Stmt]),
@@ -490,7 +496,20 @@ pub(super) enum Body<'a> {
 /// Two facts that travel together and are decided at the same moment, so a struct rather than two
 /// parameters: the second is *computed from* the first, and passing them separately would let a
 /// caller pair an arrow's reach with a function's boundary.
+#[derive(Clone, Copy)]
 pub(super) struct Nesting<'a> {
+    /// Whether a **direct** `eval` is in reach of this body's names — §19.2.1.1.
+    ///
+    /// Set for a body that contains one, and inherited by every body written *inside* that one:
+    /// an arrow or a function expression there resolves its free names through the scope the eval
+    /// can add to, so it has to ask at run time too. That is the opposite direction from the
+    /// detection, which stops at a function boundary because a nested eval's `var`s belong to the
+    /// nested body's own variable scope.
+    ///
+    /// Separate from `inside_with` although both end at [`Compiler::names_are_dynamic`]. The
+    /// consequence is one and the causes are two, and folding them would make a `with` inside an
+    /// eval-bearing function indistinguishable from either alone.
+    inside_eval: bool,
     /// Whether the body is a `MethodDefinition` — §15.4.5, which decides `[[Construct]]`.
     method: bool,
     /// Whether the body is a generator's — §15.5, which decides whether calling it runs it.
@@ -655,6 +674,51 @@ fn compile_body(
     nesting: Nesting<'_>,
     span: Span,
 ) -> Result<Chunk, CompileError> {
+    // §19.2.1.1 — a **direct** `eval` in this body may add a `var` to this body's own variable
+    // scope, so a name here cannot be pinned to a slot at compile time: the binding it should
+    // resolve to may not exist until the eval runs. Every name becomes a run-time lookup, exactly
+    // as inside a `with`.
+    //
+    // Whether there *is* one is answered by compiling and looking, rather than by a walk of the
+    // tree looking for the call. The compiler already visits every expression there is, so it
+    // cannot miss a production the way a second traversal over thirty-one expression kinds would —
+    // and a missed one is silent, which is the failure mode that matters here. `Chunk::arguments`
+    // is settled the same way one screen down, for the same reason.
+    //
+    // The retry is bounded at one. The second pass is told, so it never asks again, and a body
+    // without a direct eval pays nothing at all.
+    let first = compile_body_once(heap, parameters, body.clone(), outer.clone(), nesting, span)?;
+    if !first.saw_direct_eval || nesting.inside_eval {
+        return Ok(first.chunk);
+    }
+    let told = Nesting {
+        inside_eval: true,
+        ..nesting
+    };
+    Ok(compile_body_once(heap, parameters, body, outer, told, span)?.chunk)
+}
+
+/// What one pass of [`compile_body`] produced, and the one thing it learned on the way.
+struct Compiled {
+    /// The body.
+    chunk: Chunk,
+    /// Whether a **direct** `eval` was compiled anywhere in it, nested functions aside.
+    ///
+    /// Their evals belong to *their* variable scopes, so a name here is not at risk from one — the
+    /// detection stops at a function boundary even though the consequence, dynamic resolution,
+    /// travels the other way and reaches every body written inside this one.
+    saw_direct_eval: bool,
+}
+
+/// One pass of [`compile_body`].
+fn compile_body_once(
+    heap: &mut Heap,
+    parameters: &FormalParameters,
+    body: Body<'_>,
+    outer: Vec<Vec<Local>>,
+    nesting: Nesting<'_>,
+    span: Span,
+) -> Result<Compiled, CompileError> {
     let lexical = nesting.lexical;
     let mut compiler = Compiler::new(heap);
     // §10.2.9 — interned, so that the hundred `function f` in a program share one String and so that
@@ -674,6 +738,7 @@ fn compile_body(
     // — see `Compiler::own_depth`.
     compiler.seeded_scopes = outer.len();
     compiler.with_depth = u32::from(nesting.inside_with);
+    compiler.inside_eval = nesting.inside_eval;
     compiler.outer = outer;
     compiler.this_binding = nesting.this_binding;
     compiler.chunk.arrow = lexical == Lexical::Yes;
@@ -1011,7 +1076,11 @@ fn compile_body(
         true => compiler.arguments_slot,
         false => None,
     };
-    Ok(compiler.finish())
+    let saw_direct_eval = compiler.saw_direct_eval;
+    Ok(Compiled {
+        chunk: compiler.finish(),
+        saw_direct_eval,
+    })
 }
 
 /// Whether a property reference should leave its base behind as well.
