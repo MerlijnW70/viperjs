@@ -1,7 +1,13 @@
 //! **ViperJS** — an embeddable JavaScript engine in safe Rust, with zero runtime dependencies.
 //!
-//! The public surface is deliberately tiny and will grow one milestone at a time (see
-//! `AGENTS.md`). Nothing here is stable until the crate reaches 1.0.
+//! Start at [`api`]. [`api::Engine`] runs a script, binds host functions written in Rust, and can
+//! give a run a wall-clock budget that the script **cannot catch** — which is what makes running
+//! untrusted source a configuration problem rather than a liability. `examples/embed.rs` is the
+//! tour.
+//!
+//! Everything else is public because the engine is meant to be taken apart: [`lexer`], [`parser`]
+//! and [`compile`] are each usable on their own, and [`span`] is the worked example of the standard
+//! the rest is held to. That is a wide surface on purpose, and none of it is stable until 1.0.
 //!
 //! # The one invariant that outranks everything
 //!

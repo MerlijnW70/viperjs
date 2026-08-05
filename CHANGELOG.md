@@ -7,7 +7,15 @@ public API is not stable and may change in any release.
 
 ## [Unreleased]
 
-## [0.2.0] — 2026-08-05
+## [0.2.1] — 2026-08-05
+
+### Fixed
+
+- **The crate-level documentation described a crate that no longer exists.** It called the public
+  surface "deliberately tiny" directly above the fourteen public modules docs.rs lists, and pointed
+  readers at `AGENTS.md` — a file the packaged crate deliberately does not ship, so the reference
+  resolved to nothing for anyone arriving from crates.io or docs.rs. It now names [`api`] as the
+  entry point, says the wide surface is deliberate, and links only to things inside the crate.
 
 The first released version. `0.1.0` was never published; this is what the crate has grown into
 since, and the headline is that the engine **runs JavaScript** rather than merely reading it.
@@ -64,5 +72,6 @@ needing multiple agents.
 - No input panics. Nesting is bounded by an explicit count rather than by hitting the OS stack
   guard, and a full-depth parse is asserted to survive one mebibyte of stack.
 
-[Unreleased]: https://github.com/MerlijnW70/viperjs/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/MerlijnW70/viperjs/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/MerlijnW70/viperjs/releases/tag/v0.2.1
 [0.2.0]: https://github.com/MerlijnW70/viperjs/releases/tag/v0.2.0
