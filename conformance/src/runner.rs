@@ -512,6 +512,18 @@ fn evaluate(
         Err(error) => return Verdict::Skipped(error.message()),
     };
     let mut vm = Vm::new(&mut heap);
+    // The collection schedule, so the suite can be run with it on and the cost read off the
+    // difference. An environment variable rather than a flag because it is a *measurement* knob:
+    // the number this harness reports must not depend on how the run was invoked, so the default
+    // is whatever the engine's default is and setting this is a deliberate experiment.
+    //
+    // `PRAXIS_COLLECT_GROWTH=1048576 cargo run --release -p conformance`
+    if let Some(growth) = std::env::var("PRAXIS_COLLECT_GROWTH")
+        .ok()
+        .and_then(|text| text.parse::<usize>().ok())
+    {
+        vm.set_collection_growth(Some(growth));
+    }
     // §16.2.1.7 at *run* time, which is the half a pre-built graph cannot answer: a dynamic
     // `import()`'s specifier is whatever an expression evaluated to, so the directory has to stay
     // reachable while the test runs. Given to every test and not only to a module one — §13.3.10 is

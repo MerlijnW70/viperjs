@@ -102,6 +102,58 @@ impl Vm {
                 // So the *policy* is the host's — [`Vm::collect`] — and what is settled here is
                 // the part that cannot be left half-right: the root set, checked against the
                 // collector in `vm::tests::collecting`.
+                //
+                // …and a host may now hand the policy back, with `Vm::set_collection_growth`. Off
+                // unless asked, so nothing above changes for a caller that says nothing.
+                //
+                // Measured on **growth** rather than on the total, because `footprint` is a
+                // high-water mark: a collection makes slots reusable and does not lower the number,
+                // so a ceiling would fire at every check once crossed. This subtraction cannot
+                // underflow — `collected_at` is a footprint this run already saw and the arena only
+                // ever grows — but it is written saturating anyway, because the alternative to a
+                // wrong answer here is a panic and DR-0002 does not allow one for any reason.
+                // …and **only when no native is holding values in Rust locals**, which is what
+                // `reentries` counts. This is the condition the whole schedule turns on, and it
+                // cost a measurement to find rather than an argument: `Array.prototype.sort` reads
+                // its elements into a `Vec`, calls a comparator that re-enters this loop, and
+                // writes them back. A collection underneath that comparator frees every element,
+                // because a root set is a claim about what a *program* can name and those elements
+                // are named only by Rust. The suite reported it as `undefined` where an object had
+                // been — a wrong value, not a crash, exactly as this file's collector warns.
+                //
+                // DR-0011 already counts the re-entries for its own bound, so the fact was on the
+                // machine before this needed it. What it costs is real and belongs in DR-0023: a
+                // program spending its time *inside* a native re-entry — a long `sort`, a
+                // `JSON.parse` with a reviver — does not collect until it comes back out.
+                // Written as "is there any allowance left" rather than as a comparison, for the
+                // reason DR-0022 gives about its own deadline: `>=` and `>` differ only when the
+                // growth lands exactly on the threshold, which is one byte value a script cannot
+                // aim at, and mutation coverage is right to call that untestable. A saturating
+                // subtraction asks the same question and has no second spelling — flipping the
+                // `== 0` inverts the schedule and every test here says so.
+                if let Some(growth) = self.collect_after_growth
+                    && self.reentries == 0
+                    && self
+                        .collect_next
+                        .saturating_sub(heap.footprint().saturating_sub(self.collected_at))
+                        == 0
+                {
+                    self.collect_running(root, current.as_deref(), heap);
+                    self.collected_at = heap.footprint();
+                    // **Proportional to what survived, and never below the base.** The walk this
+                    // just did costs what is *live*, so a program holding a great deal would
+                    // otherwise pay that walk once per fixed step of growth. Measured on a loop
+                    // holding 150,000 objects: a mebibyte step ran 3.56 s against 0.61 s for a
+                    // sixteen-mebibyte one — six times the work for the same program, and all of it
+                    // re-walking the same live set.
+                    //
+                    // So the next allowance is the live set itself, floored at the base a host
+                    // asked for. A program with nothing live collects every `growth` bytes and
+                    // stays small; one holding 30 MiB is allowed to grow by 30 MiB before being
+                    // walked again, which is the standard proportional rule and is what stops the
+                    // schedule turning a large heap into a quadratic one.
+                    self.collect_next = growth.max(heap.live_footprint());
+                }
                 if heap.is_exhausted() {
                     let thrown = self.realm.error(
                         heap,

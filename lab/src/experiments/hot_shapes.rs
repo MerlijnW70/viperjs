@@ -181,6 +181,9 @@ pub fn run(argument: Option<&str>) -> std::process::ExitCode {
         }
     }
     reuse_check();
+    ceiling_check();
+    threshold_sweep();
+    live_set_cost();
     println!("\nread the differences, not the rows — see this module's doc for the pairs.");
     println!("OUT OF HEAP is DR-0013's budget reached: the row stopped early and its time is not");
     println!("comparable. It is a result — that shape cannot run a million passes at all.");
@@ -312,4 +315,143 @@ fn reuse_of(body: &str) -> Option<(usize, usize)> {
         after_first.saturating_sub(start),
         after_second.saturating_sub(after_first),
     ))
+}
+
+/// The ceiling this notebook has predicted twice, and what a schedule does to it.
+///
+/// `hot-shapes` measured 74 B of arena per call and DR-0019's note turned that into "about 900,000
+/// calls before any program dies". This runs the loop it describes, at four sizes, with the loop
+/// allowed to collect and with it not — which is the difference between an engine that can run
+/// ordinary code of ordinary size and one that cannot.
+fn ceiling_check() {
+    println!(
+        "
+the call ceiling, with a schedule and without:"
+    );
+    println!(
+        "  {:<12} {:>26} {:>26}",
+        "calls", "no schedule", "collect every 1 MiB grown"
+    );
+    for calls in [100_000usize, 800_000, 1_000_000, 5_000_000] {
+        let mut row = Vec::new();
+        for growth in [None, Some(1 << 20)] {
+            let source = format!(
+                "function f(a) {{ return a + 1 }} var s = 0;                  for (var i = 0; i < {calls}; i++) {{ s = f(s) }} s"
+            );
+            let mut heap = Heap::new();
+            let Ok(script) = parse_script(&source) else {
+                row.push("did not parse".to_string());
+                continue;
+            };
+            let Ok(chunk) = compile_script(&script, &mut heap) else {
+                row.push("did not compile".to_string());
+                continue;
+            };
+            let mut vm = Vm::new(&mut heap);
+            vm.set_collection_growth(growth);
+            let started = Instant::now();
+            let outcome = vm.run(&chunk, &mut heap);
+            let elapsed = started.elapsed();
+            row.push(match outcome {
+                Ok(praxis::vm::Outcome::Value(_)) => {
+                    format!("ok {elapsed:?}, {} KiB", heap.footprint() / 1024)
+                }
+                Ok(praxis::vm::Outcome::Thrown(_)) => format!("THREW after {elapsed:?}"),
+                _ => "stopped".to_string(),
+            });
+        }
+        println!("  {:<12} {:>26} {:>26}", calls, row[0], row[1]);
+    }
+}
+
+/// What the threshold is worth choosing, on the loop the ceiling was measured with.
+fn threshold_sweep() {
+    println!(
+        "
+threshold sweep — 2,000,000 calls:"
+    );
+    println!(
+        "  {:<20} {:>14} {:>14}",
+        "collect after", "time", "footprint"
+    );
+    for growth in [
+        None,
+        Some(256 << 10),
+        Some(1 << 20),
+        Some(4 << 20),
+        Some(16 << 20),
+    ] {
+        let source = "function f(a) { return a + 1 } var s = 0;                       for (var i = 0; i < 2000000; i++) { s = f(s) } s";
+        let mut heap = Heap::new();
+        let Ok(script) = parse_script(source) else {
+            continue;
+        };
+        let Ok(chunk) = compile_script(&script, &mut heap) else {
+            continue;
+        };
+        let mut vm = Vm::new(&mut heap);
+        vm.set_collection_growth(growth);
+        let started = Instant::now();
+        let outcome = vm.run(&chunk, &mut heap);
+        let elapsed = started.elapsed();
+        let label = match growth {
+            None => "never".to_string(),
+            Some(bytes) => format!("{} KiB grown", bytes / 1024),
+        };
+        let result = match outcome {
+            Ok(praxis::vm::Outcome::Value(_)) => format!("{elapsed:?}"),
+            _ => format!("THREW after {elapsed:?}"),
+        };
+        println!(
+            "  {:<20} {:>14} {:>12} KiB",
+            label,
+            result,
+            heap.footprint() / 1024
+        );
+    }
+}
+
+/// The case a fixed threshold could be pathological on: a **large live set**.
+///
+/// Every collection walks what is reachable, so a program holding a great deal and allocating
+/// steadily pays that walk once per threshold of growth. This builds a live set first and then runs
+/// the same call loop over it, which is the shape where a fixed threshold amplifies.
+fn live_set_cost() {
+    println!(
+        "
+walk cost against a large live set — 500,000 calls over a held array:"
+    );
+    println!(
+        "  {:<20} {:>14} {:>14}",
+        "collect after", "time", "footprint"
+    );
+    for growth in [None, Some(1 << 20), Some(4 << 20), Some(16 << 20)] {
+        let source = "var held = []; for (var i = 0; i < 150000; i++) { held.push({ n: i }) }                       function f(a) { return a + 1 } var s = 0;                       for (var j = 0; j < 500000; j++) { s = f(s) } s + held.length";
+        let mut heap = Heap::new();
+        let Ok(script) = parse_script(source) else {
+            continue;
+        };
+        let Ok(chunk) = compile_script(&script, &mut heap) else {
+            continue;
+        };
+        let mut vm = Vm::new(&mut heap);
+        vm.set_collection_growth(growth);
+        let started = Instant::now();
+        let outcome = vm.run(&chunk, &mut heap);
+        let elapsed = started.elapsed();
+        let label = match growth {
+            None => "never".to_string(),
+            Some(bytes) => format!("{} KiB grown", bytes / 1024),
+        };
+        let result = match outcome {
+            Ok(praxis::vm::Outcome::Value(_)) => format!("{elapsed:?}"),
+            _ => format!("THREW after {elapsed:?}"),
+        };
+        println!(
+            "  {:<20} {:>14} {:>12} KiB",
+            label,
+            result,
+            heap.footprint() / 1024
+        );
+    }
 }

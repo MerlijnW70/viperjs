@@ -18,10 +18,11 @@
 //! Reuse without that check would be worse than tombstones: a root the collector missed is
 //! *invisible* today, and with reuse it hands back a different value of the same type in silence.
 //!
-//! Two arenas have converted — environments and BigInts, the second through the shared `arena` module,
-//! which exists so that the remaining three are the same change and not three retellings of it.
-//! Objects, Strings and Symbols are still tombstoned; they cost what the environments did, and
-//! the Strings one has a trap named in DR-0019 that the intern table sets.
+//! **All five arenas have converted** — objects, environments, Strings, BigInts and Symbols are one
+//! `Arena<T>`, which is what the shared module exists for. This paragraph said "two … the remaining
+//! three are the same change" for three commits after the other three landed; `hot-shapes` measures
+//! each of them separately now, and the reuse it reports is per arena precisely so that a claim like
+//! that one has a number under it rather than a reader's memory.
 //!
 //! # Why a handle is not a reference
 //!
@@ -408,6 +409,31 @@ impl Heap {
         self.objects.len() * size_of::<Option<Object>>()
             + self.environments.len() * size_of::<Option<Environment>>()
             + self.strings.len() * size_of::<Option<Box<[u16]>>>()
+            + self.string_units * size_of::<u16>()
+            + self.buffer_bytes
+    }
+
+    /// The same measure over the slots that **hold something** — what a collection cannot reclaim.
+    ///
+    /// [`Heap::footprint`] is a high-water mark and answers what has been paid for; this answers
+    /// what is still owed. The two are the same number on a heap that has never collected and drift
+    /// apart afterwards, because DR-0019 makes a swept slot reusable without shortening the `Vec`.
+    ///
+    /// # What it is for, and why the budget does not use it
+    ///
+    /// A collection schedule needs to know how big the *live* set is, because the walk it is about
+    /// to do is proportional to exactly that. Measured on a loop holding 150,000 objects, a
+    /// threshold fixed at one mebibyte of growth ran six times slower than one at sixteen — the
+    /// same walk, repeated once per mebibyte. Scaling the next threshold by this number is what
+    /// stops a large live set being walked over and over; see `Vm::set_collection_growth`.
+    ///
+    /// DR-0013's budget deliberately keeps using `footprint`: what it bounds is a program that
+    /// *allocates* without end, and that is a claim about what has been taken rather than about
+    /// what is still held. Swapping it for this would let such a loop run for ever.
+    pub fn live_footprint(&self) -> usize {
+        self.objects.live() * size_of::<Option<Object>>()
+            + self.environments.live() * size_of::<Option<Environment>>()
+            + self.strings.live() * size_of::<Option<Box<[u16]>>>()
             + self.string_units * size_of::<u16>()
             + self.buffer_bytes
     }
@@ -801,6 +827,67 @@ mod tests {
         assert_eq!(heap.footprint(), so_far);
         heap.new_environment(None, 64);
         assert_eq!(heap.footprint(), so_far + size_of::<Option<Environment>>());
+    }
+
+    #[test]
+    fn the_live_footprint_counts_each_kind_of_slot_and_falls_where_the_high_water_mark_cannot() {
+        // Every term of the sum, one at a time, so that dropping or mis-scaling any one of them is
+        // a failure here rather than a schedule that collects at the wrong moment. The two measures
+        // agree exactly until something is swept, which is the property the schedule rests on.
+        let mut heap = Heap::new();
+        let base = heap.live_footprint();
+        assert_eq!(base, heap.footprint(), "nothing has been swept yet");
+
+        heap.new_object(None);
+        let after_object = heap.live_footprint();
+        assert_eq!(after_object, base + size_of::<Option<Object>>());
+
+        heap.new_environment(None, 4);
+        let after_environment = heap.live_footprint();
+        assert_eq!(
+            after_environment,
+            after_object + size_of::<Option<Environment>>()
+        );
+
+        // A String is two terms at once — its slot and its units — so its arrival moves the total
+        // by the sum and neither term alone.
+        // Named, because `8 * size_of::<u16>()` reads to a linter — and to a person — as a
+        // bit-width calculation rather than as a count of code units.
+        const UNITS: usize = 8;
+        heap.new_string(vec![0; UNITS]);
+        let after_string = heap.live_footprint();
+        assert_eq!(
+            after_string,
+            after_environment + size_of::<Option<Box<[u16]>>>() + UNITS * size_of::<u16>()
+        );
+
+        heap.charge_buffer(1024);
+        assert_eq!(heap.live_footprint(), after_string + 1024);
+        let held = heap.live_footprint();
+        assert_eq!(held, heap.footprint(), "still nothing swept");
+
+        // …and now the half a high-water mark cannot express. Everything above is unreachable from
+        // an empty root set, so a collection frees every slot.
+        //
+        // `footprint` falls by **exactly the String's units and nothing else**, which is the
+        // distinction worth pinning: those bytes are genuinely handed back when the `Box` drops,
+        // while the slots are made reusable rather than returned and go on being counted. So the
+        // two measures differ by every slot freed, and the schedule needs the one that says what is
+        // still held.
+        let paid = heap.footprint();
+        heap.collect(&Roots::default());
+        assert_eq!(
+            heap.footprint(),
+            paid - UNITS * size_of::<u16>(),
+            "only a String's units come back; a freed slot is reusable, not refunded"
+        );
+        assert!(
+            heap.live_footprint() < heap.footprint(),
+            "the live measure must now sit below what has been paid for: {} against {}",
+            heap.live_footprint(),
+            heap.footprint()
+        );
+        assert!(heap.live_footprint() < held);
     }
 
     #[test]

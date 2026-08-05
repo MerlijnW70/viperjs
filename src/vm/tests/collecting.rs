@@ -207,3 +207,135 @@ fn what_nothing_names_any_more_is_freed() {
     let asked = compile_script(&script, &mut heap).expect("the question compiles"); // same
     assert_eq!(describe_run(&asked, &mut vm, &mut heap), "1");
 }
+
+/// Run `source` twice on fresh machines, once with the loop collecting and once without, and
+/// answer both results and both footprints.
+fn with_and_without_a_schedule(source: &str) -> (String, String, usize, usize) {
+    let mut answers = Vec::new();
+    let mut footprints = Vec::new();
+    for growth in [Some(0), None] {
+        let mut heap = Heap::new();
+        let mut vm = Vm::new(&mut heap);
+        vm.set_collection_growth(growth);
+        let script = parse_script(source).expect("the source parses"); // the test is the answer
+        let chunk = compile_script(&script, &mut heap).expect("the source compiles"); // same
+        answers.push(describe_run(&chunk, &mut vm, &mut heap));
+        footprints.push(heap.footprint());
+    }
+    (
+        answers[0].clone(),
+        answers[1].clone(),
+        footprints[0],
+        footprints[1],
+    )
+}
+
+#[test]
+fn a_collection_at_every_check_changes_no_answer() {
+    // The root set's contract, forced. `Some(0)` collects at **every** thousand-instruction check,
+    // so anything the root set forgot is freed while the program that names it is still running —
+    // and the answer changes, or a later instruction reads a slot that has been handed to somebody
+    // else. Each of these touches a different kind of thing the machine holds outside the heap.
+    for source in [
+        // Strings from a chunk's constant table, concatenated across an allocation storm.
+        "var s = ''; for (var i = 0; i < 3000; i++) { s = 'ab' + 'cd'; } s",
+        // Closures over a per-iteration binding — the shape that retains most per pass.
+        "var f; for (let i = 0; i < 3000; i++) { f = function () { return i } } f()",
+        // Objects reachable only through another object's property.
+        "var o = { deep: { n: 0 } }; \
+         for (var i = 0; i < 3000; i++) { o.deep = { n: o.deep.n + 1 } } o.deep.n",
+        // A generator, whose parked execution is not on the frame stack at all.
+        "function* g() { var kept = 'held'; for (var i = 0; i < 500; i++) { yield i } return kept } \
+         var it = g(); var last; for (var j = 0; j < 400; j++) { last = it.next().value } \
+         last + ',' + it.next().value",
+        // A job queue that outlives the statement that filled it.
+        "var seen = []; for (var i = 0; i < 200; i++) { Promise.resolve(i).then(function (v) { \
+             seen.push(v) }) } seen.length",
+        // A `Map`'s keys, which the collector reaches through a collection rather than a property.
+        "var m = new Map(); for (var i = 0; i < 2000; i++) { m.set('k' + (i % 7), { at: i }) } \
+         m.size + ',' + m.get('k3').at",
+        // Template objects, which the machine keeps per call site rather than per chunk.
+        "function tag(parts) { return parts[0] } var t; \
+         for (var i = 0; i < 2000; i++) { t = tag`held` } t",
+    ] {
+        let (scheduled, unscheduled, _, _) = with_and_without_a_schedule(source);
+        assert_eq!(scheduled, unscheduled, "{source}");
+    }
+}
+
+#[test]
+fn a_schedule_stops_the_arena_growing_which_is_the_whole_point_of_it() {
+    // DR-0019 makes a swept slot reusable, so a collection does not lower `footprint` — it stops
+    // it *rising*. That is what this measures, and it is the difference between a program that
+    // reaches DR-0013's budget and one that does not.
+    // A closure over a per-iteration binding, which is the shape that retains most per pass — a
+    // plain call retains too little for 20,000 of them to separate the two runs decisively, and
+    // raising the count instead would make this the slowest test in the suite.
+    let (scheduled, unscheduled, with, without) = with_and_without_a_schedule(
+        "var f; for (let i = 0; i < 20000; i++) { f = function () { return i } } f()",
+    );
+    assert_eq!(scheduled, "19999");
+    assert_eq!(unscheduled, "19999");
+    // Not a ratio anybody should read as a promise — what is being asserted is the *direction*,
+    // and that the gap is far outside anything noise could produce.
+    //
+    // A base of `Some(0)` is not "collect at every check for ever": after the first collection the
+    // allowance becomes the live set, which is the proportional rule. So this measures a schedule
+    // behaving as a schedule rather than one thrashing, and the gap is what it is worth.
+    assert!(
+        with * 2 < without,
+        "collecting should hold the arena well below the run that never does: {with} against {without}"
+    );
+}
+#[test]
+fn a_body_compiled_at_run_time_survives_the_same_schedule() {
+    // The chunks with no source file behind them, which are the ones a reader suspects first when
+    // asking what the root set can reach. Each holds a String constant that appears nowhere else,
+    // so a collection that lost the chunk's table would answer with something other than it.
+    for source in [
+        "eval(\"var t = ''; for (var i = 0; i < 4000; i++) { t = 'only-in-eval' } t\")",
+        "var g = eval; g(\"var u = ''; for (var i = 0; i < 4000; i++) { u = 'indirect-only' } u\")",
+        "function h() { return eval(\"var v = ''; for (var i = 0; i < 4000; i++) { v = 'in-a-function' } v\") } h()",
+        "new Function(\"var w = ''; for (var i = 0; i < 4000; i++) { w = 'dynamic-fn' } return w\")()",
+    ] {
+        let (scheduled, unscheduled, _, _) = with_and_without_a_schedule(source);
+        assert_eq!(scheduled, unscheduled, "{source}");
+    }
+}
+
+#[test]
+fn a_sort_with_a_comparator_survives_a_collection_in_the_middle_of_it() {
+    // A built-in that re-enters the interpreter *and* holds a Rust-side working set while it does.
+    // `Array.prototype.sort` reads the elements out, calls a comparator that runs a program, and
+    // writes them back — so anything it is holding between those two moments is reachable only from
+    // a Rust local, which is the one place a root set cannot look.
+    let (scheduled, unscheduled, _, _) = with_and_without_a_schedule(
+        "var a = []; for (var i = 0; i < 2048; i++) { a.push({ n: 'A' + i, r: i % 3 }) } \
+         a.sort(function (x, y) { return x.r - y.r }); \
+         a.length + ',' + a[0].r + ',' + a[2047].r + ',' + (typeof a[5].n)",
+    );
+    assert_eq!(scheduled, unscheduled);
+    assert_eq!(scheduled, "2048,0,2,string");
+}
+
+#[test]
+fn a_threshold_the_program_never_reaches_collects_nothing() {
+    // The other side of the trigger's comparison. A base larger than everything the program
+    // allocates must leave the arena exactly as an unscheduled run does — which is what says the
+    // condition is a threshold rather than "collect whenever asked".
+    let source = "var f; for (let i = 0; i < 2000; i++) { f = function () { return i } } f()";
+    let mut footprints = Vec::new();
+    for growth in [Some(usize::MAX), None] {
+        let mut heap = Heap::new();
+        let mut vm = Vm::new(&mut heap);
+        vm.set_collection_growth(growth);
+        let script = parse_script(source).expect("the source parses"); // the test is the arena
+        let chunk = compile_script(&script, &mut heap).expect("the source compiles"); // same
+        assert_eq!(describe_run(&chunk, &mut vm, &mut heap), "1999");
+        footprints.push(heap.footprint());
+    }
+    assert_eq!(
+        footprints[0], footprints[1],
+        "a threshold nothing reaches must behave exactly as no threshold at all"
+    );
+}

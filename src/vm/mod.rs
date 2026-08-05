@@ -307,6 +307,24 @@ pub struct Vm {
     ///
     /// Read only inside the periodic check, so a run with no budget never asks the clock at all.
     expires_at: Option<std::time::Instant>,
+    /// How much the arena may **grow** between collections before the loop runs one itself.
+    ///
+    /// `None` is the historical behaviour: no collection happens unless a host asks for one.
+    ///
+    /// Growth and not size, because [`crate::heap::Heap::footprint`] is a high-water mark that
+    /// never falls. A threshold on the total would fire once and then at every check for ever,
+    /// since a collection cannot lower the number it is being compared against. Growth *since the
+    /// last collection* is the question that has an answer: DR-0019 hands a swept slot out again,
+    /// so a program whose live set is steady stops growing the arena entirely and never triggers a
+    /// second pass, while one that really is accumulating triggers as often as it accumulates.
+    collect_after_growth: Option<usize>,
+    /// The footprint when the last collection finished — the base `collect_after_growth` measures
+    /// from. Set at the start of a run so a fresh machine does not count the realm as growth.
+    collected_at: usize,
+    /// How much growth the *next* collection waits for, which is the base or the live set,
+    /// whichever is larger — see the site in `execute` for the measurement that made it
+    /// proportional rather than fixed.
+    collect_next: usize,
     /// Whether the machine has been stopped and must read no further instruction — DR-0022.
     ///
     /// Checked before an instruction is read, which is what makes it reach *every* execution: a
@@ -401,6 +419,16 @@ impl Vm {
             references: Vec::new(),
             until_check: 0,
             time_budget: None,
+            // DR-0023 — built, measured, and **off until one thing is proven**. Turning it on
+            // failed `modules::a_module_may_await_at_its_top_level_and_everything_importing_it_waits`
+            // and nothing else: a graph is evaluated through `link_and_evaluate`, which does not go
+            // through `run`'s preamble, so the schedule state is never initialised there *and* the
+            // root set over a partly-evaluated graph has not been established the way `collecting`
+            // establishes it for a script. One of those two is a bug and this record does not yet
+            // say which. The default flips in the commit that answers it.
+            collect_after_growth: None,
+            collected_at: 0,
+            collect_next: 0,
             expires_at: None,
             stopped: false,
             templates: std::collections::HashMap::new(),
@@ -599,6 +627,13 @@ impl Vm {
         self.expires_at = self
             .time_budget
             .map(|budget| std::time::Instant::now() + budget);
+        // The growth the schedule measures is this run's, so the base is taken here for the same
+        // reason the deadline is: a machine that ran once already has a footprint, and counting it
+        // as growth would collect on the first check of every later run.
+        self.collected_at = heap.footprint();
+        // The first collection of a run waits for the base; every one after it is told by the live
+        // set the previous one left.
+        self.collect_next = self.collect_after_growth.unwrap_or(0);
         // §14.2.2 — a statement list whose statements all produce nothing has the value
         // `undefined`, which is what `eval("var x")` and `eval(";")` come to.
         self.completion = Value::Undefined;
@@ -833,6 +868,30 @@ impl Vm {
         self.time_budget = budget;
     }
 
+    /// Let the loop collect for itself once the arena has grown this much since the last one.
+    ///
+    /// `None`, the default, is the behaviour every version until now: the collector runs only when
+    /// a host calls [`Vm::collect`]. What that costs is not abstract — a function call retains
+    /// about 74 bytes of arena, so `for (i = 0; i < 1e6; i++) s = f(i)` reaches DR-0013's budget
+    /// and throws a RangeError somewhere past 800,000 calls. With a threshold set it does not.
+    ///
+    /// # Why the argument is growth rather than a ceiling
+    ///
+    /// [`crate::heap::Heap::footprint`] is a high-water mark and a collection does not lower it —
+    /// DR-0019 makes a swept slot *reusable*, which stops the arena growing rather than shrinking
+    /// it. So "collect above 8 MiB" would fire at every check once crossed, for ever. Growth since
+    /// the last collection is self-limiting instead: a steady program stops growing and stops
+    /// collecting, and one that is genuinely accumulating pays in proportion to what it accumulates.
+    ///
+    /// # What it is honoured to
+    ///
+    /// The same interval as DR-0022's budget — a thousand instructions, and between them rather
+    /// than inside one. A single built-in that allocates without returning is not interrupted, so
+    /// this bounds a *program*'s growth and not any one operation's.
+    pub fn set_collection_growth(&mut self, growth: Option<usize>) {
+        self.collect_after_growth = growth;
+    }
+
     /// Free everything this machine can no longer reach, and answer how much that was.
     ///
     /// The host's to call, and the interpreter runs none on a schedule of its own. That was
@@ -858,7 +917,38 @@ impl Vm {
     /// native while the interpreter is mid-instruction: the operands of the instruction in flight
     /// are on the stack and rooted, but a value a Rust local is holding and has not pushed is not.
     pub fn collect(&self, root: &Chunk, heap: &mut Heap) -> crate::heap::Collected {
-        let roots = self.roots(root);
+        let roots = self.roots(root, None);
+        heap.collect(&roots)
+    }
+
+    /// The same, from inside the loop, where one more chunk is live than `roots` can find.
+    ///
+    /// `running` is the body the machine is **currently** executing, and it is in none of the
+    /// places `roots` looks. `Frame::code` holds the chunk to go *back* to, so the innermost body
+    /// is only ever in `execute`'s own `current` local — every frame on the stack names its
+    /// caller's code and not its own.
+    ///
+    /// **No program has been found that needs it, and that was measured rather than assumed.** The
+    /// line was removed by hand and the whole suite run again with a collection at *every* check:
+    /// nothing failed, including bodies entered through a resumed generator, a direct `eval`, an
+    /// indirect one and `new Function` — each of which this doc previously claimed would need it.
+    /// They do not. Every chunk that can be `current` is owned by something already rooted: the
+    /// root chunk is walked above, and a function body is reached through the frame that names its
+    /// function object, whose `Callable::Bytecode` the collector walks the constants of.
+    ///
+    /// It is kept anyway, and the reason is asymmetry rather than doubt about the argument. Being
+    /// wrong here does not throw — it hands a later instruction a slot somebody else now owns, and
+    /// this file's own header says that is the failure a root set exists to prevent. The cost is one
+    /// walk of one constant table per collection, paid only when collecting. A guard that cannot be
+    /// distinguished is usually one to delete; a *root* that cannot be distinguished is one whose
+    /// absence no test would announce.
+    fn collect_running(
+        &self,
+        root: &Chunk,
+        running: Option<&Chunk>,
+        heap: &mut Heap,
+    ) -> crate::heap::Collected {
+        let roots = self.roots(root, running);
         heap.collect(&roots)
     }
 
@@ -877,9 +967,14 @@ impl Vm {
     ///
     /// `root` is the chunk being run, which the machine does not hold: it is lent to `run` and its
     /// constants are the Strings the outermost code is about to use.
-    fn roots(&self, root: &Chunk) -> crate::heap::Roots {
+    fn roots(&self, root: &Chunk, running: Option<&Chunk>) -> crate::heap::Roots {
         let mut values = Vec::new();
         let mut environments = vec![self.environment];
+        // The body the machine is in the middle of, when there is one — see `collect_running` for
+        // why no frame names it.
+        if let Some(chunk) = running {
+            chunk.names(&mut values); // no program distinguishes it — see `collect_running`
+        }
 
         values.extend(self.stack.iter().copied());
         values.extend([self.this_value, self.new_target, self.completion]);
