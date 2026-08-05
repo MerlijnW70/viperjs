@@ -1209,3 +1209,41 @@ fn a_proxy_used_as_a_write_receiver_has_its_traps_called_and_not_walked_past() {
         "has:p,get:Symbol(Symbol.unscopables),has:p,set:p,gopd:p,dp:p"
     );
 }
+
+#[test]
+fn a_proxy_with_no_set_trap_answers_with_what_the_target_said() {
+    // §10.5.9 step 6 — `Return ? target.[[Set]](P, V, Receiver)`. A missing trap forwards the
+    // write *and its answer*; it does not make the write succeed. Invisible until the target
+    // refuses, which is why a non-extensible one is what asks the question.
+    // The write is refused *and* nothing is written — the answer and the effect agree.
+    assert_eq!(
+        run("var t = {}; Object.preventExtensions(t); \
+             var p = new Proxy(t, {}); \
+             Reflect.set(p, 'x', 1) + ',' + ('x' in t)"),
+        "false,false"
+    );
+    // …and it forwards through more than one layer, the receiver staying the outermost proxy.
+    assert_eq!(
+        run("var t = {}; Object.preventExtensions(t); \
+             var p = new Proxy(new Proxy(t, {}), {}); \
+             Reflect.set(p, 'x', 1)"),
+        "false"
+    );
+    // A target that accepts still answers `true`, so this is not "a trapless proxy refuses".
+    assert_eq!(
+        run("var t = {}; var p = new Proxy(t, {}); \
+             Reflect.set(p, 'x', 1) + ',' + t.x"),
+        "true,1"
+    );
+    // The same refusal reached from an ordinary strict assignment is a TypeError, because
+    // §6.2.5.6 turns a `[[Set]]` of `false` into one — the answer being forwarded is what makes
+    // this throw rather than pass silently.
+    assert_eq!(
+        run(
+            "var t = {}; Object.preventExtensions(t); var p = new Proxy(t, {}); \
+             (function () { 'use strict'; try { p.x = 1; return 'stored' } \
+              catch (e) { return e.constructor.name } })()"
+        ),
+        "TypeError"
+    );
+}

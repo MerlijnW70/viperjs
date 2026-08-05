@@ -194,9 +194,18 @@ impl Vm {
             return Ok(None);
         };
         let (trap, handler, target) = match trapped {
+            // §10.5.9 step 6 — `Return ? target.[[Set]](P, V, Receiver)`, and the `Return` is the
+            // whole of it. A proxy with no `set` trap is not a proxy that always succeeds; it is one
+            // whose answer is the target's. praxis ran the write and reported `true` regardless, so
+            // `Reflect.set(new Proxy(sealed, {}), 'x', 1)` said the write happened when nothing had
+            // been written anywhere.
+            //
+            // Every sibling here already forwards its answer — `[[Delete]]` below is the model.
+            // This was the one that did not, and it is invisible until the target refuses.
             Trapped::Target(target) => {
-                self.set_through(Value::Object(target), key, value, receiver, heap)?;
-                return Ok(Some(true));
+                let answered =
+                    self.set_through(Value::Object(target), key, value, receiver, heap)?;
+                return Ok(Some(answered.to_boolean(heap)));
             }
             Trapped::Handler {
                 trap,

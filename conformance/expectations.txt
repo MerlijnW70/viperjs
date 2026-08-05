@@ -2702,14 +2702,8 @@ built-ins/Proxy/ownKeys/trap-is-not-callable-realm.js (strict) :: it threw TypeE
 built-ins/Proxy/preventExtensions/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/preventExtensions/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/revocable/tco-fn-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/set/trap-is-missing-target-is-proxy.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Proxy/set/trap-is-missing-target-is-proxy.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Proxy/set/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/set/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/set/trap-is-null-target-is-proxy.js :: it threw an object with no name: Expected true but got false
-built-ins/Proxy/set/trap-is-null-target-is-proxy.js (strict) :: it threw an object with no name: Expected true but got false
-built-ins/Proxy/set/trap-is-undefined-target-is-proxy.js :: it threw an object with no name: Expected true but got false
-built-ins/Proxy/set/trap-is-undefined-target-is-proxy.js (strict) :: it threw an object with no name: Expected true but got false
 built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Reflect/set/receiver-is-not-object.js :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
