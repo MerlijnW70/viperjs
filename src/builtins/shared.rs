@@ -19,17 +19,32 @@
 //! shared one. §25.4.3's `ValidateIntegerTypedArray` asks about the *element kind* rather than
 //! about sharing, which is the check these actually make.
 //!
-//! # `wait` and `notify` with one agent, which is not the same as without them
+//! # Waiting with one agent, where blocking and not blocking come apart
 //!
-//! Both are implemented, and neither is a stub. [`notify`] answers `+0` because that is what
-//! waking a list with nothing on it returns, and [`wait`] throws a TypeError because DoWait step
-//! 12 asks `AgentCanSuspend()` and this agent cannot — nothing could ever wake it. A browser's
-//! main thread answers identically, which is what test262's `CanBlockIsFalse` flag is for.
+//! The three waiting operations do not share a fate here, and the line between them is whether
+//! the agent has to stop.
 //!
-//! What that leaves is everything before those steps, and it is most of what a test can see: the
-//! *waitable* kind check ([`Kinds`]), which admits `Int32Array` and `BigInt64Array` alone, the
-//! index, and the conversions of the value, the count and the timeout — each of which may run the
-//! program's own `valueOf` and must run in the clause's order.
+//! [`wait`] throws a TypeError, always. DoWait step 12 asks `AgentCanSuspend()` and this agent
+//! cannot: with no second agent, one that suspended could never be woken by anybody. A browser's
+//! main thread answers the same way, which is what test262's `CanBlockIsFalse` flag is for.
+//!
+//! [`wait_async`] **works**, and that is not a contradiction — it never suspends anything. The
+//! agent parks a promise and carries straight on, so it can reach [`notify`] a statement later and
+//! wake its *own* waiter. test262's `undefined-for-timeout.js` is exactly that program. So
+//! `Vm::waiters` is a real §25.4.1 waiter list rather than a formality, and `notify` answers how
+//! many it woke.
+//!
+//! **One case is out of reach and it is worth naming precisely** — DR-0024: a waiter with a
+//! *finite, non-zero* timeout that nothing notifies should settle `"timed-out"` when the timeout
+//! elapses, and there is no timer here to elapse it, so it stays parked. A timeout of zero is
+//! answered immediately without a promise, and a notify settles a waiter whatever its timeout was,
+//! so the gap is one shape rather than the feature. The record says what would close it and why
+//! the three obvious fakes are each worse than the gap.
+//!
+//! Around all three sits the part a test mostly measures: the *waitable* kind check ([`Kinds`]),
+//! which admits `Int32Array` and `BigInt64Array` alone, the index, and the conversions of the
+//! value, the count and the timeout — each of which may run the program's own `valueOf` and must
+//! run in the clause's order.
 
 use super::{define_method, define_value, key};
 use crate::heap::{Element, Heap, Native, NativeCall, Numeric, ObjectId, PropertyDescriptor, View};
@@ -443,31 +458,101 @@ fn compare_exchange(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comp
 
 /// §25.4.3.7 `Atomics.notify(typedArray, index, count)`.
 ///
-/// Always answers `+0` here, and that is the specification's own answer rather than a stub: step 8
-/// wakes the waiters on a list, ViperJS has one agent, and an agent cannot be waiting while it is
-/// running this. What the clause still asks for is every step *before* that — the waitable kind
-/// check, the index, and the count's coercion — each of which can throw and each of which runs
-/// user code the program can observe.
+/// Wakes the agent's **own** waiters, which is not the contradiction it sounds like: a
+/// [`wait_async`] does not block, so the agent that parked one goes on running and reaches this.
+/// Step 8 settles each woken promise with `"ok"` and the answer is how many were woken.
 ///
 /// **The non-shared case is a `0` and not an error**, which is where this parts company with
-/// [`wait`]: step 7 returns `+0` for an ordinary `ArrayBuffer`, because notifying nobody is what
-/// notifying a buffer no one can share amounts to. Refusing it would be a stricter engine, not a
-/// more correct one.
+/// [`wait`]: step 7 returns `+0` for an ordinary `ArrayBuffer` — nothing can be waiting on a
+/// buffer no one else can reach. Refusing it would be a stricter engine, not a more correct one.
+///
+/// The waiters are settled **after** the list has been emptied, and that ordering is load-bearing:
+/// resolving a promise runs the program's jobs eventually, and a `then` that calls `notify` again
+/// must not find the waiter this call has already claimed.
 fn notify(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let _ = target(vm, heap, call, Kinds::Waitable)?;
-    // Step 3 — the count is computed and then thrown away, because with nothing waiting there is
-    // no number of woken agents for a program to see. It is still computed, and that is the point:
-    // computing it is what runs the program's own `valueOf` and what lets that `valueOf`'s throw
-    // out, both of which are observable where the number is not.
-    //
-    // **The clause's `undefined` → +∞ case is deliberately not branched on.** +∞ and
-    // `ToIntegerOrInfinity(undefined)`'s 0 are both discarded, and `ToNumber(undefined)` is `NaN`
-    // and cannot throw — so a branch there is one no program could ever distinguish. Written as a
-    // case it survived mutation, which is the ratchet saying the branch is not a missing test but
-    // a distinction this engine cannot have.
-    let count = vm.to_number(call.argument(2), heap)?;
-    let _ = super::string::to_integer_or_infinity(count).max(0.0);
-    Ok(Value::Number(0.0))
+    let (view, element, at) = target(vm, heap, call, Kinds::Waitable)?;
+    // Step 3 — a missing count is **+∞** and not `ToIntegerOrInfinity(undefined)`'s zero, which is
+    // the one argument here where absent and zero must not agree: `Atomics.notify(a, 0)` wakes
+    // everything, and reading it as 0 would wake nothing and answer 0 while looking right.
+    // `ToNumber(undefined)` is `NaN` and `to_integer_or_infinity` maps that to 0, so the case has
+    // to be written out — and it is now observable, where before nothing was ever woken.
+    let count = match call.argument(2) {
+        Value::Undefined => f64::INFINITY,
+        given => {
+            let number = vm.to_number(given, heap)?;
+            super::string::to_integer_or_infinity(number).max(0.0)
+        }
+    };
+    // Step 7 — a buffer nobody else can reach can have nothing waiting on it. Asked after the
+    // count, because the count's conversion is a step the program can see and this is not an error.
+    if !heap
+        .object(view.buffer)
+        .and_then(crate::heap::Object::buffer)
+        .is_some_and(crate::heap::Buffer::shared)
+    {
+        return Ok(Value::Number(0.0));
+    }
+    let woken = vm.take_waiters(view.buffer, view.offset + at * element.width(), count);
+    let total = woken.len();
+    let ok = super::text(heap, "ok");
+    for capability in woken {
+        vm.settle_capability(capability, crate::heap::ReactionKind::Fulfil, ok, heap)?;
+    }
+    Ok(Value::Number(total as f64))
+}
+
+/// §25.4.3.15 `Atomics.waitAsync(typedArray, index, value, timeout)` — DoWait in `async` mode.
+///
+/// The half of DoWait that [`wait`] cannot reach. It never suspends the agent, so
+/// `AgentCanSuspend()` is not asked and this works here where the blocking form cannot: the agent
+/// carries on and may wake its own waiter with [`notify`] a statement later, which is exactly what
+/// test262's `undefined-for-timeout.js` does.
+///
+/// Three answers, and the shape says which. Two of them settle **before returning** and are handed
+/// back as a plain String with `async: false` — the value having changed already, and a timeout of
+/// zero — because there is nothing left to wait for and a promise would only delay a known answer
+/// by a turn. The third parks and answers `async: true` with the promise.
+///
+/// **What this engine cannot do is time one out.** A waiter with a finite timeout that nothing
+/// notifies should settle `"timed-out"` when the timeout elapses, and there is no timer to elapse
+/// it — so it stays parked. The divergence is bounded to that case: a timeout of zero is answered
+/// immediately, and a notify settles a waiter whatever its timeout was.
+fn wait_async(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let (view, element, at) = target(vm, heap, call, Kinds::SharedWaitable)?;
+    let expected = vm.to_numeric(element.holds_big(), call.argument(2), heap)?;
+    // Step 6's `ToNumber`, and NaN is +∞ rather than zero — the reverse of what `ToIndex` gives,
+    // and why `waitAsync(a, 0, 0)` waits rather than answering at once.
+    let timeout = vm.to_number(call.argument(3), heap)?;
+    let timeout = match timeout.is_nan() {
+        true => f64::INFINITY,
+        false => timeout.max(0.0),
+    };
+    let Some(held) = heap.numeric_at(view, at) else {
+        return Err(Abrupt::type_error("this ArrayBuffer has been detached"));
+    };
+    // Step 17 — the comparison is against the value as the element kind *stores* it, the same rule
+    // `compareExchange` makes, so an expectation past the width matches the bits it would land as.
+    let stored = element
+        .write_numeric(&expected, false)
+        .map(|bytes| element.read(&bytes));
+    let settled = match stored.as_ref() == Some(&held) {
+        false => Some("not-equal"),
+        true if timeout == 0.0 => Some("timed-out"),
+        true => None,
+    };
+    let outcome = heap.new_object(Some(vm.realm().object_prototype()));
+    let (asynchronous, value) = match settled {
+        Some(answer) => (false, super::text(heap, answer)),
+        None => {
+            let capability = vm.intrinsic_capability(heap);
+            let promise = capability.promise;
+            vm.park_waiter(view.buffer, view.offset + at * element.width(), capability);
+            (true, promise)
+        }
+    };
+    super::create_data_property(heap, outcome, "async", Value::Boolean(asynchronous));
+    super::create_data_property(heap, outcome, "value", value);
+    Ok(Value::Object(outcome))
 }
 
 /// §25.4.3.14 `Atomics.wait(typedArray, index, value, timeout)`.
@@ -556,6 +641,7 @@ pub(super) fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         ("store", 3, store),
         ("sub", 3, sub),
         ("wait", 4, wait),
+        ("waitAsync", 4, wait_async),
         ("xor", 3, xor),
     ] {
         define_method(heap, realm, atomics, name, length, native);

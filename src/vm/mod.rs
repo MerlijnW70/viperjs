@@ -203,6 +203,25 @@ pub(super) struct Handler {
     pub(super) environment: EnvironmentId,
 }
 
+/// §25.4.1.2's Waiter Record, for the one agent this engine has.
+///
+/// **A waiter here is not a parked thread**, and that is why the list is worth keeping at all.
+/// `Atomics.waitAsync` does not block: the agent that parks a waiter carries straight on and may
+/// wake its *own* waiter with `Atomics.notify` a statement later. test262's
+/// `undefined-for-timeout.js` does exactly that — four waits on an infinite timeout, then one
+/// notify — where a blocking `Atomics.wait` in a single agent could never be woken by anybody and
+/// is refused outright.
+pub(crate) struct Waiter {
+    /// The buffer holding the position. Two views over one buffer share a list.
+    pub(crate) buffer: crate::heap::ObjectId,
+    /// The **byte** offset in that buffer, so views of different element widths agree about
+    /// whether they name the same position — §25.4.1 keys a list on a block and a byte index, and
+    /// an element index would make an `Int32Array`'s slot 1 miss a `BigInt64Array`'s slot 0.
+    pub(crate) byte: usize,
+    /// The promise `waitAsync` answered with, settled with `"ok"` when a notify reaches it.
+    pub(crate) capability: crate::heap::Capability,
+}
+
 /// The interpreter.
 ///
 /// Holds the operand stack and nothing else so far. Call frames, the environment and the job
@@ -235,6 +254,12 @@ pub struct Vm {
     environment: EnvironmentId,
     /// The script's completion value so far — §14.2.2's `UpdateEmpty`, as a register.
     completion: Value,
+    /// §25.4.1.2's waiter records — the agent's own `Atomics.waitAsync` parks, still unwoken.
+    ///
+    /// On the machine for the same reason the modules below are: a waiter outlives the call that
+    /// made it, and the promise it is holding is reachable from nothing else the collector walks
+    /// until a notify or a `then` finds it.
+    waiters: Vec<Waiter>,
     /// Every module this execution has linked, by chunk identity — §16.2.1's records.
     ///
     /// On the machine rather than in a local of the link, because §16.2.1.6's "each body once" is a
@@ -398,6 +423,7 @@ impl Vm {
     /// throws needs a prototype to be an instance of.
     pub fn new(heap: &mut Heap) -> Self {
         Self {
+            waiters: Vec::new(),
             modules: std::collections::BTreeMap::new(),
             resolved: Graph::new(),
             edges: std::collections::BTreeMap::new(),
@@ -975,6 +1001,49 @@ impl Vm {
     ///
     /// `root` is the chunk being run, which the machine does not hold: it is lent to `run` and its
     /// constants are the Strings the outermost code is about to use.
+    /// §25.4.1.5 `AddWaiter` — park a `waitAsync`'s promise on a position for a later notify.
+    pub(crate) fn park_waiter(
+        &mut self,
+        buffer: crate::heap::ObjectId,
+        byte: usize,
+        capability: crate::heap::Capability,
+    ) {
+        self.waiters.push(Waiter {
+            buffer,
+            byte,
+            capability,
+        });
+    }
+
+    /// §25.4.1.7 `RemoveWaiters` — take up to `count` of the waiters on a position, oldest first.
+    ///
+    /// The order is the specification's and is observable: §25.4.1.5 appends, and a notify with a
+    /// count smaller than the list wakes the *earliest* waiters, so two promises settle in the
+    /// order their `waitAsync` calls were made rather than in whatever order a container happens to
+    /// hold them.
+    ///
+    /// `count` is an `f64` because §25.4.3.7 step 3 makes a missing count **+∞** — a value no
+    /// integer type can hold, and one that must mean "all of them" rather than saturating to a
+    /// large number that happens to exceed the list.
+    pub(crate) fn take_waiters(
+        &mut self,
+        buffer: crate::heap::ObjectId,
+        byte: usize,
+        count: f64,
+    ) -> Vec<crate::heap::Capability> {
+        let mut taken = Vec::new();
+        let mut left = count;
+        self.waiters.retain(|waiter| {
+            if left > 0.0 && waiter.buffer == buffer && waiter.byte == byte {
+                taken.push(waiter.capability);
+                left -= 1.0;
+                return false;
+            }
+            true
+        });
+        taken
+    }
+
     fn roots(&self, root: &Chunk, running: Option<&Chunk>) -> crate::heap::Roots {
         let mut values = Vec::new();
         let mut environments = vec![self.environment];
@@ -1028,6 +1097,16 @@ impl Vm {
         // execution whether or not anything is currently running it — a later `import()` of the same
         // specifier must find the same namespace and must not run the body again. Freeing an
         // environment here would leave a namespace object reading slots that are gone.
+        // §25.4.1's waiter records. A parked `waitAsync` holds the only reference to the promise
+        // it answered with until a notify or a `then` reaches it, so a collection in between would
+        // free a promise a later `Atomics.notify` is about to settle.
+        for waiter in &self.waiters {
+            values.extend([
+                waiter.capability.promise,
+                waiter.capability.resolve,
+                waiter.capability.reject,
+            ]);
+        }
         for record in self.modules.values() {
             environments.push(record.environment);
             values.extend(record.namespace.map(Value::Object));

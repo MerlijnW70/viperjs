@@ -265,10 +265,11 @@ fn an_atomic_refuses_the_kinds_and_indices_an_ordinary_element_read_would_allow(
         ),
         "[object Atomics],object,function"
     );
-    // `waitAsync` is the one of the four that is *not* here, and it is absent on purpose rather
-    // than forgotten: it answers a promise that settles when a timeout elapses, and this engine
-    // has no timer to elapse one. Pinned so that building it is a deliberate change to this row.
-    assert_eq!(run("typeof Atomics.waitAsync"), "undefined");
+    // Three of the four are here; `pause` is a separate proposal and is not.
+    assert_eq!(
+        run("typeof Atomics.waitAsync + ',' + typeof Atomics.pause"),
+        "function,undefined"
+    );
 }
 
 #[test]
@@ -361,9 +362,9 @@ fn compare_exchange_compares_what_the_slot_would_hold_and_never_a_clamped_form_o
 }
 
 #[test]
-fn notify_answers_zero_and_still_runs_every_step_before_the_waking() {
-    // §25.4.3.7 step 8 wakes a waiter list. With one agent nothing can be on one — an agent that
-    // is running this is not waiting — so the answer is `+0` by the clause rather than by omission.
+fn notify_wakes_this_agents_own_waiters_and_answers_how_many() {
+    // Nothing parked, so nothing to wake — but this is `+0` by counting an empty list, not by the
+    // operation being decorative. The rows below park first and get a different number.
     assert_eq!(
         run("var a = new Int32Array(new SharedArrayBuffer(16)); Atomics.notify(a, 0, 1)"),
         "0"
@@ -496,5 +497,124 @@ fn wait_refuses_because_this_agent_cannot_suspend_and_converts_first() {
         run("Atomics.wait.length + ',' + Atomics.wait.name + ',' \
              + Atomics.notify.length + ',' + Atomics.notify.name"),
         "4,wait,3,notify"
+    );
+}
+
+#[test]
+fn wait_async_parks_a_promise_that_this_agents_own_notify_wakes() {
+    // The two answers that settle before returning carry `async: false` and a **String**, because
+    // there is nothing left to wait for: the value has already changed, or the timeout is zero.
+    assert_eq!(
+        run("var a = new Int32Array(new SharedArrayBuffer(32)); \
+             var r = Atomics.waitAsync(a, 0, 0, 0); r.async + ',' + r.value"),
+        "false,timed-out"
+    );
+    assert_eq!(
+        run("var a = new Int32Array(new SharedArrayBuffer(32)); \
+             var r = Atomics.waitAsync(a, 0, 42); r.async + ',' + r.value"),
+        "false,not-equal"
+    );
+    // A negative timeout is `max(q, 0)` and not an error — it is a duration, where an index would
+    // have been a RangeError. So -1 answers at once rather than waiting.
+    assert_eq!(
+        run("var a = new Int32Array(new SharedArrayBuffer(32)); \
+             Atomics.waitAsync(a, 0, 0, -1).value"),
+        "timed-out"
+    );
+    // …and the third answer parks, with `%Promise%` itself rather than whatever `Promise` names.
+    assert_eq!(
+        run("var a = new Int32Array(new SharedArrayBuffer(32)); \
+             var r = Atomics.waitAsync(a, 0, 0, 1000); \
+             r.async + ',' + (r.value instanceof Promise) \
+             + ',' + (Object.getPrototypeOf(r.value) === Promise.prototype)"),
+        "true,true,true"
+    );
+    // The whole point of the list with one agent: the agent that parked carries on and wakes its
+    // own waiter. A blocking `Atomics.wait` could never reach the next statement.
+    assert_eq!(
+        run(
+            "var a = new Int32Array(new SharedArrayBuffer(32)); var said = 'nothing'; \
+             Atomics.waitAsync(a, 0, 0).value.then(function (o) { said = o; }); \
+             var woke = Atomics.notify(a, 0); \
+             woke + ',' + said"
+        ),
+        // `said` is still untouched here: settling queues a job and §9.5 runs it after this script.
+        "1,nothing"
+    );
+    // The promise really does settle with "ok", which the row above deliberately cannot show —
+    // `run_settled` drains §9.5's queue first and only then reads the expression.
+    assert_eq!(
+        run_settled(
+            "var a = new Int32Array(new SharedArrayBuffer(32)); var said = 'nothing'; \
+             Atomics.waitAsync(a, 0, 0).value.then(function (o) { said = o; }); \
+             Atomics.notify(a, 0);",
+            "said"
+        ),
+        "ok"
+    );
+    // …and a waiter nothing notifies stays parked rather than settling, because there is no timer
+    // to time it out. This is the recorded divergence, pinned here so that building a timer has to
+    // change this row deliberately rather than quietly.
+    assert_eq!(
+        run_settled(
+            "var a = new Int32Array(new SharedArrayBuffer(32)); var said = 'nothing'; \
+             Atomics.waitAsync(a, 0, 0, 1).value.then(function (o) { said = o; });",
+            "said"
+        ),
+        "nothing"
+    );
+    // A count smaller than the list wakes that many and leaves the rest parked — and §25.4.1.5
+    // appends, so it is the *earliest* waiters that go.
+    assert_eq!(
+        run("var a = new Int32Array(new SharedArrayBuffer(32)); \
+             Atomics.waitAsync(a, 0, 0); Atomics.waitAsync(a, 0, 0); Atomics.waitAsync(a, 0, 0); \
+             Atomics.notify(a, 0, 2) + ',' + Atomics.notify(a, 0)"),
+        "2,1"
+    );
+    // A missing count is +∞ and not zero, which is the row that fails if `undefined` is read as
+    // `ToIntegerOrInfinity(undefined)`: two waiters, one notify with no count, both woken.
+    assert_eq!(
+        run("var a = new Int32Array(new SharedArrayBuffer(32)); \
+             Atomics.waitAsync(a, 0, 0); Atomics.waitAsync(a, 0, 0); Atomics.notify(a, 0)"),
+        "2"
+    );
+    // The list is keyed on a **byte** position, so a waiter at index 1 is not woken by a notify at
+    // index 0 — and a notify at the wrong index answers 0 rather than waking the wrong promise.
+    assert_eq!(
+        run("var a = new Int32Array(new SharedArrayBuffer(32)); \
+             Atomics.waitAsync(a, 1, 0); Atomics.notify(a, 0) + ',' + Atomics.notify(a, 1)"),
+        "0,1"
+    );
+    // Two views of different widths over one buffer agree about the position, because the key is a
+    // byte offset: a `BigInt64Array`'s slot 0 and an `Int32Array`'s slot 0 are the same eight-byte
+    // start. An element-index key would make these two different lists and the notify would miss.
+    assert_eq!(
+        run("var b = new SharedArrayBuffer(32); \
+             var w = new BigInt64Array(b); var n = new Int32Array(b); \
+             Atomics.waitAsync(w, 0, 0n); Atomics.notify(n, 0)"),
+        "1"
+    );
+    // An unshared buffer is refused by `waitAsync` exactly as by `wait` — nothing else can reach
+    // it, so a parked promise there could only ever be woken by the parking agent itself, and the
+    // clause does not allow it.
+    assert_eq!(
+        run("try { Atomics.waitAsync(new Int32Array(4), 0, 0) } catch (e) { e.message }"),
+        "this is not a SharedArrayBuffer"
+    );
+    // Step 17 compares against the value **as the element kind stores it**, and storing wraps
+    // rather than clamps: 2**31 lands in an `Int32Array` as -2147483648, so a cell holding that is
+    // a match and the wait parks. Clamping would make it 2147483647, find no match, and answer
+    // "not-equal" — the same shape `compareExchange` has, and the only row that tells the two
+    // apart, since `Uint8ClampedArray` is not a waitable kind and can never reach this.
+    assert_eq!(
+        run(
+            "var a = new Int32Array(new SharedArrayBuffer(32)); a[0] = -2147483648; \
+             var r = Atomics.waitAsync(a, 0, 2147483648); r.async + ',' + r.value"
+        ),
+        "true,[object Promise]"
+    );
+    assert_eq!(
+        run("Atomics.waitAsync.length + ',' + Atomics.waitAsync.name"),
+        "4,waitAsync"
     );
 }
