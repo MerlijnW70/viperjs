@@ -16,8 +16,10 @@ It runs about **84% of test262** — classes, generators, `async`/`await`, ES mo
 `BigInt`, TypedArrays, and its own regular-expression engine. No `unsafe`, no crates, and no input
 makes it panic.
 
-> Two names, so that neither surprises you: the **crate** is `viperjs` and the **command** it
-> installs is `viper`.
+**Why it exists.** Embedding a scripting language should not mean embedding a C++ codebase, a
+build system and someone else's `unsafe`. The constraint — no dependencies, no `unsafe`, no panics
+— is the product; everything else follows from it, including writing the regular-expression engine
+by hand. [GOAL.md](GOAL.md) is the binding version of that argument.
 
 ## Run some JavaScript right now
 
@@ -32,6 +34,9 @@ cargo build --release
 ```
 1,4,9
 ```
+
+> Two names, so that neither surprises you: the **crate** is `viperjs` and the **command** it
+> installs is `viper`.
 
 Run a file, pipe one in, or type at a prompt:
 
@@ -123,10 +128,20 @@ cargo run --release -p conformance -- --test262 ../test262
 
 **Two caveats, both honest.** The second percentage is the one to quote; the first flatters an
 engine that declines most of the suite, and it *falls* whenever the engine learns to compile
-something new. And the number **moves by a couple of hundred runs between invocations**: roughly 900
-test262 files sit exactly on the harness's ten-second per-test budget and cross it in either
-direction with machine load. `conformance/expectations.txt` is the real record — it may only shrink,
-so a genuine regression is still a hard failure.
+something new.
+
+And the number **moves by a couple of hundred runs between invocations.** Three consecutive runs of
+one unchanged commit on an idle machine gave 78,222, then 78,504, then 78,566 passing. That spread
+is not progress: roughly 900 `RegExp/property-escapes` files sit exactly on the harness's
+ten-second per-test budget and cross it in either direction with machine load — the same file
+reports "the heap has grown past what this engine will allocate" on one run and "it did not finish
+within 10 seconds" on the next. Taking the intersection of those three runs, every one of the 490
+tests that "newly passed" had been failing on the heap budget, and none lay outside that one
+directory.
+
+So quote the low end, and treat a jump in that bucket as weather.
+`conformance/expectations.txt` is the real record — it may only shrink, so a genuine regression is
+still a hard failure.
 
 ## Point it at your own code
 

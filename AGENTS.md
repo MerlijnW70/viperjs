@@ -215,8 +215,10 @@ Two consequences beyond the parser, each one line and each with a test that fail
   the alternative that matched, and the answer would depend on source order.
 
 **What it exposed is worth naming: six tests moved from `did not parse` to a real gap** — the `d`
-flag's `.indices` array, which ViperJS does not build at all. That is a next slice with its own
-tests already listed against it.
+flag's `.indices` array, which ViperJS did not build at all. **That slice has since landed**
+(§22.2.7.8, +48 runs), so `/(a)(b)/d.exec("ab").indices` is `[[0,2],[0,1],[1,2]]` today. Left here
+because the *shape* is the reusable part: a bucket that stops saying `did not parse` and starts
+naming a real gap is the ratchet handing you the next slice.
 
 ### One `?`, and 109 runs: §15.8.4 rejects where the generator clauses throw
 
