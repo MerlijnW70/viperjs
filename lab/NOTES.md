@@ -29,6 +29,102 @@ reproducible.
 
 ---
 
+## somebody-elses-code — on twenty thousand real files, what breaks first?
+
+**Date:** 2026-08-05
+**Question:** `run-module` showed three.js links and runs, which is one library chosen for having no
+host dependencies. The conformance number says what fraction of *test262* passes and test262 is
+written to probe edges, not to resemble a program anybody ships. **Pointed at large repositories
+written by people who have never heard of this engine, what fails — and is the first failure a
+grammar gap, a library gap, or something else entirely?**
+**Setup:** four checkouts, kept outside the working tree. `examples/parse --commonjs` over
+`nodejs/node`'s `lib/` and `test/` (sparse checkout), `webpack/webpack` excluding `node_modules`, and
+`ramda/ramda`'s ESM `source/`. Then `run-module` over ramda's entry, and a 36-row probe importing
+across the library — currying, transducers, `equals` over Map/Set/`-0`/`NaN`, lenses, `sortWith`
+comparators, global-flag regex with a replacer function, object algebra, numerics — run **from the
+same file** under this engine and under node v22.22.1, and diffed. Finally a compute-bound
+benchmark in both, and a bisect of the call-loop ceiling.
+
+**Result — the parser found nothing, and that is the whole of the parser's result.**
+
+| corpus | files | parsed | panicked | |
+| --- | --- | --- | --- | --- |
+| `node/lib` | 407 | 406 | 0 | 5.2 MB in 0.2 s |
+| `node/test` | 8,235 | 8,165 | 0 | 29.2 MB in 1.2 s |
+| `webpack` | 11,368 | 11,162 | 0 | 15.3 MB in 0.9 s |
+| `ramda/source` | 369 | 369 | 0 | 0.4 MB |
+
+Every one of the 277 failures was triaged and every one is a **correct refusal**: Stage 3 proposals
+(`using` 41, `import defer` 26, `import source` 19, `import.source`/`import.defer` 13, the retired
+`assert { type: "json" }` 15), JSX 11, webpack's `---` fixture separator which is not JavaScript 22,
+deliberately-broken syntax-error fixtures, one file of V8 natives syntax (`%PrepareFunctionFor…`),
+and one generated validator over `MAX_NESTING_DEPTH` — the same DR-0006 case three.js's draco blob
+hit, at column 156,314 of a machine-written line.
+
+**Two refusals were checked against node rather than against a reading, and both held.**
+
+- `webpack/test/configCases/rebuild/finishModules/other-file.js` has `import foo from "./module"`
+  and `export const foo = {…}` in one module. §16.2.1.1 makes that a duplicate lexical declaration.
+  Node agrees to the line and column: `SyntaxError: Identifier 'foo' has already been declared`. **A
+  real latent bug in webpack's own fixture, found by sweeping it.**
+- `node/test/fixtures/utf8-bom-shebang-shebang.js` is a BOM, then two hashbangs. Refusing it looked
+  like a BOM-handling bug; node's `test-module-loading.js` asserts a `SyntaxError` there. Right
+  answer, reached more strictly — §12.5 wants the hashbang at the very start of the Source Text, and
+  node's BOM-stripping is a host convention rather than a grammar rule.
+
+**The runtime found nothing either, which is the stronger half.** Ramda's entry pulls **1,027
+modules**; they link and evaluate in **82.7 ms**. The 36-row probe is **byte-identical** to node's
+output — `diff` is empty. Deep `equals` over a `Set` inside an array inside an object, `-0` against
+`0`, `NaN` against `NaN`, a lens composed three deep, and a global regex driven by a replacer
+function all agree.
+
+**What broke first was not a feature. It was the arena ceiling, on a two-line program.**
+
+```
+for (var i = 0; i < N; i++) { s = f(s) }
+
+N = 100,000   ok        N = 500,000   ok        N = 800,000   ok
+N = 1,000,000 RangeError: the heap has grown past what this engine will allocate
+```
+
+DR-0019's note predicted "about 900,000 calls before any program dies" from 74 B of arena per call.
+The real boundary sits between 800,000 and 1,000,000, so the prediction was good to the digit that
+matters — and the thing it predicts is now an ordinary loop rather than a row in this notebook. The
+RangeError is catchable, and catching it is awkward for a reason worth knowing: **reporting the error
+allocates**, so a handler that concatenates `e.message` can throw again on the way out.
+
+**Speed, framed honestly, because one of the two numbers flatters us.** Linking and running the
+1,028-module graph: **86–94 ms here against node's 101–107 ms** — and that comparison means very
+little, being dominated by reading, parsing and compiling a thousand files rather than by executing
+anything. Compute-bound is the real picture:
+
+| | this engine | node v22 |
+| --- | --- | --- |
+| `arith-1e6` | 201 ms | 3 ms |
+| `propget-1e6` | 269 ms | 1 ms |
+| `array-1e5` (push then sum) | 318 ms | 2 ms |
+| `string-1e5` | 82 ms | 2 ms |
+
+An unoptimised interpreter against a JIT that can also prove most of these loops dead. The ratio is
+not a finding; **that the loops complete at all and agree on every answer is.**
+
+**Verdict: PROMOTE the collection schedule to the next M8 slice, and it is a decision record.** The
+argument was abstract this morning — this run makes it concrete. Slot reuse landed with DR-0019 and
+was re-measured today across all five arenas, so a collection now reclaims what a call took; nothing
+schedules one, so `f` called a million times still dies. That is the last thing between this engine
+and running ordinary code of ordinary size, and it is one condition in `Vm::execute` beside the
+budget check that already exists.
+
+Nothing else here is actionable. **PARK** the nesting limit — two machine-generated files in twenty
+thousand, and DR-0006 wants `nesting-cost`'s stack figure before the number moves.
+
+**Cost:** about an hour, most of it cloning and triaging buckets rather than diagnosing. The sweep
+itself is seconds. Worth repeating after any parser slice, and worth repeating with a *different*
+library after any runtime slice — the differential against node is four lines of shell and is the
+only check here that can catch a silently wrong answer.
+
+---
+
 ## direct-eval-var — is the 128-run refusal really three cases, one of them free?
 
 **Date:** 2026-08-04
