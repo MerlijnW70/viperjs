@@ -215,10 +215,8 @@ pub(super) fn to_integer_or_infinity(number: f64) -> f64 {
     // carries no sign — so a `-0` has to be normalised away rather than truncated, which preserves
     // it. Invisible wherever the answer becomes an index, and visible wherever it is handed back:
     // §25.4.3.13's `Atomics.store(a, 0, -0)` answers `+0`, so `1 / that` is `Infinity`.
-    match number.trunc() {
-        zero if zero == 0.0 => 0.0,
-        integer => integer,
-    }
+    let integer = number.trunc();
+    if integer == 0.0 { 0.0 } else { integer }
 }
 
 /// A position argument turned into an offset inside a string of `length` units.
