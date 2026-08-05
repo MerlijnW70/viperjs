@@ -144,6 +144,12 @@ impl Vm {
         if let Err(why) = self.load_reachable(entry, heap) {
             return Ok(Err(LinkError::Unresolved(why)));
         }
+        // DR-0023 — a graph is a *run*, and this is the only entry point to one that does not go
+        // through `Vm::run`. Without this the schedule measures growth from zero, so the realm's
+        // own footprint already exceeds any threshold a host set and the first check collects,
+        // then every check after it. That is not "collects too often": it is the schedule never
+        // being a schedule, and it is what made a module graph behave differently from a script.
+        self.begin_collection_window(heap);
         self.link_and_evaluate(entry, heap)
     }
 

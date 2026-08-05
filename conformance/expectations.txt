@@ -2734,8 +2734,6 @@ built-ins/RegExp/call_with_regexp_match_falsy.js :: it threw an object with no n
 built-ins/RegExp/call_with_regexp_match_falsy.js (strict) :: it threw an object with no name: RegExp returns new object Expected SameValue(«/(?:)/», «/(?:)/») to be false
 built-ins/RegExp/call_with_regexp_not_same_constructor.js :: it threw an object with no name: RegExp returns new object Expected SameValue(«/(?:)/», «/(?:)/») to be false
 built-ins/RegExp/call_with_regexp_not_same_constructor.js (strict) :: it threw an object with no name: RegExp returns new object Expected SameValue(«/(?:)/», «/(?:)/») to be false
-built-ins/RegExp/character-class-escape-non-whitespace.js :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/RegExp/character-class-escape-non-whitespace.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/RegExp/escape/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/RegExp/escape/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/RegExp/from-regexp-like-flag-override.js :: it threw an object with no name: @@match specified as a primitive boolean Expected SameValue(«"[object Object]"», «"source text"») to be true
@@ -3978,8 +3976,6 @@ built-ins/String/prototype/normalize/return-normalized-string-using-default-para
 built-ins/String/prototype/normalize/return-normalized-string-using-default-parameter.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/String/prototype/normalize/return-normalized-string.js :: it threw TypeError: what was called is not a function
 built-ins/String/prototype/normalize/return-normalized-string.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/repeat/repeat-string-n-times.js :: it threw RangeError: the heap has grown past what this engine will allocate
-built-ins/String/prototype/repeat/repeat-string-n-times.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate
 built-ins/String/prototype/replace/regexp-prototype-replace-v-u-flag.js :: it threw an object with no name: Basic replace with g flag Expected SameValue(«"𠮷a𠮷b𠮷"», «"-a-b-"») to be true
 built-ins/String/prototype/replace/regexp-prototype-replace-v-u-flag.js (strict) :: it threw an object with no name: Basic replace with g flag Expected SameValue(«"𠮷a𠮷b𠮷"», «"-a-b-"») to be true
 built-ins/String/prototype/search/regexp-prototype-search-v-flag.js :: it threw an object with no name: Search for surrogate pair without v flag Expected SameValue(«-1», «0») to be true

@@ -224,6 +224,24 @@ fn a_top_level_await_is_only_a_module_thing() {
 ///
 /// The host's half of §16.2.1.7 done by hand: the caller says which specifier names which source,
 /// which is exactly what a real host would work out from a filesystem.
+/// The same, with the collection schedule set — DR-0023's diagnosis harness.
+fn run_graph_collecting(modules: &[(&str, &str)], entry: &str, growth: Option<usize>) -> String {
+    let mut heap = Heap::new();
+    let mut graph = crate::vm::Graph::new();
+    for (specifier, source) in modules {
+        let parsed = crate::parser::parse_module(source).expect("the source parses"); // a VM test needs a chunk
+        let chunk = crate::compile::compile_module(&parsed, &mut heap).expect("it compiles"); // same
+        graph.insert(specifier, std::rc::Rc::new(chunk));
+    }
+    let mut vm = Vm::new(&mut heap);
+    vm.set_collection_growth(growth);
+    let outcome = vm
+        .run_module_graph(entry, &graph, &mut heap)
+        .expect("the chunks are well formed") // same
+        .expect("the graph links"); // same
+    describe(outcome, &mut heap)
+}
+
 fn run_graph(modules: &[(&str, &str)], entry: &str) -> String {
     let mut heap = Heap::new();
     let mut graph = crate::vm::Graph::new();
@@ -1535,4 +1553,48 @@ fn a_module_the_host_ran_directly_is_not_run_again_when_a_graph_reaches_it() {
         .expect("the chunks are well formed") // same
         .expect("the graph links"); // same
     assert_eq!(describe(outcome, &mut heap), "1");
+}
+
+#[test]
+fn a_graph_survives_a_collection_taken_between_two_of_its_modules() {
+    // DR-0023's root set over a module graph, which is a claim a script never has to make. A graph
+    // is several compiled bodies run one after another, so while the first executes the ones that
+    // have not started are reachable from nothing the collector walks — and their constant tables
+    // are Strings. This forces a collection at every check, which is the only setting that shows it:
+    // with a sensible threshold the graph finishes before one is ever due.
+    //
+    // It came back `undefined` before `Vm::roots` walked `self.resolved`, because `main`'s `'c'`
+    // had been freed while `dep` was still running.
+    let awaiting = &[
+        (
+            "dep",
+            "globalThis.log = 'a;'; await Promise.resolve(); globalThis.log += 'b;';              export var r = true;",
+        ),
+        (
+            "main",
+            "import { r } from 'dep'; globalThis.log += 'c'; globalThis.log",
+        ),
+    ];
+    let plain = &[
+        ("dep", "globalThis.log = 'a;'; export var r = true;"),
+        (
+            "main",
+            "import { r } from 'dep'; globalThis.log += 'c'; globalThis.log",
+        ),
+    ];
+    // Every setting, because the two failures this found were different: an uninitialised window
+    // made a graph collect at the *first* check whatever the threshold, and the missing root only
+    // ever showed at a threshold small enough to collect mid-evaluation.
+    for growth in [None, Some(1usize << 20), Some(0usize)] {
+        assert_eq!(
+            run_graph_collecting(awaiting, "main", growth),
+            "a;b;c",
+            "top-level await at {growth:?}"
+        );
+        assert_eq!(
+            run_graph_collecting(plain, "main", growth),
+            "a;c",
+            "no await at {growth:?}"
+        );
+    }
 }

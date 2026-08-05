@@ -419,14 +419,12 @@ impl Vm {
             references: Vec::new(),
             until_check: 0,
             time_budget: None,
-            // DR-0023 — built, measured, and **off until one thing is proven**. Turning it on
-            // failed `modules::a_module_may_await_at_its_top_level_and_everything_importing_it_waits`
-            // and nothing else: a graph is evaluated through `link_and_evaluate`, which does not go
-            // through `run`'s preamble, so the schedule state is never initialised there *and* the
-            // root set over a partly-evaluated graph has not been established the way `collecting`
-            // establishes it for a script. One of those two is a bug and this record does not yet
-            // say which. The default flips in the commit that answers it.
-            collect_after_growth: None,
+            // DR-0023 — **on**. An engine that cannot run `for (i = 0; i < 1e6; i++) s = f(i)` is
+            // not one anybody can embed, and that loop reached DR-0013's budget at about 900,000
+            // calls until this line. One mebibyte of *growth*, and the allowance after each
+            // collection is the live set, so a program holding a great deal is not walked over and
+            // over — see the site in `execute` and the record for both measurements.
+            collect_after_growth: Some(1 << 20),
             collected_at: 0,
             collect_next: 0,
             expires_at: None,
@@ -630,10 +628,7 @@ impl Vm {
         // The growth the schedule measures is this run's, so the base is taken here for the same
         // reason the deadline is: a machine that ran once already has a footprint, and counting it
         // as growth would collect on the first check of every later run.
-        self.collected_at = heap.footprint();
-        // The first collection of a run waits for the base; every one after it is told by the live
-        // set the previous one left.
-        self.collect_next = self.collect_after_growth.unwrap_or(0);
+        self.begin_collection_window(heap);
         // §14.2.2 — a statement list whose statements all produce nothing has the value
         // `undefined`, which is what `eval("var x")` and `eval(";")` come to.
         self.completion = Value::Undefined;
@@ -868,6 +863,19 @@ impl Vm {
         self.time_budget = budget;
     }
 
+    /// Start a run's collection window — DR-0023's base, taken where a run begins.
+    ///
+    /// Two callers, and the second is the reason this is a method rather than two lines: `Vm::run`
+    /// and `Vm::run_module_graph` are both "a run", and only the first has a preamble. A graph that
+    /// skipped this measured its growth from zero, so the realm's own footprint cleared every
+    /// threshold before a single module statement had executed.
+    pub(super) fn begin_collection_window(&mut self, heap: &Heap) {
+        self.collected_at = heap.footprint();
+        // The first collection of a run waits for the base; every one after it is told by the live
+        // set the previous one left.
+        self.collect_next = self.collect_after_growth.unwrap_or(0);
+    }
+
     /// Let the loop collect for itself once the arena has grown this much since the last one.
     ///
     /// `None`, the default, is the behaviour every version until now: the collector runs only when
@@ -1002,6 +1010,19 @@ impl Vm {
         // with: a promise reaction names its handler, its capability and the value it settled.
         for job in &self.jobs {
             job.names(&mut values);
+        }
+        // §16.2.1's *chunks*, which is a different claim from its records below and the one a
+        // script never has to make. A graph is a set of compiled bodies the machine is holding, and
+        // evaluating it runs them one after another — so while the first is executing, the ones
+        // that have not started are reachable from nothing else the collector walks. Their constant
+        // tables are Strings, and freeing those hands the next module a `'c'` that is no longer a
+        // `'c'`.
+        //
+        // Found by collecting at *every* check over a two-module graph, where the answer came back
+        // `undefined`. A threshold large enough to be sensible hides it completely, which is why
+        // `vm::tests::collecting` forces the schedule rather than trusting a default.
+        for (_, chunk) in self.resolved.entries() {
+            chunk.names(&mut values);
         }
         // §16.2.1's records. A module that has been linked is reachable for the rest of the
         // execution whether or not anything is currently running it — a later `import()` of the same

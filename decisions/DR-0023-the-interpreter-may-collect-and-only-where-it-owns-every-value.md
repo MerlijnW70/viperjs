@@ -67,25 +67,46 @@ not collect until it comes back out. Removing that restriction means rooting the
 sets, which is a shadow stack, which is the same thing DR-0019 refused for compaction and for the
 same reason.
 
-## The default is off, and what turns it on
+## The default is on, and two bugs had to be found first
 
-`Vm::new` leaves it `None`. Turning it on fails exactly one test —
-`modules::a_module_may_await_at_its_top_level_and_everything_importing_it_waits` — and passes the
-other 1,556 plus the whole conformance suite with no regressions.
+Turning it on failed exactly one test — a module with a top-level `await` — and that turned out to be
+**two** faults stacked, neither of which was about `await`. A graph with no `await` at all failed the
+same way once the schedule was aggressive enough.
 
-That one failure is not dismissible and is not yet diagnosed. A module graph is evaluated through
-`link_and_evaluate`, which does **not** go through `Vm::run`'s preamble, so two things are true at
-once and only one of them is the bug:
+- **A graph never started a collection window.** `Vm::run_module_graph` does not go through
+  `Vm::run`'s preamble, so the base was zero and the realm's own footprint cleared any threshold a
+  host set before a single module statement ran. Not "collects too often" — the schedule was never a
+  schedule there. `Vm::begin_collection_window` is now the one place that starts one, and both
+  entry points call it.
+- **A graph's chunks were not roots.** This is the real one. A graph is several compiled bodies run
+  one after another, so while the first executes, the ones that have not started are reachable from
+  nothing `Vm::roots` walked — and their constant tables are Strings. `main`'s `'c'` was freed while
+  `dep` was still running, and the answer came back `undefined`. `roots` now walks `self.resolved`.
 
-- the schedule's own state is never initialised there, so a graph evaluates with a base of zero and
-  collects at every check rather than on a threshold;
-- and the root set over a *partly evaluated* graph has never been established the way
-  `vm::tests::collecting` establishes it for a script — a module body suspended at a top-level
-  `await` is a parked execution reached from a record, and nothing yet proves that path.
+**The second was invisible at any sensible threshold** and only ever appeared when collecting at
+every check, which is why `vm::tests::collecting` forces the schedule rather than trusting a default
+to exercise it.
 
-**The default flips in the commit that answers which.** Shipping it on before then would be shipping
-the failure mode this record exists to describe: a wrong value, silently, in the one area where the
-tests are thinnest.
+## What it is worth, counted honestly
+
+**+4 conformance runs.** Not the number the first run reported.
+
+A run with the schedule on reports between 310 and 476 newly passing, and repeating it gives a
+different figure each time. Taking the intersection of three runs leaves 116 — and **112 of those
+116 are `built-ins/RegExp/property-escapes`**, the bucket this project has already parked as sitting
+exactly on the ten-second per-test budget. The schedule moves those across the line in both
+directions, so they pass sometimes and fail sometimes, and blessing a lucky run put 198 of them into
+the ratchet as passes the engine could not repeat. That was caught by re-running rather than by
+review, and the entries were put back.
+
+So the conformance ledger reads: four runs genuinely fixed, and a large bucket made *noisier* than
+it was. The ratchet holds — those entries stay listed as failures and a run that happens to pass
+them reports "newly passing", never a regression — but **the headline percentage now varies by a
+couple of hundred runs between invocations, and it did not before.** That is a real cost of this
+decision and it is stated here rather than discovered by whoever next wonders why the number moved.
+
+**The conformance number is not why this is on.** `for (i = 0; i < 1e6; i++) s = f(s)` is why. That
+program threw before this and runs now, and so does the same loop at five million.
 
 ## What follows from this decision
 

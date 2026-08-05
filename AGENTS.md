@@ -1081,26 +1081,20 @@ six passes; run once at the budget, 79 files to buy none. This file then said "t
 is slot reuse with generation-tagged handles — a decision record, not a patch, and after it the
 timer is one line".
 
-**That step is DR-0019 and it is built** — a free list per arena and a generation in every handle.
-So the 318-files measurement's premise is gone and it has not been taken again: **do not quote it as
-a reason.**
+**That step is DR-0019, and DR-0023 has now built the schedule on top of it.** The interpreter
+collects for itself: one mebibyte of *growth*, the allowance after each collection being the live
+set, and **only when no native has been re-entered**. That last clause is the one to remember —
+`Array.prototype.sort` holds its elements in a Rust `Vec` across a comparator call, and a collection
+underneath it freed every one of them. DR-0011's re-entry counter is what says when it is safe.
 
-`lab/NOTES.md`'s `hot-shapes` was re-run on 2026-08-05 and its entry carries the numbers. **All five
-arenas reuse** — environments, objects, Strings, Symbols and BigInts are one `Arena<T>` now, and the
-entry's earlier claim that four of them "are next" was three commits stale. What that re-run did
-*not* overturn is the timing table: `call` is still 705 ns and 74 B a pass, because those rows never
-collect. So **"about 900,000 calls before any program dies" is still true of a program that never
-calls `Vm::collect`, and false of one that does** — DR-0019 turned an absolute ceiling into a
-schedule question and did not answer it. The schedule is now the only thing between here and M8.
-
-**And the entry's original headline was a property of the measure, not of the collector.**
-`footprint` is a high-water mark, so its `after gc` column is identical to the `leak/pass` column in
-every row *whether slots are reused or not* — reading it as "what a collection cannot reclaim" is
-what produced "a full collection reclaims nothing". Only a **second loop** tells reuse from
-tombstones. A first attempt at that second loop then reported Strings as tombstoned, because
-`footprint` is slots **plus** `string_units` and a String's units are genuinely re-bought each pass;
-taking both readings after a collection fixed it. **A mixed-unit metric hands you a confident wrong
-verdict for whichever term dominates**, and both mistakes here were that.
+`for (i = 0; i < 1e6; i++) s = f(s)` threw a RangeError before this and runs now; so does the same
+loop at five million. **That is what the record is for, and not the conformance number** — which
+moved by *four* stable runs. A run with the schedule on reports 310 to 476 newly passing and a
+different figure each time, because 112 of the 116 that survive a three-run intersection are
+`RegExp/property-escapes` sitting exactly on the ten-second budget. Blessing a lucky one put 198
+unrepeatable passes into the ratchet before a re-run caught it. **Read that bucket's movement as
+noise, never as progress**, and take the intersection of three runs before removing anything from
+the expectations file.
 
 What *is* settled is the part that cannot be left half-right. Four whole classes of reference were
 untraced before this: a bound function's target and arguments, a revive closure's context, a
