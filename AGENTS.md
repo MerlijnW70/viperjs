@@ -171,7 +171,7 @@ and mostly are not, which is worth doing once and writing down rather than re-de
 | 8,316 | `Temporal is not defined` | a proposal — see below |
 | ~821 | `what was called is not a function` | **now mostly proposals**: `Array.fromAsync`, `Iterator.zip`/`zipKeyed`/`concat`, `Promise.allKeyed`/`allSettledKeyed`, `Map`/`WeakMap`'s `getOrInsert`, `Uint8Array` base64, `DataView`'s `getFloat16`, `Math.sumPrecise`, `JSON.rawJSON`. It was **939** and this file said the same thing about it then, while seven *shipped* functions were hiding in it — see below. **Ask the engine what it has** before believing this row |
 | ~898 | the heap budget | almost all are `RegExp/property-escapes`, and the lab has **parked** them — see below. The count shuffles between this row and the ten-second budget from run to run; it is one bucket wearing two names |
-| ~400 | `cannot read a property…` | **Atomics ~300** (most needing `$262.agent`, so ~80 are winnable in a one-thread engine) and `Error.prototype.stack` 64, a proposal |
+| ~290 | `cannot read a property…` | **Atomics 224, and every one of them is `$262.agent`** — the row is `$262.agent.start` reading a property of `undefined`. Done as a target, see below. Beside it `Error.prototype.stack` 64, a proposal |
 | 293 | `expected 'meta', found an identifier` | `import.defer` and `import.source` — two proposals, not `import.meta` |
 | 238 | `Calling as constructor…` | all `Temporal` |
 | 224 | `expected ';', found an identifier` | `using` / `await using` — explicit resource management, a proposal |
@@ -189,6 +189,52 @@ and mostly are not, which is worth doing once and writing down rather than re-de
 - **`Temporal` is a Stage 3 proposal with a surface larger than `Date`, `Intl` and `RegExp`
   combined.** Building it would raise the number while making the engine no more of a JavaScript
   engine, and it will sit at the top of that list for as long as this file is worth reading.
+
+### §25.4's three waits do not share a fate, and one of them works with a single agent
+
++170 runs across three commits, and the reason it was worth more than the estimate is that
+"ViperJS has one agent" had been read as one fact when it is two.
+
+**A blocking wait is impossible and a non-blocking one is not.** `Atomics.wait` throws a TypeError
+because DoWait step 12 asks `AgentCanSuspend()` and an agent that suspended here could never be
+woken — a browser's main thread answers identically, which is what test262's `CanBlockIsFalse` flag
+means. But `Atomics.waitAsync` **never suspends**: the agent parks a promise, carries straight on,
+and reaches `Atomics.notify` a statement later to wake its *own* waiter. `undefined-for-timeout.js`
+is exactly that program. So §25.4.1's waiter list is real here, and `notify` counts what it woke.
+
+Four things around it cost more than the clauses did:
+
+- **Two clauses that look alike decide oppositely about a plain `ArrayBuffer`.** `wait` refuses it
+  with a TypeError; `notify` answers `0`. Nothing puts those side by side — it came out of two
+  separate `info:` blocks.
+- **`ValidateSharedIntegerTypedArray`'s refusal is inside step 1, so it lands before the index is
+  converted.** Both orders answer TypeError and only a poisoned getter says which ran first, which
+  is what `non-shared-bufferdata-throws.js` measures. Those four tests **had been passing on the
+  gap**: calling an undefined `Atomics.wait` is also a TypeError, so they were green against the
+  bug they exist to catch. Expect that whenever a slice removes a refusal.
+- **The waiter list is keyed on a buffer and a *byte* offset**, per §25.4.1. A `BigInt64Array`'s
+  slot 0 and an `Int32Array`'s slot 0 are one position; an element index makes them two lists and a
+  notify through the wrong view silently misses.
+- **The harness was skipping `CanBlockIsFalse` and `CanBlockIsTrue` alike**, reason "agents are not
+  implemented". The first describes *this* host and needs no agents. Fourth time a reason string in
+  the harness's voice was read as a fact about the engine.
+
+**DR-0024 records what is not built**, and the boundary is one shape: a waiter with a finite,
+non-zero timeout that nothing notifies should settle `"timed-out"` when it elapses, and there is no
+clock the job queue can wait on. Settling it early is a lie `Date.now()` can measure, so it stays
+parked and a test pins that it does.
+
+**And two mutation survivors pointed opposite ways within an hour**, which is the distinction worth
+carrying: `notify`'s `undefined` branch was unobservable — `ToNumber(undefined)` is `NaN`, cannot
+throw, and the count was discarded — so the **code** was deleted; `waitAsync`'s `write_numeric(…,
+false)` was observable and the **test** was missing, because every existing row used small numbers
+where wrapping and clamping agree. Same report, opposite conclusions, and the question that
+separates them is whether a program could ever see the difference.
+
+**A shared helper was leaking a sign.** `to_integer_or_infinity(-0)` answered `-0` where §7.1.5
+step 3 gives the *mathematical* value 0, which carries no sign — invisible wherever the answer
+becomes an index, visible wherever it is handed back. The test asks `1 / x` rather than `x`,
+because the two zeroes print identically and an assertion on the value passes either way.
 
 ### Duplicate named capture groups, and the check that needs *which* disjunction
 
@@ -974,7 +1020,11 @@ doc says which line to change if data ever arrives.
     `typeof`) are small; what is not small is that the slot belongs to a *host* object, so the
     embedding surface has to be able to make one and `conformance` builds its `$262` by writing
     JavaScript source.
-  - **`Atomics` — ~300 runs**, of which about 80 do not need `$262.agent` and the rest do.
+  - **`Atomics` is finished** — see the section below. 170 runs came out of it, and the 224 that
+    remain are `$262.agent` to the last file: 112 of the 127 failing files name it, and the other
+    15 are proposals (the immutable-`ArrayBuffer` harness, `Atomics.pause`). The estimate that
+    stood here — "~80 winnable" — was low by more than double, which is what came of costing it
+    from the failing paths instead of asking the engine what it had.
 
 - **`super(…)` inside a direct `eval` — 16 runs**, and the whole of what is left of that entry.
   `new.target` in an arrow's direct eval was the other half and is **built**: the fact travels on
