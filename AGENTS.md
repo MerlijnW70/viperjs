@@ -1002,9 +1002,14 @@ doc says which line to change if data ever arrives.
 - **Annex B's regexp grammar is done** — §B.1.2, see the section above and DR-0008's second
   amendment. What is left in `annexB/built-ins/RegExp/` is `legacy-accessors` (48 runs), which is
   the *Legacy RegExp Features* proposal and not §B.1.2 at all, and `prototype/compile` (10 runs),
-  which is §B.2.4 and is real. Beside them sit four runs that now fail on **a lone surrogate in a
-  pattern**: `.source` answers U+FFFD because the parser reads Rust `char`s. That is DR-0004's seam
-  and the cheapest real thing left in the area.
+  which is §B.2.4 and is real. Beside them sit four runs on **a lone surrogate in a pattern**, and
+  this file called them "the cheapest real thing left in the area" — **which is wrong, measured
+  2026-08-05.** `new RegExp("\\" + lone).source` answers the surrogate back correctly; the two
+  tests build their pattern with `eval("/" + text + "/")`, and it is the **lexer** that loses it.
+  Broader than RegExp, too: `eval("'" + lone + "'")` answers U+FFFD as well. So it is DR-0004's
+  seam in the place that costs most — source text is a Rust `&str` and a lone surrogate is not a
+  `char` — and four runs behind an architectural change is the opposite of cheap. **Probe the path
+  a test actually uses**: `new RegExp` and a literal are two different front ends here.
 - **The resizable-buffer area is done** — see the shrink section below. What remains beside it
   is `subarray` over an out-of-bounds source, which §23.2.5.1 refuses with a RangeError, and the
   files that use the immutable-`ArrayBuffer` harness, which is a proposal.

@@ -89,12 +89,22 @@ fn escape_source(source: &[u16]) -> Vec<u16> {
         // A `/` that is not already escaped has to be, or the text would close the literal early.
         // One inside a class is safe in the grammar but escaping it changes nothing, so this does
         // not track classes.
+        // A terminator that is **already escaped** needs the letter and not the backslash: the
+        // backslash is on `out` from the previous unit, and writing another turns `\<LF>` — an
+        // identity escape of a newline — into `\\n`, which matches a literal backslash and an `n`.
+        // A different pattern that reads almost the same, which is why the four rows below each
+        // ask `escaped` exactly as the `/` row above always did.
+        let already = usize::from(escaped);
         match (*unit, escaped) {
             (0x2F, false) => out.extend_from_slice(&[0x5C, 0x2F]),
-            (0x0A, _) => out.extend_from_slice(&[0x5C, u16::from(b'n')]),
-            (0x0D, _) => out.extend_from_slice(&[0x5C, u16::from(b'r')]),
-            (0x2028, _) => out.extend_from_slice(&"\\u2028".encode_utf16().collect::<Vec<_>>()),
-            (0x2029, _) => out.extend_from_slice(&"\\u2029".encode_utf16().collect::<Vec<_>>()),
+            (0x0A, _) => out.extend_from_slice(&[0x5C, u16::from(b'n')][already..]),
+            (0x0D, _) => out.extend_from_slice(&[0x5C, u16::from(b'r')][already..]),
+            (0x2028, _) => {
+                out.extend_from_slice(&"\\u2028".encode_utf16().collect::<Vec<_>>()[already..]);
+            }
+            (0x2029, _) => {
+                out.extend_from_slice(&"\\u2029".encode_utf16().collect::<Vec<_>>()[already..]);
+            }
             _ => out.push(*unit),
         }
         escaped = *unit == 0x5C && !escaped;

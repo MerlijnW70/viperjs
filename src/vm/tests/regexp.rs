@@ -148,6 +148,42 @@ fn source_answers_the_pattern_in_a_form_that_can_be_read_back() {
     assert_eq!(run("new RegExp('a/b').source"), "a\\/b");
     // One already escaped is not escaped twice.
     assert_eq!(run("new RegExp('a\\\\/b').source"), "a\\/b");
+    // A line terminator is escaped for the same reason — but one that is **already** escaped needs
+    // the letter and not a second backslash. `\<LF>` is an identity escape of a newline and `\n` is
+    // the escape sequence for one, so the two are the same pattern; writing `\\n` instead is a
+    // literal backslash followed by an `n`, which is a *different* pattern that reads almost alike.
+    // The `/` row above always asked this question and these four productions did not.
+    assert_eq!(
+        run(
+            "var s = new RegExp('\\\\' + String.fromCharCode(10)).source; \
+             s.length + ':' + s.charCodeAt(0) + ',' + s.charCodeAt(1)"
+        ),
+        "2:92,110"
+    );
+    assert_eq!(
+        run(
+            "var s = new RegExp('\\\\' + String.fromCharCode(13)).source; \
+             s.length + ':' + s.charCodeAt(1)"
+        ),
+        "2:114"
+    );
+    // A bare one still gets its own backslash, which is the case that must not regress.
+    assert_eq!(
+        run("var s = new RegExp(String.fromCharCode(10)).source; \
+             s.length + ':' + s.charCodeAt(0) + ',' + s.charCodeAt(1)"),
+        "2:92,110"
+    );
+    // …and an escaped *backslash* clears the flag, so a newline after it is escaped in its own
+    // right: the answer is four characters and not three.
+    assert_eq!(
+        run("new RegExp('\\\\\\\\' + String.fromCharCode(10)).source.length"),
+        "4"
+    );
+    // U+2028 takes the same rule, spelled as a `\u` escape.
+    assert_eq!(
+        run("new RegExp('\\\\' + String.fromCharCode(0x2028)).source"),
+        "\\u2028"
+    );
 }
 
 #[test]
