@@ -327,6 +327,80 @@ impl Heap {
         Some(self.record(environment)?.slots.len())
     }
 
+    /// §19.2.1.3's `CreateGlobalVarBinding` for a *declarative* scope: add a `var` to an
+    /// environment that is **already running**, and answer which slot it got.
+    ///
+    /// The one shape DR-0018 left open, and the reason `EvalVars::Caller` was refused by name. A
+    /// sloppy direct `eval` inside a function adds its `var`s to the caller's variable scope, whose
+    /// slot count was fixed when that function was compiled — so the binding has nowhere to go
+    /// unless the scope can grow.
+    ///
+    /// **It can, and only by appending.** `slots` is a `Vec`, and every `(depth, index)` any
+    /// compiled code already holds names a slot before the new one, so nothing that ran earlier is
+    /// disturbed. The name list grows with it: it is an `Rc<[Binding]>` and is *replaced* rather
+    /// than mutated, which costs one copy per declaration and nothing per access — and the field's
+    /// own contract already allows the list to be shorter than the slots, so a scope whose names
+    /// were `None` stays `None` and the new slot is reachable by index alone.
+    ///
+    /// **A name already bound here is left exactly as it is**, per §19.2.1.3 step 5.d.ii: a `var`
+    /// re-declaring something is not an initialisation, so `function f() { var x = 1;
+    /// eval("var x"); return x }` is 1 and not `undefined`. The existing slot comes back instead.
+    ///
+    /// Answers `None` for a handle this heap did not issue, or for an environment whose bindings
+    /// are an **object's** — a `with` scope's names are properties and §9.1.1.2 has its own way of
+    /// adding one, which is not this.
+    pub fn declare_in(
+        &mut self,
+        environment: EnvironmentId,
+        name: &str,
+        mutability: crate::heap::Mutability,
+    ) -> Option<u32> {
+        let record = self.record(environment)?;
+        if record.binding_object.is_some() {
+            return None;
+        }
+        // Asked of the *names*, not of the slots: a slot past the end of the list belongs to a
+        // scope already left, and its name no longer resolves — so re-using it would hand the
+        // program a binding somebody else's code still indexes.
+        if let Some(names) = record.names.as_deref()
+            && let Some(at) = names
+                .iter()
+                .position(|binding| binding.name.as_ref() == name)
+        {
+            return u32::try_from(at).ok();
+        }
+        let mut names: Vec<Binding> = self
+            .record(environment)?
+            .names
+            .as_deref()
+            .unwrap_or_default()
+            .to_vec();
+        // The list has to reach the new slot, so a scope whose slots already run past its names
+        // gets the gap filled with names no source can write — the same `%` spelling a compiler's
+        // own slot uses, for the same reason.
+        let record = self.record_mut(environment)?;
+        while names.len() < record.slots.len() {
+            // `%` is in neither `IdentifierStart` nor `IdentifierPart`, so this takes its place in
+            // the list and keeps index and slot in step while no source text can ask for it — the
+            // spelling the compiler's own slots already use, documented on [`Binding::name`].
+            names.push(Binding {
+                name: "%gap".into(),
+                mutability: crate::heap::Mutability::Mutable,
+            });
+        }
+        // A scope with more than `u32::MAX` bindings is unreachable: DR-0013's heap budget stops
+        // the program long before the count does. And `None` is the answer the caller already
+        // handles, so this refuses the declaration rather than putting it somewhere wrong.
+        let at = u32::try_from(names.len()).ok()?; // DR-0013 bounds this long before u32 does
+        names.push(Binding {
+            name: name.into(),
+            mutability,
+        });
+        record.slots.push(Some(Value::Undefined));
+        record.names = Some(names.into());
+        Some(at)
+    }
+
     /// The environment `depth` parents out from `from`.
     ///
     /// `0` is `from` itself. Answers `None` for a chain shorter than asked for, which no compiled
@@ -694,5 +768,91 @@ mod tests {
         // The walk is outward only. A scope the `with` was opened *from* is untouched by it, which
         // is what stops a function called out of one from resolving dynamically for ever.
         assert!(!heap.any_binding_object(nested));
+    }
+    #[test]
+    fn a_running_scope_can_take_a_var_and_only_by_appending() {
+        use crate::heap::Mutability;
+        let mut heap = Heap::new();
+        let names: Rc<[Binding]> = vec![Binding {
+            name: "a".into(),
+            mutability: Mutability::Mutable,
+        }]
+        .into();
+        let scope = heap.new_named_environment(None, 1, names);
+        heap.set_variable(scope, 0, Value::Number(1.0));
+
+        // The new binding goes on the end, so the slot anything already compiled holds is untouched
+        // — which is the whole reason this may only append.
+        let at = heap
+            .declare_in(scope, "b", Mutability::Mutable)
+            .expect("a slot");
+        assert_eq!(at, 1);
+        assert!(matches!(
+            heap.variable(scope, 0),
+            Some(Some(Value::Number(one))) if one == 1.0
+        ));
+        assert!(matches!(
+            heap.variable(scope, 1),
+            Some(Some(Value::Undefined))
+        ));
+        assert_eq!(heap.environment_size(scope), Some(2));
+        let listed: Vec<&str> = heap
+            .environment_names(scope)
+            .expect("names")
+            .iter()
+            .map(|binding| binding.name.as_ref())
+            .collect();
+        assert_eq!(listed, ["a", "b"]);
+
+        // §19.2.1.3 step 5.d.ii — a `var` over a name that is already bound is not an
+        // initialisation. The same slot comes back and what it holds is left alone, which is why
+        // `var x = 1; eval("var x")` is 1 rather than undefined.
+        assert_eq!(heap.declare_in(scope, "a", Mutability::Mutable), Some(0));
+        assert!(matches!(
+            heap.variable(scope, 0),
+            Some(Some(Value::Number(one))) if one == 1.0
+        ));
+        assert_eq!(heap.environment_size(scope), Some(2));
+    }
+
+    #[test]
+    fn a_declaration_reaches_past_slots_that_no_name_covers() {
+        use crate::heap::Mutability;
+        let mut heap = Heap::new();
+        // A compiled body's slot count is a high-water mark across the scopes inside it, so the
+        // names may run short. The new binding still has to land on a slot its own index names, so
+        // the gap is filled with names no source can write rather than by pointing the name at a
+        // slot somebody else's code indexes.
+        let names: Rc<[Binding]> = vec![Binding {
+            name: "a".into(),
+            mutability: Mutability::Mutable,
+        }]
+        .into();
+        let scope = heap.new_named_environment(None, 3, names);
+        let at = heap
+            .declare_in(scope, "b", Mutability::Mutable)
+            .expect("a slot");
+        assert_eq!(
+            at, 3,
+            "the new slot is past the ones the list did not cover"
+        );
+        assert_eq!(heap.environment_size(scope), Some(4));
+        let listed = heap.environment_names(scope).expect("names");
+        assert_eq!(listed.len(), 4);
+        assert_eq!(listed[3].name.as_ref(), "b");
+        // …and the filler is unwritable as a source name, so nothing resolves to those slots.
+        assert!(listed[1].name.starts_with('%'));
+        assert!(listed[2].name.starts_with('%'));
+    }
+
+    #[test]
+    fn an_object_scope_refuses_a_declarative_binding() {
+        use crate::heap::Mutability;
+        let mut heap = Heap::new();
+        let object = heap.new_object(None);
+        let scope = heap.new_with_environment(None, 0, Vec::new().into(), object);
+        // §9.1.1.2's bindings are an object's properties and are added by defining one. Growing the
+        // slot list here would make a binding nothing reads — the lookups go to the object.
+        assert_eq!(heap.declare_in(scope, "x", Mutability::Mutable), None);
     }
 }
