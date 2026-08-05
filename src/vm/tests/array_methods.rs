@@ -375,3 +375,57 @@ fn array_species_create_ignores_the_constructor_of_something_that_is_not_an_arra
         "false,1"
     );
 }
+
+#[test]
+fn the_unscopables_list_is_a_fixed_set_of_names_and_not_the_methods_added_since_es5() {
+    // §23.1.3.35. The order is the clause's, and it is observable — `OrdinaryOwnPropertyKeys` lists
+    // string keys in insertion order, none of these being an array index.
+    assert_eq!(
+        run("Object.keys(Array.prototype[Symbol.unscopables]).join(',')"),
+        "at,copyWithin,entries,fill,find,findIndex,findLast,findLastIndex,flat,flatMap,\
+         includes,keys,toReversed,toSorted,toSpliced,values"
+    );
+    // Step 1's `OrdinaryObjectCreate(null)`. With `Object.prototype` under it a `with` over an
+    // array would find `toString` and `valueOf` in here and read them as blocked names.
+    assert_eq!(
+        run("Object.getPrototypeOf(Array.prototype[Symbol.unscopables])"),
+        "null"
+    );
+    // **`with` is not in the list**, though it is a change-array-by-copy method exactly as
+    // `toReversed` and `toSorted` are. Membership is a decision the committee took per method and
+    // not a rule about vintage: `with` is a reserved word, so no code ever named a binding that and
+    // there is nothing for it to shadow. Read as "the methods newer than ES5" this row is wrong.
+    assert_eq!(
+        run("Object.prototype.hasOwnProperty.call(Array.prototype[Symbol.unscopables], 'with')"),
+        "false"
+    );
+    // …and neither is anything ES5 already had, however array-ish it looks.
+    assert_eq!(
+        run(
+            "['join', 'slice', 'indexOf', 'forEach', 'map', 'length'].some(function (n) { \
+             return n in Array.prototype[Symbol.unscopables] })"
+        ),
+        "false"
+    );
+}
+
+#[test]
+fn the_unscopables_property_and_its_entries_carry_different_attributes() {
+    // The property is not writable, not enumerable and **configurable**; each entry is
+    // `CreateDataPropertyOrThrow`, so all three are true. One helper for both gets exactly one of
+    // them wrong, and `propertyHelper.js` checks both — which is why they are asserted apart.
+    assert_eq!(
+        run(
+            "var d = Object.getOwnPropertyDescriptor(Array.prototype, Symbol.unscopables); \
+             [d.writable, d.enumerable, d.configurable].join()"
+        ),
+        "false,false,true"
+    );
+    assert_eq!(
+        run(
+            "var d = Object.getOwnPropertyDescriptor(Array.prototype[Symbol.unscopables], 'keys'); \
+             [d.value, d.writable, d.enumerable, d.configurable].join()"
+        ),
+        "true,true,true,true"
+    );
+}

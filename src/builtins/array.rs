@@ -117,6 +117,78 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     // `slice`. Without it every one of those answers a plain Array, and a subclass silently loses
     // its type on the first method call.
     super::buffer::define_species(heap, realm, function);
+    define_unscopables(heap, realm, prototype);
+}
+
+/// §23.1.3.35 `Array.prototype [ %Symbol.unscopables% ]`.
+///
+/// # What it is for
+///
+/// §9.1.1.2.1 step 5 reads this off the object a `with` was opened on, and a name listed here is
+/// one the `with` does **not** bind. That is what stops `with (array) { … }` from shadowing an
+/// outer `values` or `keys` with a method the array only has because ES2015 added it — the whole
+/// point being that code written before the method existed must go on meaning what it meant.
+///
+/// # Two things the list is not
+///
+/// **It is not "the methods added after ES5".** It is a fixed list in the specification, and the
+/// membership of a given method is a decision TC39 took when that method landed rather than
+/// anything derivable here. `Array.prototype.with` is the case that shows it: it is a
+/// change-array-by-copy method exactly like `toReversed` and `toSorted`, it is **not** in the list,
+/// and `built-ins/Array/prototype/Symbol.unscopables/change-array-by-copy.js` asserts its absence.
+/// The reason is that `with` is a reserved word, so no code has ever referred to a binding by that
+/// name and there is nothing for it to shadow.
+///
+/// **It is not conditioned on what praxis implements.** The list is what the clause says whether or
+/// not the method beside it exists, because a script reads the object rather than calling through
+/// it.
+///
+/// # The attributes differ between the two levels, and both are checked
+///
+/// Each entry is `CreateDataPropertyOrThrow`, so all three attributes are true — these are
+/// properties a script may delete or overwrite, and `propertyHelper.js` verifies it. The property
+/// holding them is the other set: not writable, not enumerable, **configurable**. One helper for
+/// both would get exactly one of them wrong.
+fn define_unscopables(heap: &mut Heap, realm: &Realm, prototype: ObjectId) {
+    // Step 1 — `OrdinaryObjectCreate(null)`. A null prototype because the keys are ordinary method
+    // names: with `Object.prototype` under it, a `with` over an array would find `toString` and
+    // `valueOf` here and read them as blocked.
+    let list = heap.new_object(None);
+    for name in [
+        "at",
+        "copyWithin",
+        "entries",
+        "fill",
+        "find",
+        "findIndex",
+        "findLast",
+        "findLastIndex",
+        "flat",
+        "flatMap",
+        "includes",
+        "keys",
+        "toReversed",
+        "toSorted",
+        "toSpliced",
+        "values",
+    ] {
+        super::create_data_property(heap, list, name, Value::Boolean(true));
+    }
+    let Some(symbol) = realm.well_known(super::well_known_at("unscopables")) else {
+        return;
+    };
+    let descriptor = PropertyDescriptor {
+        value: Some(Value::Object(list)),
+        writable: Some(false),
+        enumerable: Some(false),
+        configurable: Some(true),
+        ..PropertyDescriptor::EMPTY
+    };
+    let _ = heap.define_own_property(
+        prototype,
+        crate::heap::PropertyKey::from_symbol(symbol),
+        &descriptor,
+    );
 }
 
 /// §23.1.2.1 `Array.from(items[, mapfn[, thisArg]])`.

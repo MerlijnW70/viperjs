@@ -471,14 +471,6 @@ built-ins/Array/proto-from-ctor-realm-two.js :: it threw TypeError: what was cal
 built-ins/Array/proto-from-ctor-realm-two.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/proto-from-ctor-realm-zero.js :: it threw TypeError: what was called is not a function
 built-ins/Array/proto-from-ctor-realm-zero.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/Symbol.unscopables/array-find-from-last.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/Symbol.unscopables/array-find-from-last.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/Symbol.unscopables/change-array-by-copy.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/Symbol.unscopables/change-array-by-copy.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/Symbol.unscopables/prop-desc.js :: it threw an object with no name: Symbol(Symbol.unscopables) should be an own property
-built-ins/Array/prototype/Symbol.unscopables/prop-desc.js (strict) :: it threw an object with no name: Symbol(Symbol.unscopables) should be an own property
-built-ins/Array/prototype/Symbol.unscopables/value.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/Array/prototype/Symbol.unscopables/value.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Array/prototype/concat/Array.prototype.concat_array-like-length-to-string-throws.js :: it threw an object with no name: [].concat(objWithPoisonedLengthToString) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/concat/Array.prototype.concat_array-like-length-to-string-throws.js (strict) :: it threw an object with no name: [].concat(objWithPoisonedLengthToString) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/prototype/concat/Array.prototype.concat_array-like-length-value-of-throws.js :: it threw an object with no name: [].concat(objWithPoisonedLengthValueOf) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all

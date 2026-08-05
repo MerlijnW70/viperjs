@@ -516,3 +516,28 @@ fn a_with_does_not_make_every_call_written_there_an_eval() {
         "has:eval,has:x,get:Symbol(Symbol.unscopables),get:x"
     );
 }
+
+#[test]
+fn an_array_blocks_its_newer_methods_from_a_with_and_leaves_the_older_ones_alone() {
+    // §23.1.3.35 is the reason §9.1.1.2.1 step 5 exists, and this is the pair that shows it: the
+    // same `with`, the same array, two names — one listed and one not.
+    assert_eq!(
+        run("var keys = 'outer'; var a = [1, 2]; with (a) { keys }"),
+        "outer"
+    );
+    assert_eq!(
+        run("var join = 'outer'; var a = [1, 2]; with (a) { typeof join }"),
+        "function"
+    );
+    // A name that is the array's *own* is unaffected whatever the list says — `length` is not in
+    // it, and the list is consulted for names the object has rather than for names it might.
+    assert_eq!(
+        run("var length = 'outer'; var a = [1, 2]; with (a) { length }"),
+        "2"
+    );
+    // And blocking is not deleting: the method is still reachable through the array.
+    assert_eq!(
+        run("var a = [1, 2]; with (a) { typeof a.values }"),
+        "function"
+    );
+}
