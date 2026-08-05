@@ -984,8 +984,6 @@ built-ins/Atomics/pause/not-a-constructor.js :: it threw an object with no name:
 built-ins/Atomics/pause/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
 built-ins/Atomics/pause/returns-undefined.js :: it threw TypeError: what was called is not a function
 built-ins/Atomics/pause/returns-undefined.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Atomics/store/expected-return-value-negative-zero.js :: it threw an object with no name: Atomics.store(i32a, 0, -0) normalizes -0 to +0
-built-ins/Atomics/store/expected-return-value-negative-zero.js (strict) :: it threw an object with no name: Atomics.store(i32a, 0, -0) normalizes -0 to +0
 built-ins/Atomics/store/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/store/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/sub/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined

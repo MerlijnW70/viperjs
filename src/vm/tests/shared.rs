@@ -125,6 +125,13 @@ fn every_atomic_answers_what_was_there_and_leaves_what_it_computed() {
         run("var a = new Int32Array(4); a[0] = 1; Atomics.store(a, 0, 2.7) + ',' + a[0]"),
         "2,2"
     );
+    // …and §7.1.5 step 3 answers the *mathematical value* 0 for a -0, which has no sign to carry.
+    // The two zeroes print identically, so `1 / x` is the only thing that tells them apart — which
+    // is exactly how test262 asks it.
+    assert_eq!(
+        run("var a = new Int32Array(4); String(1 / Atomics.store(a, 0, -0))"),
+        "Infinity"
+    );
     // §25.4.3.3 — the comparison is against the value **as the element kind stores it**. Expecting
     // 300 of a `Uint8Array` holding 44 matches, because 300 stored there *is* 44; comparing the
     // raw arguments would never match and the write would never happen.
