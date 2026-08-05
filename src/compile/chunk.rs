@@ -5,7 +5,7 @@
 //! deliberately small: an embedder holds a [`Chunk`], and a chunk holds instructions, constants,
 //! a count of slots, and the bodies of the functions written inside it.
 
-use crate::ast::{BinaryOperator, UnaryOperator};
+use crate::ast::{BinaryOperator, UnaryOperator, UpdateOperator};
 use crate::compile::{CompileError, ErrorKind};
 use crate::heap::Binding;
 use crate::span::Span;
@@ -326,6 +326,19 @@ pub enum Instruction {
     RegExpLiteral,
     /// Replace the value on top of the stack with the result of a unary operator.
     Unary(UnaryOperator),
+    /// §7.1.4 `ToNumeric` — what §13.4's four update productions coerce with.
+    ///
+    /// Not [`Instruction::Unary`] with a `+`, which is §13.5.4's `ToNumber` and turns a BigInt into
+    /// a TypeError. The two agree on every value that is not a BigInt, which is how one stood in
+    /// for the other until BigInts existed.
+    ToNumeric,
+    /// §13.4's "add one", in whichever numeric domain the operand already is.
+    ///
+    /// Separate from [`Instruction::ToNumeric`] because a postfix update keeps the **coerced** old
+    /// value — `x = "1"; x++` evaluates to the number 1, not to `"1"` — so the duplication belongs
+    /// between the two. And separate from a `Binary` against a constant 1, because that constant
+    /// would have to be a Number or a BigInt and which one is not known until the operand is.
+    Step(UpdateOperator),
     /// Replace the top two values with the result of a binary operator, left below right.
     Binary(BinaryOperator),
     /// Continue at this instruction instead of the next one.
@@ -1390,7 +1403,9 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         // Not a jump. An `Unpatched` can only ever name one, since `emit_jump` is the only way
         // to make one — so these are unreachable, and are listed rather than swept into a
         // catch-all so that a new jump cannot hide among them.
-        Instruction::PushScope(_)
+        Instruction::ToNumeric
+        | Instruction::Step(_)
+        | Instruction::PushScope(_)
         | Instruction::CopyScope(_)
         | Instruction::PushWithScope(_)
         | Instruction::LoadName(_)

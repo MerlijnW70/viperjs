@@ -1184,8 +1184,6 @@ built-ins/Atomics/xor/immutable-buffer.js :: it threw an object with no name: no
 built-ins/Atomics/xor/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/BigInt/is-a-constructor.js :: it threw an object with no name: isConstructor(BigInt) must return true Expected SameValue(«false», «true») to be true
 built-ins/BigInt/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(BigInt) must return true Expected SameValue(«false», «true») to be true
-built-ins/BigInt/prototype/toString/a-z.js :: it threw TypeError: a BigInt cannot be converted to a number
-built-ins/BigInt/prototype/toString/a-z.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 built-ins/BigInt/prototype/valueOf/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/BigInt/prototype/valueOf/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/BigInt/wrapper-object-ordinary-toprimitive.js :: it threw an object with no name: hint: default
@@ -13156,18 +13154,10 @@ built-ins/TypedArray/prototype/copyWithin/coerced-values-start-detached.js :: it
 built-ins/TypedArray/prototype/copyWithin/coerced-values-start-detached.js (strict) :: it threw RangeError: this array-like is longer than this engine will allocate (Testing with Int16Array and makeArray.)
 built-ins/TypedArray/prototype/copyWithin/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/TypedArray/prototype/copyWithin/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/TypedArray/prototype/every/BigInt/callbackfn-set-value-during-interaction.js :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/every/BigInt/callbackfn-set-value-during-interaction.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/fill/BigInt/fill-values-conversion-once.js :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/fill/BigInt/fill-values-conversion-once.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/fill/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/TypedArray/prototype/fill/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/TypedArray/prototype/filter/BigInt/callbackfn-set-value-during-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/filter/BigInt/callbackfn-set-value-during-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/speciesctor-destination-backed-by-immutable-buffer.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/filter/speciesctor-destination-backed-by-immutable-buffer.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/forEach/BigInt/callbackfn-set-value-during-interaction.js :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/forEach/BigInt/callbackfn-set-value-during-interaction.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/includes/BigInt/detached-buffer-during-fromIndex-returns-true-for-undefined.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/includes/BigInt/detached-buffer-during-fromIndex-returns-true-for-undefined.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/includes/BigInt/length-zero-returns-false.js :: it threw an object with no name:  (Testing with BigInt64Array and makePassthrough.)
@@ -13210,8 +13200,6 @@ built-ins/TypedArray/prototype/lastIndexOf/BigInt/length-zero-returns-minus-one.
 built-ins/TypedArray/prototype/lastIndexOf/BigInt/length-zero-returns-minus-one.js (strict) :: it threw an object with no name:  (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/lastIndexOf/length-zero-returns-minus-one.js :: it threw an object with no name:  (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/lastIndexOf/length-zero-returns-minus-one.js (strict) :: it threw an object with no name:  (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/map/BigInt/callbackfn-set-value-during-interaction.js :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/map/BigInt/callbackfn-set-value-during-interaction.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ctor-abrupt.js :: it threw an object with no name: callback should not be called Expected SameValue(«4», «0») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ctor-abrupt.js (strict) :: it threw an object with no name: callback should not be called Expected SameValue(«4», «0») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/speciesctor-destination-backed-by-immutable-buffer.js :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
@@ -13220,10 +13208,6 @@ built-ins/TypedArray/prototype/map/speciesctor-get-ctor-abrupt.js :: it threw an
 built-ins/TypedArray/prototype/map/speciesctor-get-ctor-abrupt.js (strict) :: it threw an object with no name: callback should not be called Expected SameValue(«4», «0») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/map/speciesctor-resizable-buffer-shrink.js :: it threw an object with no name: Actual [0, 0, 0, 0] and expected [undefined, undefined, undefined, undefined] should have the same contents.
 built-ins/TypedArray/prototype/map/speciesctor-resizable-buffer-shrink.js (strict) :: it threw an object with no name: Actual [0, 0, 0, 0] and expected [undefined, undefined, undefined, undefined] should have the same contents.
-built-ins/TypedArray/prototype/reduce/BigInt/callbackfn-set-value-during-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/reduce/BigInt/callbackfn-set-value-during-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/reduceRight/BigInt/callbackfn-set-value-during-iteration.js :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/reduceRight/BigInt/callbackfn-set-value-during-iteration.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/reverse/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/TypedArray/prototype/reverse/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/TypedArray/prototype/set/BigInt/array-arg-primitive-toobject.js :: it threw TypeError: this is not something to copy from (Testing with BigInt64Array and makePassthrough.)
@@ -13276,8 +13260,6 @@ built-ins/TypedArray/prototype/slice/speciesctor-destination-backed-by-immutable
 built-ins/TypedArray/prototype/slice/speciesctor-destination-backed-by-immutable-buffer.js (strict) :: it threw TypeError: what was called is not a function (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/speciesctor-return-same-buffer-with-offset.js :: it threw an object with no name: Actual [20, 30, 40, 60] and expected [20, 20, 20, 60] should have the same contents.  (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/slice/speciesctor-return-same-buffer-with-offset.js (strict) :: it threw an object with no name: Actual [20, 30, 40, 60] and expected [20, 20, 20, 60] should have the same contents.  (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/some/BigInt/callbackfn-set-value-during-interaction.js :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/some/BigInt/callbackfn-set-value-during-interaction.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/sort/comparefn-shrink.js :: it threw an object with no name: Actual [7, 8] and expected [10, 9] should have the same contents.
 built-ins/TypedArray/prototype/sort/comparefn-shrink.js (strict) :: it threw an object with no name: Actual [7, 8] and expected [10, 9] should have the same contents.
 built-ins/TypedArray/prototype/sort/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
@@ -14177,14 +14159,6 @@ language/expressions/optional-chaining/eval-optional-call.js :: it threw an obje
 language/expressions/optional-chaining/eval-optional-call.js (strict) :: it threw an object with no name: fn() returns "global" value from indirect eval Expected SameValue(«"local"», «"global"») to be true
 language/expressions/optional-chaining/optional-call-preserves-this.js :: it threw TypeError: cannot read a property of something that is not an object
 language/expressions/optional-chaining/optional-call-preserves-this.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-language/expressions/postfix-decrement/bigint.js :: it threw TypeError: a BigInt cannot be converted to a number
-language/expressions/postfix-decrement/bigint.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-language/expressions/postfix-increment/bigint.js :: it threw TypeError: a BigInt cannot be converted to a number
-language/expressions/postfix-increment/bigint.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-language/expressions/prefix-decrement/bigint.js :: it threw TypeError: a BigInt cannot be converted to a number
-language/expressions/prefix-decrement/bigint.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
-language/expressions/prefix-increment/bigint.js :: it threw TypeError: a BigInt cannot be converted to a number
-language/expressions/prefix-increment/bigint.js (strict) :: it threw TypeError: a BigInt cannot be converted to a number
 language/expressions/right-shift/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/right-shift/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/subtraction/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error

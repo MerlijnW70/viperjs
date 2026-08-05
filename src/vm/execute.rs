@@ -189,6 +189,55 @@ impl Vm {
                         None => continue,
                     }
                 }
+                Instruction::ToNumeric => {
+                    let operand = self.pop()?;
+                    // §7.1.4, which may run the program's own `valueOf` — hence `settle`, exactly
+                    // as the unary above does.
+                    let value = self
+                        .to_numeric_value(operand, heap)
+                        .map(|numeric| heap.numeric_value(numeric));
+                    match self.settle(value, heap, root, current, at)? {
+                        Some(value) => self.stack.push(value),
+                        None => continue,
+                    }
+                }
+                Instruction::Step(operator) => {
+                    let operand = self.pop()?;
+                    // Asked again rather than assumed. `ToNumeric` has already run — the compiler
+                    // emits the two together — so this is the identity on everything that can
+                    // arrive, and asking makes the arm *total* instead of leaving a case no
+                    // program can reach and no test can kill.
+                    let value = self.to_numeric_value(operand, heap).and_then(|numeric| {
+                        Ok(match numeric {
+                            crate::heap::Numeric::Number(number) => Value::Number(match operator {
+                                crate::ast::UpdateOperator::Increment => number + 1.0,
+                                crate::ast::UpdateOperator::Decrement => number - 1.0,
+                            }),
+                            // §6.1.6.2 is unbounded, so this cannot overflow the way the Number
+                            // case saturates at its precision — but it does allocate, which is
+                            // why the Number path does not go through the heap at all.
+                            crate::heap::Numeric::BigInt(big) => {
+                                let one = crate::bigint::BigInt::from_u64(1);
+                                let stepped = match operator {
+                                    crate::ast::UpdateOperator::Increment => big.add(&one),
+                                    crate::ast::UpdateOperator::Decrement => big.subtract(&one),
+                                };
+                                match stepped {
+                                    Ok(answer) => Value::BigInt(heap.new_bigint(answer)),
+                                    Err(_) => {
+                                        return Err(crate::value::Abrupt::range_error(
+                                            "this BigInt is larger than this engine will allocate",
+                                        ));
+                                    }
+                                }
+                            }
+                        })
+                    });
+                    match self.settle(value, heap, root, current, at)? {
+                        Some(value) => self.stack.push(value),
+                        None => continue,
+                    }
+                }
                 Instruction::Binary(operator) => {
                     // Right first: it was pushed second, so it is on top. Getting this backwards
                     // would make every subtraction and comparison silently mirror itself.

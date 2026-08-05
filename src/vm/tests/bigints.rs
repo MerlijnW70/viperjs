@@ -435,3 +435,55 @@ fn number_of_a_bigint_converts_where_every_other_operation_refuses() {
     assert_eq!(run("Number()"), "0");
     assert_eq!(run("Number(undefined)"), "NaN");
 }
+
+#[test]
+fn an_update_expression_steps_a_bigint_in_its_own_domain() {
+    // §13.4.4.1 step 1 is `ToNumeric`, not `ToNumber` — the one place §13.5.4's unary `+` and this
+    // clause part company, and the reason they could stand in for each other until BigInts existed.
+    // `1n++` is 2n and never becomes a Number.
+    assert_eq!(run("var x = 1n; x++; typeof x + ':' + x"), "bigint:2");
+    assert_eq!(run("var y = 5n; --y; typeof y + ':' + y"), "bigint:4");
+    // A postfix update answers the **old** value, and a prefix one the new — both as BigInts.
+    assert_eq!(run("var z = 3n; String(z++) + ',' + String(z)"), "3,4");
+    assert_eq!(run("var z = 3n; String(++z) + ',' + String(z)"), "4,4");
+    // All three reference shapes, because each has its own codegen path and only a slot was ever
+    // exercised by the rows above.
+    assert_eq!(
+        run("var o = { p: 9n }; o.p++; typeof o.p + ':' + o.p"),
+        "bigint:10"
+    );
+    assert_eq!(
+        run("var a = [7n]; a[0]--; typeof a[0] + ':' + a[0]"),
+        "bigint:6"
+    );
+    // …and through a `with`, which resolves the name at run time and is the fourth path.
+    assert_eq!(
+        run("var o = { q: 2n }; with (o) { q++; } typeof o.q + ':' + o.q"),
+        "bigint:3"
+    );
+    // The coercion still happens **before** the step, which is what makes `"1"++` evaluate to the
+    // number 1 rather than to the string. A BigInt changes which domain that is, not when it runs.
+    assert_eq!(
+        run("var s = '1'; String(s++) + ',' + typeof s + ':' + s"),
+        "1,number:2"
+    );
+    // An object whose `valueOf` answers a BigInt reaches the same path — `ToNumeric` runs the
+    // program's own code first, and what comes back decides the domain.
+    assert_eq!(
+        run(
+            "var o = { valueOf: function () { return 7n; } };              var stepped = ++o; typeof stepped + ':' + stepped"
+        ),
+        "bigint:8"
+    );
+    // Mixing is still refused, so the step has not quietly turned a BigInt into a Number: `x + 1`
+    // beside `x++` is the pair that tells those apart.
+    assert_eq!(
+        run("var x = 1n; x++; try { x + 1 } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // And unary `+` on a BigInt is still a TypeError, which is the clause this used to borrow.
+    assert_eq!(
+        run("try { +1n } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+}

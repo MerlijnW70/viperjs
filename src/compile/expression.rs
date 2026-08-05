@@ -1133,10 +1133,6 @@ impl Compiler<'_> {
         argument: &Expr,
         span: Span,
     ) -> Result<(), CompileError> {
-        let step = match operator {
-            UpdateOperator::Increment => BinaryOperator::Add,
-            UpdateOperator::Decrement => BinaryOperator::Subtract,
-        };
         match &argument.kind {
             ExprKind::Identifier(name) => {
                 // §13.4.4.1 step 1 evaluates the `LeftHandSideExpression` **once**, and steps 2
@@ -1153,12 +1149,11 @@ impl Compiler<'_> {
                     let index = self.name(name)?;
                     self.chunk.emit(Instruction::ResolveName(index));
                     self.chunk.emit(Instruction::LoadThrough(index));
-                    self.chunk.emit(Instruction::Unary(UnaryOperator::Plus));
+                    self.chunk.emit(Instruction::ToNumeric);
                     if !prefix {
                         self.chunk.emit(Instruction::Duplicate);
                     }
-                    self.constant(Value::Number(1.0))?;
-                    self.chunk.emit(Instruction::Binary(step));
+                    self.chunk.emit(Instruction::Step(operator));
                     self.chunk.emit(Instruction::StoreThrough(index));
                     if !prefix {
                         self.chunk.emit(Instruction::Pop);
@@ -1166,13 +1161,12 @@ impl Compiler<'_> {
                     return Ok(());
                 }
                 self.load_name(name)?;
-                self.chunk.emit(Instruction::Unary(UnaryOperator::Plus));
+                self.chunk.emit(Instruction::ToNumeric);
                 // The old value has to outlive the store, and only a postfix one needs it.
                 if !prefix {
                     self.chunk.emit(Instruction::Duplicate);
                 }
-                self.constant(Value::Number(1.0))?;
-                self.chunk.emit(Instruction::Binary(step));
+                self.chunk.emit(Instruction::Step(operator));
                 self.store_name(name)?;
                 // The store leaves the *new* value behind. A postfix one wants the old, which is
                 // underneath it, so the new one goes.
@@ -1195,7 +1189,7 @@ impl Compiler<'_> {
                 }
                 self.chunk.emit(Instruction::DuplicateTop(width));
                 self.chunk.emit(reference.get());
-                self.chunk.emit(Instruction::Unary(UnaryOperator::Plus));
+                self.chunk.emit(Instruction::ToNumeric);
                 if !prefix {
                     // Under the base, the key and the copy that is about to become the new value
                     // — the three the store is going to consume. It surfaces again when the new
@@ -1206,8 +1200,7 @@ impl Compiler<'_> {
                     // a `super` reference is one value wider than the other two.
                     self.chunk.emit(Instruction::Bury(width + 1));
                 }
-                self.constant(Value::Number(1.0))?;
-                self.chunk.emit(Instruction::Binary(step));
+                self.chunk.emit(Instruction::Step(operator));
                 self.chunk.emit(reference.set());
                 if !prefix {
                     self.chunk.emit(Instruction::Pop);
