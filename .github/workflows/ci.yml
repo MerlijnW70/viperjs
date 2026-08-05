@@ -77,11 +77,24 @@ jobs:
       # Two of the three non-negotiables in GOAL.md, checked mechanically rather than trusted.
       # `#![forbid(unsafe_code)]` makes the compiler enforce the second; this asserts the
       # attribute is still there, since deleting it is the one way to get around it quietly.
+      # The package is looked up by name, so it has to assert it *found* one. Summing over a
+      # filter that matches nothing gives zero, and `-eq 0` then passes for a crate that could
+      # have any number of dependencies — which is exactly what happened when the package was
+      # renamed and this line was not: a green build asserting nothing at all.
       - name: the dependency table is empty
         run: |
-          count=$(cargo metadata --no-deps --format-version 1 \
-            | python3 -c 'import json,sys; p=json.load(sys.stdin)["packages"]; print(sum(len(x["dependencies"]) for x in p if x["name"]=="praxis"))')
-          echo "praxis declares $count dependencies"
+          metadata=$(cargo metadata --no-deps --format-version 1)
+          found=$(echo "$metadata" | python3 -c 'import json,sys; print(sum(1 for x in json.load(sys.stdin)["packages"] if x["name"]=="viperjs"))')
+          test "$found" -eq 1 || { echo "no package named viperjs — this check would pass vacuously"; exit 1; }
+          count=$(echo "$metadata" | python3 -c 'import json,sys; print(sum(len(x["dependencies"]) for x in json.load(sys.stdin)["packages"] if x["name"]=="viperjs"))')
+          echo "viperjs declares $count dependencies"
           test "$count" -eq 0
-      - name: unsafe code is forbidden crate-wide
-        run: grep -q '^#!\[forbid(unsafe_code)\]' src/lib.rs
+      # **Every crate root, not just the library.** `#![forbid(unsafe_code)]` is an attribute on
+      # one crate root and covers nothing outside it, so `src/bin/viper.rs` could contain `unsafe`
+      # and compile with the library's attribute untouched. DR-0002 names both for that reason.
+      - name: unsafe code is forbidden in every crate root
+        run: |
+          for root in src/lib.rs src/bin/viper.rs; do
+            grep -q '^#!\[forbid(unsafe_code)\]' "$root" \
+              || { echo "$root does not forbid unsafe code"; exit 1; }
+          done

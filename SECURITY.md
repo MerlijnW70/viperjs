@@ -3,7 +3,7 @@
 ## Reporting
 
 Report privately through
-[GitHub Security Advisories](https://github.com/MerlijnW70/praxis/security/advisories/new).
+[GitHub Security Advisories](https://github.com/MerlijnW70/viperjs/security/advisories/new).
 Do not open a public issue for a vulnerability.
 
 You can expect an acknowledgement within a few days and an assessment within two weeks. If a
@@ -11,7 +11,7 @@ fix is warranted you will be credited in the advisory unless you ask otherwise.
 
 ## What counts as a vulnerability here
 
-praxis is an engine that runs **untrusted script inside someone else's process**. That framing
+ViperJS is an engine that runs **untrusted script inside someone else's process**. That framing
 decides the answer to most questions:
 
 - **A panic, abort, or stack overflow on any input** — including input no reasonable program
@@ -36,5 +36,5 @@ a report worth making.
 
 ## Supported versions
 
-praxis is pre-1.0 and under active development. Only the latest released version is supported;
+ViperJS is pre-1.0 and under active development. Only the latest released version is supported;
 before 1.0 that means the tip of `master`.

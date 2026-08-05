@@ -4,7 +4,7 @@
 
 **An embeddable JavaScript engine in safe Rust, with zero runtime dependencies.**
 
-[![CI](https://github.com/MerlijnW70/praxis/actions/workflows/ci.yml/badge.svg)](https://github.com/MerlijnW70/praxis/actions/workflows/ci.yml)
+[![CI](https://github.com/MerlijnW70/viperjs/actions/workflows/ci.yml/badge.svg)](https://github.com/MerlijnW70/viperjs/actions/workflows/ci.yml)
 [![Licence: MIT OR Apache-2.0](https://img.shields.io/badge/licence-MIT%20OR%20Apache--2.0-blue.svg)](#licence)
 [![Rust 1.88+](https://img.shields.io/badge/rust-1.88%2B-orange.svg)](https://www.rust-lang.org)
 [![Dependencies: 0](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](Cargo.toml)
@@ -16,16 +16,15 @@ It runs about **84% of test262** — classes, generators, `async`/`await`, ES mo
 `BigInt`, TypedArrays, and its own regular-expression engine. No `unsafe`, no crates, and no input
 makes it panic.
 
-> Three names, so that none of them surprises you: the **project** is ViperJS, the **crate** is
-> `viperjs`, and the **command** is `viper`. The repository is still called `praxis`, which is what
-> this was called before the rename — the git history says so and is left alone.
+> Two names, so that neither surprises you: the **crate** is `viperjs` and the **command** it
+> installs is `viper`.
 
 ## Run some JavaScript right now
 
 A Rust toolchain and nothing else. No build script, no C compiler, no submodules.
 
 ```sh
-git clone https://github.com/MerlijnW70/praxis && cd praxis
+git clone https://github.com/MerlijnW70/viperjs && cd viperjs
 cargo build --release
 ./target/release/viper -e "[1,2,3].map(n => n * n).join(',')"
 ```

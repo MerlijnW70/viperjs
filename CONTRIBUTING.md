@@ -1,4 +1,4 @@
-# Contributing to praxis
+# Contributing to ViperJS
 
 Thank you for looking. Read [GOAL.md](GOAL.md) first — it is the binding charter and it outranks
 everything here. [AGENTS.md](AGENTS.md) has the milestone plan and the house style.
@@ -69,6 +69,6 @@ proposing the ninth — they are short.
 
 ## Licence
 
-praxis is copyright MerlijnW70 and dual-licensed under [MIT](LICENSE-MIT) OR
+ViperJS is copyright MerlijnW70 and dual-licensed under [MIT](LICENSE-MIT) OR
 [Apache-2.0](LICENSE-APACHE); [COPYRIGHT](COPYRIGHT) states it for both halves. By contributing
 you agree that your work is dual-licensed on the same terms.

@@ -52,7 +52,7 @@ as an appointed representative at an online or offline event.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the
 community leaders responsible for enforcement through a
-[private security advisory](https://github.com/MerlijnW70/praxis/security/advisories/new) or by
+[private security advisory](https://github.com/MerlijnW70/viperjs/security/advisories/new) or by
 contacting the repository owner directly on GitHub. All complaints will be reviewed and
 investigated promptly and fairly.
 

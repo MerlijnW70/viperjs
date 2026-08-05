@@ -33,4 +33,4 @@ a complete lexer and a parser covering most of the modern grammar.
 - No input panics. Nesting is bounded by an explicit count rather than by hitting the OS stack
   guard, and a full-depth parse is asserted to survive one mebibyte of stack.
 
-[Unreleased]: https://github.com/MerlijnW70/praxis/commits/master
+[Unreleased]: https://github.com/MerlijnW70/viperjs/commits/master
