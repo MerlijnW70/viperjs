@@ -28,7 +28,7 @@ tests, each of which either passes or does not. That has three consequences for 
 | --- | --- |
 | `src/` | The engine. Zero deps, no `unsafe`, no panics, fully tested. |
 | `lab/` | Experiments — see [`lab/README.md`](lab/README.md). Not shipped, and cannot be imported by the engine. |
-| `conformance/` | The test262 harness and its expectations ratchet (arrives at M5). |
+| `conformance/` | The test262 harness and its expectations ratchet. |
 | `decisions/` | Decision records for anything architectural: one file, prose + the invariant it implies. |
 | `GOAL.md` | The charter. Binding. |
 
@@ -106,7 +106,8 @@ a commit, and none may cost a single conformance test.
    statement that a branch you wrote is untested, and it comes with the input that
    distinguishes it. Fix the test, not the branch.
 5. **The gate** — green (fmt, clippy `-D warnings`, `missing_docs`, no-unsafe, the boundary).
-6. **Run the conformance suite** once M5 exists. The number goes up, or the change explains why.
+6. **Run the conformance suite.** The number goes up, or the change explains why — and see
+   `conformance/README.md` on why a gain needs three runs to be believed and a regression does not.
 7. **Commit.** The message says what changed *behaviourally*, not which files moved.
 
 ## House style
@@ -151,7 +152,8 @@ refused wholesale until DR-0008's second amendment. A pattern carrying neither `
 `/}/` as a brace, `/\1/` with no group as a legacy octal escape, `/\8/` as an `8`, `/\c1/` as three
 characters and `/[\d-x]/` as a union. See the section below for the shape of it.
 
-Conformance as of this commit is **83.54% of test262** — 77,828 of 93,161 runs. Treat that number as
+Conformance as of this commit is **about 84% of test262** — 78,222 of 93,161 runs on the run this
+sentence was written from, and a few hundred either way on the next. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 320 runs are now *stopped* before anything executes. **One of them was misfiled here for a
 long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a

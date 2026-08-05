@@ -23,10 +23,12 @@ released, and the engine cannot import it — the arrow points `lab -> praxis`, 
 ## Workflow
 
 ```
-cargo run -p praxis-lab                # list experiments
-cargo run -p praxis-lab -- value-repr  # run one
-cargo test -p praxis-lab               # lab has its own tests, held to no standard
+cargo run -p praxis-lab                          # list experiments
+cargo run -p praxis-lab --release -- hot-shapes  # run one
+cargo test -p praxis-lab                         # lab has its own tests, held to no standard
 ```
+
+`--release` for anything that measures: a debug build measures the debug build.
 
 `cargo test` at the repo root does **not** see any of this: the root package is
 the engine alone. That separation is the whole design — check it stays true if you ever touch

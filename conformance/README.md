@@ -45,8 +45,8 @@ engine rather than in the harness.
 ## What a run says
 
 ```
-7679 passed, 539 failed, 84943 not run
-93.44% of what ran — 8.24% of the whole suite
+78222 passed, 14619 failed, 320 not run
+84.25% of what ran — 83.96% of the whole suite
 ```
 
 Both percentages, always. The first flatters an engine that declines most of the suite, and it
@@ -57,13 +57,20 @@ Then the buckets:
 
 ```
 what stopped the rest, commonest first:
-   73357  a reference to an undeclared name is not implemented yet
-   10737  an async test reports through $DONE, which needs a host function
-     830  modules are M7
+    170  the RegExp modifiers proposal is not implemented yet
+     92  a property of strings is not implemented yet
+     18  agents are not implemented
+     16  `super` outside a derived constructor is not implemented yet
 ```
 
-That list is the reason the directory exists. A bucket with seventy thousand runs behind it is
-the next milestone; one with four is not.
+That list is the reason the directory exists. It used to be the whole work list — the top bucket
+once had seventy thousand runs behind it and named the next milestone. It is now 320 runs in total,
+and everything left in it is a proposal or something a single-threaded engine cannot do, so the
+work list has moved to the **failures** instead. Sort those by reason to find the next slice:
+
+```sh
+grep -av '^#' expectations.txt | sed 's/.* :: //' | sort | uniq -c | sort -rn | head -25
+```
 
 ## Passed, failed, and not run
 
@@ -74,9 +81,14 @@ have begun. This is the half of test262 that catches a permissive parser, and it
 that is easiest to accidentally score backwards.
 
 A test is **not run** when the engine declined it before anything executed: a construct the
-compiler has not been taught, a module, an agent test. Nothing ran, so nothing can be said about
-what it would have done. Counting those as failures would write the same sentence into the
-expectations file tens of thousands of times and bury the entries that mean something.
+compiler has not been taught, a syntax from a proposal, a test needing `$262.agent`. Nothing ran, so
+nothing can be said about what it would have done. Counting those as failures would write the same
+sentence into the expectations file and bury the entries that mean something.
+
+This column used to hold tens of thousands of runs and now holds 320. **A shrinking "not run" is
+not automatically progress** — a construct wrongly recorded as declined passes every negative test
+that asserts it must be rejected, so moving a test out of this column and into `failed` is the
+honest outcome and moving it into `passed` may not be.
 
 A file with neither `onlyStrict` nor `noStrict` is **two** tests. §11.2.2's strict mode changes
 what the same source means, and a name that did not say which mode it was would hide half of any
@@ -112,10 +124,31 @@ The exit code is what CI reads. A summary printed to stdout is not a verdict.
 
 The reason column is load-bearing. `expectations.txt` is the one place the conformance number
 can be quietly laundered — "just add it to the list" is always available and always tempting.
-Every entry says why — `:: it threw a RangeError` is a reason, and those reasons
-get interrogated rather than taken on faith. A reason like "flaky" or "weird" is
-not a reason. Which is why `--bless` rewrites the file wholesale and nothing else may add a line:
-a harness that could write its own excuses would not be a ratchet.
+Every entry says why, in the engine's own words: `:: it threw a RangeError` is a reason, and
+"flaky" or "weird" is not one. **Nothing checks a reason automatically** — an earlier version of
+this file claimed a tool interrogated them, and no tool can: they are prose in a `.txt`. What keeps
+them honest is that `--bless` rewrites the file wholesale and nothing else may add a line, so every
+*added* entry has to be read by whoever added it.
+
+The check worth making by hand: an added line whose path was already listed is an honest reason
+rewrite, and one with a genuinely new path is the ratchet moving the wrong way.
+
+## The number is not stable to the last hundred runs, and that is not a bug in the engine
+
+Roughly 900 files — most of `built-ins/RegExp/property-escapes` — take close to the ten-second
+per-test budget, so they cross it in either direction depending on what else the machine is doing.
+Consecutive runs of the same commit can differ by a few hundred in "newly passing".
+
+Two rules follow, and both were learned by getting them wrong:
+
+- **Take the intersection of three runs before deleting anything from `expectations.txt`.** Blessing
+  a lucky run once put 198 unrepeatable passes into the file; the next run reported all 198 as
+  regressions.
+- **Never bless to make a shuffled reason string go away.** The entries are failures either way, and
+  a bless that only rewrites reasons has changed nothing while looking like progress.
+
+Regressions themselves are stable — a test that really breaks breaks on every run — so a red build
+is still a red build. It is the *gains* that need corroborating.
 
 ## What is excluded, and why
 
