@@ -126,10 +126,15 @@ impl Vm {
     }
 
     /// Read what `name` resolves to — §6.2.5.5 `GetValue`.
+    ///
+    /// `strict` is §9.1.1.2.6's `S`, and only an object scope reads it: step 3 turns a binding that
+    /// has gone since it was resolved into a ReferenceError for strict code and `undefined` for
+    /// sloppy. A declarative scope has its own dead-zone rule and does not ask.
     pub(super) fn load_dynamic(
         &mut self,
         found: Resolved,
         key: PropertyKey,
+        strict: bool,
         heap: &mut Heap,
     ) -> Completion<Option<Value>> {
         match found {
@@ -147,9 +152,31 @@ impl Vm {
                 // than a program's problem. Answered as unresolvable, which is the safe direction.
                 None => Ok(None),
             },
-            Resolved::Property(object) => self
-                .get_property_key(Value::Object(object), key, heap)
-                .map(Some),
+            // §9.1.1.2.6 `GetBindingValue` — and like its `SetMutableBinding` twin below it is four
+            // steps rather than one.
+            Resolved::Property(object) => {
+                let base = Value::Object(object);
+                // Step 2 — the binding is looked for **again**. Resolving it ran `HasBinding`,
+                // which reads `@@unscopables`, and that is a getter a script may write: one that
+                // deletes the property leaves a reference to a binding that is no longer there.
+                //
+                // `HasProperty` and not `HasBinding`, so the list is *not* consulted a second time
+                // — which is what makes the getter run exactly once for one read, and is asserted
+                // as such by the tests either side of this clause.
+                if !self.has_property_key(base, key, heap)? {
+                    // Step 3. Not a fall-through to the global: the name was bound *here* when it
+                    // was resolved, so the walk is over. Answering `None` would send
+                    // `read_resolved` on to the global object and read something else entirely.
+                    if strict {
+                        return Err(Abrupt::Raised(
+                            crate::value::ErrorKind::Reference,
+                            "a binding that is no longer there",
+                        ));
+                    }
+                    return Ok(Some(Value::Undefined));
+                }
+                self.get_property_key(base, key, heap).map(Some)
+            }
             Resolved::Global => Ok(None),
         }
     }
@@ -162,9 +189,10 @@ impl Vm {
         &mut self,
         found: Resolved,
         key: PropertyKey,
+        strict: bool,
         heap: &mut Heap,
     ) -> Completion<Option<Value>> {
-        match self.load_dynamic(found, key, heap)? {
+        match self.load_dynamic(found, key, strict, heap)? {
             Some(value) => Ok(Some(value)),
             None => match self.global_binding(key, heap) {
                 Some(read) => read.map(Some),
@@ -222,7 +250,15 @@ impl Vm {
                 //
                 // `HasProperty` and not §9.1.1.2.1's `HasBinding`: `@@unscopables` decides what a
                 // `with` can *see*, and by here the reference has already been resolved.
-                if strict && !self.has_property_key(base, key, heap)? {
+                //
+                // **Asked whatever the strictness, and only the throw is conditioned on it.** Step
+                // 3 reads "if stillExists is false and S is true", which puts the `S` on the
+                // refusal and not on the question — and the question is observable, being a
+                // `HasProperty` that runs a proxy's `has` trap. Written as `strict && …` it is
+                // skipped entirely in sloppy code, so `with (proxy) { p = 1 }` called one trap
+                // fewer than every other engine.
+                let still_exists = self.has_property_key(base, key, heap)?;
+                if strict && !still_exists {
                     return Err(Abrupt::Raised(
                         crate::value::ErrorKind::Reference,
                         "an assignment to a binding that is no longer there",

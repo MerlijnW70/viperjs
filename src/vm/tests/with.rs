@@ -505,15 +505,80 @@ fn a_with_does_not_make_every_call_written_there_an_eval() {
         run("var o = { x: 41 }; with (o) { (0, eval)('typeof x') }"),
         "undefined"
     );
-    // §9.1.1.2.1's traps run in the clause's order for a name the evaluated text reads, which says
-    // the lookup really went through the object environment rather than around it.
+    // §9.1.1.2.1's and §9.1.1.2.6's traps run in the clauses' order for a name the evaluated text
+    // reads, which says the lookup really went through the object environment rather than around
+    // it. Two `has:x` and not one: `HasBinding` asks, and then `GetBindingValue` step 2 asks again.
     assert_eq!(
         run("var seen = []; \
              var p = new Proxy({ x: 41 }, { \
                  has: function (t, k) { seen.push('has:' + String(k)); return k in t }, \
                  get: function (t, k) { seen.push('get:' + String(k)); return t[k] } }); \
              with (p) { eval('x') } seen.join(',')"),
-        "has:eval,has:x,get:Symbol(Symbol.unscopables),get:x"
+        "has:eval,has:x,get:Symbol(Symbol.unscopables),has:x,get:x"
+    );
+}
+
+#[test]
+fn a_binding_is_looked_for_again_when_it_is_read_through_and_the_list_is_not() {
+    // §9.1.1.2.6 `GetBindingValue`, the read-side twin of the `SetMutableBinding` rule two tests
+    // below. Step 2 asks `HasProperty` a second time, because everything between resolving a
+    // reference and reading through it is a program — and `@@unscopables` is a getter, so the
+    // resolution *itself* is the program in the interesting case.
+    assert_eq!(
+        run("var seen = []; \
+             var o = { x: 1, get [Symbol.unscopables]() { seen.push('list'); delete o.x; return null } }; \
+             with (o) { var read = x; } seen.join(',') + '|' + read"),
+        "list|undefined"
+    );
+    // Step 3's `S`. The same program read from strict code is a ReferenceError rather than
+    // `undefined`, and the shape is forced: a `with` is a Syntax Error in strict code, so the only
+    // way to reach this clause with `S` true is a **strict function written inside a sloppy
+    // `with`**, which keeps the object environment in its chain. That is the one program that
+    // distinguishes step 3's two halves, and it is why the strict row cannot be written as a
+    // directive at the top.
+    assert_eq!(
+        run(
+            "var o = { x: 1, get [Symbol.unscopables]() { delete o.x; return null } }; \
+             var out; \
+             with (o) { \
+                 (function () { 'use strict'; \
+                     try { out = x } catch (e) { out = e.constructor.name } })(); } \
+             out"
+        ),
+        "ReferenceError"
+    );
+    // **Step 2 is `HasProperty` and not `HasBinding`**, so the list is read once for one access.
+    // Asking `HasBinding` again would answer the same and call the getter twice, which is a
+    // difference no assertion about the *value* can see.
+    assert_eq!(
+        run("var calls = 0; \
+             var o = { x: 1, get [Symbol.unscopables]() { calls++; return null } }; \
+             with (o) { x; } calls"),
+        "1"
+    );
+    // And a binding that is still there reads as it did — the re-check is not a second chance to
+    // block, only a second chance to be gone.
+    assert_eq!(run("var o = { x: 1 }; with (o) { x }"), "1");
+}
+
+#[test]
+fn the_second_look_for_a_binding_happens_in_sloppy_code_too_and_only_the_refusal_is_strict() {
+    // §9.1.1.2.5 step 2 and §9.1.1.2.6 step 2 are both unconditional; it is step 3 that carries the
+    // `S`. The difference is observable because `HasProperty` runs a proxy's `has` trap, so a
+    // sloppy write that skipped the question called one trap fewer than the clause asks for.
+    let trace = "var seen = []; \
+                 var p = new Proxy({ p: 0 }, { \
+                     has: function (t, k) { seen.push('has:' + String(k)); return k in t }, \
+                     get: function (t, k) { seen.push('get:' + String(k)); return t[k] }, \
+                     set: function (t, k, v) { seen.push('set:' + String(k)); t[k] = v; return true } }); ";
+    assert_eq!(
+        run(&format!("{trace} with (p) {{ p = 1; }} seen.join(',')")),
+        "has:p,get:Symbol(Symbol.unscopables),has:p,set:p"
+    );
+    // …and the read side of the same program, for the same reason.
+    assert_eq!(
+        run(&format!("{trace} with (p) {{ p; }} seen.join(',')")),
+        "has:p,get:Symbol(Symbol.unscopables),has:p,get:p"
     );
 }
 

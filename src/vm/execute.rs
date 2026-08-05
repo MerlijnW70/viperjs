@@ -589,6 +589,9 @@ impl Vm {
                 Instruction::LoadName(index) | Instruction::LoadNameForCall(index) => {
                     let key = self.global_name(running, index, heap)?;
                     let name = self.name_text(running, index, heap)?;
+                    // Read before `settle_resolution`, which borrows the `current` that `running`
+                    // came from — the same hoist the two store sites already make.
+                    let strict = running.is_strict();
                     let found = match self.settle_resolution(&name, key, heap, root, current, at)? {
                         Some(found) => found,
                         None => continue,
@@ -598,7 +601,7 @@ impl Vm {
                     if matches!(instruction, Instruction::LoadNameForCall(_)) {
                         self.stack.push(Vm::with_base(found));
                     }
-                    match self.read_resolved(found, key, heap) {
+                    match self.read_resolved(found, key, strict, heap) {
                         Ok(Some(value)) => self.stack.push(value),
                         // §6.2.5.5 — nothing anywhere is the ReferenceError an ordinary
                         // unresolvable name gets, said in the same words by the same code.
@@ -631,7 +634,7 @@ impl Vm {
                 Instruction::LoadThrough(index) => {
                     let key = self.global_name(running, index, heap)?;
                     let found = *self.references.last().ok_or(Fault::MissingReference)?;
-                    match self.read_resolved(found, key, heap) {
+                    match self.read_resolved(found, key, running.is_strict(), heap) {
                         Ok(Some(value)) => self.stack.push(value),
                         // §6.2.5.5 — nothing anywhere is the ReferenceError an ordinary
                         // unresolvable name gets, said in the same words by the same code.
@@ -719,11 +722,12 @@ impl Vm {
                 Instruction::TypeofName(index) => {
                     let key = self.global_name(running, index, heap)?;
                     let name = self.name_text(running, index, heap)?;
+                    let strict = running.is_strict();
                     let found = match self.settle_resolution(&name, key, heap, root, current, at)? {
                         Some(found) => found,
                         None => continue,
                     };
-                    let read = self.read_resolved(found, key, heap);
+                    let read = self.read_resolved(found, key, strict, heap);
                     // §13.5.1.1 step 2 — a name that is nowhere is `"undefined"` and not a throw,
                     // which is the one place `typeof` differs from a read.
                     let answer = match self.settle(
