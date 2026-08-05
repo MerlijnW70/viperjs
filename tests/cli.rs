@@ -169,3 +169,38 @@ fn the_host_binds_print_and_nothing_else() {
     assert_eq!(out, "function,undefined,undefined,undefined,object\n");
     assert_eq!(status, Some(0));
 }
+
+#[test]
+fn module_code_is_named_as_module_code_rather_than_as_a_puzzling_token() {
+    // A Script parse of Module code trips on whatever token comes first, and the message is then
+    // true and useless: `export` reads as "expected an expression". The goal symbol is the actual
+    // answer, and it is asked by *parsing* rather than by guessing at a file extension.
+    for source in [
+        "export const x = 1;",
+        "import x from './a.js';",
+        // §16.2.1's top-level `await` is the third thing a Module accepts and a Script does not,
+        // so it reaches the same sentence without an `import` or `export` anywhere in it.
+        "const x = await Promise.resolve(1);",
+    ] {
+        let (_, err, status) = viper(&["-e", source], "");
+        assert!(
+            err.contains("this is Module code"),
+            "{source}: expected the Module signpost, got {err:?}"
+        );
+        // The token the Script parse tripped on is kept, because it is what tells apart a Module
+        // that is fine from one that is *also* malformed.
+        assert!(err.contains("as a Script it said:"), "{source}: {err:?}");
+        assert_eq!(status, Some(1), "{source}");
+    }
+    // An ordinary syntax error must be untouched: it is not Module code, and saying so would send
+    // a reader looking for an `import` that is not there.
+    let (_, err, status) = viper(&["-e", "function ( {"], "");
+    assert!(!err.contains("Module code"), "{err:?}");
+    assert!(err.contains("SyntaxError"), "{err:?}");
+    assert_eq!(status, Some(1));
+    // And code that runs never reaches the question at all.
+    let (out, err, status) = viper(&["-e", "print('fine')"], "");
+    assert!(out.contains("fine"), "{out:?}");
+    assert!(!err.contains("Module"), "{err:?}");
+    assert_eq!(status, Some(0));
+}

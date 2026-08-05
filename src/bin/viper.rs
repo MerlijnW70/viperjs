@@ -39,6 +39,7 @@ use std::process::ExitCode;
 use std::time::Duration;
 use viperjs::api::{Engine, Error, Host};
 use viperjs::heap::{Heap, NativeCall};
+use viperjs::parser::parse_module;
 use viperjs::value::{Completion, Value};
 use viperjs::vm::Vm;
 
@@ -248,11 +249,39 @@ fn run(engine: &mut Engine, source: &str, show: Show) -> ExitCode {
             }
         },
         Ok(_) => ExitCode::SUCCESS,
+        // A Script parse that fails on text which *is* a Module deserves to say so. Without this
+        // the message is about the token the parser tripped on — "expected an expression, found
+        // `export`" — which is true and tells a person nothing about why their file will not run.
+        Err(Error::Syntax(said)) if is_module(source) => {
+            eprintln!("viper: this is Module code — it parses under §11.2's Module goal but not");
+            eprintln!("       as a Script, which is what viper runs. A Module's imports need a");
+            eprintln!("       resolver, and GOAL.md §3 leaves that to the host: see");
+            eprintln!("       viperjs::api::Engine to supply one.");
+            eprintln!("       as a Script it said: {said}");
+            ExitCode::FAILURE
+        }
         Err(error) => {
             eprintln!("viper: {}", describe(&error));
             ExitCode::FAILURE
         }
     }
+}
+
+/// Whether this is Module code, asked only once a Script parse has already failed.
+///
+/// **Asked by parsing rather than by guessing**, because the two goal symbols of §11.2 differ in
+/// exactly what they accept and nothing else can answer it: a file extension is a convention the
+/// language does not have, and scanning for `import` finds it in `import("x")`, in a property
+/// called `export`, and in a string.
+///
+/// The direction matters and makes this precise. Module code is strict, so nearly everything a
+/// Script accepts and a Module does not would fail *both* parses; what a Module accepts and a
+/// Script cannot is `import` and `export` declarations and a top-level `await`. So a source that
+/// fails as a Script and parses as a Module is one of those, which is the sentence below.
+///
+/// Only reached after a failure, so a program that runs pays nothing for it.
+fn is_module(source: &str) -> bool {
+    parse_module(source).is_ok()
 }
 
 /// What went wrong, in one line, for a person reading a terminal.
