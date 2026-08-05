@@ -26,8 +26,13 @@
 //! against `o.x` is the element path against the named one; `a[0]` read against `a[0]` written is
 //! which direction allocates.
 //!
-//! Footprint is counted the same way `Heap::footprint` counts it — arena slots, which DR-0010 does
-//! not reuse — so a row's growth is what that shape *retains*, not what it touched.
+//! Footprint is counted the same way `Heap::footprint` counts it — each arena's `len()`, which is a
+//! **high-water mark**: DR-0019 hands a swept slot out again, and that stops the arena growing
+//! without shortening the `Vec`. So a row's growth is what that shape made the heap *reach*, and
+//! the `after gc` column beside it cannot fall even when every slot in it has been freed for reuse.
+//! That is a property of the measure and not of the collector — see `reuse_check`, which is the
+//! part of this experiment that can tell the two apart, and which exists because reading this table
+//! as though the column meant "unreclaimable" is exactly the mistake it once produced.
 //!
 //! # What this cannot see
 //!
@@ -203,9 +208,12 @@ fn measure(body: &str) -> Option<(Duration, usize, usize, bool)> {
     // did not finish is a row whose time means nothing and whose footprint means everything.
     let finished = matches!(outcome, Ok(praxis::vm::Outcome::Value(_)));
     let grew = heap.footprint().saturating_sub(before);
-    // …and then collect, with the chunk as the root. If the footprint does not fall, what the row
-    // retained is not *garbage the collector missed* — it is arena slots DR-0010 declines to reuse,
-    // and no collection schedule can give them back. That distinction is the whole verdict.
+    // …and then collect, with the chunk as the root. This column does **not** say what a collection
+    // can reclaim, though it was read that way once and the reading became this notebook's headline.
+    // `footprint` is a high-water mark, so a freed slot goes on being counted whether or not the
+    // next allocation takes it — and the number therefore looks identical for an arena that reuses
+    // perfectly and one that never does. `reuse_check` is what distinguishes them; this column's
+    // honest use is only "what did this shape make the heap reach".
     vm.collect(&chunk, &mut heap);
     let after = heap.footprint().saturating_sub(before);
     Some((elapsed, grew, after, finished))
@@ -213,53 +221,95 @@ fn measure(body: &str) -> Option<(Duration, usize, usize, bool)> {
 
 /// DR-0019's claim, checked directly: does a collection make the slots available again?
 ///
-/// The table above cannot show this, and it took a run to see why. `Heap::footprint` counts
-/// `environments.len()`, and freeing a slot does not shorten the `Vec` — it makes the slot
-/// *reusable*. So a collection at the end of a loop moves nothing, and the only thing that tells
-/// reuse from tombstones is whether a **second** loop has to grow the arena at all.
+/// The table above cannot show this, and it took a run to see why. `Heap::footprint` counts each
+/// arena's `len()`, and freeing a slot does not shorten the `Vec` — it makes the slot *reusable*.
+/// So a collection at the end of a loop moves nothing, and the only thing that tells reuse from
+/// tombstones is whether a **second** loop has to grow the arena at all.
 ///
-/// Which is what this measures: the same loop twice with a collection between. With tombstones
-/// the second run costs what the first did. With DR-0019's free list it costs nothing.
+/// Which is what this measures: the same loop twice with a collection between. With tombstones the
+/// second run costs what the first did. With DR-0019's free list it costs nothing.
+///
+/// # Why there is a row per arena
+///
+/// DR-0019 landed for environments first, and this notebook's entry recorded that the objects,
+/// Strings, Symbols and BigInts were "still tombstoned … and are next". They are not: all five are
+/// the one `Arena<T>` now. That is readable in `src/heap/mod.rs` in a second, and a reading is not
+/// what this file is for — a shape per arena turns it into a number, and the two rows that
+/// allocate no *new* arena keep the check honest about what it is attributing.
 fn reuse_check() {
-    let source = format!(
-        "var N = {ITERATIONS}; function f(a) {{ return a }}          var s = 0; for (var i = 0; i < N; i++) {{ s = f(i); }} s"
+    // One shape per arena that a loop can fill: a call makes an environment, a literal an object,
+    // a concatenation a String, an arithmetic a BigInt. Symbols are left out — `Symbol()` in a loop
+    // is not a shape any real program has, and the registry makes `Symbol.for` a strong root.
+    let shapes: &[(&str, &str)] = &[
+        (
+            "environments (a call)",
+            "function f(a) { return a } var s = 0; for (var i = 0; i < N; i++) { s = f(i); } s",
+        ),
+        (
+            "objects (a literal)",
+            "var s = 0; for (var i = 0; i < N; i++) { s = ({ a: i }).a; } s",
+        ),
+        (
+            "strings (a concatenation)",
+            "var s = ''; for (var i = 0; i < N; i++) { s = 'x' + i; } s.length",
+        ),
+        (
+            "bigints (an addition)",
+            "var s = 0n; for (var i = 0; i < N; i++) { s = 1n + BigInt(i); } 0",
+        ),
+    ];
+    println!("\nDR-0019 — {ITERATIONS} passes, collect, {ITERATIONS} passes again, collect:");
+    println!(
+        "  {:<26} {:>13} {:>13}  verdict",
+        "arena", "run 1 kept", "run 2 kept"
     );
+    for (name, body) in shapes {
+        let Some((first, second)) = reuse_of(body) else {
+            println!("  {name:<26} did not run");
+            continue;
+        };
+        // Four to one rather than "the second is zero": a collection leaves the chunk's own
+        // constants and whatever the loop's last pass is still reachable from, so a reusing arena
+        // keeps a little. The measured gap is three orders of magnitude and the threshold sits
+        // nowhere near either side of it.
+        let verdict = match second * 4 < first {
+            true => "REUSED",
+            false => "tombstoned — paid again",
+        };
+        println!("  {name:<26} {first:>11} B {second:>11} B  {verdict}");
+    }
+}
+
+/// What each of two identical runs *permanently* added to the heap, each measured after a
+/// collection — `None` if the shape could not be run at all.
+///
+/// # Why both ends are measured after a collect, which a first version of this got wrong
+///
+/// The obvious measurement — grow, collect, grow again, compare the two growths — answers wrongly
+/// for exactly one arena, and reported Strings as tombstoned when they are not. `Heap::footprint`
+/// is not a slot count: it is slots **plus** `string_units`, and a String's units are real memory
+/// that the sweep genuinely gives back and the next allocation genuinely pays for again. So the
+/// second run's growth for that shape is its units being bought a second time, which is correct
+/// behaviour and says nothing at all about the slot.
+///
+/// Measuring the high-water mark *after* a collection removes the component that legitimately comes
+/// and goes, and leaves the one the question is about. If slots are reused the arena never had to
+/// grow, so the second number is the first. If they are tombstoned the second is twice it.
+fn reuse_of(body: &str) -> Option<(usize, usize)> {
+    let source = format!("var N = {ITERATIONS}; {body}");
     let mut heap = Heap::new();
-    let Ok(script) = parse_script(&source) else {
-        return;
-    };
-    let Ok(chunk) = compile_script(&script, &mut heap) else {
-        return;
-    };
+    let script = parse_script(&source).ok()?;
+    let chunk = compile_script(&script, &mut heap).ok()?;
     let start = heap.footprint();
     let mut vm = Vm::new(&mut heap);
-    if vm.run(&chunk, &mut heap).is_err() {
-        return;
-    }
-    let after_first = heap.footprint();
+    vm.run(&chunk, &mut heap).ok()?;
     vm.collect(&chunk, &mut heap);
-    let swept = heap.footprint();
-    if vm.run(&chunk, &mut heap).is_err() {
-        return;
-    }
+    let after_first = heap.footprint();
+    vm.run(&chunk, &mut heap).ok()?;
+    vm.collect(&chunk, &mut heap);
     let after_second = heap.footprint();
-    let first = after_first.saturating_sub(start);
-    let second = after_second.saturating_sub(swept);
-    println!(
-        "
-DR-0019 — {ITERATIONS} calls, collect, {ITERATIONS} calls again:"
-    );
-    println!("  first run grew the arena by  {first:>9} B");
-    println!(
-        "  the collection gave back     {:>9} B",
-        after_first.saturating_sub(swept)
-    );
-    println!("  second run grew it by        {second:>9} B");
-    println!(
-        "  => slots are {}",
-        match second * 4 < first {
-            true => "REUSED",
-            false => "tombstones — the second run paid again",
-        }
-    );
+    Some((
+        after_first.saturating_sub(start),
+        after_second.saturating_sub(after_first),
+    ))
 }

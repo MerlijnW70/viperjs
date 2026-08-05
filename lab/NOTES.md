@@ -209,6 +209,49 @@ Two things the table could *not* show, and it took a run each to see why:
   reuse changes what a program *can* do rather than what any current test does. The objects,
   strings, symbols and BigInt arenas are still tombstoned; they are the same change and are next.
 
+### Re-run 2026-08-05 — the rollout finished, and the table's headline is a property of the measure
+
+**Question:** the entry above says the other four arenas "are next". Are they still tombstoned, and
+does the 74 B-per-call ceiling still stand?
+
+**Result: all of them reuse, and the ceiling is conditional rather than absolute.** `reuse_check`
+grew a row per arena, each running its loop twice with a collection between:
+
+| arena | run 1 kept | run 2 kept | |
+| --- | --- | --- | --- |
+| environments (a call) | 7,462,922 B | 816 B | REUSED |
+| objects (a literal) | 41,062,106 B | 0 B | REUSED |
+| strings (a concatenation) | 3,462,118 B | 0 B | REUSED |
+| bigints (an addition) | 262,078 B | 0 B | REUSED |
+
+`src/heap/mod.rs` has all five fields as one `Arena<T>` and `collect.rs` sweeps every one through
+it, so this confirms a reading rather than discovering anything — but the reading was three commits
+old and the entry above still said otherwise, which is why it was worth the run.
+
+**What has *not* changed is the timing table, and the two must not be confused.** `call` is still
+705 ns and 74 B a pass; `empty-let-captured` still reaches DR-0013's budget and stops. Those rows
+allocate and never collect, because nothing collects unless a host asks. So **"about 900,000 calls
+before any program dies" is still true of a program that never calls `Vm::collect`, and false of one
+that does.** DR-0019 turned an absolute ceiling into a schedule question, and the schedule is
+genuinely still open — which is now the *only* thing standing between this notebook and M8.
+
+**The `after gc` column cannot answer any of this, and that is the correction worth carrying.** It
+is identical to the `leak/pass` column in every row and always will be: `footprint` is a high-water
+mark, so a freed slot goes on being counted whether or not the next allocation takes it. Read as
+"what a collection cannot reclaim" it produced this entry's original headline — *a full collection
+reclaims nothing* — which was a statement about the measure and not about the collector. Only a
+**second loop** distinguishes reuse from tombstones.
+
+**And the first version of the per-arena check got Strings wrong**, which is worth recording because
+the failure was subtle and the number looked decisive. Measuring "growth in run 1 vs growth in run 2"
+reported Strings as `tombstoned — paid again`: 5,617,700 B then 2,155,560 B. Both numbers were real
+and the verdict was wrong, because `footprint` is slots **plus** `string_units`, and a String's units
+are memory the sweep genuinely returns and the next allocation genuinely buys again. That component
+is correct behaviour and says nothing about the slot. Taking both readings **after a collection**
+removes what legitimately comes and goes, and Strings then read 3,462,118 B / 0 B — reuse, and the
+arithmetic of the two versions agrees to twenty-two bytes. **A mixed-unit metric will hand you a
+confident wrong verdict for whichever term dominates.**
+
 
 ## name-resolution — what would it cost to resolve every name at run time?
 

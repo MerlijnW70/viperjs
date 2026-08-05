@@ -1081,12 +1081,26 @@ six passes; run once at the budget, 79 files to buy none. This file then said "t
 is slot reuse with generation-tagged handles — a decision record, not a patch, and after it the
 timer is one line".
 
-**That step is DR-0019 and it is built.** A swept slot goes on a free list and every handle carries
-the generation its slot was on. So the measurement's premise is gone and the numbers above have not
-been taken again — **do not quote them as a reason**. `lab/NOTES.md`'s `hot-shapes` predates DR-0019
-too, including its headline finding that "a full collection reclaims nothing" and the 74 B-per-call
-ceiling that follows from it. Re-running that experiment is the cheapest thing on the list, and it
-either restores the conclusion with new numbers or removes the stated blocker on M8.
+**That step is DR-0019 and it is built** — a free list per arena and a generation in every handle.
+So the 318-files measurement's premise is gone and it has not been taken again: **do not quote it as
+a reason.**
+
+`lab/NOTES.md`'s `hot-shapes` was re-run on 2026-08-05 and its entry carries the numbers. **All five
+arenas reuse** — environments, objects, Strings, Symbols and BigInts are one `Arena<T>` now, and the
+entry's earlier claim that four of them "are next" was three commits stale. What that re-run did
+*not* overturn is the timing table: `call` is still 705 ns and 74 B a pass, because those rows never
+collect. So **"about 900,000 calls before any program dies" is still true of a program that never
+calls `Vm::collect`, and false of one that does** — DR-0019 turned an absolute ceiling into a
+schedule question and did not answer it. The schedule is now the only thing between here and M8.
+
+**And the entry's original headline was a property of the measure, not of the collector.**
+`footprint` is a high-water mark, so its `after gc` column is identical to the `leak/pass` column in
+every row *whether slots are reused or not* — reading it as "what a collection cannot reclaim" is
+what produced "a full collection reclaims nothing". Only a **second loop** tells reuse from
+tombstones. A first attempt at that second loop then reported Strings as tombstoned, because
+`footprint` is slots **plus** `string_units` and a String's units are genuinely re-bought each pass;
+taking both readings after a collection fixed it. **A mixed-unit metric hands you a confident wrong
+verdict for whichever term dominates**, and both mistakes here were that.
 
 What *is* settled is the part that cannot be left half-right. Four whole classes of reference were
 untraced before this: a bound function's target and arguments, a revive closure's context, a

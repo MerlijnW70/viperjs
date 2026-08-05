@@ -33,9 +33,16 @@
 //! Any decision about *when* to collect. §9.10's note leaves that to the implementation entirely,
 //! so what is here is the operation and an embedder that calls it — see [`crate::vm::Vm::collect`].
 //!
-//! The measurement that decided against a schedule is in `lab/NOTES.md` under `hot-shapes`, and
-//! **it predates DR-0019**: its verdict rested on a collection reclaiming no slots, which was true
-//! when it was taken and is not now. It is due again before anyone quotes it.
+//! The measurement that decided against a schedule is in `lab/NOTES.md` under `hot-shapes`, and it
+//! predates DR-0019 — 318 conformance files lost their time budget to buy six collection passes,
+//! taken when a pass could not reclaim a slot at all. **A pass now reclaims every arena**, measured
+//! per arena in that entry's 2026-08-05 re-run, so the number is stale and the question is open.
+//!
+//! What that re-run also establishes is the shape of the remaining problem: reuse only helps a
+//! program that *collects*, and nothing here collects unless a host asks. So `hot-shapes`'s ceiling
+//! — about 900,000 calls before DR-0013's budget stops a program — is still exactly true of a script
+//! that never calls [`crate::vm::Vm::collect`]. DR-0019 turned an absolute ceiling into a schedule
+//! question; it did not answer it.
 
 use crate::heap::Handle;
 use crate::heap::{EnvironmentId, Heap, Object, ObjectId, PropertyKind, Weak};
