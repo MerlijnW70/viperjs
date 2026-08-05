@@ -10,12 +10,17 @@
 //!
 //! # Why `deref` can be answered by asking the arena
 //!
-//! DR-0010 never reuses a slot: sweeping empties it and leaves the hole, and the arena only grows.
-//! So an [`crate::heap::ObjectId`] whose slot is empty names something that *was* collected and
-//! can never name anything else — and `heap.object(id).is_none()` is exactly §26.1.3.2's question,
-//! with no extra bookkeeping and no chance of answering about the wrong object. A collector with a
-//! free list would need a generation counter here the same day, which is the cost the module
-//! documentation in [`crate::heap::collect`] already records.
+//! `heap.object(id).is_none()` is exactly §26.1.3.2's question, with no extra bookkeeping here and
+//! no chance of answering about the wrong object — but **not** for the reason this paragraph used
+//! to give. It said the slot was never reused, so an empty one could only mean "collected". DR-0019
+//! reuses it, and the guarantee is now DR-0019's own: the handle carries the generation its slot
+//! was on, [`crate::heap::arena::Arena::get`] compares them, and a handle to a collected object
+//! answers `None` however many times its slot has been handed out since.
+//!
+//! So the free-list-needs-a-generation cost the old text called future is one already paid, and the
+//! behaviour is unchanged. Recorded at this length because the stale version read as an argument
+//! that this file's soundness *depended* on slots never being reused, which would have made
+//! `deref` a use-after-free the moment they were.
 //!
 //! # Why the cleanup callback never runs
 //!

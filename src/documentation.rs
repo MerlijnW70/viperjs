@@ -23,6 +23,17 @@
 //! describes what the function does — see the `for_in_parts` comment that claimed a refusal for
 //! two commits after the refusal was implemented. That remains a reading problem, and the only
 //! defence is the habit of reading the comment when changing the code under it.
+//!
+//! The most expensive instance so far is worth naming, because it shows what the class costs at
+//! full size. DR-0019 gave the arena a free list and generation-tagged handles; six comments across
+//! four files went on saying a swept slot is *never* reused, and one of them —
+//! [`crate::heap::collect`]'s module doc — said so under the heading "why there is still none".
+//! Two were load-bearing arguments rather than description: `Heap::define_own_property` justified
+//! an unreachable branch with "an arena only grows", and [`crate::heap::weak_ref`] explained
+//! `deref`'s soundness by the same sentence — so a reader who believed the comment would have
+//! concluded that a correct function was a use-after-free. Every one of them compiled, linked and
+//! passed every test. **A comment that states a rule is the kind that stops the next reader
+//! checking**, which is exactly why it is worth suspecting one that reads well.
 
 use std::collections::BTreeSet;
 use std::fs;

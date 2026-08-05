@@ -1072,13 +1072,21 @@ Three things about it are worth keeping, none of them about closures:
   `continue` leaves the environment and deliberately does not close the iterator, and with the two
   the wrong way round it stops at the iterator and leaks an environment per pass.
 
-**The garbage collector's root set is settled; its schedule is not.** `Vm::collect` is the host's
-to call, and the interpreter does not run one on a timer. That is measured, not deferred:
-`Heap::footprint` counts arena *slots* and DR-0010 does not reuse a swept one, so a collection
-reclaims Strings, environments and buffers and cannot reclaim what an object took. Scheduled every
-eight mebibytes it cost 318 conformance files their time budget to buy six passes; run once at the
-budget, 79 files to buy none. **The next step there is slot reuse with generation-tagged handles —
-a decision record, not a patch**, and after it the timer is one line.
+**The garbage collector's root set is settled; its schedule is not — and the reason it is not has
+expired.** `Vm::collect` is the host's to call and the interpreter does not run one on a timer. That
+was measured rather than deferred: `Heap::footprint` counts arena *slots*, a swept one was **never
+reused**, so a collection reclaimed Strings, environments and buffers and could not reclaim what an
+object took. Scheduled every eight mebibytes it cost 318 conformance files their time budget to buy
+six passes; run once at the budget, 79 files to buy none. This file then said "the next step there
+is slot reuse with generation-tagged handles — a decision record, not a patch, and after it the
+timer is one line".
+
+**That step is DR-0019 and it is built.** A swept slot goes on a free list and every handle carries
+the generation its slot was on. So the measurement's premise is gone and the numbers above have not
+been taken again — **do not quote them as a reason**. `lab/NOTES.md`'s `hot-shapes` predates DR-0019
+too, including its headline finding that "a full collection reclaims nothing" and the 74 B-per-call
+ceiling that follows from it. Re-running that experiment is the cheapest thing on the list, and it
+either restores the conclusion with new numbers or removes the stated blocker on M8.
 
 What *is* settled is the part that cannot be left half-right. Four whole classes of reference were
 untraced before this: a bound function's target and arguments, a revive closure's context, a

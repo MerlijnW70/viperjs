@@ -85,13 +85,19 @@ impl Vm {
                 // §7.1's abstract operations say nothing about memory, and DR-0013's budget is
                 // what praxis answers with instead.
                 //
-                // The collector is **not** run from here, and that is a measurement rather than an
-                // oversight. `Heap::footprint` counts arena *slots*, and DR-0010 does not reuse a
-                // swept one — so a collection reclaims Strings, environments and buffers and
+                // The collector is **not** run from here, and that was a measurement rather than an
+                // oversight — but the measurement's premise has since changed and it has not been
+                // taken again. It read: `Heap::footprint` counts arena *slots*, a swept one is
+                // never reused, so a collection reclaims Strings, environments and buffers and
                 // cannot reclaim what an object took. Scheduled every eight mebibytes it cost 318
                 // conformance files their time budget to buy six passes; run once at the budget,
-                // 79 files to buy none. Until a slot can be reused, walking the heap buys less
-                // than the walk costs.
+                // 79 files to buy none. The conclusion was "until a slot can be reused, walking the
+                // heap buys less than the walk costs".
+                //
+                // **DR-0019 reused the slot.** So the condition that conclusion waited on has
+                // passed, and this comment is the standing note that the numbers above are stale
+                // rather than a reason. Re-measure before changing anything here — `hot-shapes` in
+                // `lab/` is the experiment, and it predates DR-0019 too.
                 //
                 // So the *policy* is the host's — [`Vm::collect`] — and what is settled here is
                 // the part that cannot be left half-right: the root set, checked against the

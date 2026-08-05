@@ -70,3 +70,22 @@ having no collection policy yet, stated plainly rather than discovered later.
 
 A loop that allocates *nothing* — `while (true) { i = i + 1; }` — is not stopped and should not be.
 It costs CPU and no memory, and an engine that refused it would be an engine that refused a loop.
+
+## Note added 2026-08-05: the premise of the measurement above has changed
+
+The argument in "It should not, and the measurement is why" rests on a sentence that is no longer
+true: *"DR-0010 buys never-dangling handles by never reusing a slot: a sweep empties a slot and
+leaves the hole, and the arena only grows."* **DR-0019 reuses the slot** — a free list plus a
+generation on every handle, in `src/heap/arena.rs` — so "bounding the arena needs slot reuse, slot
+reuse needs the generation counter DR-0010 costed out" names a prerequisite that has since been met.
+
+**Nothing in "What praxis does" changes, and that is the point of writing this as a note rather than
+an amendment.** `MAX_HEAP_BYTES`, the between-instructions check and the RangeError are all
+untouched, because `Heap::footprint` counts `slots.len()` — a high-water mark that reuse stops
+*growing* and does not refund. A budget measured that way answers the same for the same program.
+
+What is now open, and was closed when this record was written, is whether the interpreter should run
+a collection on a schedule. The numbers that said no — 318 conformance files losing their time budget
+to buy six passes — were taken when a collection could not reclaim an object's slot at all. They have
+not been taken since. `lab/NOTES.md`'s `hot-shapes` is the experiment and it predates DR-0019 as
+well; the comment in `Vm::execute` beside the budget check says the same thing at the site.

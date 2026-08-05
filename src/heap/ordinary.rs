@@ -539,10 +539,14 @@ impl Heap {
             Validation::AcceptUnchanged => true,
             Validation::Accept => {
                 let updated = apply(descriptor, current.as_ref());
-                // The object was found above and an arena only grows, so this cannot be absent —
-                // and the answer does not depend on it. Writing `None => false` here would be a
-                // branch no input could take, and one that would report a refusal the rules did
-                // not make.
+                // The object was found above and **nothing between the two lookups collects**, so
+                // this cannot be absent — and the answer does not depend on it. Writing
+                // `None => false` here would be a branch no input could take, and one that would
+                // report a refusal the rules did not make.
+                //
+                // The reason used to be "an arena only grows", which DR-0019 made false: a swept
+                // slot is handed out again. What holds the conclusion up is that a sweep runs only
+                // from `Heap::collect`, and validating and applying a descriptor does not call it.
                 if let Some(found) = self.object_mut(object) {
                     found.insert(key, updated);
                 }
@@ -915,8 +919,9 @@ impl Heap {
                 None => break,
             }
         }
-        // Step 8. As in [`Heap::define_own_property`], the object was found at the top and the
-        // arena only grows, so there is nothing here to fail and no refusal left to report.
+        // Step 8. As in [`Heap::define_own_property`], the object was found at the top and nothing
+        // between the two lookups collects, so there is nothing here to fail and no refusal left to
+        // report. The prototype walk above only reads.
         if let Some(found) = self.object_mut(object) {
             found.prototype = prototype;
         }

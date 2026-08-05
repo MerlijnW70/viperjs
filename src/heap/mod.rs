@@ -419,11 +419,12 @@ impl Heap {
 
     /// Note that a buffer that held `before` bytes now holds `after` — §25.1.6.4's resize.
     ///
-    /// The one place this total goes **down**. Everything else that allocates only adds, because
-    /// DR-0010 does not give a slot back and a detached buffer's bytes are not returned either —
-    /// but a resizable buffer shrinking really has given the memory up, and charging it as a fresh
-    /// allocation would make `for (;;) { ab.resize(0); ab.resize(n); }` read as a runaway and be
-    /// refused for memory it is not using.
+    /// The one place this total goes **down**. Everything else that allocates only adds: a slot is
+    /// counted at its high-water mark whether or not DR-0019 later hands it out again — see
+    /// [`Heap::footprint`] — and a detached buffer's bytes are not returned either. A resizable
+    /// buffer shrinking really has given the memory up, and charging it as a fresh allocation would
+    /// make `for (;;) { ab.resize(0); ab.resize(n); }` read as a runaway and be refused for memory
+    /// it is not using.
     pub fn charge_buffer_delta(&mut self, before: usize, after: usize) {
         self.buffer_bytes = self
             .buffer_bytes

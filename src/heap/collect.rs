@@ -15,23 +15,27 @@
 //! the roots are handed in. A collector that guessed would be a collector that freed something
 //! still in use, and no amount of testing finds that reliably.
 //!
-//! # The generation counter DR-0010 deferred, and why there is still none
+//! # The generation counter DR-0010 deferred, and where it went
 //!
-//! DR-0010 left it out and said the sweep would decide with evidence. This is that decision, and
-//! the answer is that it is still not needed — because a freed slot is never *reused*. Sweeping
-//! empties a slot and leaves the hole; the arena only grows. A stale handle therefore addresses
-//! an empty slot and answers `None`, which is the same narrow promise every handle already makes.
+//! DR-0010 left it out and said the sweep would decide with evidence. **DR-0019 is that decision
+//! and it is built**, in [`crate::heap::arena`] rather than here: a swept slot goes on a free list,
+//! its generation is bumped, and every read takes the whole handle so that a stale one answers
+//! `None` instead of the value that reused its slot. This module's part is only to hand each arena
+//! its marks — `Arena::sweep` does the freeing, the bumping and the remembering.
 //!
-//! A free list would change that, and would need a generation the same day: without one, a reused
-//! slot turns a stale handle into a use-after-free with the types intact — a wrong answer rather
-//! than a crash, which is the worse of the two. Reusing slots is an M8 experiment, and this is the
-//! note that says what it costs.
+//! The paragraph this replaced said the opposite in three sentences — no generation, no reuse,
+//! "an M8 experiment" — and went on saying it after DR-0019 landed forty lines away. It is worth
+//! knowing that a reader who believed it would conclude `WeakRef::deref` was unsound, and it is
+//! not: see [`crate::heap::weak_ref`], where the same correction had to be made.
 //!
 //! # What is not here
 //!
 //! Any decision about *when* to collect. §9.10's note leaves that to the implementation entirely,
-//! and picking a moment needs a measurement of what allocation costs — an M8 experiment. What is
-//! here is the operation, and an embedder that calls it.
+//! so what is here is the operation and an embedder that calls it — see [`crate::vm::Vm::collect`].
+//!
+//! The measurement that decided against a schedule is in `lab/NOTES.md` under `hot-shapes`, and
+//! **it predates DR-0019**: its verdict rested on a collection reclaiming no slots, which was true
+//! when it was taken and is not now. It is due again before anyone quotes it.
 
 use crate::heap::Handle;
 use crate::heap::{EnvironmentId, Heap, Object, ObjectId, PropertyKind, Weak};
@@ -1139,12 +1143,17 @@ mod tests {
     }
 
     #[test]
-    fn sweeping_gives_back_a_freed_strings_units_but_not_its_slot() {
-        // The two halves of DR-0010's bargain, told apart by DR-0013's number. A swept String's
-        // units are genuinely returned — the `Box` is dropped here — so the budget must see them
-        // come back, or a program that collects would be charged forever for memory it no longer
-        // holds. Its *slot* is not returned and never will be, which is the price of a handle
-        // that cannot dangle, and the footprint goes on counting it.
+    fn sweeping_gives_back_a_freed_strings_units_but_not_what_the_budget_charged_for_its_slot() {
+        // Two halves told apart by DR-0013's number. A swept String's units are genuinely returned
+        // — the `Box` is dropped here — so the budget must see them come back, or a program that
+        // collects would be charged forever for memory it no longer holds.
+        //
+        // The slot is a different matter, and the old name for this test got it wrong in a way
+        // worth spelling out. DR-0019 *does* give the slot back: it goes on the free list and the
+        // next allocation takes it. What does not come back is the **charge**, because
+        // `Heap::footprint` counts `slots.len()`, which is a high-water mark and never falls. So
+        // the assertion below is unchanged and its reason is the opposite of what it used to say —
+        // reuse stops the arena growing, and it does not refund.
         let mut heap = Heap::new();
         let kept = heap.new_string("kept".encode_utf16().collect());
         heap.new_string("gone".encode_utf16().collect());
