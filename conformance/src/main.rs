@@ -6,12 +6,45 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 use std::time::Duration;
 
-/// How long one test may take before it is abandoned.
+/// How long one test may take before it is abandoned, unless `--budget` says otherwise.
 ///
-/// Generous, because the point is to survive `while (true);` rather than to measure speed. A test
-/// that legitimately needs longer than this on any machine would be a performance bug worth its
-/// own line in the expectations file.
+/// Generous for what it was written for — surviving `while (true);` rather than measuring speed —
+/// and **not** generous enough for `RegExp/property-escapes`, which is why it is a default rather
+/// than a constant now. Measured 2026-08-05: that directory alone passes 814 of its 1,226 runs,
+/// and inside a full parallel run only about 300 of the same tests finish in time. The difference
+/// is contention, not the engine: every worker gets a smaller share of the machine, each test
+/// takes longer in wall-clock, and a budget written per test cannot see that.
+///
+/// The cost of getting it wrong is not a wrong verdict but a *noisy* one. Those runs cross the
+/// line in both directions between runs of one unchanged commit, so the report's "newly passing"
+/// swung between 264 and 844 in a single afternoon and every real gain had to be found by hand
+/// underneath it.
 const BUDGET: Duration = Duration::from_secs(10);
+
+/// How many tests run at once, unless `--workers` says otherwise.
+///
+/// **Half the hardware threads, and the halving is the measurement rather than a hunch.** One
+/// worker per thread maximises throughput and is what made the budget above bite: each worker is
+/// a separate process running JavaScript, so at full subscription every test is slower in
+/// wall-clock than the same test run alone, and the ~880 `RegExp/property-escapes` runs that sit
+/// near the line cross it in whichever direction the scheduler happens to go.
+///
+/// Measured on 2026-08-05, same commit, same machine:
+///
+/// | workers | newly passing | failing differently |
+/// | --- | --- | --- |
+/// | one per thread (32) | 264, 386, 514, 606, 788, 844 | 78 to 610 |
+/// | half (16) | 890, 890, 890 | 6, 6, 6 |
+///
+/// Three runs at half subscription were **identical**, down to which tests. A slower run that
+/// answers the same thing twice is worth more than a fast one that does not: the whole point of
+/// the number is to compare it with the last one.
+fn default_workers() -> usize {
+    let threads = std::thread::available_parallelism().map_or(4, |count| count.get());
+    // At least one, because integer division of a single-threaded machine is zero and a run with
+    // no workers finishes instantly with nothing to say.
+    (threads / 2).max(1)
+}
 
 fn main() -> ExitCode {
     let mut root = std::env::var("TEST262").map(PathBuf::from).ok();
@@ -19,6 +52,8 @@ fn main() -> ExitCode {
     let mut bless = false;
     let mut filter = None;
     let mut worker = false;
+    let mut workers = default_workers();
+    let mut budget = BUDGET;
     let mut arguments = std::env::args().skip(1);
     while let Some(argument) = arguments.next() {
         match argument.as_str() {
@@ -34,6 +69,17 @@ fn main() -> ExitCode {
             // Running one directory is how a failure bucket gets worked through, and it must not
             // touch the ratchet — a partial run has nothing to say about the tests it skipped.
             "--only" => filter = arguments.next(),
+            // Both of these change what a *timing* failure means, so they are named in the report
+            // below: a number produced under one pair is not comparable with one produced under
+            // another, and a reader who cannot see which was used cannot know that.
+            "--workers" => match arguments.next().and_then(|text| text.parse().ok()) {
+                Some(0) | None => return complain("--workers needs a positive count"),
+                Some(count) => workers = count,
+            },
+            "--budget" => match arguments.next().and_then(|text| text.parse().ok()) {
+                Some(0) | None => return complain("--budget needs a positive number of seconds"),
+                Some(seconds) => budget = Duration::from_secs(seconds),
+            },
             "--help" => {
                 println!("{USAGE}");
                 return ExitCode::SUCCESS;
@@ -61,9 +107,12 @@ fn main() -> ExitCode {
         files.retain(|file| file.to_string_lossy().replace('\\', "/").contains(filter));
         println!("running {} of the suite matching {filter}", files.len());
     }
-    let workers = std::thread::available_parallelism().map_or(4, |count| count.get());
-    println!("running {} files on {workers} threads", files.len());
-    let report = run_all(&root, &files, workers, BUDGET);
+    println!(
+        "running {} files on {workers} threads, {}s per test",
+        files.len(),
+        budget.as_secs()
+    );
+    let report = run_all(&root, &files, workers, budget);
     announce(&report);
 
     if filter.is_some() {
@@ -182,5 +231,9 @@ usage: cargo run -p conformance -- [options]
   --test262 <path>       a checkout of tc39/test262 (or set TEST262)
   --expectations <path>  the ratchet file (default conformance/expectations.txt)
   --only <substring>     run just the matching files, and do not judge the ratchet
+  --workers <count>      how many tests run at once (default: one per hardware thread)
+  --budget <seconds>     how long one test may take (default 10). Both of these decide what a
+                         timing failure means, so a number is only comparable with one measured
+                         under the same pair
   --bless                rewrite the expectations file from this run
   --help                 this";

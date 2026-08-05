@@ -53,8 +53,20 @@ impl Judgement {
     /// A fixed test is as red as a regression, which is the part people find surprising. It is the
     /// whole mechanism: if passing tests could stay listed, the file would only ever grow and the
     /// number it guards would stop being a number about the engine.
+    ///
+    /// **A changed reason is reported and does not stop it**, which it used to. That was not part
+    /// of the ratchet: an entry whose reason moved is still an entry, still a failure, and the file
+    /// has not grown or loosened. It is *information* — today it repeatedly named the next slice,
+    /// because a test that starts failing differently is one whose first gap just closed — and
+    /// [`Judgement`] carries it either way for a reader to act on.
+    ///
+    /// What it cannot be is a gate, because some reasons are not the engine's to fix. Three files
+    /// report **which sub-case** failed first and that varies between runs (`Int16Array and
+    /// makeArray` one time, `Int32Array and makeIterable` the next), and two sit close enough to
+    /// the per-test budget to cross it either way. With those in the gate a clean run can never go
+    /// green, and an exit code that is always red is one nobody reads.
     pub fn is_green(&self) -> bool {
-        self.regressions.is_empty() && self.fixed.is_empty() && self.changed.is_empty()
+        self.regressions.is_empty() && self.fixed.is_empty()
     }
 }
 
@@ -373,7 +385,12 @@ mod tests {
                 "it threw a string".to_string()
             )]
         );
-        assert!(!judgement.is_green());
+        // …and it is **reported without stopping the run**. The entry is still an entry and the
+        // file has neither grown nor loosened, so this is not a ratchet violation — it is the
+        // signal that a test's first gap closed and a second one is now in front of it. Gating on
+        // it made green unreachable, because a handful of reasons are not deterministic: some
+        // tests report which sub-case failed first, and that varies with scheduling.
+        assert!(judgement.is_green());
     }
 
     #[test]

@@ -180,12 +180,17 @@ and mostly are not, which is worth doing once and writing down rather than re-de
 
 **Two buckets have been costed and must not be re-costed.**
 
-- **`RegExp/property-escapes` (878) is dead as a GC target**, and the recorded claim that it was
-  blocked on DR-0010 slot reuse is **wrong**. `lab/NOTES.md`'s `gc-pressure` measured it: even with
-  a zero-cost collector and simulated slot reuse, `ASCII.js` takes 21.8 s against a 10 s per-test
-  budget. These need an interpreter several times faster, which is M8. The experiment's two real
-  findings — a throwaway heap String per computed property key, and a timed-out run landing in no
-  column — are both **fixed**; do not go looking for them again.
+- **`RegExp/property-escapes` is not what this file said it was, and the correction is instructive.**
+  It read: "dead as a GC target … these need an interpreter several times faster, which is M8",
+  resting on `lab/NOTES.md`'s `gc-pressure`, where `ASCII.js` takes 21.8 s against a 10 s budget.
+  That measurement is about **one** file and was generalised to all 878. Measured 2026-08-05: run
+  alone the directory passes **814 of its 1,226 runs**, and 890 of them stabilised the moment the
+  worker count was halved. So most of the bucket needed a flag, not a milestone — and the reason
+  string in the expectations file, which said `the heap has grown past…`, was simply the wrong
+  failure. **Read a reason as a claim somebody made, not as a measurement.** What is left of the
+  bucket is genuinely slow and M8 is genuinely its answer, but it is hundreds of runs rather than
+  878. The experiment's two real findings — a throwaway heap String per computed property key, and
+  a timed-out run landing in no column — are both **fixed**; do not go looking for them again.
 - **`Temporal` is a Stage 3 proposal with a surface larger than `Date`, `Intl` and `RegExp`
   combined.** Building it would raise the number while making the engine no more of a JavaScript
   engine, and it will sit at the top of that list for as long as this file is worth reading.

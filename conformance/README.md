@@ -133,13 +133,37 @@ them honest is that `--bless` rewrites the file wholesale and nothing else may a
 The check worth making by hand: an added line whose path was already listed is an honest reason
 rewrite, and one with a genuinely new path is the ratchet moving the wrong way.
 
-## The number is not stable to the last hundred runs, and that is not a bug in the engine
+## The number was not stable, and the cause was this harness rather than the engine
 
-Roughly 900 files — most of `built-ins/RegExp/property-escapes` — take close to the ten-second
-per-test budget, so they cross it in either direction depending on what else the machine is doing.
-Consecutive runs of the same commit can differ by a few hundred in "newly passing".
+Roughly 880 files — most of `built-ins/RegExp/property-escapes` — take close to the per-test
+budget. **Fixed on 2026-08-05 by halving the default worker count**, and the diagnosis is worth
+keeping because it was wrong for months first.
 
-Two rules follow, and both were learned by getting them wrong:
+Each worker is a separate process running JavaScript. At one worker per hardware thread the
+machine is fully subscribed, so every test is slower in wall-clock than the same test run alone,
+and the files near the line cross it in whichever direction the scheduler happens to go. Same
+commit, same machine, one afternoon:
+
+| workers | newly passing | failing differently |
+| --- | --- | --- |
+| one per thread (32) | 264, 386, 514, 606, 788, 844 | 78 to 610 |
+| half (32 → 16) | 890, 890, 890 | 6, 6, 6 |
+
+Three runs at half subscription were identical down to *which* tests, so those 890 came out of
+`expectations.txt` and the default is now `available_parallelism() / 2`. A run costs about four
+minutes and answers the same thing twice, which is the trade worth making: the whole point of the
+number is comparing it with the last one.
+
+**What this cost while it was misdiagnosed.** Those entries sat in the ratchet under the reason
+`the heap has grown past what this engine will allocate`, which is a *different* failure and was
+mostly not what was happening — and both this file and `AGENTS.md` concluded from it that the
+bucket needed an interpreter several times faster. It needed a flag. Read a reason as a claim
+somebody made, not as a measurement, and check it before costing a milestone against it.
+
+`--workers` and `--budget` exist so this can be measured rather than argued about. A number is
+only comparable with one taken under the same pair, which is why the run prints both.
+
+Two rules still follow, and both were learned by getting them wrong:
 
 - **Take the intersection of three runs before deleting anything from `expectations.txt`.** Blessing
   a lucky run once put 198 unrepeatable passes into the file; the next run reported all 198 as
