@@ -645,17 +645,35 @@ impl Reader<'_> {
             if self.peek() == Some('-') && self.text.get(self.at + 1) != Some(&']') {
                 self.at += 1;
                 let second = self.class_operand()?;
-                let (ClassItem::Single(low), ClassItem::Single(high)) = (&first, &second) else {
-                    // §22.2.1.1 — a class escape stands for a set and cannot be an end of a range.
-                    // Annex B reads `[\d-x]` as three atoms; DR-0008 leaves that out.
-                    return Err(Error::at(
-                        "a character class range has a class escape as an end",
-                    ));
+                let ends = match (&first, &second) {
+                    (ClassItem::Single(low), ClassItem::Single(high)) => Some((*low, *high)),
+                    _ => None,
                 };
-                if low > high {
-                    return Err(Error::at("a character class range runs backwards"));
+                match ends {
+                    Some((low, high)) => {
+                        if low > high {
+                            return Err(Error::at("a character class range runs backwards"));
+                        }
+                        items.push(ClassItem::Range(low, high));
+                    }
+                    // §22.2.1.1 — a class escape stands for a set, and a set has no place at the
+                    // end of a range.
+                    None if self.flags.unicode_mode() => {
+                        return Err(Error::at(
+                            "a character class range has a class escape as an end",
+                        ));
+                    }
+                    // §B.1.4.1.1's `CharacterRangeOrUnion`, and the name is the rule: without `u`
+                    // or `v` the same text is not a malformed range but a **union** of the three
+                    // things written, hyphen included. So `[\d-x]` holds the digits, a hyphen and
+                    // an `x` — which is why this is decided by the mode rather than by the shape.
+                    // Both readings are derivations of the same characters.
+                    None => {
+                        items.push(first);
+                        items.push(ClassItem::Single(u32::from(b'-')));
+                        items.push(second);
+                    }
                 }
-                items.push(ClassItem::Range(*low, *high));
                 continue;
             }
             items.push(first);
@@ -1755,11 +1773,106 @@ mod tests {
             }
         );
         assert_eq!(refused("[z-a]"), "a character class range runs backwards");
-        assert_eq!(
-            refused("[\\d-z]"),
-            "a character class range has a class escape as an end"
-        );
         assert_eq!(refused("[a"), "a character class is not closed");
+    }
+
+    #[test]
+    fn a_range_with_a_class_escape_at_an_end_is_a_union_of_three_without_u_and_an_error_with_it() {
+        // §B.1.4.1.1's `CharacterRangeOrUnion`. The hyphen is one of the three, so `[\d-z]` matches
+        // a hyphen as well as the digits and the `z` — reading it as "the range is dropped" would
+        // lose that and pass most of the tests.
+        assert_eq!(
+            plain("[\\d-z]"),
+            Node::Class {
+                negated: false,
+                items: vec![
+                    ClassItem::Escape(ClassEscape::Digit(false)),
+                    ClassItem::Single(45),
+                    ClassItem::Single(122),
+                ],
+                strings: Vec::new(),
+            }
+        );
+        // Either end is enough, and so is both.
+        assert_eq!(
+            plain("[%-\\d]"),
+            Node::Class {
+                negated: false,
+                items: vec![
+                    ClassItem::Single(37),
+                    ClassItem::Single(45),
+                    ClassItem::Escape(ClassEscape::Digit(false)),
+                ],
+                strings: Vec::new(),
+            }
+        );
+        assert_eq!(
+            plain("[\\s-\\d]"),
+            Node::Class {
+                negated: false,
+                items: vec![
+                    ClassItem::Escape(ClassEscape::Space(false)),
+                    ClassItem::Single(45),
+                    ClassItem::Escape(ClassEscape::Digit(false)),
+                ],
+                strings: Vec::new(),
+            }
+        );
+        // A leading hyphen is an ordinary atom, so `[--\d]` is a range whose *low* end is one — and
+        // the union then holds two of them, which is the case a "drop the hyphen" reading answers
+        // the same way by accident and a "drop the range" reading gets wrong.
+        assert_eq!(
+            plain("[--\\d]"),
+            Node::Class {
+                negated: false,
+                items: vec![
+                    ClassItem::Single(45),
+                    ClassItem::Single(45),
+                    ClassItem::Escape(ClassEscape::Digit(false)),
+                ],
+                strings: Vec::new(),
+            }
+        );
+        // …and what follows the union goes on being read as it was.
+        assert_eq!(
+            plain("[\\d-az]"),
+            Node::Class {
+                negated: false,
+                items: vec![
+                    ClassItem::Escape(ClassEscape::Digit(false)),
+                    ClassItem::Single(45),
+                    ClassItem::Single(97),
+                    ClassItem::Single(122),
+                ],
+                strings: Vec::new(),
+            }
+        );
+        // Two single ends are still a range, which is the half this must not take with it.
+        assert_eq!(
+            plain("[a-c]"),
+            Node::Class {
+                negated: false,
+                items: vec![ClassItem::Range(97, 99)],
+                strings: Vec::new(),
+            }
+        );
+        // Under `u` and `v` the production is §22.2.1.1's and refuses.
+        assert_eq!(
+            unicode("[\\d-z]"),
+            Err("a character class range has a class escape as an end")
+        );
+        assert_eq!(
+            parse(
+                "[\\d-z]",
+                Flags {
+                    unicode_sets: true,
+                    ..Flags::default()
+                }
+            )
+            .err()
+            .map(|error| error.message),
+            Some("a character class range has a class escape as an end")
+        );
     }
 
     #[test]

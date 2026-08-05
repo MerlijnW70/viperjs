@@ -192,10 +192,6 @@ annexB/language/global-code/switch-case-global-existing-global-init.js :: it thr
 annexB/language/global-code/switch-case-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
 annexB/language/global-code/switch-dflt-global-existing-global-init.js :: it threw TypeError: what was called is not a function
 annexB/language/global-code/switch-dflt-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
-annexB/language/literals/regexp/non-empty-class-ranges-no-dash.js :: it did not parse: a character class range has a class escape as an end
-annexB/language/literals/regexp/non-empty-class-ranges-no-dash.js (strict) :: it did not parse: a character class range has a class escape as an end
-annexB/language/literals/regexp/non-empty-class-ranges.js :: it did not parse: a character class range has a class escape as an end
-annexB/language/literals/regexp/non-empty-class-ranges.js (strict) :: it did not parse: a character class range has a class escape as an end
 annexB/language/statements/class/subclass/superclass-emulates-undefined.js :: it threw TypeError: Object.defineProperty requires an object
 annexB/language/statements/class/subclass/superclass-emulates-undefined.js (strict) :: it threw TypeError: Object.defineProperty requires an object
 annexB/language/statements/class/subclass/superclass-prototype-emulates-undefined.js :: it threw TypeError: the `prototype` of an extended constructor is neither an object nor null
