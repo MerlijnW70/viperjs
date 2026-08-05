@@ -22,36 +22,49 @@ A Rust toolchain and nothing else. No build script, no C compiler, no submodules
 
 ```sh
 git clone https://github.com/MerlijnW70/praxis && cd praxis
-echo "[1,2,3].map(n => n * n).join(',')" | cargo run --release --example evaluate
+cargo build --release
+./target/release/praxis -e "[1,2,3].map(n => n * n).join(',')"
 ```
 
 ```
 1,4,9
 ```
 
-`evaluate` reads **one script per line** from standard input and writes one answer per line, the way
-`String(x)` would write it. Anything it cannot run comes back beginning with `!`, so a sweep never
-silently drops a line:
+Run a file, pipe one in, or type at a prompt:
 
 ```sh
-printf '%s\n' \
-  'class A { #x = 7; get x() { return this.#x } } new A().x' \
-  '/(?<y>\d{4})-(?<m>\d{2})/.exec("2026-08").groups.y' \
-  '2n ** 64n' \
-  'function* g() { yield* [1,2,3] } [...g()].join()' \
-  '[..."héllo"].length' \
-  'typeof Temporal' \
-  | cargo run --release --example evaluate
+praxis script.js          # run a file
+cat script.js | praxis    # or pipe it
+praxis                    # a prompt, if stdin is a terminal
+praxis --help             # every option, which is not many
+```
+
+The host binds exactly one function, `print`. There is no `require`, no `fs` and no `console` —
+GOAL.md §3 says the host provides I/O, and this host provides almost none of it on purpose.
+
+```js
+// script.js
+function fib(n) {
+  return n < 2 ? n : fib(n - 1) + fib(n - 2);
+}
+print([...Array(10).keys()].map(fib).join(','));
 ```
 
 ```
-7
-2026
-18446744073709551616
-1,2,3
-5
-undefined
+0,1,1,2,3,5,8,13,21,34
 ```
+
+Untrusted input? `--time-budget` is DR-0022's bound, and a script **cannot catch it**:
+
+```sh
+praxis --time-budget 100 -e "try { while (true) {} } catch (e) { 'caught' }"
+```
+
+```
+praxis: the run was stopped: it spent its time budget
+```
+
+Exit status is `0` ran, `1` the script threw or would not parse, `2` the arguments made no sense.
 
 ## Embed it
 
@@ -177,10 +190,15 @@ trade on offer.
 ## Building and testing
 
 ```sh
-cargo test                 # the engine's own tests — about 1,560 of them
+cargo build --release      # the library and the `praxis` binary
+cargo test                 # the engine's tests, the CLI's, and the CLI as a process
 cargo test --workspace     # and the conformance harness and the lab
 cargo run --example embed  # the embedding tour
 ```
+
+There is also `cargo run --release --example evaluate`, which reads **one script per line** and
+answers one per line. That is not a worse CLI — it is a differential-sweep tool, built to be fed a
+list of expressions and diffed against another engine's answers. Use `praxis` to run programs.
 
 Needs a toolchain with edition 2024 support; built with 1.97.
 

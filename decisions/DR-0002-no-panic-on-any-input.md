@@ -2,7 +2,7 @@
 id: DR-0002
 title: No input may panic — script text is data, never a trusted caller
 status: enforced
-invariant: forbid-unsafe src/lib.rs
+invariant: forbid-unsafe src/lib.rs src/bin/praxis.rs
 ---
 
 Every failure a script author can cause is a `Result`. Not a panic, not an abort, not a
@@ -26,6 +26,13 @@ Concretely this forbids, in production paths:
 
 `#![forbid(unsafe_code)]` is the companion half: memory safety is not a thing we argue about
 case by case. Together they are what makes "embed this in your binary" a reasonable request.
+
+**It is listed per crate root, and that is not bookkeeping.** `#![forbid(unsafe_code)]` is an
+attribute on *a* crate root and covers nothing outside it, so `src/bin/praxis.rs` — a second crate
+root, not a module of the library — could have contained `unsafe` and compiled cleanly with the
+library's attribute untouched. The invariant above names every root for that reason, and the gate
+refused the command line's first commit until it did. A `src/bin/` or a second `[[bin]]` added later
+needs a line here on the same day.
 
 The gate enforces the mechanical parts (it flags bare `unwrap()`
 and `.ok()?`); the depth caps and the overflow discipline are enforced by tests and by fuzzing
