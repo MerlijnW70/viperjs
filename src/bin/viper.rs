@@ -23,9 +23,16 @@
 //! # What it deliberately does not do
 //!
 //! GOAL.md §3: no Node compatibility. There is no `require`, no `fs`, no module resolution against
-//! `node_modules`, and there will not be. The one thing bound here is `print`, because a language
-//! with no way to say anything is hard to evaluate — everything else is the host's to provide, and
-//! this host provides nothing.
+//! `node_modules`, and there will not be. What is bound is `print`, because a language with no way
+//! to say anything is hard to evaluate, and a `console` of six logging methods — everything else is
+//! the host's to provide, and this host provides nothing.
+//!
+//! **`console` is not a step across that line, and its absence used to be one.** It is a WHATWG
+//! surface, in the Minimum Common API that browsers, workers, Deno and Bun all implement, and it is
+//! no more Node's than `Math` is. Refusing it did not keep this host small; it made ordinary
+//! libraries die on a ReferenceError in code that was never about output. Most of the console
+//! specification is still absent — `group`, `table`, `time`, `count`, `assert`, `dir`, and the
+//! Formatter's `%s` and `%d` — and finding those missing is better than finding a plausible fake.
 //!
 //! Modules are not run here either. [`viperjs::api::Engine`] evaluates Script code, and a Module is
 //! a different goal symbol needing a resolver; `--module` would be a flag that lies. When the
@@ -156,17 +163,18 @@ options:
   -h, --help                 this text
   -V, --version              the version
 
-The host binds one function, `print`. There is no `require`, no `fs` and no module loading:
-GOAL.md §3 says the host provides I/O and this host provides almost none of it.
+The host binds `print` and a `console` of six logging methods — log, info and debug to standard
+output, warn, error and trace to standard error. There is no `require`, no `fs` and no module
+loading: GOAL.md §3 says the host provides I/O and this host provides almost none of it.
 
 exit status: 0 ran, 1 the script threw or would not parse, 2 the arguments made no sense.
 ";
 
 /// §19's `print` for a command line: write one argument and a newline.
 ///
-/// Not `console.log`. A `console` object is a host API with a shape and a specification of its own,
-/// and pretending to have one would be the first step toward the Node compatibility GOAL.md §3
-/// refuses. This is a function that prints, named for what it does.
+/// Kept beside `console` rather than replaced by it. This is what a script written *for* this host
+/// uses, it takes one argument and says so in its `length`, and the conformance harness and every
+/// example depend on it.
 fn print(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let mut host = Host::new(vm, heap);
     let text = host.text(call.argument(0))?;
@@ -176,11 +184,68 @@ fn print(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
     Ok(Value::Undefined)
 }
 
+/// Every argument, converted and joined by a space — what a `console` method writes.
+///
+/// The conversion is `ToString` per argument, which is `String(x)` and not `JSON.stringify`: an
+/// object comes out as `[object Object]`. The WHATWG console's *Formatter* — `%s`, `%d`, `%o` and
+/// the rest — is deliberately not implemented, and a first argument containing one is written out
+/// as it stands rather than being read as a directive.
+fn joined(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<String> {
+    let mut host = Host::new(vm, heap);
+    let mut out = String::new();
+    for (at, value) in call.arguments.iter().enumerate() {
+        if at > 0 {
+            out.push(' ');
+        }
+        out.push_str(&host.text(*value)?);
+    }
+    Ok(out)
+}
+
+/// `console.log`, `console.info` and `console.debug` — to standard output.
+fn console_out(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let text = joined(vm, heap, call)?;
+    let _ = writeln!(std::io::stdout(), "{text}");
+    Ok(Value::Undefined)
+}
+
+/// `console.warn`, `console.error` and `console.trace` — to standard error.
+///
+/// The split matters more here than it looks: a library writing a deprecation notice must not end
+/// up inside the output a script is piped into. Node and every browser divide them the same way,
+/// and a host that sent everything to one stream would silently corrupt `viper x.js > out.json`.
+fn console_err(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let text = joined(vm, heap, call)?;
+    let _ = writeln!(std::io::stderr(), "{text}");
+    Ok(Value::Undefined)
+}
+
 fn main() -> ExitCode {
     let arguments: Vec<String> = std::env::args().skip(1).collect();
     let asked = read_arguments(&arguments, std::io::stdin().is_terminal());
     let mut engine = Engine::new();
     engine.bind("print", 1, print);
+    // Six methods and no more. Real libraries reach for `console.warn` to report a deprecation and
+    // `console.error` to report a failure they are handling; without one they die on a
+    // ReferenceError in code that was never about output. `ajv` — a top-20 package — does exactly
+    // that, which is how this got noticed.
+    //
+    // This is not a step toward Node compatibility, which GOAL.md §3 refuses: `console` is a
+    // WHATWG surface that browsers, workers, Deno and Bun all have, and it is in the Minimum Common
+    // API. What is *not* here is most of the specification — `group`, `table`, `time`, `count`,
+    // `assert`, `dir` and the Formatter's `%s`/`%d` directives — so a program that needs those will
+    // still find them missing, and finding them missing is better than finding a plausible fake.
+    engine.bind_namespace(
+        "console",
+        &[
+            ("log", 0, console_out),
+            ("info", 0, console_out),
+            ("debug", 0, console_out),
+            ("warn", 0, console_err),
+            ("error", 0, console_err),
+            ("trace", 0, console_err),
+        ],
+    );
     engine.set_time_budget(asked.budget);
 
     match asked.command {

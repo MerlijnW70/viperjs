@@ -155,10 +155,15 @@ fn help_and_version_answer_on_stdout_and_succeed() {
 }
 
 #[test]
-fn the_host_binds_print_and_nothing_else() {
+fn the_host_binds_print_and_console_and_nothing_else() {
     // GOAL.md §3 — the host provides I/O and this host provides almost none. Naming what is absent
-    // is the point: a `console` or a `require` arriving by accident is exactly the drift toward
+    // is the point: a `require` or a `process` arriving by accident is exactly the drift toward
     // Node compatibility the charter refuses, and this is what would notice.
+    //
+    // `console` is deliberately on the other side of that line and was not always. It is a WHATWG
+    // surface that browsers, workers, Deno and Bun all have, and refusing it broke ordinary
+    // libraries in code that was never about output. Its *shape* is checked below; this row is
+    // about the boundary, and the boundary moved once, on purpose.
     let (out, _, status) = viper(
         &[
             "-e",
@@ -166,7 +171,7 @@ fn the_host_binds_print_and_nothing_else() {
         ],
         "",
     );
-    assert_eq!(out, "function,undefined,undefined,undefined,object\n");
+    assert_eq!(out, "function,object,undefined,undefined,object\n");
     assert_eq!(status, Some(0));
 }
 
@@ -203,4 +208,61 @@ fn module_code_is_named_as_module_code_rather_than_as_a_puzzling_token() {
     assert!(out.contains("fine"), "{out:?}");
     assert!(!err.contains("Module"), "{err:?}");
     assert_eq!(status, Some(0));
+}
+
+#[test]
+fn console_writes_diagnostics_to_standard_error_and_output_to_standard_out() {
+    // Real libraries reach for `console.warn` to report a deprecation and `console.error` for a
+    // failure they are handling. Without a `console` they die on a ReferenceError in code that was
+    // never about output, which is how this got noticed: `ajv` does exactly that.
+    //
+    // The split is the part worth testing rather than the existence. A host that sent everything
+    // to one stream would corrupt `viper x.js > out.json` the first time a library warned.
+    let (out, err, status) = viper(
+        &[],
+        "console.log('to out'); console.warn('to err'); console.error('also err');\n",
+    );
+    assert_eq!(out.trim(), "to out");
+    assert_eq!(
+        err.trim().lines().collect::<Vec<_>>(),
+        ["to err", "also err"]
+    );
+    assert_eq!(status, Some(0));
+}
+
+#[test]
+fn a_console_method_joins_every_argument_with_a_space() {
+    // `print` takes one argument and `console.log` takes as many as it is given — which is why they
+    // are separate functions rather than one under two names. The conversion is `ToString` per
+    // argument, so an object is `[object Object]` and not JSON.
+    let (out, _, status) = viper(
+        &[],
+        "console.log('a', 1, true, null, undefined, {x: 1}, [1, 2]);\n",
+    );
+    assert_eq!(out.trim(), "a 1 true null undefined [object Object] 1,2");
+    assert_eq!(status, Some(0));
+    // No arguments is an empty line rather than nothing, which is what a bare `console.log()` means.
+    let (out, _, _) = viper(&[], "console.log();\n");
+    assert_eq!(
+        out,
+        "
+"
+    );
+}
+
+#[test]
+fn console_is_an_ordinary_object_the_program_may_take_apart() {
+    // A namespace the host hands over belongs to the script: it can be destructured, re-bound and
+    // passed around, which is what a library does when it caches `const warn = console.warn`.
+    let (out, err, status) = viper(
+        &[],
+        "var w = console.warn; w('detached');\n\
+         print(console.log.name + ',' + typeof console + ',' + Object.keys(console).length);\n",
+    );
+    assert_eq!(out.trim(), "console.log,object,6");
+    assert_eq!(err.trim(), "detached");
+    assert_eq!(status, Some(0));
+    // And `print` is still there, because every example and the conformance harness use it.
+    let (out, _, _) = viper(&[], "print(typeof print);\n");
+    assert_eq!(out.trim(), "function");
 }

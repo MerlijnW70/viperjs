@@ -355,6 +355,45 @@ impl Engine {
         let _ = self.set_global(name, Value::Object(function));
     }
 
+    /// Bind an object of host functions into the global object under `name`.
+    ///
+    /// `console`, and whatever else a host groups: each entry becomes a method of a plain object
+    /// inheriting from `Object.prototype`, named `name.method` the way §10.3.3 names a built-in's,
+    /// and the object goes on the global.
+    ///
+    /// # Why this is not a loop over [`Engine::bind`]
+    ///
+    /// It could not be. A host outside this crate can make an object and a native function — both
+    /// are public on the heap — but not give the function the `name` and `length` §10.3.3 requires,
+    /// because that operation is internal. So an embedder building `console` by hand got methods
+    /// whose `name` was the empty string, and the only way to a correct one was to write JavaScript
+    /// source and evaluate it. Our own command line hit exactly that, which is what
+    /// `examples/embed.rs` is for.
+    ///
+    /// The methods are ordinary writable, enumerable, configurable properties — a namespace a host
+    /// hands over belongs to the program, which may take it apart.
+    pub fn bind_namespace(&mut self, name: &str, methods: &[(&str, u32, Native)]) {
+        let object = self
+            .heap
+            .new_object(Some(self.vm.realm().object_prototype()));
+        for (method, length, native) in methods {
+            let prototype = self.vm.realm().function_prototype();
+            let function = self.heap.new_native_function(prototype, *native);
+            // §10.3.3's name for a method of a namespace is the qualified one, which is what a
+            // stack trace and `console.log.name` should both say.
+            let spelled = format!("{name}.{method}");
+            crate::builtins::define_function_metadata(&mut self.heap, function, &spelled, *length);
+            let key = self.key(method);
+            let _ = self.heap.define_own_property(
+                object,
+                key,
+                &PropertyDescriptor::data(Value::Object(function)),
+            );
+        }
+        // Made in this call, so it cannot have been collected.
+        let _ = self.set_global(name, Value::Object(object));
+    }
+
     /// Put `value` on the global object under `name`.
     ///
     /// Also the way to **root** a value: the global object is reachable from the program, so
@@ -517,6 +556,34 @@ mod tests {
     use super::*;
     use crate::heap::NativeCall;
     use crate::value::Completion;
+
+    #[test]
+    fn a_namespace_of_host_functions_is_an_ordinary_object_with_named_methods() {
+        fn answer(_: &mut Vm, _: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+            Ok(call.argument(0))
+        }
+        let mut engine = Engine::new();
+        engine.bind_namespace("host", &[("echo", 1, answer), ("also", 2, answer)]);
+        // An ordinary object with ordinary properties: the program owns it and may take it apart.
+        let answer = engine
+            .eval("typeof host + ',' + Object.keys(host).join('|')")
+            .expect("runs");
+        assert_eq!(engine.text(answer).as_deref(), Ok("object,echo|also"));
+        let answer = engine.eval("host.echo(7)").expect("runs");
+        assert_eq!(engine.text(answer).as_deref(), Ok("7"));
+        // §10.3.3's metadata, which is the whole reason this is not a loop over `bind`: a host
+        // outside the crate can make the function but cannot name it, and an unnamed method is
+        // what every hand-built namespace used to have.
+        let answer = engine
+            .eval("host.echo.name + ',' + host.echo.length + ',' + host.also.name")
+            .expect("runs");
+        assert_eq!(engine.text(answer).as_deref(), Ok("host.echo,1,host.also"));
+        // It inherits from `Object.prototype`, so the ordinary object protocol works on it.
+        let answer = engine
+            .eval("host.hasOwnProperty('echo') + ',' + ('toString' in host)")
+            .expect("runs");
+        assert_eq!(engine.text(answer).as_deref(), Ok("true,true"));
+    }
 
     #[test]
     fn a_script_answers_its_completion_value_and_the_host_reads_it_as_text() {

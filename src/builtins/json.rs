@@ -31,9 +31,11 @@ use crate::vm::Vm;
 /// documents parse depend on how the engine was compiled. Measured on the 1 MiB stack Windows gives
 /// a program, in a debug build, whose frames are largest — the reader dies between 750 and 800, a
 /// `revive` past 400, and the **serialiser between 250 and 300**, which is the one this has to fit
-/// inside. 64 is the number every other cap in the engine uses (`MAX_NESTING_DEPTH`,
-/// `MAX_EXPRESSION_DEPTH`, `MAX_REENTRY_DEPTH`) and it sits at a quarter of the narrowest of those
-/// three, which is the margin the others do not have and this one can afford.
+/// inside. 64 is the number the parser's caps use — `MAX_NESTING_DEPTH` and
+/// `MAX_EXPRESSION_DEPTH` — and it sits at a quarter of the narrowest of those, which is the margin
+/// they do not have and this one can afford. `MAX_REENTRY_DEPTH` was in that list and is **32**: it
+/// came down when a macOS runner overflowed at 64, and this comment went on naming it as one of the
+/// three for some time afterwards.
 ///
 /// It costs nothing measurable: no JSON in test262 nests past a handful, and data that nests past
 /// 64 is machine-generated. Like `MAX_NESTING_DEPTH` this should become an embedder's number, when

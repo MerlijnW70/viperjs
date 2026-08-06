@@ -62,10 +62,24 @@ use std::rc::Rc;
 /// measurement and leaves better than the 2× this comment has claimed twice; the guard runs at the
 /// cap, so a future slice that fattens the frame again will fail it locally rather than in CI.
 ///
-/// What the cap costs a program is nothing anyone will meet: it is how deeply `valueOf` may call
-/// something whose `valueOf` calls something else, and thirty-two of those is already a program
-/// nobody wrote by hand. The fattest arms left are `MakeClass`, `MakeFunction` and `CallSpread`, and
-/// moving them is the lever to reach for before this number goes lower still.
+/// **What the cap costs a program is not nothing, and this comment claimed it was.** It read: "how
+/// deeply `valueOf` may call something whose `valueOf` calls something else, and thirty-two of those
+/// is already a program nobody wrote by hand." The counter is not about conversions. It rises for
+/// **every** native that calls back into JavaScript — `map`, `forEach`, `sort`, `reduce`, a
+/// `JSON.stringify` replacer, a `then` handler — so a recursive walk written the ordinary way,
+///
+/// ```js
+/// function walk(node) { return node.children.map(walk); }
+/// ```
+///
+/// stops at depth 33, where pure recursion reaches 5,000. Measured 2026-08-06 against real
+/// packages: `ajv` hits it while compiling a schema, and the error it raises still says
+/// *conversion*, which is the wrong word for most of what arrives here.
+///
+/// The fattest arms left are `MakeClass`, `MakeFunction` and `CallSpread`, and moving them out of
+/// line is the lever — it is what bought 64 back once already. Raising the number without moving
+/// them trades a `RangeError` a program can catch for an abort DR-0002 forbids, so the measurement
+/// comes first and on every platform CI runs.
 const MAX_REENTRY_DEPTH: usize = 32;
 
 impl Vm {
