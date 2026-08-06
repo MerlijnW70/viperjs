@@ -285,3 +285,90 @@ fn a_promise_and_its_two_functions_come_out_together() {
         "true,TypeError,0"
     );
 }
+
+#[test]
+fn the_three_that_look_for_a_string_refuse_a_pattern_outright() {
+    // §22.1.3.7, §22.1.3.8 and §22.1.3.23 step 3 — `IsRegExp` and then a TypeError. Not a search
+    // for the three characters `/b/`, which is what `ToString` would have made of it and what all
+    // three answered before: `false`, quietly, for a program that meant `search` or `test`.
+    for method in ["startsWith", "includes", "endsWith"] {
+        assert_eq!(
+            run(&format!(
+                "try {{ 'abc'.{method}(/b/); 'no throw' }} catch (e) {{ e.constructor.name }}"
+            )),
+            "TypeError"
+        );
+    }
+    // §7.2.8 decides, so an ordinary object *claiming* to be a pattern is refused too — the
+    // question is whether a thing behaves as one, not whether `RegExp` made it.
+    assert_eq!(
+        run(
+            "var o = { [Symbol.match]: true, toString: function () { return 'b'; } };
+             try { 'abc'.includes(o); 'no throw' } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    // …and one claiming *not* to be is searched for as a string, which is the same clause read the
+    // other way and the reason this cannot be a test for `instanceof RegExp`.
+    assert_eq!(
+        run(
+            "var o = { [Symbol.match]: false, toString: function () { return 'b'; } };
+             'abc'.includes(o)"
+        ),
+        "true"
+    );
+    // The test runs **before** the needle is converted, so a `toString` that throws never runs.
+    assert_eq!(
+        run("var ran = false;
+             var o = { [Symbol.match]: true, toString: function () { ran = true; return 'b'; } };
+             try { 'abc'.includes(o) } catch (e) {} String(ran)"),
+        "false"
+    );
+    // A throwing `@@match` getter is the caller's error and not this clause's TypeError.
+    assert_eq!(
+        run(
+            "var o = { get [Symbol.match]() { throw new RangeError('mine'); } };
+             try { 'abc'.includes(o); 'no throw' } catch (e) { e.message }"
+        ),
+        "mine"
+    );
+}
+
+#[test]
+fn a_pattern_whose_match_symbol_is_undefined_is_still_a_pattern() {
+    // §7.2.8 step 3 tests whether `@@match` is **present**, not whether it is truthy: an absent one
+    // falls through to step 4, which asks for a real `[[RegExpMatcher]]`. So a regular expression
+    // with `@@match` set to `undefined` is still a pattern…
+    assert_eq!(
+        run(
+            "var re = /b/; Object.defineProperty(re, Symbol.match, { value: undefined });
+             try { 'abc'.includes(re); 'no throw' } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    // …while one set to `false` is not, and is searched for as the string `/b/`.
+    assert_eq!(
+        run(
+            "var re = /b/; Object.defineProperty(re, Symbol.match, { value: false });
+             'abc'.includes(re) + ',' + 'a/b/c'.includes(re)"
+        ),
+        "false,true"
+    );
+    // The same distinction reaches §22.1.3.20, where being a pattern is what demands a `g` flag.
+    assert_eq!(
+        run(
+            "var re = /a/; Object.defineProperty(re, Symbol.match, { value: undefined });
+             try { 'aa'.replaceAll(re, 'b'); 'no throw' } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    // And an object with no `[[RegExpMatcher]]` at all is not a pattern however step 4 is read,
+    // which is what keeps step 4 from swallowing step 5.
+    assert_eq!(
+        run(
+            "var o = { [Symbol.match]: undefined, [Symbol.replace]: function () { return 'ok'; } };
+             'aa'.replaceAll(o, 'b')"
+        ),
+        "ok"
+    );
+}

@@ -2802,14 +2802,6 @@ built-ins/SharedArrayBuffer/prototype-from-newtarget.js :: it threw an object wi
 built-ins/SharedArrayBuffer/prototype-from-newtarget.js (strict) :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object SharedArrayBuffer]», «») to be true
 built-ins/String/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/String/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/endsWith/return-abrupt-from-searchstring-regexp-test.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/String/prototype/endsWith/return-abrupt-from-searchstring-regexp-test.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/String/prototype/endsWith/searchstring-is-regexp-throws.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/endsWith/searchstring-is-regexp-throws.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/includes/return-abrupt-from-searchstring-regexp-test.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/String/prototype/includes/return-abrupt-from-searchstring-regexp-test.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/String/prototype/includes/searchstring-is-regexp-throws.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/includes/searchstring-is-regexp-throws.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js :: it threw an object with no name: String.prototype.localeCompare considers ö (\u006f\u0308) ≠ ö (\u00f6).
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js (strict) :: it threw an object with no name: String.prototype.localeCompare considers ö (\u006f\u0308) ≠ ö (\u00f6).
 built-ins/String/prototype/match/regexp-prototype-match-v-u-flag.js :: it threw an object with no name: Actual argument [null] shouldn't be primitive. Basic match with g flag
@@ -2850,10 +2842,6 @@ built-ins/String/prototype/split/instance-is-math.js :: it threw an object with 
 built-ins/String/prototype/split/instance-is-math.js (strict) :: it threw an object with no name: The value of __split[0] is "[object Math]" Expected SameValue(«"[object Object]"», «"[object Math]"») to be true
 built-ins/String/prototype/split/separator-tostring-error.js :: it threw an object with no name: ToString should be called on the separator before checking if the limit is zero. Expected a ExpectedError to be thrown but no exception was thrown at all
 built-ins/String/prototype/split/separator-tostring-error.js (strict) :: it threw an object with no name: ToString should be called on the separator before checking if the limit is zero. Expected a ExpectedError to be thrown but no exception was thrown at all
-built-ins/String/prototype/startsWith/return-abrupt-from-searchstring-regexp-test.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/String/prototype/startsWith/return-abrupt-from-searchstring-regexp-test.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/String/prototype/startsWith/searchstring-is-regexp-throws.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/startsWith/searchstring-is-regexp-throws.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/toLocaleLowerCase/Final_Sigma_U180E.js :: it threw an object with no name: Sigma preceded by LATIN CAPITAL LETTER A, MONGOLIAN VOWEL SEPARATOR Expected SameValue(«"a᠎σ"», «"a᠎ς"») to be true
 built-ins/String/prototype/toLocaleLowerCase/Final_Sigma_U180E.js (strict) :: it threw an object with no name: Sigma preceded by LATIN CAPITAL LETTER A, MONGOLIAN VOWEL SEPARATOR Expected SameValue(«"a᠎σ"», «"a᠎ς"») to be true
 built-ins/String/prototype/toLocaleLowerCase/special_casing_conditional.js :: it threw an object with no name: Sigma preceded by LATIN CAPITAL LETTER A Expected SameValue(«"aσ"», «"aς"») to be true

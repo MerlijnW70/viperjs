@@ -69,21 +69,29 @@ pub(super) fn method_of(
 /// `{[Symbol.match]: true}` counts as one. That is deliberate in the specification: the question is
 /// "does this behave as a pattern", not "was this made by `RegExp`", and `replaceAll` uses the
 /// answer to decide whether to demand a `g` flag.
-fn is_pattern(vm: &mut Vm, heap: &mut Heap, value: Value) -> Completion<bool> {
-    if !matches!(value, Value::Object(_)) {
+pub(super) fn is_pattern(vm: &mut Vm, heap: &mut Heap, value: Value) -> Completion<bool> {
+    let Value::Object(object) = value else {
         return Ok(false);
-    }
+    };
     // A well-known Symbol the realm does not have is one nothing can be keyed by, so the lookup
     // answers exactly as an absent property does.
     let matcher = match vm.realm().well_known(super::well_known_at("match")) {
         Some(id) => vm.get_property_key(value, crate::heap::PropertyKey::from_symbol(id), heap)?,
         None => Value::Undefined,
     };
-    // §7.2.8's steps 3 to 5 are one expression while nothing has a `[[RegExpMatcher]]`: step 3
-    // answers `ToBoolean(matcher)`, and steps 4 and 5 answer `false` — which is what
-    // `ToBoolean(undefined)` is. When `RegExp` arrives step 4 becomes a real question and this
-    // becomes a branch again; writing the branch now would be one no test could distinguish.
-    Ok(matcher.to_boolean(heap))
+    // Step 3 — the property wins whenever it is **present**, which is not the same as being
+    // truthy: a regular expression whose `@@match` has been set to `undefined` falls through to
+    // step 4 and is a pattern anyway, while one set to `false` is not.
+    if !matches!(matcher, Value::Undefined) {
+        return Ok(matcher.to_boolean(heap));
+    }
+    // Step 4 — a real `[[RegExpMatcher]]`. This was written as `ToBoolean(undefined)` above a
+    // comment saying it would "become a real question when `RegExp` arrives"; it had arrived, and
+    // the two answers differ for exactly one input, which no test happened to ask about.
+    Ok(heap
+        .object(object)
+        .and_then(crate::heap::Object::regexp)
+        .is_some())
 }
 
 /// The receiver as characters, after `RequireObjectCoercible` — §22.1.3's opening step.

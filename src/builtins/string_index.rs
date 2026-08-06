@@ -13,7 +13,7 @@
 
 use super::string::{argument_string, at, characters, clamp, to_integer_or_infinity};
 use crate::heap::{Heap, NativeCall};
-use crate::value::{Completion, Value};
+use crate::value::{Abrupt, Completion, Value};
 use crate::vm::Vm;
 
 /// §22.1.3.1 `String.prototype.charAt(pos)`.
@@ -156,8 +156,13 @@ fn code_point(units: &[u16], position: f64, first: u16) -> u32 {
 /// shared steps — `RequireObjectCoercible`, `IsRegExp`, `ToString`, the clamp — are the part that
 /// would drift if this were written three times.
 ///
-/// `IsRegExp` is not among them yet, because there are no regular expressions to detect. When there
-/// are, these three gain the TypeError that stops `"a".includes(/a/)` — and it belongs here, once.
+/// # Why a pattern is refused rather than converted
+///
+/// `"abc".includes(/b/)` is a TypeError and not a search for the three characters `/b/`. The three
+/// take a **string** and a pattern reaching one is almost always a program that meant `search` or
+/// `test`, so the clause refuses instead of doing something plausible with `ToString`. §7.2.8 is
+/// what decides, which means an ordinary object saying `{[Symbol.match]: true}` is refused too:
+/// the question is whether a thing behaves as a pattern, not whether `RegExp` made it.
 fn matches_at(
     vm: &mut Vm,
     heap: &mut Heap,
@@ -165,6 +170,13 @@ fn matches_at(
     where_from: Anchor,
 ) -> Completion<Value> {
     let units = characters(vm, heap, call)?;
+    // Step 3, and it runs **before** the needle is converted: a pattern whose `toString` throws
+    // gives the TypeError this clause is for, not that program's error.
+    if super::string_replace::is_pattern(vm, heap, call.argument(0))? {
+        return Err(Abrupt::type_error(
+            "this method takes a string to look for, not a regular expression",
+        ));
+    }
     let needle = argument_string(vm, heap, call, 0)?;
     let found = match where_from {
         // §22.1.3.7 step 6 — an `undefined` end position is the length, and every other value is
