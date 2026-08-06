@@ -225,6 +225,13 @@ pub enum ParseErrorKind {
     /// An `ImportCall` is a `CallExpression` and `new MemberExpression Arguments` takes the
     /// narrower one — so there is no production, and nothing to construct if there were.
     NewOnImportCall,
+    /// §13.3: `new super()`.
+    ///
+    /// A `NewExpression` takes a `MemberExpression` or a `NewExpression`, and the bare word
+    /// `super` is neither — `super(...)` is a `SuperCall`, `super.x` a `SuperProperty`, and
+    /// only the property is a `MemberExpression`. So `new super.x()` derives where
+    /// `new super()` does not.
+    NewOnSuper,
     /// §13.3.12: `import.meta` outside a module.
     ///
     /// "It is a Syntax Error if the syntactic goal symbol is not Module." A script is not a
@@ -551,6 +558,9 @@ impl fmt::Display for ParseErrorKind {
             ),
             Self::NewOnImportCall => {
                 write!(f, "`new` may not be applied to `import()`")
+            }
+            Self::NewOnSuper => {
+                write!(f, "`new` may not be applied to `super()`")
             }
             Self::ImportMetaOutsideModule => {
                 write!(f, "`import.meta` is only allowed in a module")
