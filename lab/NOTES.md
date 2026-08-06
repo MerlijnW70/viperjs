@@ -29,6 +29,52 @@ reproducible.
 
 ---
 
+## reentry-cost — how much higher can `MAX_REENTRY_DEPTH` go?
+
+**Date:** 2026-08-06
+**Question:** `MAX_REENTRY_DEPTH` is 32, and a re-entry is *any* native calling back into the
+interpreter — so `node.children.map(walk)` stops at depth 33 while pure recursion reaches 5,000.
+`ajv` hits it compiling a schema. The cap's own comment said this was "nothing anyone will meet".
+**How much higher can it go, and what is the lever?**
+**Setup:** `cargo run -p viperjs-lab -- reentry-cost`, with `MAX_REENTRY_DEPTH` raised to a million
+first so the stack is what refuses rather than the constant. One child process per candidate depth,
+because an overflow aborts and cannot be bisected inside one process; a 1 MiB thread, the smallest
+in common use, in a **debug** build, whose frames are largest. Three shapes, so a native's own
+frame is reached by subtraction from the interpreter's.
+**Result:**
+
+| shape | deepest that survives | bytes per level |
+| --- | --- | --- |
+| `valueOf` | 43 | 24.4 KiB |
+| `map` | 38 | 27.6 KiB |
+| `sort` | **35** | 30.0 KiB |
+
+**Verdict: PARK, and the question was the wrong way round.** The cap cannot go *up*: at 32 the
+margin on the dearest shape is **1.09×**, where the constant's comment claimed "better than 2×".
+The comment was not wrong about what it measured — a `toString` chain, the cheapest of the three —
+and the cap has to hold for the dearest. So the engine has been one fattened arm away from the
+macOS abort it already suffered once, and nothing would have caught it: the guard test
+`a_conversion_at_the_cap_fits_in_the_stack_it_claims_to_need` used the cheapest shape too. **That
+test now uses `sort`**, with a second row keeping the pair honest if they ever swap places.
+
+Two things ruled out, so they are not re-tried. `MakeClass` and `MakeFunction` were the documented
+suspects for the fat frame and are **not** it — both hold an `Rc<Chunk>`, which is a pointer, not a
+copy. And raising the cap while shrinking nothing is not a trade: it converts a `RangeError` a
+program can catch into the abort DR-0002 forbids.
+
+**What would revive it:** the frame profiled *per arm* rather than guessed at. The loop is one
+function and its frame is the sum of every arm's locals, so a level costs 24 KiB before any native
+adds to it — and 24 KiB of locals in one `match` is a number somebody should be able to attribute.
+Halving it buys 64 with a real margin, which is what `ajv` needs and roughly where this was before
+the macOS failure.
+
+**Cost:** about two hours, most of it the bisection running rather than being written — each trial
+is a process and a cliff at 35 takes a dozen of them per shape. The experiment stays: it is the
+only thing here that can answer "did that slice cost us stack?", and the answer is now needed after
+any change to the interpreter loop rather than after any change to the cap.
+
+---
+
 ## somebody-elses-code — on twenty thousand real files, what breaks first?
 
 **Date:** 2026-08-05

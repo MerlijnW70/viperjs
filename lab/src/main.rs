@@ -24,6 +24,10 @@ fn main() -> std::process::ExitCode {
         Some("nesting-cost") => {
             return experiments::nesting_cost::run(std::env::args().nth(2).as_deref());
         }
+        Some("reentry-cost") => {
+            let rest: Vec<String> = std::env::args().skip(3).collect();
+            return experiments::reentry_cost::run(std::env::args().nth(2).as_deref(), &rest);
+        }
         Some(other) => {
             eprintln!("viperjs-lab: no experiment named `{other}`");
             eprintln!("run without arguments to list what exists");
@@ -36,6 +40,7 @@ fn main() -> std::process::ExitCode {
             println!("  hot-shapes     where the interpreter's time and allocations go, per shape");
             println!("  run-module     run a real module graph off the disk");
             println!("  nesting-cost   how much stack a nesting level costs, per shape");
+            println!("  reentry-cost   how much stack a native's re-entry costs, per shape");
             println!();
             println!("Start one:  create lab/src/experiments/<name>.rs, register it in main.rs,");
             println!("            and open its entry in lab/NOTES.md BEFORE you write the code.");

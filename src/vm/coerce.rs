@@ -76,10 +76,27 @@ use std::rc::Rc;
 /// packages: `ajv` hits it while compiling a schema, and the error it raises still says
 /// *conversion*, which is the wrong word for most of what arrives here.
 ///
-/// The fattest arms left are `MakeClass`, `MakeFunction` and `CallSpread`, and moving them out of
-/// line is the lever — it is what bought 64 back once already. Raising the number without moving
-/// them trades a `RangeError` a program can catch for an abort DR-0002 forbids, so the measurement
-/// comes first and on every platform CI runs.
+/// **And the margin is not what the paragraph above says.** Measured 2026-08-06 by
+/// `lab`'s `reentry-cost`, which bisects the cliff with one child process per depth on a mebibyte
+/// in a debug build:
+///
+/// | shape | deepest that survives | bytes per level |
+/// | --- | --- | --- |
+/// | `valueOf` | 43 | 24.4 KiB |
+/// | `map` | 38 | 27.6 KiB |
+/// | `sort` | **35** | 30.0 KiB |
+///
+/// So the margin at 32 is **1.09×** and not "better than 2×". The number was never wrong for the
+/// shape it was measured against — a `toString` chain, the cheapest of the three — and the cap has
+/// to hold for the dearest. A native's own frame rides on top of the interpreter's, and `sort`
+/// carries a `Vec` of elements across the comparator call.
+///
+/// **So this number cannot go up yet, which is the opposite of what its cost above argues for.**
+/// The lever is still the frame: the loop is one function and its frame is the sum of every arm's
+/// locals, so a level costs 24 KiB before any native adds to it. `MakeClass` and `MakeFunction`
+/// were suspected and are not it — both hold an `Rc<Chunk>`, which is a pointer. Finding what does
+/// dominate wants the frame profiled per arm rather than guessed at, and until somebody does that,
+/// raising this trades a `RangeError` a program can catch for the abort DR-0002 forbids.
 const MAX_REENTRY_DEPTH: usize = 32;
 
 impl Vm {

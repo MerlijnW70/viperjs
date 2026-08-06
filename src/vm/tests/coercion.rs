@@ -226,12 +226,44 @@ fn a_conversion_at_the_cap_fits_in_the_stack_it_claims_to_need() {
     // on Windows and recorded as thin — and macOS CI, whose frames are larger, aborted on the next
     // push with no panic and the output cut off mid-run. A margin that only one platform can afford
     // is not a margin, which is why 32 is what this asks for now.
+    //
+    // **And it measured the wrong shape until 2026-08-06.** A `toString` chain is the *cheapest*
+    // way to re-enter, and the cap has to hold for the dearest: `lab`'s `reentry-cost` bisects the
+    // cliff at 43 levels for `toString`, 38 for `map` and **35 for `sort`**, which carries a `Vec`
+    // of elements across the comparator call. So the guard passed with room to spare while the real
+    // margin was 1.09×, and a slice that fattened the frame by a tenth would have been found by CI
+    // aborting rather than by this.
     let worker = std::thread::Builder::new()
         .stack_size(1024 * 1024)
         .spawn(|| {
             // The cap as a literal rather than through the constant, so that raising the
             // constant without re-measuring makes this fail rather than quietly follow it up.
-            let deep = "var d = 0; function make() { d = d + 1;                  return {toString: function () { return d < 32 ? '' + make() : 'end' }}; }                  '' + make()";
+            let deep = "var d = 0; function f() { d = d + 1; if (d >= 32) return 'end'; \
+                        var out = ''; [1, 2].sort(function () { out = f(); return 0; }); \
+                        return out; } f()";
+            run(deep)
+        })
+        .unwrap_or_else(|err| panic!("could not spawn the measuring thread: {err}")); // without the thread there is no measurement
+    assert_eq!(
+        worker.join().unwrap_or_default(), // a panic in the thread is the failure being reported
+        "end",
+        "re-entering at the cap through the fattest native needs more than the mebibyte it claims"
+    );
+}
+
+#[test]
+fn the_cheapest_way_to_re_enter_is_not_what_the_cap_has_to_afford() {
+    // The row above measures `sort` because it is the dearest. This one measures a conversion at
+    // the same depth, and exists to keep the *pair* honest: if some slice ever makes the
+    // conversion path the fattest, the two swap places and the guard above should follow. Both
+    // passing says nothing on its own; the point is that the guard tracks whichever is worse, and
+    // the only way to notice a change is to have measured both.
+    let worker = std::thread::Builder::new()
+        .stack_size(1024 * 1024)
+        .spawn(|| {
+            let deep = "var d = 0; function make() { d = d + 1; \
+                        return {toString: function () { return d < 32 ? '' + make() : 'end' }}; } \
+                        '' + make()";
             run(deep)
         })
         .unwrap_or_else(|err| panic!("could not spawn the measuring thread: {err}")); // without the thread there is no measurement
