@@ -85,6 +85,15 @@ impl Parser<'_> {
                 span: self.current.span,
             });
         }
+        // §15.7.1's "Contains await" counts this head as it counts the operand form, so the
+        // same record is written here that `parse_await` writes — a static block reads it back
+        // and reports `AwaitInStaticBlock`, and an async function's body discards it exactly as
+        // it discards that one. Without it, a `for await` in a static block slips past the one
+        // rule that would refuse it.
+        self.forbidden_in_parameters.get_or_insert(ParseError {
+            kind: ParseErrorKind::AwaitInParameters,
+            span: self.current.span,
+        });
         self.advance(Goal::RegExp)?;
         Ok(true)
     }
