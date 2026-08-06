@@ -250,11 +250,37 @@ pub fn splice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
     Ok(Value::Object(removed))
 }
 
+/// §23.1.3.1.1 `IsConcatSpreadable(O)` — whether `concat` opens this argument out.
+///
+/// Step 2 reads `@@isConcatSpreadable` and step 3 believes it **whatever it is**, so the property
+/// decides in both directions: an ordinary object saying `true` is spread and an array saying
+/// `false` is not. `IsArray` at step 4 is only the answer when the property is absent, and
+/// `undefined` is the one value that means absent — a `null` there is falsy and refuses.
+fn spreadable(vm: &mut Vm, heap: &mut Heap, object: ObjectId) -> Completion<bool> {
+    // A well-known Symbol the realm does not have is one nothing can be keyed by, so the lookup
+    // answers exactly as an absent property does.
+    let flag = match vm
+        .realm()
+        .well_known(crate::builtins::well_known_at("isConcatSpreadable"))
+    {
+        Some(id) => vm.get_property_key(
+            Value::Object(object),
+            crate::heap::PropertyKey::from_symbol(id),
+            heap,
+        )?,
+        None => Value::Undefined,
+    };
+    if !matches!(flag, Value::Undefined) {
+        return Ok(flag.to_boolean(heap));
+    }
+    heap.is_array_through(object)
+}
+
 /// §23.1.3.1 `Array.prototype.concat`.
 ///
-/// An Array argument is *spread* one level and anything else is appended whole, which is
-/// §23.1.3.1.1's `IsConcatSpreadable` without the Symbol that can override it. One level: an array
-/// inside an array stays an array, which is why `flat` had to be added later.
+/// An argument §23.1.3.1.1 calls spreadable is opened out one level and anything else is appended
+/// whole. One level: an array inside an array stays an array, which is why `flat` had to be added
+/// later.
 pub fn concat(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = this_object(vm, heap, call)?;
     let Value::Object(joined) = array_species_create(vm, heap, object, 0)? else {
@@ -271,14 +297,30 @@ pub fn concat(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
             at += 1;
             continue;
         };
-        // §23.1.3.1 step 5.b — `IsConcatSpreadable` falls back to `IsArray`, which sees through a
-        // proxy to its target rather than asking a trap.
-        if !heap.is_array_through(id)? {
+        // §23.1.3.1 step 5.b's `IsConcatSpreadable`, which is §23.1.3.1.1 and is four steps rather
+        // than the one that used to be here. `@@isConcatSpreadable` is asked **first** and its
+        // answer is final in both directions: an ordinary object carrying `true` is spread, and an
+        // **array** carrying `false` is appended whole. Only when the property is absent does the
+        // operation fall back to `IsArray`, which sees through a proxy to its target rather than
+        // asking a trap.
+        //
+        // The comment that stood here described step 4 as though it were the operation. Nothing
+        // about an ordinary program notices — every array lacks the property and every non-array
+        // has no `length` worth spreading — which is why it survived.
+        if !spreadable(vm, heap, id)? {
             create_index(heap, joined, at, source)?;
             at += 1;
             continue;
         }
         let length = length_of(vm, heap, id)?;
+        // Step 5.c.iii — refused before a single element is copied. Without it the loop below is
+        // `0..2**53`, which is not a wrong answer but a program that never comes back: a spreadable
+        // source claiming the maximum length is reachable in three lines.
+        if !crate::builtins::array_methods::fits(at.saturating_add(length)) {
+            return Err(Abrupt::type_error(
+                "this array-like is longer than this engine will allocate",
+            ));
+        }
         for index in 0..length {
             // A hole in a spread source is a hole in the result, so `[1, , 2].concat(3)` keeps
             // its gap rather than filling it with `undefined`.

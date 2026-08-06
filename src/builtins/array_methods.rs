@@ -319,6 +319,19 @@ pub fn to_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
 pub fn push(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = this_object(vm, heap, call)?;
     let mut length = length_of(vm, heap, object)?;
+    // Step 4 — refused **before** anything is written, so an array-like at the limit is left
+    // exactly as it was rather than part-way grown. `ToLength` has already clamped a `length` of
+    // `2 ** 60` down to the maximum, which is why a nonsense length arrives here as a refusable
+    // one rather than as arithmetic that overflows.
+    //
+    // `argCount` and not one: pushing **nothing** onto an array at the maximum is allowed, since
+    // `len + 0` is not past it. That is the case an off-by-one gets wrong in the safe-looking
+    // direction, and the one a test written with a single argument cannot see.
+    if !fits(length.saturating_add(call.arguments.len() as u64)) {
+        return Err(Abrupt::type_error(
+            "this array-like is longer than this engine will allocate",
+        ));
+    }
     for value in call.arguments {
         let name = index_key(heap, length);
         set_or_throw(vm, heap, object, name, *value)?;

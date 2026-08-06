@@ -525,3 +525,111 @@ fn a_length_nothing_could_index_is_refused_rather_than_walked() {
         "cba"
     );
 }
+
+#[test]
+fn what_concat_spreads_is_decided_by_a_symbol_before_it_is_decided_by_being_an_array() {
+    // §23.1.3.1.1 `IsConcatSpreadable` is four steps and ViperJS had step 4. Step 2 reads
+    // `@@isConcatSpreadable` and step 3 believes it **whatever it is**, so the property decides in
+    // both directions and the fallback is only for its absence.
+    //
+    // Nothing an ordinary program does notices, which is why it survived: every array lacks the
+    // property, and every non-array that has a `length` was not going to be spread anyway.
+    assert_eq!(
+        run(
+            "var o = {length: 2, 0: 'a', 1: 'b'}; o[Symbol.isConcatSpreadable] = true; \
+             JSON.stringify([].concat(o))"
+        ),
+        r#"["a","b"]"#
+    );
+    // …and the other way, which is the half a test for "an object can opt in" would miss.
+    assert_eq!(
+        run("var a = [1, 2]; a[Symbol.isConcatSpreadable] = false; \
+             JSON.stringify([].concat(a))"),
+        "[[1,2]]"
+    );
+    // Step 3 is `ToBoolean` and not "is it `true`", so any falsy value refuses and any truthy one
+    // accepts. `0` on an array is the case that tells this from an equality test.
+    assert_eq!(
+        run("var a = [1, 2]; a[Symbol.isConcatSpreadable] = 0; JSON.stringify([].concat(a))"),
+        "[[1,2]]"
+    );
+    assert_eq!(
+        run(
+            "var o = {length: 1, 0: 'x'}; o[Symbol.isConcatSpreadable] = 'yes'; \
+             JSON.stringify([].concat(o))"
+        ),
+        r#"["x"]"#
+    );
+    // **`undefined` is the one value that means absent.** A `null` is falsy and refuses, where a
+    // check for "is the property there" would fall through to `IsArray` and spread.
+    assert_eq!(
+        run("var a = [1, 2]; a[Symbol.isConcatSpreadable] = null; JSON.stringify([].concat(a))"),
+        "[[1,2]]"
+    );
+    assert_eq!(
+        run("var a = [1, 2]; a[Symbol.isConcatSpreadable] = undefined; \
+             JSON.stringify([].concat(a))"),
+        "[1,2]"
+    );
+    // An inherited one counts: step 2 is `Get` and not `GetOwnProperty`.
+    assert_eq!(
+        run("var proto = {}; proto[Symbol.isConcatSpreadable] = true; \
+             var o = Object.create(proto); o.length = 1; o[0] = 'p'; \
+             JSON.stringify([].concat(o))"),
+        r#"["p"]"#
+    );
+}
+
+#[test]
+fn a_method_that_would_grow_an_array_like_past_the_maximum_refuses_first() {
+    // §23.1.3.23 step 4 and §23.1.3.1 step 5.c.iii — a TypeError rather than a clamp, because the
+    // elements have nowhere to go. `ToLength` has already clamped what was *read*; this is about
+    // what would be written.
+    assert_eq!(
+        run("var o = {length: 9007199254740991}; \
+             try { Array.prototype.push.call(o, 1); 'no throw' } \
+             catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // The refusal is `len + argCount`, so two arguments are refused one step earlier than one.
+    assert_eq!(
+        run("var o = {length: 9007199254740990}; \
+             try { Array.prototype.push.call(o, 1, 2); 'no throw' } \
+             catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // …and pushing **nothing** onto an array-like at the maximum is allowed, because `len + 0` is
+    // not past it. That is the case an off-by-one gets wrong in the direction nothing complains
+    // about, and it is why the count is added rather than compared against one.
+    assert_eq!(
+        run("var o = {length: 9007199254740991}; \
+             Array.prototype.push.call(o); o.length"),
+        "9007199254740991"
+    );
+    // Nothing is written before the refusal: the array-like is left exactly as it was, rather than
+    // part-way grown with a `length` that no longer matches its indices.
+    assert_eq!(
+        run("var o = {length: 9007199254740991}; \
+             try { Array.prototype.push.call(o, 'x') } catch (e) {} \
+             o.length + '|' + (9007199254740991 in o)"),
+        "9007199254740991|false"
+    );
+    // §23.1.3.1's is the same rule counted from what has been copied so far, which is why an empty
+    // receiver and a one-element receiver disagree about the very same argument.
+    assert_eq!(
+        run(
+            "var o = {length: 9007199254740991}; o[Symbol.isConcatSpreadable] = true; \
+             try { [1].concat(o); 'no throw' } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    // An ordinary concat is untouched, which is what keeps the guard from being a refusal of
+    // everything.
+    assert_eq!(
+        run(
+            "var o = {length: 3, 0: 'a', 1: 'b', 2: 'c'}; o[Symbol.isConcatSpreadable] = true; \
+             JSON.stringify([1].concat(o))"
+        ),
+        r#"[1,"a","b","c"]"#
+    );
+}
