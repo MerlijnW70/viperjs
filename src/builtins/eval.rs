@@ -43,21 +43,44 @@ pub(super) fn eval(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Compl
     perform(vm, heap, &text)
 }
 
-/// Parse, compile and run one piece of source as a Script in the global scope.
+/// §19.2.1.1 for a text that is certainly a String — the indirect mode's whole body.
+fn perform(vm: &mut Vm, heap: &mut Heap, text: &str) -> Completion<Value> {
+    source_as(vm, heap, text, Goal::Eval)
+}
+
+/// Which of the two clauses is running this text — they differ in one argument.
+#[derive(Clone, Copy)]
+pub(crate) enum Goal {
+    /// §19.2.1.1 — an `eval`. `CreateGlobalVarBinding`'s `D` is **true**, so what it declares is
+    /// deletable.
+    Eval,
+    /// §16.1.7 — a Script. `D` is **false**, so a `var` it declares is a permanent property of the
+    /// global object.
+    ///
+    /// Reachable from a host through [`crate::api::Host::eval_script`], which is what
+    /// §INTERPRETING.md's `$262.evalScript` is defined as. The distinction is not decorative: a
+    /// test that asks `verifyProperty(globalThis, 'f', {configurable: false})` after declaring `f`
+    /// can tell the two apart, and an `evalScript` written as an indirect `eval` fails it.
+    Script,
+}
+
+/// Parse, compile and run one piece of source in the global scope, under one of the two goals.
 ///
 /// Split from the entry point above because the two errors it can answer with are the interesting
 /// part, and both are **SyntaxError**: §19.2.1.1 step 8 says a text that is not a Script throws
 /// one, and ViperJS decides some of §22.2.1's early errors in the compiler rather than the parser —
 /// so a compile refusal has to arrive as the same error a parse refusal does, or a program could
 /// tell where ViperJS happens to have put the check.
-fn perform(vm: &mut Vm, heap: &mut Heap, text: &str) -> Completion<Value> {
+pub(crate) fn source_as(vm: &mut Vm, heap: &mut Heap, text: &str, goal: Goal) -> Completion<Value> {
     let script = match crate::parser::parse_script(text) {
         Ok(script) => script,
         Err(error) => return Err(syntax_error(vm, heap, &error.kind.to_string())),
     };
-    // §19.2.1.1 rather than §16.1.7 — the scope chain is the same and the bindings' `D` is not:
-    // an `eval`'s globals are deletable, direct and indirect alike.
-    let chunk = match crate::compile::compile_eval(&script, heap) {
+    let compiled = match goal {
+        Goal::Eval => crate::compile::compile_eval(&script, heap),
+        Goal::Script => crate::compile::compile_script(&script, heap),
+    };
+    let chunk = match compiled {
         Ok(chunk) => chunk,
         Err(error) => return Err(syntax_error(vm, heap, &error.message())),
     };

@@ -162,6 +162,32 @@ impl<'a> Host<'a> {
         self.vm.call_value(callee, this_value, arguments, self.heap)
     }
 
+    /// Run `source` as a **Script** in this realm, from inside a host function.
+    ///
+    /// §16.1.7's goal and not §19.2.1.1's, which is one argument's worth of difference and is
+    /// observable: a Script's `var` becomes a permanent property of the global object where an
+    /// `eval`'s is deletable. That is what §INTERPRETING.md defines `$262.evalScript` as, and an
+    /// `evalScript` written as `(0, eval)(source)` fails the tests that ask
+    /// `verifyProperty(globalThis, 'f', {configurable: false})`.
+    ///
+    /// The run is *nested*: the frames underneath belong to the script that is waiting, and they
+    /// come back untouched. [`Engine::eval`] cannot be used for this — it starts a fresh top-level
+    /// run and clears the machine, which from inside a call would take the caller's stack with it.
+    ///
+    /// # Errors
+    ///
+    /// A **SyntaxError** for source that will not parse or that an early error refuses, and
+    /// otherwise whatever the script threw. Both arrive as a `Completion`, so `?` in a native does
+    /// what a `throw` does.
+    pub fn eval_script(&mut self, source: &str) -> Completion<Value> {
+        crate::builtins::eval::source_as(
+            self.vm,
+            self.heap,
+            source,
+            crate::builtins::eval::Goal::Script,
+        )
+    }
+
     /// A refusal, in the terms the language uses — the commonest thing a host says.
     ///
     /// A plain function rather than a method because it borrows nothing: `Abrupt::Raised` carries a

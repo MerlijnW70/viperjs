@@ -146,8 +146,8 @@ annexB/language/eval-code/direct/func-switch-dflt-eval-func-existing-fn-update.j
 annexB/language/eval-code/direct/func-switch-dflt-eval-func-existing-var-no-init.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 annexB/language/eval-code/direct/func-switch-dflt-eval-func-existing-var-update.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 annexB/language/eval-code/direct/func-switch-dflt-eval-func-no-skip-param.js :: it threw an object with no name: binding is not initialized to `undefined` Expected SameValue(«undefined», «123») to be true
-annexB/language/eval-code/direct/script-decl-lex-no-collision.js :: it threw TypeError: what was called is not a function
-annexB/language/eval-code/direct/script-decl-lex-no-collision.js (strict) :: it threw TypeError: what was called is not a function
+annexB/language/eval-code/direct/script-decl-lex-no-collision.js :: it threw an object with no name: Expected SameValue(«function test262Fn() { [native code] }», «1») to be true
+annexB/language/eval-code/direct/script-decl-lex-no-collision.js (strict) :: it threw ReferenceError: test262Fn is not defined
 annexB/language/expressions/assignment/dstr/array-pattern-emulates-undefined.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 annexB/language/expressions/assignment/dstr/array-pattern-emulates-undefined.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 annexB/language/expressions/assignment/dstr/object-pattern-emulates-undefined.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
@@ -171,23 +171,7 @@ annexB/language/expressions/yield/star-iterable-return-emulates-undefined-throws
 annexB/language/expressions/yield/star-iterable-return-emulates-undefined-throws-when-called.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 annexB/language/expressions/yield/star-iterable-throw-emulates-undefined-throws-when-called.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 annexB/language/expressions/yield/star-iterable-throw-emulates-undefined-throws-when-called.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-annexB/language/global-code/block-decl-global-existing-global-init.js :: it threw TypeError: what was called is not a function
-annexB/language/global-code/block-decl-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
-annexB/language/global-code/if-decl-else-decl-a-global-existing-global-init.js :: it threw TypeError: what was called is not a function
-annexB/language/global-code/if-decl-else-decl-a-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
-annexB/language/global-code/if-decl-else-decl-b-global-existing-global-init.js :: it threw TypeError: what was called is not a function
-annexB/language/global-code/if-decl-else-decl-b-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
-annexB/language/global-code/if-decl-else-stmt-global-existing-global-init.js :: it threw TypeError: what was called is not a function
-annexB/language/global-code/if-decl-else-stmt-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
-annexB/language/global-code/if-decl-no-else-global-existing-global-init.js :: it threw TypeError: what was called is not a function
-annexB/language/global-code/if-decl-no-else-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
-annexB/language/global-code/if-stmt-else-decl-global-existing-global-init.js :: it threw TypeError: what was called is not a function
-annexB/language/global-code/if-stmt-else-decl-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
-annexB/language/global-code/script-decl-lex-collision.js :: it threw an object with no name: Expected a SyntaxError but got a TypeError
-annexB/language/global-code/switch-case-global-existing-global-init.js :: it threw TypeError: what was called is not a function
-annexB/language/global-code/switch-case-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
-annexB/language/global-code/switch-dflt-global-existing-global-init.js :: it threw TypeError: what was called is not a function
-annexB/language/global-code/switch-dflt-global-existing-non-enumerable-global-init.js :: it threw TypeError: what was called is not a function
+annexB/language/global-code/script-decl-lex-collision.js :: it threw an object with no name: Expected a SyntaxError to be thrown but no exception was thrown at all
 annexB/language/statements/class/subclass/superclass-emulates-undefined.js :: it threw TypeError: Object.defineProperty requires an object
 annexB/language/statements/class/subclass/superclass-emulates-undefined.js (strict) :: it threw TypeError: Object.defineProperty requires an object
 annexB/language/statements/class/subclass/superclass-prototype-emulates-undefined.js :: it threw TypeError: the `prototype` of an extended constructor is neither an object nor null
@@ -12102,12 +12086,12 @@ built-ins/TypedArray/from/iter-next-value-error.js :: it threw an object with no
 built-ins/TypedArray/from/iter-next-value-error.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/TypedArray/prototype/at/coerced-index-resize.js :: it threw an object with no name: Expected SameValue(«0», «undefined») to be true
 built-ins/TypedArray/prototype/at/coerced-index-resize.js (strict) :: it threw an object with no name: Expected SameValue(«0», «undefined») to be true
-built-ins/TypedArray/prototype/copyWithin/coerced-values-end-detached-prototype.js :: it threw RangeError: the heap has grown past what this engine will allocate (Testing with Int16Array and makeIterable.)
-built-ins/TypedArray/prototype/copyWithin/coerced-values-end-detached-prototype.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate (Testing with Int32Array and makeIterable.)
-built-ins/TypedArray/prototype/copyWithin/coerced-values-end-detached.js :: it threw RangeError: this array-like is longer than this engine will allocate (Testing with Int16Array and makeArray.)
-built-ins/TypedArray/prototype/copyWithin/coerced-values-end-detached.js (strict) :: it threw RangeError: this array-like is longer than this engine will allocate (Testing with Int16Array and makeArray.)
-built-ins/TypedArray/prototype/copyWithin/coerced-values-start-detached.js :: it threw RangeError: this array-like is longer than this engine will allocate (Testing with Int16Array and makeArray.)
-built-ins/TypedArray/prototype/copyWithin/coerced-values-start-detached.js (strict) :: it threw RangeError: this array-like is longer than this engine will allocate (Testing with Int16Array and makeArray.)
+built-ins/TypedArray/prototype/copyWithin/coerced-values-end-detached-prototype.js :: it threw RangeError: this array-like is longer than this engine will allocate (Testing with Uint16Array and makeArray.)
+built-ins/TypedArray/prototype/copyWithin/coerced-values-end-detached-prototype.js (strict) :: it threw RangeError: this array-like is longer than this engine will allocate (Testing with Uint16Array and makeArray.)
+built-ins/TypedArray/prototype/copyWithin/coerced-values-end-detached.js :: it threw RangeError: the heap has grown past what this engine will allocate (Testing with Int16Array and makeIterable.)
+built-ins/TypedArray/prototype/copyWithin/coerced-values-end-detached.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate (Testing with Int16Array and makeIterable.)
+built-ins/TypedArray/prototype/copyWithin/coerced-values-start-detached.js :: it threw RangeError: the heap has grown past what this engine will allocate (Testing with Int16Array and makeIterable.)
+built-ins/TypedArray/prototype/copyWithin/coerced-values-start-detached.js (strict) :: it threw RangeError: the heap has grown past what this engine will allocate (Testing with Int16Array and makeIterable.)
 built-ins/TypedArray/prototype/copyWithin/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/TypedArray/prototype/copyWithin/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/TypedArray/prototype/fill/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
@@ -13129,25 +13113,21 @@ language/function-code/eval-param-env-with-computed-key.js :: it threw SyntaxErr
 language/function-code/eval-param-env-with-prop-initializer.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/global-code/decl-lex-restricted-global.js :: expected a SyntaxError at runtime time, and nothing was thrown
 language/global-code/decl-lex-restricted-global.js (strict) :: expected a SyntaxError at runtime time, and nothing was thrown
-language/global-code/script-decl-func-dups.js :: it threw TypeError: what was called is not a function
-language/global-code/script-decl-func-dups.js (strict) :: it threw TypeError: what was called is not a function
-language/global-code/script-decl-func.js :: it threw TypeError: what was called is not a function
-language/global-code/script-decl-func.js (strict) :: it threw TypeError: what was called is not a function
-language/global-code/script-decl-lex-deletion.js :: it threw TypeError: what was called is not a function
-language/global-code/script-decl-lex-lex.js :: it threw an object with no name: `let` binding Expected a SyntaxError but got a TypeError
-language/global-code/script-decl-lex-lex.js (strict) :: it threw an object with no name: `let` binding Expected a SyntaxError but got a TypeError
-language/global-code/script-decl-lex-restricted-global.js :: it threw TypeError: what was called is not a function
-language/global-code/script-decl-lex-restricted-global.js (strict) :: it threw TypeError: what was called is not a function
-language/global-code/script-decl-lex-var-declared-via-eval.js :: it threw TypeError: what was called is not a function
-language/global-code/script-decl-lex-var-declared-via-eval.js (strict) :: it threw TypeError: what was called is not a function
-language/global-code/script-decl-lex-var.js :: it threw an object with no name: variable Expected a SyntaxError but got a TypeError
-language/global-code/script-decl-lex-var.js (strict) :: it threw an object with no name: variable Expected a SyntaxError but got a TypeError
-language/global-code/script-decl-lex.js :: it threw TypeError: what was called is not a function
-language/global-code/script-decl-lex.js (strict) :: it threw TypeError: what was called is not a function
-language/global-code/script-decl-var-collision.js :: it threw TypeError: what was called is not a function
-language/global-code/script-decl-var-collision.js (strict) :: it threw TypeError: what was called is not a function
-language/global-code/script-decl-var.js :: it threw TypeError: what was called is not a function
-language/global-code/script-decl-var.js (strict) :: it threw TypeError: what was called is not a function
+language/global-code/script-decl-func.js :: it threw an object with no name: like-named configurable property Expected SameValue(«"number"», «"function"») to be true
+language/global-code/script-decl-func.js (strict) :: it threw an object with no name: like-named configurable property Expected SameValue(«"number"», «"function"») to be true
+language/global-code/script-decl-lex-deletion.js :: it threw ReferenceError: test262let is not defined
+language/global-code/script-decl-lex-lex.js :: it threw an object with no name: `let` binding Expected a SyntaxError to be thrown but no exception was thrown at all
+language/global-code/script-decl-lex-lex.js (strict) :: it threw an object with no name: `let` binding Expected a SyntaxError to be thrown but no exception was thrown at all
+language/global-code/script-decl-lex-restricted-global.js :: it threw an object with no name: Expected a SyntaxError to be thrown but no exception was thrown at all
+language/global-code/script-decl-lex-restricted-global.js (strict) :: it threw an object with no name: Expected a SyntaxError to be thrown but no exception was thrown at all
+language/global-code/script-decl-lex-var-declared-via-eval.js :: it threw an object with no name: Expected SameValue(«undefined», «1») to be true
+language/global-code/script-decl-lex-var-declared-via-eval.js (strict) :: it threw ReferenceError: test262Var is not defined
+language/global-code/script-decl-lex-var.js :: it threw an object with no name: variable Expected a SyntaxError to be thrown but no exception was thrown at all
+language/global-code/script-decl-lex-var.js (strict) :: it threw an object with no name: variable Expected a SyntaxError to be thrown but no exception was thrown at all
+language/global-code/script-decl-lex.js :: it threw ReferenceError: test262let is not defined
+language/global-code/script-decl-lex.js (strict) :: it threw ReferenceError: this name is not declared and strict code may not create it
+language/global-code/script-decl-var-collision.js :: it threw an object with no name: `var` on `let` binding Expected a SyntaxError to be thrown but no exception was thrown at all
+language/global-code/script-decl-var-collision.js (strict) :: it threw an object with no name: `var` on `let` binding Expected a SyntaxError to be thrown but no exception was thrown at all
 language/identifier-resolution/assign-to-global-undefined.js (strict) :: expected a ReferenceError at runtime time, and nothing was thrown
 language/import/import-attributes/json-extensibility-array.js :: it did not parse: "./json-value-array_FIXTURE.json" does not export "default"
 language/import/import-attributes/json-idempotency.js :: it did not parse: "./json-idempotency_FIXTURE.json" does not export "default"

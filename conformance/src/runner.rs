@@ -6,9 +6,10 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::Duration;
+use viperjs::api::Host;
 use viperjs::compile::ErrorKind;
 use viperjs::compile::{compile_module, compile_script};
-use viperjs::heap::Heap;
+use viperjs::heap::{Heap, PropertyKey};
 use viperjs::parser::{parse_module, parse_script};
 use viperjs::vm::{Graph, Outcome as VmOutcome, Vm};
 
@@ -268,11 +269,6 @@ impl Runner {
                 }
             }
         }
-        // §INTERPRETING.md's host object, as much of it as this host can honestly answer. Before
-        // the test and after the includes, so that a harness file asking for it finds it.
-        if !block.has("raw") {
-            program.push_str(HOST);
-        }
         // Before the test and after the includes, because `asyncHelpers.js` asks whether `$DONE`
         // is an **own property of the global object** and refuses to run if it is not — which a
         // function declaration at the top level of a script is, and nothing else here would be.
@@ -284,24 +280,85 @@ impl Runner {
     }
 }
 
-/// `$262`, with the two members this host can answer honestly.
+/// `$262.detachArrayBuffer` — §INTERPRETING.md's, spelled through the buffer's own `transfer`.
 ///
-/// INTERPRETING.md names seven, and providing one this engine cannot really do would be worse than
-/// providing none: a test that asked for `createRealm` and got something that pretended would
-/// report a failure about the wrong thing entirely. So there are two.
+/// §25.1.5.5's `transfer` is the operation the host API *is* — it throws the bytes away and leaves
+/// the object — so this reaches for the language's own rather than detaching the buffer behind its
+/// back. A second implementation in Rust would be a second thing that could disagree with the
+/// first.
+fn detach_array_buffer(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    call: &viperjs::heap::NativeCall<'_>,
+) -> viperjs::value::Completion<viperjs::value::Value> {
+    let mut host = Host::new(vm, heap);
+    let buffer = call.argument(0);
+    let transfer = host.get(buffer, "transfer")?;
+    host.call(transfer, buffer, &[])?;
+    Ok(viperjs::value::Value::Undefined)
+}
+
+/// `$262.evalScript` — §INTERPRETING.md's, and it is `ScriptEvaluation` rather than an `eval`.
 ///
-/// `detachArrayBuffer` is §25.1.5.5's `transfer`, which is the operation the host API *is* — it
-/// throws the bytes away and leaves the object. Written in JavaScript rather than as a native
-/// because it already exists in the language, and a second implementation of it in Rust would be a
-/// second thing that could disagree with the first.
+/// The difference is one argument to `CreateGlobalVarBinding` and it is what sixteen of
+/// `annexB/language/global-code`'s tests measure: they declare a function in a block and then ask
+/// `verifyProperty(global, 'f', {configurable: false})`. An `evalScript` written as
+/// `(0, eval)(source)` makes the binding deletable and fails every one of them.
+fn eval_script(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    call: &viperjs::heap::NativeCall<'_>,
+) -> viperjs::value::Completion<viperjs::value::Value> {
+    let mut host = Host::new(vm, heap);
+    // §INTERPRETING.md says "accepts a string value", and every test passes one — but `ToString`
+    // rather than a refusal, because a host is not the place to invent an error the document does
+    // not describe.
+    let source = host.text(call.argument(0))?;
+    host.eval_script(&source)
+}
+
+/// Build `$262` and put it on the global object.
 ///
-/// The five that are missing — `createRealm`, `evalScript`, `agent`, `gc`, `IsHTMLDDA` — are absent
-/// rather than stubbed, so a test that needs one fails saying so.
-/// `global` is §19.1's `globalThis` and not `this`, for the same reason [`DONE`] is: at the top
-/// level of a Script the two are the same object, and at the top level of a *module* `this` is
-/// **undefined**. One spelling that is right in both beats one that is right in the common case.
-const HOST: &str = "var $262 = { global: globalThis, detachArrayBuffer: function (buffer) { buffer.transfer(); } };
-";
+/// **Built here rather than written as JavaScript**, which is what it was until the embedding
+/// surface could express it. DR-0021 records the old way as the evidence that `api.rs` was
+/// missing: a host could bind a function and not a namespace, and a native could not evaluate
+/// source at all. Both are `api.rs` operations now, and this is their first real caller.
+///
+/// What is absent stays absent — `createRealm`, `agent`, `gc` and `IsHTMLDDA` — so a test that
+/// needs one fails saying so rather than passing against a stub.
+fn install_host(vm: &mut Vm, heap: &mut Heap) {
+    let prototype = vm.realm().object_prototype();
+    let object = heap.new_object(Some(prototype));
+    let global = viperjs::value::Value::Object(vm.realm().global());
+    let function_prototype = vm.realm().function_prototype();
+    let define = |heap: &mut Heap, name: &str, value: viperjs::value::Value| {
+        let units: Vec<u16> = name.encode_utf16().collect();
+        let key = PropertyKey::from_units(heap, &units);
+        let _ =
+            heap.define_own_property(object, key, &viperjs::heap::PropertyDescriptor::data(value));
+    };
+    // `global` is §19.1's `globalThis` and not `this`: at the top level of a Script the two are the
+    // same object, and at the top level of a *module* `this` is **undefined**.
+    define(heap, "global", global);
+    for (name, native) in [
+        (
+            "detachArrayBuffer",
+            detach_array_buffer as viperjs::heap::Native,
+        ),
+        ("evalScript", eval_script),
+    ] {
+        let function = heap.new_native_function(function_prototype, native);
+        define(heap, name, viperjs::value::Value::Object(function));
+    }
+    let units: Vec<u16> = "$262".encode_utf16().collect();
+    let key = PropertyKey::from_units(heap, &units);
+    let host = viperjs::value::Value::Object(object);
+    let _ = heap.define_own_property(
+        vm.realm().global(),
+        key,
+        &viperjs::heap::PropertyDescriptor::data(host),
+    );
+}
 
 /// The host's `$DONE`, in the terms §INTERPRETING.md gives it.
 ///
@@ -518,6 +575,15 @@ fn evaluate(
         Err(error) => return Verdict::Skipped(error.message()),
     };
     let mut vm = Vm::new(&mut heap);
+    // §INTERPRETING.md's `$262`, built rather than written as source — see `install_host`.
+    //
+    // Not for a `raw` test. "Exactly the text" is the whole meaning of that flag, and the tests
+    // that use it are largely tests *about* what the global object has — a host object appearing
+    // in one would change the answer it came to check. This used to be guarded where the prologue
+    // was assembled; the object is built here now, so the guard is here.
+    if !block.has("raw") {
+        install_host(&mut vm, &mut heap);
+    }
     // The collection schedule, so the suite can be run with it on and the cost read off the
     // difference. An environment variable rather than a flag because it is a *measurement* knob:
     // the number this harness reports must not depend on how the run was invoked, so the default
@@ -1254,7 +1320,7 @@ var r = /(?i:a)/;",
         let done = run(&root, "/*---\nflags: [async]\n---*/\n$DONE();");
         assert!(matches!(&done[0].verdict, Verdict::Passed), "{done:?}");
 
-        // §INTERPRETING.md's `$262`, with the two members this host can answer. `detachArrayBuffer`
+        // §INTERPRETING.md's `$262`, with the three members this host can answer. `detachArrayBuffer`
         // is what `harness/detachArrayBuffer.js` looks for, and without it every test about a
         // buffer going away reports that the *harness* is missing something rather than testing
         // what it came to test.
@@ -1268,13 +1334,31 @@ var r = /(?i:a)/;",
         );
         assert!(matches!(&host[0].verdict, Verdict::Passed), "{host:?}");
 
-        // …and the five it cannot are *absent* rather than stubbed, so a test that needs one fails
+        // `evalScript` is §16.1.7's goal and not §19.2.1.1's, which is one argument to
+        // `CreateGlobalVarBinding` and is exactly what the tests using it measure: a `var` it
+        // declares is a **permanent** property of the global object. Written as `(0, eval)(source)`
+        // this row would report `true` and sixteen `annexB/language/global-code` tests would fail.
+        let script = run(
+            &root,
+            "/*---\ndescription: evalScript\n---*/\n\
+             if (typeof $262.evalScript !== 'function') { throw new Error('missing'); }\n\
+             if ($262.evalScript('1 + 1') !== 2) { throw new Error('no completion value'); }\n\
+             $262.evalScript('var fromScript = 7;');\n\
+             if (fromScript !== 7) { throw new Error('not in this realm'); }\n\
+             var d = Object.getOwnPropertyDescriptor(this, 'fromScript');\n\
+             if (d.configurable) { throw new Error('deletable, so it ran as an eval'); }",
+        );
+        assert!(matches!(&script[0].verdict, Verdict::Passed), "{script:?}");
+
+        // …and the four it cannot are *absent* rather than stubbed, so a test that needs one fails
         // saying so rather than reporting a failure about the wrong thing entirely.
         let absent = run(
             &root,
             "/*---\ndescription: absent\n---*/\n\
              if (typeof $262.createRealm !== 'undefined') { throw new Error('pretending'); }\n\
-             if (typeof $262.evalScript !== 'undefined') { throw new Error('pretending'); }",
+             if (typeof $262.agent !== 'undefined') { throw new Error('pretending'); }\n\
+             if (typeof $262.gc !== 'undefined') { throw new Error('pretending'); }\n\
+             if (typeof $262.IsHTMLDDA !== 'undefined') { throw new Error('pretending'); }",
         );
         assert!(matches!(&absent[0].verdict, Verdict::Passed), "{absent:?}");
 
