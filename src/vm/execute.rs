@@ -1309,8 +1309,19 @@ impl Vm {
                         configurable: Some(true),
                         ..PropertyDescriptor::EMPTY
                     };
-                    // `CreateDataProperty` on a fresh, extensible object cannot be refused.
-                    let _ = heap.define_own_property(base, key, &descriptor);
+                    // `CreateDataPropertyOrThrow`, and the second half of the name earns its place
+                    // in exactly one of this instruction's callers. Object and array literals and
+                    // the spread targets define onto something the compiler made a moment ago, so
+                    // a refusal there is unreachable; §15.7.10's **static** class field defines
+                    // onto the constructor, which §10.2.10 has already given a `prototype` that is
+                    // neither writable nor configurable. So `static ["prototype"] = 1` is refused
+                    // by the ordinary rules rather than by a check for the name, and discarding
+                    // the answer here is what let it through.
+                    if !heap.define_own_property(base, key, &descriptor) {
+                        let error = Abrupt::type_error("this property cannot be redefined");
+                        self.raise(error, heap, root, current, at)?;
+                        continue;
+                    }
                 }
                 Instruction::DefineGetter | Instruction::DefineSetter => {
                     let getter = matches!(instruction, Instruction::DefineGetter);
@@ -1927,7 +1938,13 @@ impl Vm {
                 ..crate::heap::PropertyDescriptor::EMPTY
             },
         };
-        let _ = heap.define_own_property(target, key, &descriptor);
+        // §15.4.5's `DefinePropertyOrThrow`, and the throw is reachable for the same reason
+        // §15.7.10's is: a **static** method defines onto the constructor, whose `prototype` is
+        // neither writable nor configurable. `static ["prototype"]() {}` is refused here.
+        if !heap.define_own_property(target, key, &descriptor) {
+            let error = Abrupt::type_error("this property cannot be redefined");
+            self.raise(error, heap, root, current, at)?;
+        }
         Ok(())
     }
 

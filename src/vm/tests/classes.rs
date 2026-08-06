@@ -804,3 +804,64 @@ fn what_a_class_defines_carries_the_attributes_the_clause_gives_it() {
         "false,true,function,undefined|false,true,undefined,function|function,function"
     );
 }
+
+#[test]
+fn a_static_member_named_prototype_is_refused_by_the_ordinary_rules() {
+    // §15.7.14 gives the constructor a `prototype` that is neither writable nor configurable, and
+    // §15.4.5 and §15.7.10 both define a static member with a form that **throws** when the define
+    // is refused. So there is no check for the name anywhere: `static ["prototype"]` collides with
+    // a property that is already there and cannot be replaced.
+    //
+    // Written out it is an early error instead — `static prototype() {}` never parses — which is
+    // why only the computed form reaches this rule at all.
+    for member in [
+        "static ['prototype']() {}",
+        "static get ['prototype']() {}",
+        "static set ['prototype'](v) {}",
+        "static *['prototype']() {}",
+        "static ['prototype'] = 1;",
+    ] {
+        assert_eq!(
+            run(&format!(
+                "(function () {{ try {{ (class {{ {member} }}); return 'no throw' }} \
+                 catch (e) {{ return e.constructor.name }} }})()"
+            )),
+            "TypeError",
+            "for `{member}`"
+        );
+    }
+    // The **prototype** side takes the same name happily: it is the constructor that already has a
+    // `prototype`, and `C.prototype.prototype` is an ordinary property nothing has claimed.
+    assert_eq!(
+        run(
+            "(function () { class C { ['prototype']() { return 1; } } \n             return typeof C.prototype.prototype; })()"
+        ),
+        "function"
+    );
+    // And a static member under any other name is defined as before, which is what keeps this from
+    // reading as "a static computed member is refused".
+    assert_eq!(
+        run("(function () { class C { static ['x']() { return 1; } } return C.x(); })()"),
+        "1"
+    );
+}
+
+#[test]
+fn a_field_that_lands_on_a_sealed_object_throws_rather_than_vanishing() {
+    // §15.7.10 defines a public field with `CreateDataPropertyOrThrow`, and the second half of the
+    // name is reachable: a field initialiser can seal `this` before the next field is defined.
+    // Discarding the refusal instead made the field silently absent.
+    assert_eq!(
+        run(
+            "(function () { class C { f = Object.freeze(this); g = 1; } \n             try { new C(); return 'no throw' } catch (e) { return e.constructor.name } })()"
+        ),
+        "TypeError"
+    );
+    // An object literal reaches the same instruction and can never be refused there — it defines
+    // onto something made a moment earlier — which is why this behaviour is invisible until a
+    // class field defines onto a constructor or onto a sealed instance.
+    assert_eq!(
+        run("(function () { var o = { a: 1, a: 2, ['b']: 3 }; return o.a + ',' + o.b; })()"),
+        "2,3"
+    );
+}

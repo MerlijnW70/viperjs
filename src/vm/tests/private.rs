@@ -110,12 +110,29 @@ fn a_private_field_is_invisible_to_every_way_of_asking_what_an_object_has() {
     // a *proposal* (`tc39/proposal-nonextensible-applies-to-private`) and not ES2023. Those tests are
     // expectations entries, and this row is why: do not "fix" the engine to match them without
     // checking that the proposal has landed in the specification first.
+    //
+    // A base class that seals its own `this` is the way to reach the question, and it has to be:
+    // sealing inside a field initialiser of the *same* class puts a **public** field on the sealed
+    // object a moment later, and §15.7.10's `CreateDataPropertyOrThrow` refuses that — so the
+    // program would throw for a reason that has nothing to do with the private one. test262's
+    // `private-class-field-on-nonextensible-objects.js` uses the same shape for the same reason.
     assert_eq!(
         run(
-            "(function () { class C { a = Object.freeze(this); #x = 1; read() { return this.#x; } } \
+            "(function () { class B { constructor() { Object.preventExtensions(this); } } \
+             class C extends B { #x = 1; read() { return this.#x; } } \
              return new C().read(); })()"
         ),
         "1"
+    );
+    // And the public half of that distinction, which is the whole reason the shape above is
+    // needed: §15.7.10 defines a public field with `CreateDataPropertyOrThrow`, so one landing on
+    // a frozen object is a TypeError. `class-field-on-frozen-objects.js` asserts exactly this.
+    assert_eq!(
+        run(
+            "(function () { class C { f = Object.freeze(this); g = 1; } \
+             try { new C(); return 'no throw' } catch (e) { return e.constructor.name } })()"
+        ),
+        "TypeError"
     );
 }
 

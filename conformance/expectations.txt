@@ -12634,14 +12634,6 @@ language/arguments-object/mapped/mapped-arguments-nonconfigurable-strict-delete-
 language/arguments-object/mapped/mapped-arguments-nonconfigurable-strict-delete-4.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 language/arguments-object/mapped/nonconfigurable-nonenumerable-nonwritable-descriptors-set-by-param.js :: it threw an object with no name: 0 descriptor value should be 2; 0 value should be 2
 language/arguments-object/mapped/nonconfigurable-nonwritable-descriptors-set-by-param.js :: it threw an object with no name: 0 descriptor value should be 2; 0 value should be 2
-language/computed-property-names/class/static/generator-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/computed-property-names/class/static/generator-prototype.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/computed-property-names/class/static/getter-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/computed-property-names/class/static/getter-prototype.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/computed-property-names/class/static/method-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/computed-property-names/class/static/method-prototype.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/computed-property-names/class/static/setter-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/computed-property-names/class/static/setter-prototype.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/destructuring/binding/keyed-destructuring-property-reference-target-evaluation-order-with-bindings.js :: it threw an object with no name: Actual [binding::source, binding::sourceKey, sourceKey, get source, binding::defaultValue, binding::varTarget] and expected [binding::source, binding::sourceKey, sourceKey, binding::varTarget, get source, binding::defaultValue] should have the same contents.
 language/eval-code/direct/arrow-fn-body-cntns-arguments-func-decl-arrow-func-declare-arguments-assign-incl-def-param-arrow-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/eval-code/direct/arrow-fn-body-cntns-arguments-func-decl-arrow-func-declare-arguments-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
@@ -12745,8 +12737,6 @@ language/expressions/class/elements/direct-eval-err-contains-arguments.js :: it 
 language/expressions/class/elements/direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError to be thrown but no exception was thrown at all
 language/expressions/class/elements/direct-eval-err-contains-newtarget.js :: it threw an object with no name: Expected SameValue(«function C() { [native code] }», «undefined») to be true
 language/expressions/class/elements/direct-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected SameValue(«function C() { [native code] }», «undefined») to be true
-language/expressions/class/elements/fields-computed-name-static-propname-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/class/elements/fields-computed-name-static-propname-prototype.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/class/elements/nested-arrow-fnc-init-err-contains-arguments.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/class/elements/nested-arrow-fnc-init-err-contains-arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/class/elements/nested-direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError but got a TypeError
@@ -13528,10 +13518,6 @@ language/statements/class/decorator/syntax/valid/decorator-member-expr-identifie
 language/statements/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference-yield.js :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference.js :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference.js (strict) :: it did not parse: unexpected character
-language/statements/class/definition/getters-non-configurable-err.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/definition/getters-non-configurable-err.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/definition/setters-non-configurable-err.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/definition/setters-non-configurable-err.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/elements/arrow-body-direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError to be thrown but no exception was thrown at all
 language/statements/class/elements/arrow-body-direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError to be thrown but no exception was thrown at all
 language/statements/class/elements/arrow-body-direct-eval-err-contains-newtarget.js :: it threw an object with no name: Expected SameValue(«function C() { [native code] }», «undefined») to be true
@@ -13540,15 +13526,10 @@ language/statements/class/elements/arrow-body-private-direct-eval-err-contains-a
 language/statements/class/elements/arrow-body-private-direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError to be thrown but no exception was thrown at all
 language/statements/class/elements/class-field-is-observable-by-proxy.js :: it threw an object with no name: Expected SameValue(«undefined», «3») to be true
 language/statements/class/elements/class-field-is-observable-by-proxy.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «3») to be true
-language/statements/class/elements/class-field-on-frozen-objects.js (strict) :: it threw an object with no name: Frozen objects can't be changed Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/elements/direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError to be thrown but no exception was thrown at all
 language/statements/class/elements/direct-eval-err-contains-arguments.js (strict) :: it threw an object with no name: Expected a SyntaxError to be thrown but no exception was thrown at all
 language/statements/class/elements/direct-eval-err-contains-newtarget.js :: it threw an object with no name: Expected SameValue(«function C() { [native code] }», «undefined») to be true
 language/statements/class/elements/direct-eval-err-contains-newtarget.js (strict) :: it threw an object with no name: Expected SameValue(«function C() { [native code] }», «undefined») to be true
-language/statements/class/elements/fields-computed-name-static-computed-var-propname-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/elements/fields-computed-name-static-computed-var-propname-prototype.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/elements/fields-computed-name-static-propname-prototype.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/elements/fields-computed-name-static-propname-prototype.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/elements/nested-arrow-fnc-init-err-contains-arguments.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/statements/class/elements/nested-arrow-fnc-init-err-contains-arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/statements/class/elements/nested-direct-eval-err-contains-arguments.js :: it threw an object with no name: Expected a SyntaxError to be thrown but no exception was thrown at all
@@ -13572,10 +13553,6 @@ language/statements/class/static-init-arguments-functions.js :: it did not parse
 language/statements/class/static-init-arguments-functions.js (strict) :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
 language/statements/class/static-init-arguments-methods.js :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
 language/statements/class/static-init-arguments-methods.js (strict) :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
-language/statements/class/static-method-gen-non-configurable-err.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/static-method-gen-non-configurable-err.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/static-method-non-configurable-err.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-language/statements/class/static-method-non-configurable-err.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/subclass/builtin-objects/Symbol/new-symbol-with-super-throws.js :: it threw TypeError: a class may only extend a constructor or null
 language/statements/class/subclass/builtin-objects/Symbol/new-symbol-with-super-throws.js (strict) :: it threw TypeError: a class may only extend a constructor or null
 language/statements/class/subclass/builtin-objects/Symbol/symbol-valid-as-extends-value.js :: it threw TypeError: a class may only extend a constructor or null
