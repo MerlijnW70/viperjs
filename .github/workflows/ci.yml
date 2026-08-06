@@ -8,6 +8,11 @@ on:
   # and a weekly run is what catches a new lint or a behaviour change before a contributor does.
   schedule:
     - cron: "0 6 * * 1"
+  # Because a push event can be lost. On 2026-08-06 GitHub's action service spent an afternoon
+  # answering 502s: one run had every job cancelled before a step ran, and a later push produced no
+  # run at all. Without this the only way to ask again is an empty commit, which puts an outage into
+  # the history of the engine.
+  workflow_dispatch:
 
 permissions:
   contents: read
