@@ -233,6 +233,17 @@ impl Parser<'_> {
                 span: callee.span,
             });
         }
+        // `new` takes a `MemberExpression` or a `NewExpression`, and the bare word `super` is
+        // neither — the two forms it has are the `SuperCall` and the `SuperProperty`, and only
+        // the property is a `MemberExpression`. So `new super.x()` derives where `new super()`
+        // does not, and `(super())` is a `PrimaryExpression` again, which is why the flag is
+        // asked about rather than the kind.
+        if matches!(callee.kind, ExprKind::Super) && !callee.parenthesized {
+            return Err(ParseError {
+                kind: ParseErrorKind::NewOnSuper,
+                span: callee.span,
+            });
+        }
         // `new a()()` is a call on `new a()`, because the first argument list belongs to the
         // `new` and the loop in `parse_member` takes the second.
         let (arguments, end) = if self.current.kind == TokenKind::LParen {
@@ -581,6 +592,31 @@ mod tests {
         assert_eq!(parse("new a").span, Span::new(0, 5));
         assert!(!parse("new a").parenthesized);
         assert!(parse("(new a)").parenthesized);
+    }
+
+    #[test]
+    fn a_new_expression_refuses_the_bare_word_super() {
+        // §13.3: `new` takes a `MemberExpression` or a `NewExpression`, and the bare word
+        // `super` is neither — `super(...)` is a `SuperCall` and `super.x` a `SuperProperty`,
+        // and only the property is a `MemberExpression`. So `new super.x()` derives where
+        // `new super()` does not, and `(super())` is a `PrimaryExpression` again.
+        assert_eq!(
+            kind("class D extends B { constructor() { new super(); } }"),
+            ParseErrorKind::NewOnSuper
+        );
+        assert_eq!(
+            kind("class D extends B { constructor() { new super(1, 2); } }"),
+            ParseErrorKind::NewOnSuper
+        );
+        assert!(parse_script("class D extends B { constructor() { new (super()); } }").is_ok());
+        assert!(parse_script("class D extends B { constructor() { new super.x(); } }").is_ok());
+        assert!(parse_script("class D extends B { constructor() { super(); } }").is_ok());
+        // Elsewhere the word was refused before it ever reached a `new` — for the older
+        // reason, which is the one §13.3 gives there.
+        assert_eq!(
+            kind("class C { constructor() { new super(); } }"),
+            ParseErrorKind::SuperCallOutsideDerivedConstructor
+        );
     }
 
     #[test]
