@@ -215,9 +215,58 @@ fn symbol_replace(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comple
 }
 
 /// §22.2.6.14 `RegExp.prototype[Symbol.split]`.
+///
+/// # Nothing here is a regular expression
+///
+/// The receiver need only be an Object: the clause reads `flags` off it with `Get` and hands the
+/// object itself to a constructor, never touching a pattern. And what does the matching is
+/// whatever `SpeciesConstructor` answered, reached through §22.2.7.1 — so a plain object with an
+/// `exec` method and a `lastIndex` accessor splits a string, and test262 has one that does.
+///
+/// That is why `newFlags` is assembled as **text** and never validated. `flags` may be any string
+/// at all; it is an argument to somebody else's constructor, and only `%RegExp%` — reached when
+/// the species declined to have an opinion — has any business refusing it.
 fn symbol_split(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    // Step 2.
     let object = this_object(call.this_value)?;
+    // Step 3 — before the species is asked, so a `toString` that throws is what the caller sees.
     let subject = subject_of(vm, heap, call.argument(0))?;
+    // Step 4.
+    let default = vm.realm().regexp_constructor();
+    let constructor = super::promise::species_of(vm, heap, object, default)?;
+    // Step 5.
+    let flags_name = key(heap, "flags");
+    let held = vm.get_property_key(Value::Object(object), flags_name, heap)?;
+    let spelled = vm.to_string(held, heap)?;
+    let letters = heap.string(spelled).unwrap_or(&[]).to_vec();
+    // Step 6 — read from the flags the receiver reported, not from what the splitter turns out to
+    // have. The two are the same for `%RegExp%` and need not be for anything else.
+    let unicode = letters.contains(&u16::from(b'u')) || letters.contains(&u16::from(b'v'));
+    // Step 7 — a **sticky** copy, so each attempt is anchored where the last piece ended rather
+    // than searching forward. The test is for a lowercase `y` and nothing else: flags of `"Y"`
+    // become `"Yy"`.
+    let new_flags = match letters.contains(&u16::from(b'y')) {
+        true => spelled,
+        false => {
+            let mut with_sticky = letters;
+            with_sticky.push(u16::from(b'y'));
+            heap.intern(&with_sticky)
+        }
+    };
+    // Step 8 — the receiver itself is the first argument, not its source. `new RegExp(rx, flags)`
+    // reads the pattern back out of it, and a species that is not `%RegExp%` may want the object.
+    let splitter = vm.construct_value(
+        Value::Object(constructor),
+        &[Value::Object(object), Value::String(new_flags)],
+        heap,
+    )?;
+    let Value::Object(splitter) = splitter else {
+        return Err(Abrupt::type_error("the species did not make an object"));
+    };
+    // Steps 9 to 11 — the limit is converted **here**, after the species has been asked and the
+    // splitter built. A `valueOf` on it that throws therefore lands after both, which is the only
+    // way to tell this order from the obvious one.
+    let mut pieces: Vec<Value> = Vec::new();
     let limit = match call.argument(1) {
         Value::Undefined => u32::MAX,
         given => {
@@ -226,31 +275,12 @@ fn symbol_split(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completi
             (number as i64).rem_euclid(0x1_0000_0000) as u32
         }
     };
-    let mut pieces: Vec<Value> = Vec::new();
+    // Step 12.
     if limit == 0 {
         return super::array::from_values(vm, heap, &pieces);
     }
-    // §22.2.6.14 makes a **sticky** copy of the pattern, so each attempt is anchored where the last
-    // piece ended rather than searching forward. That is what lets a split tell `"a,b"` on `/,/`
-    // from one on `/x/`, and it is why the receiver's own flags are not used directly.
-    let flags_name = key(heap, "flags");
-    let held = vm.get_property_key(Value::Object(object), flags_name, heap)?;
-    let spelled = vm.to_string(held, heap)?;
-    let mut letters = String::from_utf16_lossy(heap.string(spelled).unwrap_or(&[]));
-    if !letters.contains('y') {
-        letters.push('y');
-    }
-    let source_name = key(heap, "source");
-    let source = vm.get_property_key(Value::Object(object), source_name, heap)?;
-    let splitter = {
-        let constructor = vm.realm().regexp_prototype();
-        let _ = constructor;
-        let pattern = Value::String(vm.to_string(source, heap)?);
-        let spelled = Value::String(heap.intern(&letters.encode_utf16().collect::<Vec<_>>()));
-        super::regexp::make(vm, heap, pattern, spelled)?
-    };
     if subject.is_empty() {
-        // Step 15 — an empty subject answers one empty piece, unless the pattern matches it, in
+        // Step 13 — an empty subject answers one empty piece, unless the pattern matches it, in
         // which case it answers none at all.
         let found = regexp_exec(vm, heap, splitter, &subject)?;
         if matches!(found, Value::Null) {
@@ -265,19 +295,23 @@ fn symbol_split(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completi
         set_last_index(vm, heap, splitter, at)?;
         let found = regexp_exec(vm, heap, splitter, &subject)?;
         let Value::Object(found) = found else {
-            at += 1;
+            // Step 16.c — a failure advances by a whole code point under `u` or `v`, so a walk
+            // cannot stop between the halves of a surrogate pair.
+            at = advanced(&subject, at, unicode);
             continue;
         };
         let name = key(heap, "lastIndex");
         let held = vm.get_property_key(Value::Object(splitter), name, heap)?;
         let end = vm.to_number(held, heap)?;
-        let end = usize::try_from(end.max(0.0) as u64)
+        // Step 16.d.i and ii — `ToLength`, which clamps rather than wrapping, and then to the
+        // subject. A splitter is free to put anything at all in `lastIndex`.
+        let end = usize::try_from(super::array_methods::to_length(end))
             .unwrap_or(usize::MAX)
             .min(subject.len());
-        // Step 19.c.iii — a match that consumed nothing at the same place would split forever, so
-        // it is stepped over rather than acted on.
+        // Step 16.d.iii — a match that consumed nothing where the last piece ended would split
+        // forever, so it is stepped over rather than acted on.
         if end == piece_start {
-            at += 1;
+            at = advanced(&subject, at, unicode);
             continue;
         }
         let piece = Value::String(heap.intern(&subject[piece_start..at]));
@@ -285,12 +319,21 @@ fn symbol_split(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completi
         if pieces.len() >= limit as usize {
             return super::array::from_values(vm, heap, &pieces);
         }
-        // The captures go into the answer too, which is what makes `"a1b".split(/(\d)/)` three
-        // pieces and not two.
+        // Step 16.d.iv.5 — `p` moves to `e` *before* the captures are read, and a getter among
+        // them can throw. Written after them it would be skipped on that path.
+        piece_start = end;
+        // Steps 16.d.iv.6 and 7 — the captures go into the answer too, which is what makes
+        // `"a1b".split(/(\d)/)` three pieces and not two. `LengthOfArrayLike` is `ToLength`, so a
+        // result claiming a length of `-1` contributes none rather than wrapping to four billion.
         let length = key(heap, "length");
         let count = vm.get_property_key(Value::Object(found), length, heap)?;
-        let count = vm.to_number(count, heap)? as u32;
-        for index in 1..count {
+        let count = vm.to_number(count, heap)?;
+        let count = super::array_methods::to_length(count).saturating_sub(1);
+        // A key past `u32::MAX` is not an array index, and a walk that reached one would have made
+        // four billion `Get` calls on the way. Bounded rather than wrapped, so that two captures
+        // can never be read from the same slot on any path a program can actually run.
+        let count = u32::try_from(count).unwrap_or(u32::MAX);
+        for index in 1..=count {
             let slot = heap.index_key(index);
             let capture = vm.get_property_key(Value::Object(found), slot, heap)?;
             pieces.push(capture);
@@ -298,8 +341,8 @@ fn symbol_split(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completi
                 return super::array::from_values(vm, heap, &pieces);
             }
         }
-        piece_start = end;
-        at = end;
+        // Step 16.d.iv.10 — the next attempt starts where this piece ended.
+        at = piece_start;
     }
     let last = Value::String(heap.intern(&subject[piece_start.min(subject.len())..]));
     pieces.push(last);

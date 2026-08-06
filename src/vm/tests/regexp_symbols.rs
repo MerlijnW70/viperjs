@@ -138,6 +138,144 @@ fn split_cuts_at_every_match_and_keeps_the_captures() {
 }
 
 #[test]
+fn a_split_asks_the_receiver_for_a_species_and_hands_it_the_receiver() {
+    // §22.2.6.14 step 8 — `Construct(C, «rx, newFlags»)`. The **receiver itself** is the first
+    // argument, not its source: a species that answered on the source would be handed `"x"` here.
+    assert_eq!(
+        run("var re = /x/iy; re.constructor = function () {};
+             var seen;
+             re.constructor[Symbol.species] = function (rx, flags) { seen = [rx === re, flags]; \
+               return /[db]/y; };
+             RegExp.prototype[Symbol.split].call(re, 'abcde'); JSON.stringify(seen)"),
+        r#"[true,"iy"]"#
+    );
+    // Step 4 — a `constructor` that is not an Object is a TypeError, and so is a `@@species` that
+    // is not a constructor. Both were answers before this, which is the failure mode that matters:
+    // a missing refusal cannot be seen from the value that comes back.
+    assert_eq!(
+        run("var re = /a/; re.constructor = 7;
+             try { RegExp.prototype[Symbol.split].call(re, 'a'); 'no throw' } \
+             catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    assert_eq!(
+        run(
+            "var re = /a/; re.constructor = { }; re.constructor[Symbol.species] = 42;
+             try { RegExp.prototype[Symbol.split].call(re, 'a'); 'no throw' } \
+             catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    // Step 4 again — `undefined` is not an opinion, it is the absence of one, so `%RegExp%` is
+    // used and the split works. Refusing here would break every ordinary split there is.
+    assert_eq!(
+        run("var re = /,/; re.constructor = undefined; \
+             JSON.stringify(RegExp.prototype[Symbol.split].call(re, 'a,b'))"),
+        r#"["a","b"]"#
+    );
+}
+
+#[test]
+fn a_split_needs_neither_a_regular_expression_to_split_with_nor_one_to_split_on() {
+    // The clause reads `flags` off the receiver with `Get` and never touches a pattern, so a plain
+    // object splits — and the splitter is whatever the species made, reached through §22.2.7.1's
+    // `exec`. Nothing on either side of this is a RegExp.
+    assert_eq!(
+        run("var calls = 0;
+             var fake = { lastIndex: 0, exec: function () { calls++; this.lastIndex += 1; \
+               return calls <= 3 ? ['x'] : null; } };
+             var obj = { flags: '', constructor: function () {} };
+             obj.constructor[Symbol.species] = function () { return fake; };
+             JSON.stringify(RegExp.prototype[Symbol.split].call(obj, 'abcd'))"),
+        r#"["","","","d"]"#
+    );
+    // And `newFlags` is text handed to somebody else's constructor, never validated. `"abcd"` is
+    // not a set of flags any pattern would accept, and this used to be a SyntaxError.
+    assert_eq!(
+        run("var seen;
+             var obj = { flags: 'abcd', constructor: function () {} };
+             obj.constructor[Symbol.species] = function (_, f) { seen = f; return /./y; };
+             RegExp.prototype[Symbol.split].call(obj, ''); seen"),
+        "abcdy"
+    );
+    // The sticky test is for a lowercase `y` alone, so a capital one is *appended to* rather than
+    // taken as already sticky.
+    assert_eq!(
+        run("var seen;
+             var obj = { flags: 'Y', constructor: function () {} };
+             obj.constructor[Symbol.species] = function (_, f) { seen = f; return /./y; };
+             RegExp.prototype[Symbol.split].call(obj, ''); seen"),
+        "Yy"
+    );
+}
+
+#[test]
+fn a_split_converts_its_limit_after_it_has_built_the_splitter() {
+    // §22.2.6.14 steps 4, 8 and 11 in that order. Nothing about the *answer* tells these apart —
+    // only which of the two throws arrives first does.
+    assert_eq!(
+        run("var order = [];
+             var obj = { flags: '', constructor: function () {} };
+             obj.constructor[Symbol.species] = function () { order.push('species'); return /./y; };
+             var limit = { valueOf: function () { order.push('limit'); return 0; } };
+             RegExp.prototype[Symbol.split].call(obj, 'ab', limit); order.join()"),
+        "species,limit"
+    );
+}
+
+#[test]
+fn a_split_reads_a_splitters_lastindex_as_a_length() {
+    // §22.2.6.14 step 16.d.i — `ToLength`, so a fractional `lastIndex` truncates towards zero
+    // rather than being used as it stands. The splitter here reports 2.9 every time: the first
+    // piece therefore ends at 2, and the walk finishes because a second match at the same place
+    // is stepped over.
+    assert_eq!(
+        run("var fake = { set lastIndex(_) {}, \
+               get lastIndex() { return { valueOf: function () { return 2.9; } }; }, \
+               exec: function () { return []; } };
+             var obj = { flags: '', constructor: function () {} };
+             obj.constructor[Symbol.species] = function () { return fake; };
+             JSON.stringify(RegExp.prototype[Symbol.split].call(obj, 'abcd'))"),
+        r#"["","cd"]"#
+    );
+    // Step 16.d.iv.7 — the capture count is `LengthOfArrayLike` and so truncates the same way: a
+    // length of 2.9 contributes exactly one capture, at index 1.
+    assert_eq!(
+        run(
+            "var fake = { lastIndex: 0, exec: function () { fake.lastIndex = 1; \
+               return { length: { valueOf: function () { return 2.9; } }, \
+                        0: 'foo', 1: 'bar', 2: 'baz' }; } };
+             var obj = { flags: '', constructor: function () {} };
+             obj.constructor[Symbol.species] = function () { return fake; };
+             JSON.stringify(RegExp.prototype[Symbol.split].call(obj, 'a'))"
+        ),
+        r#"["","bar",""]"#
+    );
+}
+
+#[test]
+fn a_failed_attempt_steps_a_whole_code_point_under_the_unicode_flags() {
+    // §22.2.7.3 `AdvanceStringIndex` — a step of one code unit begins the next attempt *inside* a
+    // surrogate pair, where a lone trailing surrogate then matches. Under `u` the pair is one
+    // position and the match is unreachable, so the same subject and pattern answer differently.
+    // That difference is the whole test: an assertion on either alone passes with the step wrong.
+    assert_eq!(
+        run("/\\udf06/u[Symbol.split]('\\ud834\\udf06').length"),
+        "1"
+    );
+    assert_eq!(run("/\\udf06/[Symbol.split]('\\ud834\\udf06').length"), "2");
+    // The flags are read from the **receiver**, so a `v` asks for the same reading as a `u`.
+    assert_eq!(
+        run(
+            "var seen; var obj = { flags: 'v', constructor: function () {} };
+             obj.constructor[Symbol.species] = function (_, f) { seen = f; return /x/y; };
+             RegExp.prototype[Symbol.split].call(obj, ''); seen"
+        ),
+        "vy"
+    );
+}
+
+#[test]
 fn all_four_go_through_the_objects_own_exec_when_it_has_a_callable_one() {
     // §22.2.7.1 — `exec` is read *off the object*, so overriding it changes what every one of these
     // sees. That is the reason they are written in terms of the operation and not the built-in.

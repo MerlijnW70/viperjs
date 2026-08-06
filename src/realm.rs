@@ -94,6 +94,7 @@ pub struct Realm {
     /// %Map.prototype% — §24.1.3.
     map_prototype: ObjectId,
     regexp_prototype: ObjectId,
+    regexp_constructor: ObjectId,
     regexp_string_iterator_prototype: ObjectId,
     /// %Set.prototype% — §24.2.3.
     set_prototype: ObjectId,
@@ -401,6 +402,9 @@ impl Realm {
             typed_constructors: [typed_array_prototype; crate::heap::KINDS.len()],
             map_prototype,
             regexp_prototype,
+            // Replaced below, once the built-ins have made the real one. A prototype rather than a
+            // placeholder of some other kind because every field here must name a live object.
+            regexp_constructor: regexp_prototype,
             async_iterator_prototype,
             async_from_sync_iterator_prototype,
             generator_prototype,
@@ -445,6 +449,12 @@ impl Realm {
         }
         if let Some(found) = crate::builtins::global_object(heap, &realm, "ArrayBuffer") {
             realm.array_buffer_constructor = found;
+        }
+        // §22.2.6.8 and §22.2.6.14 both fall back to *the* `%RegExp%`, and both hand it to
+        // `Construct` — so this has to be the constructor and not the prototype, which is a
+        // distinction nothing but a call would notice.
+        if let Some(found) = crate::builtins::global_object(heap, &realm, "RegExp") {
+            realm.regexp_constructor = found;
         }
         // The same discovery for the nine, and for the same reason: they are made by the
         // built-ins, which are handed a finished realm. Taken from the global *now*, before a
@@ -599,9 +609,17 @@ impl Realm {
         self.typed_constructors.get(at).copied()
     }
 
-    /// %Map.prototype% — §24.1.3.
+    /// %RegExp.prototype% — §22.2.6.
     pub fn regexp_prototype(&self) -> ObjectId {
         self.regexp_prototype
+    }
+
+    /// %RegExp% — the default `SpeciesConstructor` falls back to in §22.2.6.8 and §22.2.6.14.
+    ///
+    /// The constructor, not the prototype: both clauses `Construct` what this answers, so the two
+    /// differ by a TypeError rather than by anything subtle.
+    pub fn regexp_constructor(&self) -> ObjectId {
+        self.regexp_constructor
     }
 
     /// §22.2.9.3 — `%RegExpStringIteratorPrototype%`, which inherits from `%IteratorPrototype%`
