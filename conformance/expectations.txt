@@ -2663,8 +2663,6 @@ built-ins/String/prototype/localeCompare/15.5.4.9_CE.js :: it threw an object wi
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js (strict) :: it threw an object with no name: String.prototype.localeCompare considers ö (\u006f\u0308) ≠ ö (\u00f6).
 built-ins/String/prototype/match/regexp-prototype-match-v-u-flag.js :: it threw an object with no name: Actual argument [null] shouldn't be primitive. Basic match with g flag
 built-ins/String/prototype/match/regexp-prototype-match-v-u-flag.js (strict) :: it threw an object with no name: Actual argument [null] shouldn't be primitive. Basic match with g flag
-built-ins/String/prototype/match/this-value-not-obj-coercible.js :: it threw an object with no name: undefined Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/match/this-value-not-obj-coercible.js (strict) :: it threw an object with no name: undefined Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/matchAll/regexp-prototype-matchAll-v-u-flag.js :: it threw an object with no name: Actual [] and expected [𠮷, 𠮷, 𠮷, 0, 3, 6] should have the same contents.
 built-ins/String/prototype/matchAll/regexp-prototype-matchAll-v-u-flag.js (strict) :: it threw an object with no name: Actual [] and expected [𠮷, 𠮷, 𠮷, 0, 3, 6] should have the same contents.
 built-ins/String/prototype/normalize/form-is-not-valid-throws.js :: it threw an object with no name: Expected a RangeError but got a TypeError
@@ -2693,8 +2691,6 @@ built-ins/String/prototype/search/regexp-prototype-search-v-flag.js :: it threw 
 built-ins/String/prototype/search/regexp-prototype-search-v-flag.js (strict) :: it threw an object with no name: Search for surrogate pair without v flag Expected SameValue(«-1», «0») to be true
 built-ins/String/prototype/search/regexp-prototype-search-v-u-flag.js :: it threw an object with no name: Search for surrogate pair without flags Expected SameValue(«-1», «0») to be true
 built-ins/String/prototype/search/regexp-prototype-search-v-u-flag.js (strict) :: it threw an object with no name: Search for surrogate pair without flags Expected SameValue(«-1», «0») to be true
-built-ins/String/prototype/search/this-value-not-obj-coercible.js :: it threw an object with no name: undefined Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/String/prototype/search/this-value-not-obj-coercible.js (strict) :: it threw an object with no name: undefined Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/split/instance-is-math.js :: it threw an object with no name: The value of __split[0] is "[object Math]" Expected SameValue(«"[object Object]"», «"[object Math]"») to be true
 built-ins/String/prototype/split/instance-is-math.js (strict) :: it threw an object with no name: The value of __split[0] is "[object Math]" Expected SameValue(«"[object Object]"», «"[object Math]"») to be true
 built-ins/String/prototype/split/separator-tostring-error.js :: it threw an object with no name: ToString should be called on the separator before checking if the limit is zero. Expected a ExpectedError to be thrown but no exception was thrown at all

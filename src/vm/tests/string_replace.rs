@@ -182,13 +182,22 @@ fn the_three_that_need_a_pattern_make_one_out_of_what_they_were_given() {
 
 #[test]
 fn each_of_the_five_refuses_a_receiver_that_cannot_be_coerced() {
-    // §22.1.3's `RequireObjectCoercible`, and the ordering with it: `replace` looks for the Symbol
-    // method *before* converting the receiver, so a pattern that handles everything never sees the
-    // refusal — and a string search value hits it.
+    // §22.1.3's `RequireObjectCoercible` is **step 1**, before the pattern is asked for anything,
+    // so a nullish receiver is refused whatever the argument is. This row used to say the opposite
+    // — "a pattern that handles everything never sees the refusal" — and had a case asserting it.
+    // What is true of the dispatch is that it comes before the **conversion**, which is a different
+    // step and is checked below.
     for source in [
         "String.prototype.replace.call(null, 'a', 'b')",
         "String.prototype.replaceAll.call(undefined, 'a', 'b')",
         "String.prototype.search.call(null, {})",
+        // …and with a pattern that would have taken over, which is the case that was wrong.
+        "var o = {}; o[Symbol.replace] = function () { return 1; }; \
+         String.prototype.replace.call(null, o, 'x')",
+        "var o = {}; o[Symbol.match] = function () { return 1; }; \
+         String.prototype.match.call(undefined, o)",
+        "var o = {}; o[Symbol.split] = function () { return 1; }; \
+         String.prototype.split.call(null, o)",
     ] {
         assert_eq!(
             run(&format!(
@@ -198,13 +207,26 @@ fn each_of_the_five_refuses_a_receiver_that_cannot_be_coerced() {
             "{source} should refuse its receiver"
         );
     }
-    // A pattern that takes over never reaches the conversion, so even `null` works through it.
+    // A pattern that takes over never reaches the **conversion**, which is the half that is true:
+    // the receiver has to be coercible and is then handed over *unconverted*, so a `toString` that
+    // throws never runs and the pattern sees the object itself.
     assert_eq!(
         run(
-            "var o = {}; o[Symbol.replace] = function (s) { return typeof s; }; \
-             String.prototype.replace.call(null, o, 'x')"
+            "var seen; var bad = { toString: function () { throw new RangeError('ran'); } }; \
+             var o = {}; o[Symbol.replace] = function (s) { seen = s === bad; return 'ok'; }; \
+             String.prototype.replace.call(bad, o, 'x') + ',' + seen"
         ),
-        "object"
+        "ok,true"
+    );
+    // …and with no pattern to take over, that same receiver reaches the conversion and throws its
+    // own error rather than this clause's TypeError. Those two rows together are what pin the
+    // order: one of them alone passes with the conversion on either side of the dispatch.
+    assert_eq!(
+        run(
+            "var bad = { toString: function () { throw new RangeError('ran'); } }; \
+             try { String.prototype.replace.call(bad, 'a', 'b') } catch (e) { e.message }"
+        ),
+        "ran"
     );
 }
 

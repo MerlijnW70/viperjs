@@ -177,6 +177,23 @@ fn value_of(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
     Ok(Value::String(this_string(heap, call.this_value)?))
 }
 
+/// §7.2.1 `RequireObjectCoercible`, without the conversion that usually follows it.
+///
+/// [`characters`] is the two together and is what most of §22.1.3 wants. The six methods that hand
+/// the whole operation to a pattern — `match`, `matchAll`, `search`, `replace`, `replaceAll` and
+/// `split` — need them **apart**: step 1 refuses a nullish receiver, and only step 2 looks the
+/// well-known Symbol up. Doing both at once would run the receiver's `toString` before the
+/// dispatch, which the clause does not, and a `this` whose conversion throws would report that
+/// instead of reaching the pattern.
+pub(super) fn require_coercible(value: Value) -> Completion<()> {
+    match value {
+        Value::Undefined | Value::Null => Err(Abrupt::type_error(
+            "this method cannot be called on undefined or null",
+        )),
+        _ => Ok(()),
+    }
+}
+
 /// The characters a method should work on — `RequireObjectCoercible` then `ToString` (§22.1.3).
 ///
 /// The order matters and is observable: `null` is refused before the argument is converted, so

@@ -226,6 +226,10 @@ fn pad_end(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Va
 ///
 /// A regular-expression separator is step 2, and arrives with `RegExp`.
 fn split(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    // Step 1 — `RequireObjectCoercible` first, and only then the Symbol. The two are apart here
+    // and together everywhere else in §22.1.3, because the *conversion* does belong below the
+    // dispatch and the refusal does not.
+    super::string::require_coercible(call.this_value)?;
     // §22.1.3.23 step 2 — the separator's `Symbol.split` takes over if it has one, which is how a
     // regular expression separator works at all. Looked for *before* the receiver is converted, and
     // only for an **Object** — see [`super::string_replace::method_of`] for why a primitive is not

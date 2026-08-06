@@ -394,6 +394,10 @@ pub(super) fn from_function(
 
 /// §22.1.3.19 `String.prototype.replace`.
 fn replace(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    // Step 1 — `RequireObjectCoercible` comes **before** the pattern is asked for its Symbol, so
+    // a nullish receiver is refused whatever the argument is. The conversion to a String stays
+    // where it was, below the dispatch, because the clause does not run it on the handed-over path.
+    string::require_coercible(call.this_value)?;
     let pattern = call.argument(0);
     let with = call.argument(1);
     // Step 2 — the Symbol method is looked for **before** the receiver is converted, so a pattern
@@ -424,6 +428,10 @@ fn replace(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Va
 
 /// §22.1.3.20 `String.prototype.replaceAll`.
 fn replace_all(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    // Step 1 — `RequireObjectCoercible` comes **before** the pattern is asked for its Symbol, so
+    // a nullish receiver is refused whatever the argument is. The conversion to a String stays
+    // where it was, below the dispatch, because the clause does not run it on the handed-over path.
+    string::require_coercible(call.this_value)?;
     let pattern = call.argument(0);
     let with = call.argument(1);
     if matches!(pattern, Value::Object(_)) {
@@ -492,6 +500,10 @@ fn pattern_from(vm: &mut Vm, heap: &mut Heap, given: Value) -> Completion<crate:
 
 /// §22.1.3.14 `String.prototype.match`.
 fn string_match(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    // Step 1 — `RequireObjectCoercible` comes **before** the pattern is asked for its Symbol, so
+    // a nullish receiver is refused whatever the argument is. The conversion to a String stays
+    // where it was, below the dispatch, because the clause does not run it on the handed-over path.
+    string::require_coercible(call.this_value)?;
     let pattern = call.argument(0);
     if matches!(pattern, Value::Object(_))
         && let Some(matcher) = method_of(vm, heap, pattern, "match")?
@@ -527,6 +539,10 @@ fn invoke_symbol(
 
 /// §22.1.3.15 `String.prototype.matchAll`.
 fn match_all(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    // Step 1 — `RequireObjectCoercible` comes **before** the pattern is asked for its Symbol, so
+    // a nullish receiver is refused whatever the argument is. The conversion to a String stays
+    // where it was, below the dispatch, because the clause does not run it on the handed-over path.
+    string::require_coercible(call.this_value)?;
     let pattern = call.argument(0);
     if matches!(pattern, Value::Object(_)) {
         // Step 2.b — the same global-flag demand `replaceAll` makes, and for the same reason:
@@ -568,6 +584,10 @@ fn match_all(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
 
 /// §22.1.3.21 `String.prototype.search`.
 fn search(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    // Step 1 — `RequireObjectCoercible` comes **before** the pattern is asked for its Symbol, so
+    // a nullish receiver is refused whatever the argument is. The conversion to a String stays
+    // where it was, below the dispatch, because the clause does not run it on the handed-over path.
+    string::require_coercible(call.this_value)?;
     let pattern = call.argument(0);
     if matches!(pattern, Value::Object(_))
         && let Some(searcher) = method_of(vm, heap, pattern, "search")?
