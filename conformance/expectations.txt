@@ -455,8 +455,6 @@ built-ins/Array/prototype/concat/create-proto-from-ctor-realm-array.js :: it thr
 built-ins/Array/prototype/concat/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/concat/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
 built-ins/Array/prototype/concat/create-proto-from-ctor-realm-non-array.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/entries/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/entries/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/every/15.4.4.16-1-10.js :: it threw an object with no name: Array.prototype.every.call(Math, callbackfn) Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/every/15.4.4.16-1-10.js (strict) :: it threw an object with no name: Array.prototype.every.call(Math, callbackfn) Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/fill/coerced-indexes.js :: it threw an object with no name: Actual [0, 0] and expected [1, 1] should have the same contents. [0, 0].fill(1, 0, undefined) must return [1, 1]
@@ -479,10 +477,6 @@ built-ins/Array/prototype/includes/length-zero-returns-false.js :: it threw an o
 built-ins/Array/prototype/includes/length-zero-returns-false.js (strict) :: it threw an object with no name: length is checked before ToInteger(fromIndex) Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/indexOf/length-zero-returns-minus-one.js :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
 built-ins/Array/prototype/indexOf/length-zero-returns-minus-one.js (strict) :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
-built-ins/Array/prototype/keys/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-built-ins/Array/prototype/keys/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-built-ins/Array/prototype/keys/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/keys/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/prototype/lastIndexOf/length-zero-returns-minus-one.js :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
 built-ins/Array/prototype/lastIndexOf/length-zero-returns-minus-one.js (strict) :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
 built-ins/Array/prototype/map/15.4.4.19-1-10.js :: it threw an object with no name: testResult[0] Expected SameValue(«false», «true») to be true
@@ -515,10 +509,6 @@ built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.j
 built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js (strict) :: it threw an object with no name: // deleteCount argument exceeding 2^53-1. Array.prototype.splice.call(source, 0, 2 ** 53 + 4) throws a StopSplice exception Expected a StopSplice but got a RangeError
 built-ins/Array/prototype/splice/property-traps-order-with-species.js :: it threw an object with no name: Actual [defineProperty, defineProperty, set, getOwnPropertyDescriptor, defineProperty] and expected [set, getOwnPropertyDescriptor, defineProperty] should have the same contents.
 built-ins/Array/prototype/splice/property-traps-order-with-species.js (strict) :: it threw an object with no name: Actual [defineProperty, defineProperty, set, getOwnPropertyDescriptor, defineProperty] and expected [set, getOwnPropertyDescriptor, defineProperty] should have the same contents.
-built-ins/Array/prototype/values/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-built-ins/Array/prototype/values/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-built-ins/Array/prototype/values/resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/prototype/values/resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/ArrayBuffer/data-allocation-after-object-creation.js :: it threw an object with no name: Expected a DummyError but got a RangeError
 built-ins/ArrayBuffer/data-allocation-after-object-creation.js (strict) :: it threw an object with no name: Expected a DummyError but got a RangeError
 built-ins/ArrayBuffer/options-maxbytelength-allocation-limit.js :: it threw an object with no name: `maxByteLength` option is 7 PiB Expected a RangeError to be thrown but no exception was thrown at all
@@ -583,8 +573,6 @@ built-ins/ArrayBuffer/prototype/transferToImmutable/to-larger.js :: it threw Typ
 built-ins/ArrayBuffer/prototype/transferToImmutable/to-larger.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/ArrayBuffer/prototype/transferToImmutable/to-same-or-smaller.js :: it threw TypeError: what was called is not a function
 built-ins/ArrayBuffer/prototype/transferToImmutable/to-same-or-smaller.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/ArrayIteratorPrototype/next/detach-typedarray-in-progress.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
-built-ins/ArrayIteratorPrototype/next/detach-typedarray-in-progress.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/AsyncDisposableStack/constructor.js :: it threw an object with no name: typeof AsyncDisposableStack is function Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/AsyncDisposableStack/constructor.js (strict) :: it threw an object with no name: typeof AsyncDisposableStack is function Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/AsyncDisposableStack/instance-extensible.js :: it threw ReferenceError: AsyncDisposableStack is not defined
@@ -12067,8 +12055,6 @@ built-ins/TypedArray/prototype/join/return-abrupt-from-separator.js :: it threw 
 built-ins/TypedArray/prototype/join/return-abrupt-from-separator.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/join/separator-tostring-once-after-resized.js :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/TypedArray/prototype/join/separator-tostring-once-after-resized.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/TypedArray/prototype/keys/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-built-ins/TypedArray/prototype/keys/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 built-ins/TypedArray/prototype/lastIndexOf/BigInt/length-zero-returns-minus-one.js :: it threw an object with no name:  (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/lastIndexOf/BigInt/length-zero-returns-minus-one.js (strict) :: it threw an object with no name:  (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/lastIndexOf/length-zero-returns-minus-one.js :: it threw an object with no name:  (Testing with Float64Array and makePassthrough.)
@@ -12147,8 +12133,6 @@ built-ins/TypedArray/prototype/toLocaleString/get-length-uses-internal-arrayleng
 built-ins/TypedArray/prototype/toLocaleString/get-length-uses-internal-arraylength.js (strict) :: it threw an object with no name: ignores length properties Expected SameValue(«1», «0») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/toString.js :: it threw an object with no name: Expected SameValue(«function toString() { [native code] }», «function toString() { [native code] }») to be true
 built-ins/TypedArray/prototype/toString.js (strict) :: it threw an object with no name: Expected SameValue(«function toString() { [native code] }», «function toString() { [native code] }») to be true
-built-ins/TypedArray/prototype/values/resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-built-ins/TypedArray/prototype/values/resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 built-ins/TypedArray/prototype/with/index-validated-against-current-length.js :: it threw RangeError: that index is not in the TypedArray
 built-ins/TypedArray/prototype/with/index-validated-against-current-length.js (strict) :: it threw RangeError: that index is not in the TypedArray
 built-ins/TypedArray/prototype/with/negative-index-resize-to-out-of-bounds.js :: it threw an object with no name: Expected a RangeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
@@ -13457,10 +13441,6 @@ language/statements/for-of/scope-head-lex-close.js :: it threw an object with no
 language/statements/for-of/scope-head-lex-close.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/scope-head-lex-open.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/statements/for-of/scope-head-lex-open.js (strict) :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/statements/for-of/typedarray-backed-by-resizable-buffer-shrink-mid-iteration.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/statements/for-of/typedarray-backed-by-resizable-buffer-shrink-mid-iteration.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/statements/for-of/typedarray-backed-by-resizable-buffer-shrink-to-zero-mid-iteration.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/statements/for-of/typedarray-backed-by-resizable-buffer-shrink-to-zero-mid-iteration.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 language/statements/for/tco-const-body.js (strict) :: it threw RangeError: too much recursion
 language/statements/for/tco-let-body.js (strict) :: it threw RangeError: too much recursion
 language/statements/for/tco-lhs-body.js (strict) :: it threw RangeError: too much recursion

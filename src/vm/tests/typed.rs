@@ -1989,3 +1989,65 @@ fn reading_an_element_asks_the_window_and_not_only_the_buffer() {
         "4,4"
     );
 }
+
+#[test]
+fn an_array_iterator_over_a_typed_array_refuses_a_buffer_that_went_away() {
+    // §23.1.5.1 splits on what is being walked. A TypedArray goes through `ValidateTypedArray`,
+    // which **throws** for a detached buffer — where reading `length` as a property answers `0`
+    // and the walk simply ends. Those are the same answer for an array that ran out and a
+    // different one for a buffer that went away underneath, and only the throw tells them apart.
+    assert_eq!(
+        run(
+            "(function () { var b = new ArrayBuffer(8); var ta = new Int8Array(b);              var it = ta[Symbol.iterator](); it.next(); b.transfer();              try { it.next(); return 'no throw' } catch (e) { return e.constructor.name } })()"
+        ),
+        "TypeError"
+    );
+    // Before a single step, too: an empty walk over a detached buffer refuses rather than quietly
+    // doing nothing, which is the same rule every §23.2 method begins with.
+    for method in ["values", "keys", "entries"] {
+        assert_eq!(
+            run(&format!(
+                "(function () {{ var b = new ArrayBuffer(8); var ta = new Int8Array(b);                  var it = ta.{method}(); b.transfer();                  try {{ it.next(); return 'no throw' }} catch (e) {{ return e.constructor.name }} }})()"
+            )),
+            "TypeError",
+            "for `{method}`"
+        );
+    }
+    // A window that no longer fits its buffer is refused on the same terms as a detached one —
+    // §10.4.5.2, and the case a check for `detached` alone would miss.
+    assert_eq!(
+        run(
+            "(function () { var b = new ArrayBuffer(8, {maxByteLength: 8});              var ta = new Int8Array(b, 4); var it = ta.keys(); it.next(); b.resize(2);              try { it.next(); return 'no throw' } catch (e) { return e.constructor.name } })()"
+        ),
+        "TypeError"
+    );
+    // …and a *tracking* view simply gets shorter, because it is never out of bounds. This is the
+    // row that stops the refusal from being "any resize throws".
+    assert_eq!(
+        run(
+            "(function () { var b = new ArrayBuffer(8, {maxByteLength: 8});              var ta = new Int8Array(b); var it = ta.keys(); it.next(); b.resize(2);              var out = []; var step; while (!(step = it.next()).done) out.push(step.value);              return out.join(','); })()"
+        ),
+        "1"
+    );
+}
+
+#[test]
+fn an_ordinary_array_is_still_walked_by_its_length_property_each_step() {
+    // The other side of the split, and the reason it is a split rather than a replacement: an
+    // Array's length is read with `Get` on **every** step, so one that shrinks mid-walk stops
+    // early and one that grows keeps going.
+    assert_eq!(
+        run(
+            "(function () { var a = [1, 2, 3, 4]; var out = [];              for (var x of a) { out.push(x); if (out.length === 2) a.length = 3; }              return out.join(','); })()"
+        ),
+        "1,2,3"
+    );
+    // An array-like walked through the same iterator answers to its own `length` too, which is
+    // what would break if the TypedArray branch had been written as "take the internal length".
+    assert_eq!(
+        run(
+            "(function () { var o = {length: 2, 0: 'a', 1: 'b'};              return Array.prototype.values.call(o).next().value; })()"
+        ),
+        "a"
+    );
+}

@@ -109,7 +109,7 @@ pub(super) fn install(heap: &mut Heap, realm: &Realm, prototype: ObjectId, const
 /// Two questions in one: is this a TypedArray at all, and are its bytes still there. The second is
 /// asked *first* in every method rather than at the first element, so an empty walk over a detached
 /// buffer throws rather than quietly doing nothing.
-fn validate(heap: &Heap, this: Value) -> Completion<(ObjectId, View)> {
+pub(super) fn validate(heap: &Heap, this: Value) -> Completion<(ObjectId, View)> {
     let Value::Object(object) = this else {
         return Err(Abrupt::type_error("this is not a TypedArray"));
     };

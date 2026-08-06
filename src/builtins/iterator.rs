@@ -422,12 +422,25 @@ fn indexed(
     state: &Iteration,
     kind: Iterated,
 ) -> Completion<Option<(Value, u64)>> {
-    let name = key(heap, "length");
-    let length = vm.get_property_key(state.over, name, heap)?;
-    // §23.1.5.2.1 step 6 reads `length` *every* step, not once — so an array that shrinks while
-    // being walked stops early, and one that grows keeps going. That is observable and is the
-    // reason this is not a count taken at the start.
-    let length = super::array_methods::to_length(vm.to_number(length, heap)?);
+    // §23.1.5.1 splits here on what is being walked. A **TypedArray** goes through
+    // `ValidateTypedArray`, which *throws* for a detached buffer or a window that no longer fits
+    // one — where reading `length` as a property answers `0` and the walk ends quietly. Those are
+    // the same answer for an array that merely ran out and a different one for a buffer that went
+    // away underneath, which is exactly the distinction the clause draws.
+    //
+    // And the length is the view's own rather than a `Get`, so a `length` accessor a script put on
+    // the prototype cannot lengthen the walk.
+    let length = match matches!(state.over, Value::Object(id) if heap.typed_view(id).is_some()) {
+        true => super::typed_methods::validate(heap, state.over)?.1.count() as u64,
+        false => {
+            let name = key(heap, "length");
+            let length = vm.get_property_key(state.over, name, heap)?;
+            // §23.1.5.2.1 step 6 reads `length` *every* step, not once — so an array that shrinks
+            // while being walked stops early, and one that grows keeps going. That is observable
+            // and is the reason this is not a count taken at the start.
+            super::array_methods::to_length(vm.to_number(length, heap)?)
+        }
+    };
     if state.at >= length {
         return Ok(None);
     }
