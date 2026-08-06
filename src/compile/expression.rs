@@ -689,7 +689,13 @@ impl Compiler<'_> {
                     else {
                         return Err(unsupported("a BigInt key this large", span));
                     };
-                    let id = self.name_of(&value.to_digits(10));
+                    // A key is the *decimal* spelling of the value, so one this engine cannot divide
+                    // has no name to be. Refused beside the size check above rather than spelled
+                    // `"0"`, which would make two different keys the same property.
+                    let Ok(spelled) = value.to_digits(10) else {
+                        return Err(unsupported("a BigInt property key this large", span));
+                    };
+                    let id = self.name_of(&spelled);
                     self.constant(Value::String(id))?;
                 }
                 AstPropertyKey::Private(_) => {

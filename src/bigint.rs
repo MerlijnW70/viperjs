@@ -228,7 +228,7 @@ impl BigInt {
         if other.is_zero() {
             return Err(Error::DividedByZero);
         }
-        let (quotient, remainder) = divide_magnitude(&self.magnitude, &other.magnitude);
+        let (quotient, remainder) = divide_magnitude(&self.magnitude, &other.magnitude)?;
         Ok((
             Self::from_parts(quotient, self.negative != other.negative),
             Self::from_parts(remainder, self.negative),
@@ -574,15 +574,19 @@ impl BigInt {
     /// Repeated division by the radix, least significant digit first. No `n` suffix: §6.1.6.2.22
     /// does not put one there, and `String(1n)` is `"1"` — the suffix is syntax and not part of
     /// the value.
-    pub fn to_digits(&self, radix: u32) -> String {
+    /// A refusal is carried rather than spelled. The digits are produced by dividing, and a
+    /// division this engine cannot normalise is a `RangeError` — where answering `"0"` for a
+    /// number with ten million digits is a wrong answer that reads like a right one, which is what
+    /// this used to do (GHSA-6976-qm5m-7mcj).
+    pub fn to_digits(&self, radix: u32) -> Result<String, Error> {
         if self.is_zero() {
-            return "0".to_string();
+            return Ok("0".to_string());
         }
         let mut digits = Vec::new();
         let mut left = self.magnitude.clone();
         let divisor = [radix];
         while !left.is_empty() {
-            let (quotient, remainder) = divide_magnitude(&left, &divisor);
+            let (quotient, remainder) = divide_magnitude(&left, &divisor)?;
             let digit = remainder.first().copied().unwrap_or(0);
             // `from_digit` answers `None` only above the radix, and a remainder is always below it.
             digits.push(char::from_digit(digit, radix).unwrap_or('0'));
@@ -591,7 +595,7 @@ impl BigInt {
         if self.negative {
             digits.push('-');
         }
-        digits.iter().rev().collect()
+        Ok(digits.iter().rev().collect())
     }
 
     /// This value as a `u64`, or `None` if it does not fit — the sign is ignored.
@@ -710,7 +714,7 @@ fn multiply_magnitude(left: &[u32], right: &[u32]) -> Result<Vec<u32>, Error> {
 /// on an operation no JavaScript program runs in a loop — and every line of it is reached by
 /// ordinary arithmetic. GOAL.md's preference for the boring implementation is exactly this trade:
 /// the clever one is faster and has a branch that cannot be tested.
-fn divide_magnitude(left: &[u32], right: &[u32]) -> (Vec<u32>, Vec<u32>) {
+fn divide_magnitude(left: &[u32], right: &[u32]) -> Result<(Vec<u32>, Vec<u32>), Error> {
     // Normalise: shift both until the divisor's top bit is set. This is not a tidying step, it is
     // what makes the estimate below *close*. With a divisor whose top limb is 1, `head / top` can
     // be four billion times the true digit and the correction loop counts all the way down; with
@@ -718,12 +722,19 @@ fn divide_magnitude(left: &[u32], right: &[u32]) -> (Vec<u32>, Vec<u32>) {
     // not a search. Measured before it was here: a division of two three-limb numbers took a
     // second.
     //
-    // The shift cannot overflow the ceiling — it adds at most one limb to operands already inside
-    // it — so a refusal here would be a case no input reaches, and `unwrap_or_default` says so
-    // rather than adding one.
+    // **The shift can overflow the ceiling**, and the comment here used to say it could not: a
+    // divisor already at `MAX_LIMBS` limbs whose top limb is dense needs one more to normalise, and
+    // the trimmed result is then one past what this engine keeps. `unwrap_or_default` turned that
+    // refusal into an *empty* divisor, and `divisor[n - 1]` with `n = 0` indexed `usize::MAX` — a
+    // panic in the embedder's process from four tokens of script (GHSA-6976-qm5m-7mcj).
+    //
+    // So it is carried. §6.1.4 lets an implementation impose a limit and requires it to throw, and
+    // a RangeError here is that: the division is refused rather than answered from a divisor that
+    // is not the one that was written. Handling the spill limb inside the estimation would answer
+    // it instead, and that is an algorithm change with a decision record in front of it.
     let shift = u64::from(right[right.len() - 1].leading_zeros());
-    let divisor = shift_magnitude_left(right, shift).unwrap_or_default();
-    let dividend = shift_magnitude_left(left, shift).unwrap_or_default();
+    let divisor = shift_magnitude_left(right, shift)?;
+    let dividend = shift_magnitude_left(left, shift)?;
 
     let n = divisor.len();
     let mut remainder: Vec<u32> = Vec::new();
@@ -757,7 +768,7 @@ fn divide_magnitude(left: &[u32], right: &[u32]) -> (Vec<u32>, Vec<u32>) {
     trim(&mut quotient);
     // The quotient is unaffected by the normalisation — both operands were scaled by the same
     // power of two — and the remainder was scaled with them, so it comes back.
-    (quotient, shift_magnitude_right(&remainder, shift))
+    Ok((quotient, shift_magnitude_right(&remainder, shift)))
 }
 
 /// `magnitude * limb`, which long division needs to try a digit before committing to it.
@@ -784,13 +795,30 @@ fn shift_magnitude_left(magnitude: &[u32], places: u64) -> Result<Vec<u32>, Erro
     }
     let limbs = (places / 32) as usize;
     let bits = (places % 32) as u32;
-    let width = magnitude.len() + limbs + 1;
+    // **The width is worked out before anything is allocated**, which is what lets one comparison
+    // do the whole job. The shift adds a limb only when the top one has bits far enough up to
+    // spill, so asking that directly gives the *final* length — where reserving a limb and
+    // trimming it afterwards means the ceiling is applied to scratch space rather than to the
+    // magnitude. That was this function's bug: a value landing exactly on the ceiling was refused,
+    // `divide_magnitude` read the refusal as "cannot happen" and swallowed it with
+    // `unwrap_or_default`, and an empty divisor indexed `divisor[n - 1]` at `usize::MAX`
+    // (GHSA-6976-qm5m-7mcj).
+    //
+    // Computing it also removes the second bound the reserve needed. DR-0013's shape: ask before
+    // the bytes are taken, rather than take them and notice.
+    let top = magnitude[magnitude.len() - 1];
+    let spills = bits > 0 && (top >> (32 - bits)) != 0;
+    let width = magnitude.len() + limbs + usize::from(spills);
     within_ceiling(width)?;
     let mut shifted = vec![0u32; width];
     for (at, limb) in magnitude.iter().enumerate() {
         let wide = u64::from(*limb) << bits;
         shifted[at + limbs] |= wide as u32;
-        shifted[at + limbs + 1] |= (wide >> 32) as u32;
+        // The high half of the last limb is what `spills` accounted for; when it did not, that
+        // half is zero and there is no slot above to put it in.
+        if at + limbs + 1 < width {
+            shifted[at + limbs + 1] |= (wide >> 32) as u32;
+        }
     }
     trim(&mut shifted);
     Ok(shifted)

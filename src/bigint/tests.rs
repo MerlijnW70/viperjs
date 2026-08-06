@@ -18,8 +18,17 @@ fn big(text: &str) -> BigInt {
 }
 
 /// What `left op right` came to, as a decimal string.
+/// The same, in a radix of its own — §21.2.3.3's other half.
+fn shown_in(value: &BigInt, radix: u32) -> String {
+    value
+        .to_digits(radix)
+        .expect("a test's own values are spellable") // a test's own input
+}
+
 fn shown(value: &BigInt) -> String {
-    value.to_digits(10)
+    value
+        .to_digits(10)
+        .expect("a test's own values are spellable")
 }
 
 #[test]
@@ -55,9 +64,9 @@ fn the_other_radixes_read_and_write_the_same_value() {
         "10"
     ); // same
     assert_eq!(shown(&BigInt::from_digits("777", 8).expect("octal")), "511"); // same
-    assert_eq!(big("255").to_digits(16), "ff");
-    assert_eq!(big("10").to_digits(2), "1010");
-    assert_eq!(big("-255").to_digits(16), "-ff");
+    assert_eq!(shown_in(&big("255"), 16), "ff");
+    assert_eq!(shown_in(&big("10"), 2), "1010");
+    assert_eq!(shown_in(&big("-255"), 16), "-ff");
     // A character that is not a digit *in that radix* is refused rather than skipped, so a caller
     // cannot hand this a string with a space in it and get a number back.
     assert!(BigInt::from_digits("1 2", 10).is_none());
@@ -224,10 +233,7 @@ fn exponentiation_squares_rather_than_repeating() {
     ); // same
     // A power large enough that repeated multiplication would be a different program.
     assert_eq!(
-        big("2")
-            .exponentiate(&big("128"))
-            .expect("finite")
-            .to_digits(10), // same
+        shown(&big("2").exponentiate(&big("128")).expect("finite")), // same
         "340282366920938463463374607431768211456"
     );
     // §6.1.6.2.3 step 1 — a negative exponent is one half, and a BigInt is an integer.
@@ -585,9 +591,18 @@ fn the_ceiling_refuses_one_limb_past_it_and_allows_the_last_one() {
     assert!(!at_the_edge.is_zero());
     // A sum of two of those is *exactly* the ceiling, and exactly the ceiling is allowed.
     assert!(at_the_edge.add(&at_the_edge).is_ok());
-    // One limb further is not: the shift below reserves a limb beyond the magnitude it moves.
+    // One limb further **is** allowed, and this row used to say otherwise. The shift reserves a
+    // limb for what spills out of the top, and that reservation was being counted against the
+    // ceiling — so a magnitude that lands exactly on it was refused. Trimming takes the reserved
+    // limb back when nothing spilled into it, and the ceiling applies to what is left.
+    //
+    // Not a tidying change: the refusal it produced was read as "cannot happen" by
+    // `divide_magnitude`, swallowed with `unwrap_or_default`, and became an empty divisor that
+    // indexed `divisor[n - 1]` at `usize::MAX`. GHSA-6976-qm5m-7mcj.
+    assert!(at_the_edge.shift_left(&BigInt::from_u64(32)).is_ok());
+    // Two limbs further is past the ceiling, and that is where the refusal belongs.
     assert_eq!(
-        at_the_edge.shift_left(&BigInt::from_u64(32)).err(),
+        at_the_edge.shift_left(&BigInt::from_u64(64)).err(),
         Some(Error::TooLarge)
     );
     // …and a product of two near-ceiling values is far past it, by the same comparison.

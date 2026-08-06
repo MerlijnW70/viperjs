@@ -69,7 +69,7 @@
 //! back what was written must give the same Number, for any Number at all.
 
 mod number_to_string;
-mod operators;
+pub(crate) mod operators;
 mod relations;
 mod string_to_number;
 
@@ -280,8 +280,12 @@ impl Value {
             Self::Number(number) => number_to_string(*number),
             // §7.1.17 — a BigInt *does* become text, unlike a Symbol: `String(1n)` is `"1"` and
             // `` `${1n}` `` is `"1"`. Without the `n`, which is syntax rather than value.
+            // …unless it cannot be spelled at all. A magnitude this engine cannot divide has no
+            // decimal form, and `None` here sends it to [`Value::to_string`], which is where a
+            // refusal can be said — see the `BigInt` arm there. Answering `"0"` was the third
+            // symptom of GHSA-6976-qm5m-7mcj and the quietest.
             Self::BigInt(id) => match heap.bigint(*id) {
-                Some(value) => value.to_digits(10),
+                Some(value) => value.to_digits(10).ok()?, // the refusal is raised by `to_string`, which this `None` routes to — see its `BigInt` arm
                 None => "0".to_string(),
             },
             Self::String(_) | Self::Symbol(_) | Self::Object(_) => return None,
@@ -310,6 +314,12 @@ impl Value {
                 // works: §22.1.1.1 has a step of its own for it, and it is the only way through.
                 Self::Symbol(_) => Err(Abrupt::type_error(
                     "a Symbol cannot be converted to a string",
+                )),
+                // §6.1.4 — a BigInt whose decimal form this engine cannot build. It reaches here
+                // only through `spelled` declining it, and it must be answered *here*: a BigInt's
+                // `ToPrimitive` is itself, so falling into the arm below would recurse for ever.
+                Self::BigInt(_) => Err(Abrupt::range_error(
+                    "this BigInt is larger than this engine can write out",
                 )),
                 // §7.1.17 step 1 — the same conversion `ToNumber` does, with the other hint.
                 // `"" + x` and `1 * x` therefore ask an object two different questions.

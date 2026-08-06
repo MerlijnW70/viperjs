@@ -149,7 +149,12 @@ fn to_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
             radix
         }
     };
-    let text = value.to_digits(radix);
+    // §6.1.4 — a limit an implementation imposes has to *throw*. A magnitude this engine cannot
+    // divide is one it cannot spell in decimal either, and answering `"0"` for it is a wrong answer
+    // that reads like a right one (GHSA-6976-qm5m-7mcj).
+    let text = value
+        .to_digits(radix)
+        .map_err(crate::value::operators::refused)?;
     Ok(Value::String(
         heap.new_string(text.encode_utf16().collect()),
     ))

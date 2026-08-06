@@ -466,7 +466,16 @@ impl Compiler<'_> {
                         Span::new(0, 0),
                     ));
                 };
-                let id = self.name_of(&value.to_digits(10));
+                // A key is the *decimal* spelling of the value, so one this engine cannot divide
+                // has no name to be. Refused beside the size check above rather than spelled
+                // `"0"`, which would make two different keys the same property.
+                let Ok(spelled) = value.to_digits(10) else {
+                    return Err(unsupported(
+                        "a BigInt property key this large",
+                        Span::new(0, 0),
+                    ));
+                };
+                let id = self.name_of(&spelled);
                 self.constant(Value::String(id))
             }
             // A private name is not a `PropertyName` at all — §15.7's `ClassElementName` is one *or*

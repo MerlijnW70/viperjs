@@ -172,7 +172,7 @@ enum Numeric {
 }
 
 /// What a BigInt operation that could not answer becomes — §6.1.6.2's three abrupt completions.
-fn refused(error: crate::bigint::Error) -> Abrupt {
+pub(crate) fn refused(error: crate::bigint::Error) -> Abrupt {
     match error {
         crate::bigint::Error::DividedByZero => {
             Abrupt::range_error("a BigInt cannot be divided by zero")
