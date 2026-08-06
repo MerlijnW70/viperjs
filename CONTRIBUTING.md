@@ -52,6 +52,27 @@ cannot encode.
 `test_line_col_2`. `src/span.rs` is the worked example of the bar for the whole repository;
 match its density of intent.
 
+## How an accepted pull request lands, and why it is not merged
+
+**Your branch will be closed rather than merged, and your commits will appear on `master` with you
+as their author.** This is worth knowing before you spend an evening on a patch.
+
+This repository is published from a private working tree. The publication is *linear*: a tool
+walks the private history forward and exports each commit, so a merge commit created here would
+have no counterpart on the other side, and the next publication would quietly revert it. Rather
+than let that happen, an accepted change is applied to the private tree — authorship, message and
+date carried across unchanged — and arrives here on the next push.
+
+So the "Closed" label on a pull request here does not mean declined. The review comment will name
+the commits your work became, and `git log` will show your name on them. If a change is declined,
+the comment says so in those words.
+
+Two consequences worth planning around:
+
+- **Rebase rather than merge** when your branch falls behind, so the patch stays a patch.
+- **A change spanning many commits is harder to carry across than one coherent slice**, which is
+  the same reason [the section above](#the-shape-of-the-work) asks for small ones.
+
 ## Things that will be declined
 
 - **A runtime dependency.** The table in `Cargo.toml` stays empty, forever (DR-0001). If you
