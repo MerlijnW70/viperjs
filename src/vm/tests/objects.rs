@@ -968,3 +968,83 @@ fn settling_a_key_changes_nothing_a_program_could_otherwise_see() {
         "key,get,set 5"
     );
 }
+
+#[test]
+fn a_write_through_a_primitive_wraps_the_base_and_keeps_the_primitive_as_receiver() {
+    // §6.2.5.6 step 3.a wraps the base with `ToObject`; step 3.c hands `GetThisValue(V)` as the
+    // receiver, which is the **primitive**. So §10.1.9.2's accessor branch calls an inherited
+    // setter with the primitive as `this` — a setter on `Number.prototype` really runs for a write
+    // through a number, and this was never reached before: the base was refused outright.
+    assert_eq!(
+        run(
+            "(function () { var seen;              Object.defineProperty(Number.prototype, 'probe', {                set: function (v) { seen = typeof this + ':' + this + ':' + v; }, configurable: true });              var n = 1; n.probe = 5; return seen; })()"
+        ),
+        "number:1:5"
+    );
+    // A String's is reached the same way, which is the row that says this is about the clause and
+    // not about numbers.
+    assert_eq!(
+        run(
+            "(function () { var seen;              Object.defineProperty(String.prototype, 'probe', {                set: function () { seen = this.length; }, configurable: true });              var s = 'abc'; s.probe = 1; return String(seen); })()"
+        ),
+        "3"
+    );
+    // And a Proxy on the wrapper's prototype chain sees the write, because the walk reaches it
+    // through the wrapper rather than stopping at the primitive.
+    assert_eq!(
+        run(
+            "(function () { var count = 0;              var spy = new Proxy({}, { set: function () { count += 1; return true; } });              var was = Object.getPrototypeOf(Boolean.prototype);              Object.setPrototypeOf(Boolean.prototype, spy);              true.anything = 1;              Object.setPrototypeOf(Boolean.prototype, was);              return count; })()"
+        ),
+        "1"
+    );
+}
+
+#[test]
+fn an_ordinary_write_through_a_primitive_is_silent_in_sloppy_code_and_throws_in_strict() {
+    // §10.1.9.2 step 3.b — a receiver that is not an Object answers `false`, and §6.2.5.6 step 3.d
+    // turns that into a TypeError **only** for strict code. The value goes nowhere either way:
+    // there is no object to keep it on, because the wrapper is discarded the moment the write ends.
+    assert_eq!(
+        run("(function () { var n = 1; n.foo = 2; return String(n.foo); })()"),
+        "undefined"
+    );
+    for spelling in [
+        "var n = 1; n.foo = 2",
+        "var s = 'a'; s.foo = 2",
+        "var b = true; b.foo = 2",
+    ] {
+        assert_eq!(
+            run(&format!(
+                "(function () {{ 'use strict';                  try {{ {spelling}; return 'no throw' }} catch (e) {{ return e.constructor.name }} }})()"
+            )),
+            "TypeError",
+            "for `{spelling}`"
+        );
+        assert_eq!(
+            run(&format!(
+                "(function () {{ {spelling}; return 'silent' }})()"
+            )),
+            "silent",
+            "for `{spelling}`"
+        );
+    }
+    // A String's index is the same rule and not a special case: the character does not change.
+    assert_eq!(
+        run("(function () { var s = 'a'; s[0] = 'b'; return s; })()"),
+        "a"
+    );
+    // `undefined` and `null` still throw in **both** modes, because there is no object to wrap
+    // them in — that is step 3.a failing rather than step 3.d firing.
+    assert_eq!(
+        run(
+            "(function () { var x; try { x.a = 1; return 'no throw' }              catch (e) { return e.constructor.name } })()"
+        ),
+        "TypeError"
+    );
+    assert_eq!(
+        run(
+            "(function () { var x = null; try { x.a = 1; return 'no throw' }              catch (e) { return e.constructor.name } })()"
+        ),
+        "TypeError"
+    );
+}

@@ -376,6 +376,25 @@ impl Vm {
     }
 
     /// `[[Set]]` when the key is already a key — see [`Vm::get_property_key`].
+    ///
+    /// # A primitive base is wrapped and the receiver is not
+    ///
+    /// §6.2.5.6 step 3.a converts the base with `ToObject`, and step 3.c hands `GetThisValue(V)`
+    /// as the receiver — which is the **primitive**, not the wrapper it was just put in. The two
+    /// halves then do different things with it: §10.1.9.2's accessor branch calls an inherited
+    /// setter with the primitive as `this`, so a setter defined on `Number.prototype` really runs
+    /// for `n.x = 1`; and step 3.b answers `false` for a receiver that is not an Object, so an
+    /// ordinary data write goes nowhere. Sloppy code discards that `false` and strict code makes
+    /// it a TypeError, which is the whole of why `(1).foo = 2` is silent and `"use strict"` is not.
+    ///
+    /// Refusing a primitive base outright — which is what this did — collapses all of that into
+    /// one TypeError: right for strict code by accident, wrong for sloppy code, and wrong in both
+    /// for the setter, which was never reached.
+    ///
+    /// `undefined` and `null` are passed through unconverted so that [`Vm::set_through`] gives the
+    /// message that pairs with the read path's. §7.1.18 is what the clause says throws there, and
+    /// its wording is about conversion where this is about an assignment; the type and the timing
+    /// are the same either way.
     pub(crate) fn set_property_key(
         &mut self,
         base: Value,
@@ -383,7 +402,11 @@ impl Vm {
         value: Value,
         heap: &mut Heap,
     ) -> Completion<Value> {
-        self.set_through(base, key, value, base, heap)
+        let target = match base {
+            Value::Object(_) | Value::Undefined | Value::Null => base,
+            primitive => self.object_for(primitive, heap)?,
+        };
+        self.set_through(target, key, value, base, heap)
     }
 
     /// §10.4.2.4 `ArraySetLength` steps 3 to 5 — the conversions, run where an interpreter is.

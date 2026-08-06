@@ -1653,11 +1653,11 @@ built-ins/Function/proto-from-ctor-realm-prototype.js :: it threw TypeError: wha
 built-ins/Function/proto-from-ctor-realm-prototype.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Function/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/apply/S15.3.4.3_A5_T1.js :: it threw TypeError: cannot set a property of something that is not an object
-built-ins/Function/prototype/apply/S15.3.4.3_A5_T1.js (strict) :: it threw TypeError: cannot set a property of something that is not an object
-built-ins/Function/prototype/apply/S15.3.4.3_A5_T2.js :: it threw TypeError: cannot set a property of something that is not an object
-built-ins/Function/prototype/apply/S15.3.4.3_A5_T2.js (strict) :: it threw TypeError: cannot set a property of something that is not an object
-built-ins/Function/prototype/apply/S15.3.4.3_A5_T3.js :: it threw TypeError: cannot set a property of something that is not an object
+built-ins/Function/prototype/apply/S15.3.4.3_A5_T1.js :: it threw an object with no name: The value of retobj["touched"] is expected to be true
+built-ins/Function/prototype/apply/S15.3.4.3_A5_T1.js (strict) :: it threw an object with no name: The value of retobj["touched"] is expected to be true
+built-ins/Function/prototype/apply/S15.3.4.3_A5_T2.js :: it threw an object with no name: The value of retobj["touched"] is expected to be true
+built-ins/Function/prototype/apply/S15.3.4.3_A5_T2.js (strict) :: it threw an object with no name: The value of retobj["touched"] is expected to be true
+built-ins/Function/prototype/apply/S15.3.4.3_A5_T3.js :: it threw an object with no name: The value of retobj["touched"] is expected to be true
 built-ins/Function/prototype/apply/argarray-not-object-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/apply/argarray-not-object-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/apply/this-not-callable-realm.js :: it threw TypeError: what was called is not a function
@@ -1676,11 +1676,11 @@ built-ins/Function/prototype/bind/instance-name-error.js :: it threw an object w
 built-ins/Function/prototype/bind/instance-name-error.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Function/prototype/bind/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/bind/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/call/S15.3.4.4_A5_T1.js :: it threw TypeError: cannot set a property of something that is not an object
-built-ins/Function/prototype/call/S15.3.4.4_A5_T1.js (strict) :: it threw TypeError: cannot set a property of something that is not an object
-built-ins/Function/prototype/call/S15.3.4.4_A5_T2.js :: it threw TypeError: cannot set a property of something that is not an object
-built-ins/Function/prototype/call/S15.3.4.4_A5_T2.js (strict) :: it threw TypeError: cannot set a property of something that is not an object
-built-ins/Function/prototype/call/S15.3.4.4_A5_T3.js :: it threw TypeError: cannot set a property of something that is not an object
+built-ins/Function/prototype/call/S15.3.4.4_A5_T1.js :: it threw an object with no name: The value of retobj["touched"] is expected to be true
+built-ins/Function/prototype/call/S15.3.4.4_A5_T1.js (strict) :: it threw an object with no name: The value of retobj["touched"] is expected to be true
+built-ins/Function/prototype/call/S15.3.4.4_A5_T2.js :: it threw an object with no name: The value of retobj["touched"] is expected to be true
+built-ins/Function/prototype/call/S15.3.4.4_A5_T2.js (strict) :: it threw an object with no name: The value of retobj["touched"] is expected to be true
+built-ins/Function/prototype/call/S15.3.4.4_A5_T3.js :: it threw an object with no name: The value of retobj["touched"] is expected to be true
 built-ins/Function/prototype/toString/built-in-function-object.js :: it threw an object with no name: Conforms to NativeFunction Syntax: "function get Iterator.prototype.constructor() { [native code] }" (%Iterator%.prototype.constructor)
 built-ins/Function/prototype/toString/built-in-function-object.js (strict) :: it threw an object with no name: Conforms to NativeFunction Syntax: "function get Iterator.prototype.constructor() { [native code] }" (%Iterator%.prototype.constructor)
 built-ins/Function/prototype/toString/line-terminator-normalisation-CR.js :: it threw ReferenceError: assertToStringOrNativeFunction is not defined
@@ -2852,7 +2852,6 @@ built-ins/Symbol/asyncDispose/prop-desc.js :: it threw an object with no name: E
 built-ins/Symbol/asyncDispose/prop-desc.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"symbol"») to be true
 built-ins/Symbol/asyncIterator/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Symbol/asyncIterator/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Symbol/auto-boxing-non-strict.js :: it threw TypeError: cannot set a property of something that is not an object
 built-ins/Symbol/dispose/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Symbol/dispose/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Symbol/dispose/no-key.js :: it threw TypeError: Symbol.keyFor requires a Symbol
@@ -2877,7 +2876,6 @@ built-ins/Symbol/matchAll/cross-realm.js :: it threw TypeError: what was called 
 built-ins/Symbol/matchAll/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Symbol/prototype/description/is-not-own-property.js :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
 built-ins/Symbol/prototype/description/is-not-own-property.js (strict) :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
-built-ins/Symbol/prototype/toString/toString-default-attributes-non-strict.js :: it threw TypeError: cannot set a property of something that is not an object
 built-ins/Symbol/replace/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Symbol/replace/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Symbol/search/cross-realm.js :: it threw TypeError: what was called is not a function
@@ -13697,8 +13695,6 @@ language/types/reference/get-value-prop-base-primitive-realm.js :: it threw Type
 language/types/reference/get-value-prop-base-primitive-realm.js (strict) :: it threw TypeError: what was called is not a function
 language/types/reference/put-value-prop-base-primitive-realm.js :: it threw TypeError: what was called is not a function
 language/types/reference/put-value-prop-base-primitive-realm.js (strict) :: it threw TypeError: what was called is not a function
-language/types/reference/put-value-prop-base-primitive.js :: it threw TypeError: cannot set a property of something that is not an object
-language/types/reference/put-value-prop-base-primitive.js (strict) :: it threw TypeError: cannot set a property of something that is not an object
 language/types/string/S8.4_A7.1.js :: it threw an object with no name: Expected a ReferenceError but got a SyntaxError
 language/types/string/S8.4_A7.2.js :: it threw an object with no name: Expected a ReferenceError but got a SyntaxError
 language/types/string/S8.4_A7.3.js :: it threw an object with no name: Expected a ReferenceError but got a SyntaxError
