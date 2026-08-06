@@ -248,9 +248,10 @@ impl Vm {
             // `f()` and `f.call()` and `f.call(null)` all agree, and a method call only differs
             // because its receiver is an object already.
             //
-            // §7.1.18 also says a *primitive* receiver is wrapped for a sloppy function, which waits
-            // for a slice of its own — a strict one is handed the primitive as it stands, which is
-            // what the rows above do.
+            // Step 6.b.i wraps a *primitive* receiver, so a sloppy function called on a number is
+            // handed a **Number object**: `f.call(1)` writes `this.x` onto something that survives
+            // the call and can be returned, and `this instanceof Number` is true. A strict one is
+            // handed the primitive as it stands, which is what the rows below do.
             // A plain call has no receiver slot at all — `receiver_at` is the callee — so what
             // it passes is `undefined`, and the substitution then applies to that.
             // …and **strict mode keeps the `undefined`**, which is step 3 of the same operation and
@@ -259,10 +260,16 @@ impl Vm {
             Entry::Plain if body.is_strict() => Value::Undefined,
             Entry::Plain => Value::Object(self.realm.global()),
             Entry::Method if body.is_strict() => self.stack[receiver_at],
-            Entry::Method => match self.stack[receiver_at] {
-                Value::Undefined | Value::Null => Value::Object(self.realm.global()),
-                given => given,
-            },
+            Entry::Method => {
+                let given = self.stack[receiver_at];
+                // Steps 6.a and 6.b in one question, because `ToObject` has no answer for exactly
+                // the two values step 6.a is about. Asking "is it nullish" first and converting
+                // after would be a branch no input could tell from this one.
+                match self.wrapped(given, heap) {
+                    Some(receiver) => receiver,
+                    None => Value::Object(self.realm.global()),
+                }
+            }
             // §10.2.2 step 5's `OrdinaryCreateFromConstructor`: `new` *makes* the receiver, out
             // of the constructor's own `prototype` property. A `prototype` that is not an object
             // — a script may assign anything to it — falls back to `Object.prototype`, which is

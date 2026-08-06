@@ -693,3 +693,79 @@ fn a_hoisted_declaration_sees_every_sibling_whichever_order_they_are_written_in(
         "5"
     );
 }
+
+#[test]
+fn a_sloppy_functions_receiver_is_wrapped_and_a_strict_ones_is_not() {
+    // §10.2.1.2 step 6.b.i — `OrdinaryCallBindThis` converts a primitive receiver with `ToObject`
+    // for a **non-strict** function, so `this` is a wrapper that survives the call. Step 5 hands a
+    // strict one the primitive untouched. The mode is the *callee's*, so the caller cannot answer
+    // for it and a strict function called from sloppy code still sees the primitive.
+    let sloppy = "function f() { return typeof this + ',' + (this instanceof Number); }";
+    let strict =
+        "function f() { 'use strict'; return typeof this + ',' + (this instanceof Number); }";
+    assert_eq!(
+        run(&format!("(function () {{ {sloppy} return f.call(1); }})()")),
+        "object,true"
+    );
+    assert_eq!(
+        run(&format!("(function () {{ {strict} return f.call(1); }})()")),
+        "number,false"
+    );
+    // A String and a Boolean are wrapped in their own kind, which is what makes this `ToObject`
+    // rather than "make an object".
+    assert_eq!(
+        run(
+            "(function () { function f() { return (this instanceof String) + ',' + this.length; }              return f.call('abc'); })()"
+        ),
+        "true,3"
+    );
+    assert_eq!(
+        run(
+            "(function () { function f() { return this instanceof Boolean; }              return f.call(true); })()"
+        ),
+        "true"
+    );
+    // Step 6.a — `undefined` and `null` are the global object instead, for a sloppy function only.
+    assert_eq!(
+        run(
+            "(function () { function f() { return this === globalThis; }              return f.call(undefined) + ',' + f.call(null) + ',' + f(); })()"
+        ),
+        "true,true,true"
+    );
+    assert_eq!(
+        run(
+            "(function () { function f() { 'use strict'; return this; }              return String(f.call(undefined)) + ',' + String(f.call(null)); })()"
+        ),
+        "undefined,null"
+    );
+}
+
+#[test]
+fn a_wrapped_receiver_is_what_a_sloppy_function_writes_to_and_can_hand_back() {
+    // The point of the wrap, and what `Function.prototype.call`'s own tests measure: a write to
+    // `this` lands on an object that outlives the call, so the value is readable through what the
+    // function returns — while the primitive the caller still holds is untouched.
+    assert_eq!(
+        run(
+            "(function () { function f() { this.touched = true; return this; }              var n = 1; var back = f.call(n);              return String(n.touched) + ',' + String(back.touched); })()"
+        ),
+        "undefined,true"
+    );
+    // A **fresh** wrapper per call, so two calls do not see each other's writes. Reading `n.x`
+    // makes a third and finds nothing, which is the same rule seen from the other side.
+    assert_eq!(
+        run(
+            "(function () { function f() { this.n = (this.n || 0) + 1; return this.n; }              return f.call(7) + ',' + f.call(7); })()"
+        ),
+        "1,1"
+    );
+    // Two clauses compose here and it is worth pinning: §6.2.5.6 hands a setter the **primitive**
+    // as its receiver, and §10.2.1.2 then wraps it because the setter is sloppy. Neither alone
+    // explains what `this` is inside an ordinary setter reached through a primitive.
+    assert_eq!(
+        run(
+            "(function () { var seen;              Object.defineProperty(Number.prototype, 'both', {                set: function () { seen = typeof this + ',' + (this instanceof Number); },                configurable: true });              var n = 1; n.both = 0; return seen; })()"
+        ),
+        "object,true"
+    );
+}

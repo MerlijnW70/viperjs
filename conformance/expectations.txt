@@ -1653,11 +1653,6 @@ built-ins/Function/proto-from-ctor-realm-prototype.js :: it threw TypeError: wha
 built-ins/Function/proto-from-ctor-realm-prototype.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Function/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/apply/S15.3.4.3_A5_T1.js :: it threw an object with no name: The value of retobj["touched"] is expected to be true
-built-ins/Function/prototype/apply/S15.3.4.3_A5_T1.js (strict) :: it threw an object with no name: The value of retobj["touched"] is expected to be true
-built-ins/Function/prototype/apply/S15.3.4.3_A5_T2.js :: it threw an object with no name: The value of retobj["touched"] is expected to be true
-built-ins/Function/prototype/apply/S15.3.4.3_A5_T2.js (strict) :: it threw an object with no name: The value of retobj["touched"] is expected to be true
-built-ins/Function/prototype/apply/S15.3.4.3_A5_T3.js :: it threw an object with no name: The value of retobj["touched"] is expected to be true
 built-ins/Function/prototype/apply/argarray-not-object-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/apply/argarray-not-object-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/apply/this-not-callable-realm.js :: it threw TypeError: what was called is not a function
@@ -1676,11 +1671,6 @@ built-ins/Function/prototype/bind/instance-name-error.js :: it threw an object w
 built-ins/Function/prototype/bind/instance-name-error.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Function/prototype/bind/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Function/prototype/bind/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/call/S15.3.4.4_A5_T1.js :: it threw an object with no name: The value of retobj["touched"] is expected to be true
-built-ins/Function/prototype/call/S15.3.4.4_A5_T1.js (strict) :: it threw an object with no name: The value of retobj["touched"] is expected to be true
-built-ins/Function/prototype/call/S15.3.4.4_A5_T2.js :: it threw an object with no name: The value of retobj["touched"] is expected to be true
-built-ins/Function/prototype/call/S15.3.4.4_A5_T2.js (strict) :: it threw an object with no name: The value of retobj["touched"] is expected to be true
-built-ins/Function/prototype/call/S15.3.4.4_A5_T3.js :: it threw an object with no name: The value of retobj["touched"] is expected to be true
 built-ins/Function/prototype/toString/built-in-function-object.js :: it threw an object with no name: Conforms to NativeFunction Syntax: "function get Iterator.prototype.constructor() { [native code] }" (%Iterator%.prototype.constructor)
 built-ins/Function/prototype/toString/built-in-function-object.js (strict) :: it threw an object with no name: Conforms to NativeFunction Syntax: "function get Iterator.prototype.constructor() { [native code] }" (%Iterator%.prototype.constructor)
 built-ins/Function/prototype/toString/line-terminator-normalisation-CR.js :: it threw ReferenceError: assertToStringOrNativeFunction is not defined
@@ -13132,11 +13122,7 @@ language/expressions/tagged-template/tco-member.js (strict) :: it threw RangeErr
 language/expressions/tco-pos.js (strict) :: it threw RangeError: too much recursion
 language/expressions/unsigned-right-shift/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/unsigned-right-shift/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/function-code/10.4.3-1-1-s.js :: it threw an object with no name: bar.call(1) Expected SameValue(«"number"», «"object"») to be true
-language/function-code/10.4.3-1-105.js :: it threw an object with no name: (5).x === 5 Expected SameValue(«true», «false») to be true
 language/function-code/10.4.3-1-19-s.js (strict) :: it threw an object with no name: my_eval("this") Expected SameValue(«undefined», «[object Object]») to be true
-language/function-code/10.4.3-1-2-s.js :: it threw an object with no name: bar.call("1") Expected SameValue(«"string"», «"object"») to be true
-language/function-code/10.4.3-1-4-s.js :: it threw an object with no name: bar.call(true) Expected SameValue(«"boolean"», «"object"») to be true
 language/function-code/S10.2.1_A2.js :: it threw an object with no name: #1: f1(1, 2) === 2
 language/function-code/S10.2.1_A3.js :: it threw an object with no name: #1: f1(1, 2) === undefined
 language/function-code/eval-param-env-with-computed-key.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet

@@ -234,20 +234,28 @@ impl Vm {
     /// ViperJS cannot make it yet: §10.4.3's String exotic object has an own property per index,
     /// which is a second exotic object and a slice of its own.
     pub(crate) fn object_for(&mut self, value: Value, heap: &mut Heap) -> Completion<Value> {
+        self.wrapped(value, heap).ok_or_else(|| {
+            Abrupt::type_error("undefined and null cannot be converted to an object")
+        })
+    }
+
+    /// §7.1.18 `ToObject` for the values that have an object — `None` for `undefined` and `null`.
+    ///
+    /// The half of the operation without the error, because two callers want different things
+    /// from the absence. [`Vm::object_for`] makes it the TypeError the clause names; §10.2.1.2
+    /// step 6 makes it the **global object**, and writing that as a separate check ahead of the
+    /// conversion would be a branch no input could distinguish from this one.
+    pub(crate) fn wrapped(&mut self, value: Value, heap: &mut Heap) -> Option<Value> {
         let wrapped = match value {
-            Value::Object(_) => return Ok(value),
+            Value::Object(_) => return Some(value),
             Value::Boolean(_) => heap.new_wrapper(self.realm.boolean_prototype(), value),
             Value::Number(_) => heap.new_wrapper(self.realm.number_prototype(), value),
             Value::String(data) => heap.new_string_object(self.realm.string_prototype(), data),
             Value::Symbol(_) => heap.new_wrapper(self.realm.symbol_prototype(), value),
             Value::BigInt(_) => heap.new_wrapper(self.realm.bigint_prototype(), value),
-            Value::Undefined | Value::Null => {
-                return Err(Abrupt::type_error(
-                    "undefined and null cannot be converted to an object",
-                ));
-            }
+            Value::Undefined | Value::Null => return None,
         };
-        Ok(Value::Object(wrapped))
+        Some(Value::Object(wrapped))
     }
 
     /// `[[Get]]` when the key is already a key.

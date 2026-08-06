@@ -975,10 +975,18 @@ fn a_write_through_a_primitive_wraps_the_base_and_keeps_the_primitive_as_receive
     // receiver, which is the **primitive**. So §10.1.9.2's accessor branch calls an inherited
     // setter with the primitive as `this` — a setter on `Number.prototype` really runs for a write
     // through a number, and this was never reached before: the base was refused outright.
+    //
+    // The setter must be **strict** to see it. §10.2.1.2 step 6.b.i wraps a sloppy function's
+    // receiver on the way in, so a sloppy setter is handed a Number object and the two clauses
+    // compose — the row below pins that, and an earlier version of this test asserted `"number"`
+    // for a sloppy one and was describing an unimplemented `OrdinaryCallBindThis` rather than the
+    // clause it names.
     assert_eq!(
-        run(
-            "(function () { var seen;              Object.defineProperty(Number.prototype, 'probe', {                set: function (v) { seen = typeof this + ':' + this + ':' + v; }, configurable: true });              var n = 1; n.probe = 5; return seen; })()"
-        ),
+        run("(function () { var seen; \
+             Object.defineProperty(Number.prototype, 'probe', { \
+               set: function (v) { 'use strict'; seen = typeof this + ':' + this + ':' + v; }, \
+               configurable: true }); \
+             var n = 1; n.probe = 5; return seen; })()"),
         "number:1:5"
     );
     // A String's is reached the same way, which is the row that says this is about the clause and
