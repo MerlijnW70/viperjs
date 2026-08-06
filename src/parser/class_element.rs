@@ -901,6 +901,27 @@ mod tests {
         assert!(parse_script("class C { static { ({ async m() { await a; } }); } }").is_ok());
         // …and not at an arrow, which has no `await` of its own to give.
         assert!(parse_script("class C { static { () => await a; } }").is_err());
+        // A `for await` head is the same word, and the same rule counts it — the walk reads
+        // back exactly the record `parse_await` writes.
+        assert_eq!(
+            kind("class C { static { for await (const x of []) ; } }"),
+            ParseErrorKind::AwaitInStaticBlock
+        );
+        assert_eq!(
+            kind("class C { static { for await (x of y) ; } }"),
+            ParseErrorKind::AwaitInStaticBlock
+        );
+        // …and the function boundary stops it as it stops the operand form.
+        assert!(
+            parse_script(
+                "class C { static { async function f() { for await (const x of []); } } }"
+            )
+            .is_ok()
+        );
+        assert!(
+            parse_script("class C { static { async () => { for await (const x of []); } } }")
+                .is_ok()
+        );
         // A nested class's field initialiser drops the parameter, so the word is a name again.
         assert!(parse_script("class C { static { class D { a = await; } } }").is_ok());
         // `[~Yield]`, and the class body is strict, so `yield` is refused as a name.
