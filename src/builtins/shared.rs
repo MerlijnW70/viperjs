@@ -180,8 +180,12 @@ fn byte_length(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
 
 /// §25.2.4.3 `SharedArrayBuffer.prototype.slice`.
 ///
-/// The same arithmetic as §25.1.5.4's, and a different brand at each end: the receiver must be
+/// The same arithmetic as §25.1.5.3's, and a different brand at each end: the receiver must be
 /// shared, and so must what the species made.
+///
+/// The one place the two clauses genuinely differ is what they check afterwards. §25.1.5.3 asks
+/// whether the new buffer has been **detached**, because constructing it can run a program;
+/// §25.2.5.4 has no such step, because a shared buffer cannot be detached at all.
 fn slice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let object = shared_buffer(heap, call.this_value)?;
     let length = heap
@@ -194,23 +198,58 @@ fn slice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
         given => super::array_methods::start_index(vm, heap, given, length as u64)?,
     };
     let taken = (end.saturating_sub(start)) as usize;
+    // Step 10 — the *species* constructor, and it is **called**, which a subclass can observe.
+    let default = vm.realm().shared_buffer_constructor();
+    let species = super::promise::species_of(vm, heap, object, default)?;
+    let made = vm.construct_value(Value::Object(species), &[Value::Number(taken as f64)], heap)?;
+    // Steps 12 to 15 — three separate refusals, and the third is not symmetrical. What came back
+    // must be a buffer and a **shared** one; it must not be the receiver, or the slice would copy
+    // a buffer onto itself; and it may be **longer** than asked but never shorter. Only the short
+    // case is refused, so a species answering ten bytes for a slice of eight is accepted and the
+    // answer is ten bytes long — the clause hands back what the species made, not a trimmed copy.
+    let Value::Object(id) = made else {
+        return Err(Abrupt::type_error(
+            "the species of this SharedArrayBuffer did not make one",
+        ));
+    };
+    let room = match heap.object(id).and_then(crate::heap::Object::buffer) {
+        Some(found) if found.shared() => found.byte_length(),
+        _ => {
+            return Err(Abrupt::type_error(
+                "the species of this SharedArrayBuffer did not make one",
+            ));
+        }
+    };
+    if id == object {
+        return Err(Abrupt::type_error(
+            "the species of this SharedArrayBuffer answered the same one",
+        ));
+    }
+    if room < taken {
+        return Err(Abrupt::type_error(
+            "the species of this SharedArrayBuffer made one too small to hold the slice",
+        ));
+    }
+    // Step 16 — read **after** the species has run, because constructing can run a program and a
+    // shared buffer's bytes are the one thing another agent could be writing to meanwhile.
     let bytes = heap
         .object(object)
         .and_then(crate::heap::Object::buffer)
         .and_then(crate::heap::Buffer::bytes)
-        .map(|found| found[start as usize..start as usize + taken].to_vec())
+        .map(|found| {
+            let from = (start as usize).min(found.len());
+            found[from..(from + taken).min(found.len())].to_vec()
+        })
         .unwrap_or_default();
-    let prototype = vm.realm().shared_buffer_prototype();
-    let made = heap.new_object(Some(prototype));
-    heap.charge_buffer(taken);
-    if let Some(found) = heap.object_mut(made) {
-        let mut buffer = crate::heap::Buffer::new_shared(taken);
-        if let Some(target) = buffer.bytes_mut() {
-            target.copy_from_slice(&bytes);
-        }
-        found.set_buffer(buffer);
+    if let Some(target) = heap
+        .object_mut(id)
+        .and_then(crate::heap::Object::buffer_mut)
+        .and_then(crate::heap::Buffer::bytes_mut)
+        .and_then(|found| found.get_mut(..bytes.len()))
+    {
+        target.copy_from_slice(&bytes);
     }
-    Ok(Value::Object(made))
+    Ok(made)
 }
 
 /// Which arithmetic §25.4.3's read-modify-write operations do.

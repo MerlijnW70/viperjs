@@ -622,8 +622,6 @@ built-ins/ArrayBuffer/prototype/immutable/this-is-sharedarraybuffer.js :: it thr
 built-ins/ArrayBuffer/prototype/immutable/this-is-sharedarraybuffer.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/ArrayBuffer/prototype/resize/this-is-immutable-arraybuffer-object.js :: it threw TypeError: what was called is not a function
 built-ins/ArrayBuffer/prototype/resize/this-is-immutable-arraybuffer-object.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/ArrayBuffer/prototype/slice/species-returns-smaller-arraybuffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/ArrayBuffer/prototype/slice/species-returns-smaller-arraybuffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/ArrayBuffer/prototype/sliceToImmutable/argument-coercion.js :: it threw TypeError: what was called is not a function
 built-ins/ArrayBuffer/prototype/sliceToImmutable/argument-coercion.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/ArrayBuffer/prototype/sliceToImmutable/modify-source-after-return.js :: it threw TypeError: what was called is not a function
@@ -2802,22 +2800,6 @@ built-ins/SharedArrayBuffer/proto-from-ctor-realm.js :: it threw TypeError: what
 built-ins/SharedArrayBuffer/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/SharedArrayBuffer/prototype-from-newtarget.js :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object SharedArrayBuffer]», «») to be true
 built-ins/SharedArrayBuffer/prototype-from-newtarget.js (strict) :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object SharedArrayBuffer]», «») to be true
-built-ins/SharedArrayBuffer/prototype/slice/species-constructor-is-not-object.js :: it threw an object with no name: `constructor` value is null Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/SharedArrayBuffer/prototype/slice/species-constructor-is-not-object.js (strict) :: it threw an object with no name: `constructor` value is null Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/SharedArrayBuffer/prototype/slice/species-is-not-constructor.js :: it threw an object with no name: `constructor[Symbol.species]` value is Object Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/SharedArrayBuffer/prototype/slice/species-is-not-constructor.js (strict) :: it threw an object with no name: `constructor[Symbol.species]` value is Object Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/SharedArrayBuffer/prototype/slice/species-is-not-object.js :: it threw an object with no name: `constructor[Symbol.species]` value is Boolean Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/SharedArrayBuffer/prototype/slice/species-is-not-object.js (strict) :: it threw an object with no name: `constructor[Symbol.species]` value is Boolean Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/SharedArrayBuffer/prototype/slice/species-returns-larger-arraybuffer.js :: it threw an object with no name: Expected SameValue(«8», «10») to be true
-built-ins/SharedArrayBuffer/prototype/slice/species-returns-larger-arraybuffer.js (strict) :: it threw an object with no name: Expected SameValue(«8», «10») to be true
-built-ins/SharedArrayBuffer/prototype/slice/species-returns-not-arraybuffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/SharedArrayBuffer/prototype/slice/species-returns-not-arraybuffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/SharedArrayBuffer/prototype/slice/species-returns-same-arraybuffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/SharedArrayBuffer/prototype/slice/species-returns-same-arraybuffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/SharedArrayBuffer/prototype/slice/species-returns-smaller-arraybuffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/SharedArrayBuffer/prototype/slice/species-returns-smaller-arraybuffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/SharedArrayBuffer/prototype/slice/species.js :: it threw an object with no name: Expected SameValue(«[object SharedArrayBuffer]», «undefined») to be true
-built-ins/SharedArrayBuffer/prototype/slice/species.js (strict) :: it threw an object with no name: Expected SameValue(«[object SharedArrayBuffer]», «undefined») to be true
 built-ins/String/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/String/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/String/prototype/endsWith/return-abrupt-from-searchstring-regexp-test.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all

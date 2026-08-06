@@ -93,8 +93,11 @@ pub struct Realm {
     typed_constructors: [ObjectId; crate::heap::KINDS.len()],
     /// %Map.prototype% — §24.1.3.
     map_prototype: ObjectId,
+    /// %RegExp.prototype% — §22.2.6.
     regexp_prototype: ObjectId,
+    /// %RegExp% itself, which §22.2.6.8's and §22.2.6.14's `SpeciesConstructor` fall back to.
     regexp_constructor: ObjectId,
+    /// %RegExpStringIteratorPrototype% — §22.2.9.3.
     regexp_string_iterator_prototype: ObjectId,
     /// %Set.prototype% — §24.2.3.
     set_prototype: ObjectId,
@@ -108,6 +111,8 @@ pub struct Realm {
     finalization_registry_prototype: ObjectId,
     /// %SharedArrayBuffer.prototype% — §25.2.4.
     shared_buffer_prototype: ObjectId,
+    /// %SharedArrayBuffer% itself, which `slice`'s `SpeciesConstructor` falls back to.
+    shared_buffer_constructor: ObjectId,
     /// %IteratorHelperPrototype% — §27.1.5.1, which inherits from %IteratorPrototype%.
     iterator_helper_prototype: ObjectId,
     /// %WrapForValidIteratorPrototype% — §27.1.3.2.1, what `Iterator.from` wraps with.
@@ -419,6 +424,8 @@ impl Realm {
             weak_set_prototype,
             weak_ref_prototype,
             shared_buffer_prototype,
+            // Replaced below once the built-ins have made the real one, exactly as %RegExp% is.
+            shared_buffer_constructor: shared_buffer_prototype,
             iterator_helper_prototype,
             wrap_iterator_prototype,
             finalization_registry_prototype,
@@ -455,6 +462,11 @@ impl Realm {
         // distinction nothing but a call would notice.
         if let Some(found) = crate::builtins::global_object(heap, &realm, "RegExp") {
             realm.regexp_constructor = found;
+        }
+        // §25.2.5.4 step 10's default. `SharedArrayBuffer` is a global here, so this is the same
+        // discovery the two above are — and the same reason it cannot be allocated up there.
+        if let Some(found) = crate::builtins::global_object(heap, &realm, "SharedArrayBuffer") {
+            realm.shared_buffer_constructor = found;
         }
         // The same discovery for the nine, and for the same reason: they are made by the
         // built-ins, which are handed a finished realm. Taken from the global *now*, before a
@@ -649,6 +661,12 @@ impl Realm {
     #[must_use]
     pub fn weak_ref_prototype(&self) -> ObjectId {
         self.weak_ref_prototype
+    }
+
+    /// %SharedArrayBuffer% — §25.2.5.4 step 10's default for `SpeciesConstructor`.
+    #[must_use]
+    pub fn shared_buffer_constructor(&self) -> ObjectId {
+        self.shared_buffer_constructor
     }
 
     /// %SharedArrayBuffer.prototype% — §25.2.4.

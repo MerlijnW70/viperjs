@@ -447,6 +447,18 @@ fn slice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
             "the species of this ArrayBuffer did not make a new one",
         ));
     }
+    // Step 15, and it is one-sided: the new buffer may be **longer** than asked and never shorter.
+    // Without it a species answering four bytes for a slice of eight left the copy below with
+    // nowhere to put half of them, and `get_mut` declined in silence — a slice that answered a
+    // buffer holding whatever the species had put there.
+    let room = matches!(made, Value::Object(id)
+        if heap.object(id).and_then(crate::heap::Object::buffer)
+            .is_some_and(|found| found.byte_length() >= taken));
+    if !room {
+        return Err(Abrupt::type_error(
+            "the species of this ArrayBuffer made one too small to hold the slice",
+        ));
+    }
 
     // Step 14 — detached is checked **after** the new buffer is made, because making it can run a
     // program that detaches this one. Copying then would read bytes that are not there.

@@ -887,3 +887,97 @@ fn an_array_like_is_refused_against_the_room_that_is_left_and_not_a_fixed_number
     // first line and the contrast has to be drawn between two heaps.
     assert_eq!(run("new Int8Array({ length: 100000 }).length"), "100000");
 }
+
+#[test]
+fn a_slice_refuses_a_species_that_made_too_little_room() {
+    // §25.1.5.3 step 15, and it is one-sided: longer is fine, shorter is not. Without the refusal
+    // the copy below found nowhere to put the bytes and declined in silence, so the answer was a
+    // buffer holding whatever the species had left in it — four zero bytes, and no complaint.
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(8);              b.constructor = { };              b.constructor[Symbol.species] = function () { return new ArrayBuffer(4); };              try { b.slice(0); 'no throw' } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    // Longer is accepted, and the answer is what the species made rather than a trimmed copy —
+    // which is what makes this a test of the clause and not of the arithmetic.
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(8);              b.constructor = { };              b.constructor[Symbol.species] = function () { return new ArrayBuffer(10); };              b.slice(0).byteLength"
+        ),
+        "10"
+    );
+    // Exactly the asked-for length is the ordinary case and must stay accepted.
+    assert_eq!(
+        run(
+            "var b = new ArrayBuffer(8);              b.constructor = { };              b.constructor[Symbol.species] = function (n) { return new ArrayBuffer(n); };              b.slice(2).byteLength"
+        ),
+        "6"
+    );
+}
+
+#[test]
+fn a_shared_slice_asks_for_a_species_and_answers_what_it_made() {
+    // §25.2.5.4 step 10 — never asked before this: the clause built a shared buffer of its own and
+    // handed that back, so a subclass got a plain `SharedArrayBuffer` and a species was ignored
+    // outright. Nothing about the *bytes* said so, which is why it survived.
+    assert_eq!(
+        run(
+            "var made; var b = new SharedArrayBuffer(8);              b.constructor = { };              b.constructor[Symbol.species] = function (n) {                return made = new SharedArrayBuffer(n); };              b.slice(0) === made"
+        ),
+        "true"
+    );
+    assert_eq!(
+        run("class B extends SharedArrayBuffer {} new B(8).slice(0, 4) instanceof B"),
+        "true"
+    );
+    // Steps 12 to 15 — the three refusals. Not shared, the receiver itself, and too small.
+    assert_eq!(
+        run(
+            "var b = new SharedArrayBuffer(8); b.constructor = { };              b.constructor[Symbol.species] = function (n) { return new ArrayBuffer(n); };              try { b.slice(0); 'no throw' } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    assert_eq!(
+        run(
+            "var b = new SharedArrayBuffer(8); b.constructor = { };              b.constructor[Symbol.species] = function () { return b; };              try { b.slice(0); 'no throw' } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    assert_eq!(
+        run(
+            "var b = new SharedArrayBuffer(8); b.constructor = { };              b.constructor[Symbol.species] = function () { return new SharedArrayBuffer(4); };              try { b.slice(0); 'no throw' } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    // …and a longer one is accepted here too, with the bytes copied into its front.
+    assert_eq!(
+        run(
+            "var b = new SharedArrayBuffer(4); new Int8Array(b)[1] = 7;              b.constructor = { };              b.constructor[Symbol.species] = function () { return new SharedArrayBuffer(9); };              var c = b.slice(0); c.byteLength + ',' + new Int8Array(c)[1]"
+        ),
+        "9,7"
+    );
+}
+
+#[test]
+fn a_shared_slice_still_copies_rather_than_sharing() {
+    // The bytes are a copy, as §25.1.5.3's are. A shared buffer is shared between *agents* and not
+    // between slices of itself, which is the distinction the name invites you to get wrong.
+    assert_eq!(
+        run(
+            "var b = new SharedArrayBuffer(8); var v = new Int8Array(b); v[2] = 9;              var c = b.slice(1, 4); v[2] = 0;              c.byteLength + ',' + new Int8Array(c)[1]"
+        ),
+        "3,9"
+    );
+    assert_eq!(
+        run("var b = new SharedArrayBuffer(8); b.slice(0) === b"),
+        "false"
+    );
+    // Both ends are relative and both clamp, exactly as the unshared clause's do.
+    assert_eq!(
+        run(
+            "var b = new SharedArrayBuffer(8);              b.slice(-2).byteLength + ',' + b.slice(0, -6).byteLength + ','              + b.slice(99).byteLength + ',' + b.slice(4, 2).byteLength"
+        ),
+        "2,2,0,0"
+    );
+}
