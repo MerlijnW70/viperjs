@@ -1,6 +1,6 @@
 [package]
 name = "conformance"
-version = "0.2.0"
+version = "0.2.2"
 edition = "2024"
 publish = false
 description = "Runs test262 against ViperJS and holds the ratchet that may only shrink."
