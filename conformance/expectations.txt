@@ -2218,36 +2218,6 @@ built-ins/Object/keys/proxy-keys.js :: it threw an object with no name: Expected
 built-ins/Object/keys/proxy-keys.js (strict) :: it threw an object with no name: Expected SameValue(«12», «10») to be true
 built-ins/Object/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Object/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Object/prototype/__proto__/get-abrupt.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/prototype/__proto__/get-abrupt.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/prototype/__proto__/get-fn-name.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/prototype/__proto__/get-fn-name.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/prototype/__proto__/get-ordinary-obj.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/prototype/__proto__/get-ordinary-obj.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/prototype/__proto__/get-to-obj-abrupt.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/prototype/__proto__/get-to-obj-abrupt.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/prototype/__proto__/prop-desc.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/prototype/__proto__/prop-desc.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/prototype/__proto__/set-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__proto__/set-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__proto__/set-cycle-shadowed.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
-built-ins/Object/prototype/__proto__/set-cycle-shadowed.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
-built-ins/Object/prototype/__proto__/set-cycle.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__proto__/set-cycle.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__proto__/set-fn-name.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/prototype/__proto__/set-fn-name.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/prototype/__proto__/set-immutable.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__proto__/set-immutable.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__proto__/set-invalid-value.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/prototype/__proto__/set-invalid-value.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/prototype/__proto__/set-non-extensible.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/prototype/__proto__/set-non-extensible.js (strict) :: it threw TypeError: this property will not take a value
-built-ins/Object/prototype/__proto__/set-non-obj-coercible.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/prototype/__proto__/set-non-obj-coercible.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/prototype/__proto__/set-non-object.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/prototype/__proto__/set-non-object.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/prototype/__proto__/set-ordinary-obj.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Object/prototype/__proto__/set-ordinary-obj.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Object/prototype/isPrototypeOf/null-this-and-primitive-arg-returns-false.js :: it threw TypeError: Object.prototype.isPrototypeOf requires an object
 built-ins/Object/prototype/isPrototypeOf/null-this-and-primitive-arg-returns-false.js (strict) :: it threw TypeError: Object.prototype.isPrototypeOf requires an object
 built-ins/Object/prototype/isPrototypeOf/undefined-this-and-primitive-arg-returns-false.js :: it threw TypeError: Object.prototype.isPrototypeOf requires an object
@@ -12344,8 +12314,6 @@ built-ins/TypedArrayConstructors/ctors/no-args/proto-from-ctor-realm.js :: it th
 built-ins/TypedArrayConstructors/ctors/no-args/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArrayConstructors/ctors/no-args/use-default-proto-if-custom-proto-is-not-object.js :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function Float64Array() { [native code] }») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/no-args/use-default-proto-if-custom-proto-is-not-object.js (strict) :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function Float64Array() { [native code] }») to be true (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/no-species.js :: it threw an object with no name: Expected SameValue(«undefined», «[object ArrayBuffer]») to be true
-built-ins/TypedArrayConstructors/ctors/no-species.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «[object ArrayBuffer]») to be true
 built-ins/TypedArrayConstructors/ctors/object-arg/custom-proto-access-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/object-arg/custom-proto-access-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/object-arg/iterating-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)

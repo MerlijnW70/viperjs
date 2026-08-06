@@ -1,4 +1,4 @@
-//! §B.2.2 — the four accessor methods Annex B keeps on `Object.prototype`.
+//! §B.2.2 — what Annex B keeps on `Object.prototype`: one accessor and four methods.
 //!
 //! # Why these exist at all
 //!
@@ -10,7 +10,7 @@
 //!
 //! # What they are not
 //!
-//! Not `Object.defineProperty` with a shorter spelling. §B.2.2.1 defines the property as
+//! Not `Object.defineProperty` with a shorter spelling. §B.2.2.2 defines the property as
 //! **enumerable and configurable**, where a descriptor with those fields absent gets `false` for
 //! both — so `o.__defineGetter__("x", f)` and `Object.defineProperty(o, "x", {get: f})` produce
 //! properties that enumerate differently. That is what makes them worth their own rows.
@@ -19,9 +19,17 @@
 //! `getOwnPropertyDescriptor` does not: they answer about the accessor a program would actually
 //! reach, which is what they were for.
 //!
-//! Nothing here can run user code. The key conversion is `ToPropertyKey` of a value that has
-//! already been read, and every other step is a heap operation — which is why none of these four
-//! takes the interpreter.
+//! §B.2.2.1's `__proto__` is not `Object.getPrototypeOf` with a shorter spelling either, and the
+//! setter is where they part: a value that is neither an Object nor `null` is *ignored* here and
+//! is a TypeError there. The web depends on `o.__proto__ = undefined` doing nothing quietly.
+//!
+//! # None of this runs user code except through an internal method
+//!
+//! The four methods' key conversion is `ToPropertyKey` of a value already read, and every other
+//! step of theirs is a heap operation. `__proto__`'s two halves are the exception and have to be:
+//! they go through `[[GetPrototypeOf]]` and `[[SetPrototypeOf]]`, which a Proxy may trap, so they
+//! take the interpreter and can raise whatever a trap raises. This paragraph said "nothing here
+//! can run user code" before the accessor landed.
 
 use super::define_method;
 use super::object::{defined, this_object};
@@ -107,27 +115,84 @@ fn look_up(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, half: Half) -> C
     }
 }
 
-/// §B.2.2.1 `Object.prototype.__defineGetter__`.
+/// §B.2.2.2 `Object.prototype.__defineGetter__`.
 fn define_getter(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     define(vm, heap, call, Half::Getter)
 }
 
-/// §B.2.2.2 `Object.prototype.__defineSetter__`.
+/// §B.2.2.3 `Object.prototype.__defineSetter__`.
 fn define_setter(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     define(vm, heap, call, Half::Setter)
 }
 
-/// §B.2.2.3 `Object.prototype.__lookupGetter__`.
+/// §B.2.2.4 `Object.prototype.__lookupGetter__`.
 fn lookup_getter(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     look_up(vm, heap, call, Half::Getter)
 }
 
-/// §B.2.2.4 `Object.prototype.__lookupSetter__`.
+/// §B.2.2.5 `Object.prototype.__lookupSetter__`.
 fn lookup_setter(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     look_up(vm, heap, call, Half::Setter)
 }
 
-/// Build Annex B's four methods onto `Object.prototype`.
+/// §B.2.2.1.1 `get Object.prototype.__proto__`.
+///
+/// `ToObject` and then `[[GetPrototypeOf]]`, so a **primitive** answers about the wrapper it
+/// stands for: `"a".__proto__` is `String.prototype`. Only `undefined` and `null` have no object
+/// and are the TypeError.
+fn get_proto(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let object = super::object::coerced(vm, heap, call.this_value)?;
+    Ok(match vm.prototype_through(object, heap)? {
+        Some(prototype) => Value::Object(prototype),
+        None => Value::Null,
+    })
+}
+
+/// §B.2.2.1.2 `set Object.prototype.__proto__`.
+///
+/// # Three ways to do nothing, and one to throw
+///
+/// The setter is deliberately lenient in a way the getter is not, and the asymmetry is the whole
+/// of it. Step 1 is `RequireObjectCoercible`, so `undefined` and `null` are a TypeError — but a
+/// value that is neither an Object nor `null` (step 2) and a **receiver** that is not an Object
+/// (step 3) both answer `undefined` and change nothing at all. So `(1).__proto__ = {}` is silent,
+/// and so is `o.__proto__ = 5`.
+///
+/// That is not `Object.setPrototypeOf`'s behaviour, which refuses a bad value with a TypeError.
+/// Two spellings of one operation, and they disagree about what a mistake is: this one predates
+/// the other and the web depends on it not throwing.
+///
+/// Step 5 is the one refusal, and it is the *outcome* of the internal method rather than a check
+/// of its own — a cycle or a non-extensible object, which §10.1.2 already decides.
+fn set_proto(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    // Step 1.
+    if matches!(call.this_value, Value::Undefined | Value::Null) {
+        return Err(Abrupt::type_error(
+            "undefined and null have no prototype to set",
+        ));
+    }
+    // Step 2 — read before the receiver is judged, though neither order is observable: nothing
+    // here runs a program.
+    let prototype = match call.argument(0) {
+        Value::Object(prototype) => Some(prototype),
+        Value::Null => None,
+        _ => return Ok(Value::Undefined),
+    };
+    // Step 3.
+    let Value::Object(object) = call.this_value else {
+        return Ok(Value::Undefined);
+    };
+    // Steps 4 and 5. Through the internal method, so a Proxy's `setPrototypeOf` trap is what
+    // answers — and a trap that says `false` is this TypeError.
+    if !vm.set_prototype_through(object, prototype, heap)? {
+        return Err(Abrupt::type_error(
+            "this object's prototype may not be changed",
+        ));
+    }
+    Ok(Value::Undefined)
+}
+
+/// Build Annex B's additions to `Object.prototype` — §B.2.2.1's accessor and four methods.
 pub fn install(heap: &mut Heap, realm: &Realm) {
     let prototype = realm.object_prototype();
     for (name, length, native) in [
@@ -138,4 +203,24 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     ] {
         define_method(heap, realm, prototype, name, length, native);
     }
+    // §B.2.2.1 — an **accessor**, and that is the point rather than an implementation detail. A
+    // script reads the two halves off the descriptor and calls them on other receivers, which is
+    // how `Object.getOwnPropertyDescriptor(Object.prototype, "__proto__").set.call(o, p)` works
+    // and why a special case in the property lookup would not do.
+    let getter = heap.new_native_function(realm.function_prototype(), get_proto);
+    super::define_function_metadata(heap, getter, "get __proto__", 0);
+    let setter = heap.new_native_function(realm.function_prototype(), set_proto);
+    super::define_function_metadata(heap, setter, "set __proto__", 1);
+    let slot = super::key(heap, "__proto__");
+    let _ = heap.define_own_property(
+        prototype,
+        slot,
+        &PropertyDescriptor {
+            getter: Some(Value::Object(getter)),
+            setter: Some(Value::Object(setter)),
+            enumerable: Some(false),
+            configurable: Some(true),
+            ..PropertyDescriptor::EMPTY
+        },
+    );
 }

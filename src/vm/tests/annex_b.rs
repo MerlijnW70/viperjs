@@ -732,3 +732,142 @@ fn annex_bs_accessor_helpers_go_through_the_internal_methods() {
         "true,function"
     );
 }
+
+#[test]
+fn dunder_proto_is_an_accessor_on_object_prototype_and_not_a_special_case() {
+    // §B.2.2.1 — an accessor pair with `enumerable: false, configurable: true`, and there is no
+    // `value`. ViperJS had no such property at all: `({}).__proto__` was `undefined` and writing
+    // one made an ordinary own property, so every program that reaches a prototype this way was
+    // silently reading and writing something else.
+    assert_eq!(
+        run(
+            "(function () { var d = Object.getOwnPropertyDescriptor(Object.prototype, '__proto__'); \
+             return (typeof d.get) + ',' + (typeof d.set) + ',' + String(d.value) + ',' \
+             + d.enumerable + ',' + d.configurable; })()"
+        ),
+        "function,function,undefined,false,true"
+    );
+    // §B.2.2.1.1 and §B.2.2.1.2's function names, which a program can read.
+    assert_eq!(
+        run(
+            "(function () { var d = Object.getOwnPropertyDescriptor(Object.prototype, '__proto__'); \
+             return d.get.name + '|' + d.get.length + '|' + d.set.name + '|' + d.set.length; })()"
+        ),
+        "get __proto__|0|set __proto__|1"
+    );
+    // Being an accessor rather than a special case is what makes this work: the halves come off
+    // the descriptor and are called on another receiver entirely.
+    assert_eq!(
+        run(
+            "(function () { var d = Object.getOwnPropertyDescriptor(Object.prototype, '__proto__'); \
+             var o = {}; var p = { m: 1 }; d.set.call(o, p); return d.get.call(o) === p; })()"
+        ),
+        "true"
+    );
+    assert_eq!(run("({}).__proto__ === Object.prototype"), "true");
+    assert_eq!(run("Object.create(null).__proto__ === undefined"), "true");
+}
+
+#[test]
+fn the_dunder_proto_getter_answers_for_a_primitive_and_the_setter_ignores_one() {
+    // §B.2.2.1.1 step 1 is `ToObject`, so a primitive answers about the wrapper it stands for.
+    assert_eq!(
+        run("(function () { var get = Object.getOwnPropertyDescriptor( \
+             Object.prototype, '__proto__').get; \
+             return (get.call('a') === String.prototype) + ',' + (get.call(1) === Number.prototype) \
+             + ',' + (get.call(true) === Boolean.prototype); })()"),
+        "true,true,true"
+    );
+    // …and `undefined` and `null` have no object, so they are the TypeError both halves share.
+    for half in ["get", "set"] {
+        assert_eq!(
+            run(&format!(
+                "(function () {{ var f = Object.getOwnPropertyDescriptor( \
+                 Object.prototype, '__proto__').{half}; \
+                 try {{ f.call(undefined); return 'no throw' }} \
+                 catch (e) {{ return e.constructor.name }} }})()"
+            )),
+            "TypeError",
+            "for the {half}ter"
+        );
+    }
+    // §B.2.2.1.2 step 3 — a primitive **receiver** answers `undefined` and changes nothing. The
+    // setter is lenient exactly where the getter is not, which is the whole asymmetry.
+    assert_eq!(
+        run("(function () { var set = Object.getOwnPropertyDescriptor( \
+             Object.prototype, '__proto__').set; var before = Object.getPrototypeOf({}); \
+             return String(set.call(1, { m: 1 })) + ',' + String(set.call('a', { m: 1 })) \
+             + ',' + (Object.getPrototypeOf({}) === before); })()"),
+        "undefined,undefined,true"
+    );
+    // Step 2 — a value that is neither an Object nor `null` is ignored, and the object keeps the
+    // prototype it had. `Object.setPrototypeOf` refuses the same value with a TypeError, which is
+    // the one place the two spellings of this operation disagree.
+    assert_eq!(
+        run(
+            "(function () { var o = {}; o.__proto__ = 5; o.__proto__ = undefined; \
+             var kept = Object.getPrototypeOf(o) === Object.prototype; \
+             var refused; \
+             try { Object.setPrototypeOf(o, 5); refused = 'no throw' } \
+             catch (e) { refused = e.constructor.name } \
+             return kept + ',' + refused; })()"
+        ),
+        "true,TypeError"
+    );
+    // `null` is not "neither", and is the one primitive the setter acts on.
+    assert_eq!(
+        run("(function () { var o = {}; o.__proto__ = null; \
+             return Object.getPrototypeOf(o) === null; })()"),
+        "true"
+    );
+}
+
+#[test]
+fn the_dunder_proto_setter_reports_a_refusal_where_the_getter_has_nothing_to_report() {
+    // §B.2.2.1.2 step 5 — the *outcome* of `[[SetPrototypeOf]]`, not a check of its own. §10.1.2
+    // refuses a cycle and a non-extensible object, and this is where that `false` becomes the
+    // TypeError a program sees. Discarding it would leave the write silently undone.
+    assert_eq!(
+        run("(function () { var a = {}; var b = Object.create(a); \
+             try { a.__proto__ = b; return 'no throw' } catch (e) { return e.constructor.name } })()"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("(function () { var o = Object.preventExtensions({}); \
+             try { o.__proto__ = { m: 1 }; return 'no throw' } \
+             catch (e) { return e.constructor.name } })()"),
+        "TypeError"
+    );
+    // Setting the prototype it already has is allowed even when the object is not extensible —
+    // §10.1.2 step 3 compares first — so the refusal is about *changing* it and not about writing.
+    assert_eq!(
+        run(
+            "(function () { var o = Object.preventExtensions({}); o.__proto__ = Object.prototype; \
+             return 'no throw'; })()"
+        ),
+        "no throw"
+    );
+}
+
+#[test]
+fn dunder_proto_goes_through_the_internal_methods_so_a_proxy_mediates_it() {
+    // Both halves are `[[GetPrototypeOf]]` and `[[SetPrototypeOf]]`, which a Proxy may trap. A
+    // pair that read and wrote the heap directly would walk straight past the trap — the shape
+    // DR-0020 exists to prevent, and the one §B.2.2's other four already had to be corrected for.
+    assert_eq!(
+        run("(function () { var seen = []; \
+             var p = new Proxy({}, { getPrototypeOf: function () { seen.push('get'); return Array.prototype; }, \
+               setPrototypeOf: function () { seen.push('set'); return true; } }); \
+             var got = p.__proto__ === Array.prototype; p.__proto__ = {}; \
+             return got + ',' + seen.join(); })()"),
+        "true,get,set"
+    );
+    // A trap that refuses is step 5's TypeError, reached without the heap having decided anything.
+    assert_eq!(
+        run(
+            "(function () { var p = new Proxy({}, { setPrototypeOf: function () { return false; } }); \
+             try { p.__proto__ = {}; return 'no throw' } catch (e) { return e.constructor.name } })()"
+        ),
+        "TypeError"
+    );
+}
