@@ -998,3 +998,105 @@ fn a_pattern_can_be_escaped_so_that_it_matches_itself() {
         "true,false"
     );
 }
+
+#[test]
+fn the_constructor_takes_anything_that_claims_to_be_a_pattern() {
+    // §22.2.4.1 step 5 — an object §7.2.8 calls a pattern contributes its `source` and `flags`
+    // **properties**, which is the branch ViperJS did not have: it fell to step 6 and converted the
+    // object, so this used to be `/[object Object]/`.
+    assert_eq!(
+        run(
+            "var o = { source: 'a+', flags: 'i' }; o[Symbol.match] = true;
+             var r = new RegExp(o); r.source + ',' + r.flags"
+        ),
+        "a+,i"
+    );
+    // Any truthy `@@match` will do — the clause runs `ToBoolean`, so a string or a number counts.
+    assert_eq!(
+        run("var o = { source: 'a+', flags: 'i' }; o[Symbol.match] = 86;
+             new RegExp(o).source"),
+        "a+"
+    );
+    // Step 5.c — `flags` is read **only** when the call gave none. A getter that throws must not
+    // run for `new RegExp(o, 'g')`, which is the one thing an assertion on the answer cannot see.
+    assert_eq!(
+        run("var o = { source: 'a+' }; o[Symbol.match] = true;
+             Object.defineProperty(o, 'flags', { get: function () { throw new Error('read'); } });
+             var r = new RegExp(o, 'g'); r.source + ',' + r.flags"),
+        "a+,g"
+    );
+    // Step 6 — an object that claims nothing is converted, which is what keeps step 5 from
+    // swallowing every object with a `source` property.
+    assert_eq!(
+        run("String(new RegExp({ source: 'a+' }).source)"),
+        "[object Object]"
+    );
+    // Step 4 is asked before step 5 and asks for the **slot**, not §7.2.8. So a real regular
+    // expression whose `@@match` is `false` is not a pattern by step 1 and still contributes its
+    // own source here rather than its string form.
+    assert_eq!(
+        run("var re = /a+/g; re[Symbol.match] = false;
+             var r = new RegExp(re); r.source + ',' + r.flags"),
+        "a+,g"
+    );
+}
+
+#[test]
+fn the_constructors_short_circuit_asks_who_made_it_and_asks_seven_two_eight() {
+    // §22.2.4.1 step 2.b.i — `constructor` is read as a **property** and compared against the
+    // active function. A regular expression whose `constructor` has been reassigned is therefore
+    // copied rather than passed through, which ViperJS never checked.
+    assert_eq!(
+        run("var a = /a/; a.constructor = function () {}; RegExp(a) === a"),
+        "false"
+    );
+    assert_eq!(run("var a = /a/; RegExp(a) === a"), "true");
+    // The condition is §7.2.8's and not "does it hold a matcher", and that cuts both ways. A plain
+    // object saying it is a pattern and naming `RegExp` is handed straight back…
+    assert_eq!(
+        run("var o = { constructor: RegExp }; o[Symbol.match] = true; RegExp(o) === o"),
+        "true"
+    );
+    // …and a real regular expression whose `@@match` is falsy is not, so a new one is made.
+    assert_eq!(
+        run("var re = /(?:)/; re[Symbol.match] = false; RegExp(re) === re"),
+        "false"
+    );
+    // Step 2 is reached only without `new`, and step 2.b only with no flags of its own.
+    assert_eq!(
+        run(
+            "var o = { constructor: RegExp, source: 'a' }; o[Symbol.match] = true;
+             (new RegExp(o) === o) + ',' + (RegExp(o, 'g') === o)"
+        ),
+        "false,false"
+    );
+}
+
+#[test]
+fn the_constructor_asks_the_match_symbol_before_it_looks_at_anything_else() {
+    // §22.2.4.1 step 1 runs for **every** call, whatever the argument turns out to be, so a
+    // throwing `@@match` getter is what the caller sees rather than a complaint about the source.
+    assert_eq!(
+        run(
+            "var o = { get [Symbol.match]() { throw new RangeError('mine'); } };
+             try { new RegExp(o); 'no throw' } catch (e) { e.message }"
+        ),
+        "mine"
+    );
+    // …including when the argument is a perfectly good regular expression, where nothing else
+    // would have needed to ask.
+    assert_eq!(
+        run("var re = /a/; Object.defineProperty(re, Symbol.match, {                get: function () { throw new RangeError('mine'); } });
+             try { new RegExp(re); 'no throw' } catch (e) { e.message }"),
+        "mine"
+    );
+    // A throwing `constructor` getter is step 2.b.i's, and reaches only a plain call.
+    assert_eq!(
+        run(
+            "var o = { get constructor() { throw new RangeError('ctor'); } };
+             o[Symbol.match] = true;
+             try { RegExp(o); 'no throw' } catch (e) { e.message }"
+        ),
+        "ctor"
+    );
+}

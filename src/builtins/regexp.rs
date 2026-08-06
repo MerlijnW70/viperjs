@@ -113,43 +113,81 @@ fn escape_source(source: &[u16]) -> Vec<u16> {
 }
 
 /// §22.2.4.1 `RegExp(pattern, flags)`.
+///
+/// # Three ways to be a pattern, and they are asked in this order
+///
+/// Step 4 takes a real `[[RegExpMatcher]]` and reads its **slots**. Step 5 takes anything else
+/// §7.2.8 calls a pattern and reads its `source` and `flags` **properties** — so
+/// `new RegExp({[Symbol.match]: true, source: "a", flags: "i"})` is `/a/i` and not
+/// `/[object Object]/`. Step 6 takes everything else and converts it.
+///
+/// The order matters where the two overlap: a regular expression whose `@@match` is `false` is not
+/// a pattern by §7.2.8, but step 4 does not ask §7.2.8 — it asks for the slot — so it still
+/// contributes its own source rather than its string form.
 fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let pattern = call.argument(0);
     let flags = call.argument(1);
-    // Step 1 — a plain call on something that is already a regular expression with the same
-    // constructor and no new flags hands the *same object* back. That is why `RegExp(re) === re`,
-    // and it is the one constructor in the language that does not always make something.
-    if !call.constructing()
-        && let Value::Object(given) = pattern
-        && heap
-            .object(given)
-            .and_then(crate::heap::Object::regexp)
-            .is_some()
-        && matches!(flags, Value::Undefined)
-    {
-        return Ok(pattern);
-    }
-    // §22.2.3.1 step 1 — a regular expression argument contributes its *source and flags*, not its
-    // string form, so `new RegExp(/a/g)` keeps the `g` and `new RegExp(/a/g, "i")` replaces it.
-    let held = match pattern {
-        Value::Object(given) => heap
-            .object(given)
-            .and_then(crate::heap::Object::regexp)
-            .map(|found| (found.source().to_vec(), found.flags().spelled())),
-        _ => None,
-    };
-    let (pattern, flags) = match held {
-        Some((source, spelled)) => {
-            let source = Value::String(heap.intern(&source));
-            let carried = match flags {
-                Value::Undefined => {
-                    Value::String(heap.intern(&spelled.encode_utf16().collect::<Vec<_>>()))
-                }
-                given => given,
-            };
-            (source, carried)
+    // Step 1 — **always**, and before anything else. It reads `@@match`, so a getter there runs
+    // for every call to `RegExp` whatever the argument turns out to be.
+    let claims = super::string_replace::is_pattern(vm, heap, pattern)?;
+    let holds_matcher = matches!(pattern, Value::Object(given)
+        if heap.object(given).and_then(crate::heap::Object::regexp).is_some());
+    // Step 2.b — a plain call on a pattern that says `RegExp` made it, with no new flags, hands
+    // the *same object* back. This is the one constructor in the language that does not always
+    // make something.
+    //
+    // Two things here are easy to get wrong and each has a test of its own. The question is
+    // §7.2.8's and not "does it hold a matcher", so `/a/` with `@@match` set to `false` is *not*
+    // short-circuited and an ordinary object with `@@match` and `constructor: RegExp` **is**. And
+    // `constructor` is read as a property and compared against the active function, so a regular
+    // expression whose `constructor` has been reassigned is copied rather than passed through.
+    if !call.constructing() && claims && matches!(flags, Value::Undefined) {
+        let name = key(heap, "constructor");
+        let owner = vm.get_property_key(pattern, name, heap)?;
+        if matches!(owner, Value::Object(id) if id == vm.realm().regexp_constructor()) {
+            return Ok(pattern);
         }
-        None => (pattern, flags),
+    }
+    // Steps 4 to 6.
+    let (pattern, flags) = if holds_matcher {
+        // Step 4 — its *source and flags*, not its string form, so `new RegExp(/a/g)` keeps the
+        // `g` and `new RegExp(/a/g, "i")` replaces it. From the slots, so no getter runs.
+        let held = match pattern {
+            Value::Object(given) => heap
+                .object(given)
+                .and_then(crate::heap::Object::regexp)
+                .map(|found| (found.source().to_vec(), found.flags().spelled())),
+            _ => None,
+        };
+        match held {
+            Some((source, spelled)) => {
+                let source = Value::String(heap.intern(&source));
+                let carried = match flags {
+                    Value::Undefined => {
+                        Value::String(heap.intern(&spelled.encode_utf16().collect::<Vec<_>>()))
+                    }
+                    given => given,
+                };
+                (source, carried)
+            }
+            None => (pattern, flags),
+        }
+    } else if claims {
+        // Step 5 — the two **properties**. `flags` is read only when the call gave none, which is
+        // observable: a `flags` getter that throws must not run for `new RegExp(obj, "g")`.
+        let name = key(heap, "source");
+        let source = vm.get_property_key(pattern, name, heap)?;
+        let carried = match flags {
+            Value::Undefined => {
+                let name = key(heap, "flags");
+                vm.get_property_key(pattern, name, heap)?
+            }
+            given => given,
+        };
+        (source, carried)
+    } else {
+        // Step 6.
+        (pattern, flags)
     };
     let prototype = super::prototype_from(heap, call, vm.realm().regexp_prototype());
     let object = heap.new_object(Some(prototype));

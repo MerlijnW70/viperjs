@@ -73,8 +73,6 @@ annexB/built-ins/RegExp/legacy-accessors/rightContext/this-not-regexp-constructo
 annexB/built-ins/RegExp/legacy-accessors/rightContext/this-not-regexp-constructor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/rightContext/this-subclass-constructor.js :: it threw an object with no name: RegExp.rightContext getter throws for subclass receiver Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/legacy-accessors/rightContext/this-subclass-constructor.js (strict) :: it threw an object with no name: RegExp.rightContext getter throws for subclass receiver Expected a TypeError to be thrown but no exception was thrown at all
-annexB/built-ins/RegExp/prototype/Symbol.split/Symbol.match-getter-recompiles-source.js :: it threw an object with no name: Expected SameValue(«""», «"a"») to be true
-annexB/built-ins/RegExp/prototype/Symbol.split/Symbol.match-getter-recompiles-source.js (strict) :: it threw an object with no name: Expected SameValue(«""», «"a"») to be true
 annexB/built-ins/RegExp/prototype/compile/pattern-regexp-immutable-lastindex.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/prototype/compile/pattern-regexp-immutable-lastindex.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/prototype/compile/this-cross-realm-instance.js :: it threw TypeError: what was called is not a function
@@ -2540,26 +2538,8 @@ built-ins/RegExp/Symbol.species/symbol-species-name.js :: it threw TypeError: ca
 built-ins/RegExp/Symbol.species/symbol-species-name.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/RegExp/Symbol.species/symbol-species.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/RegExp/Symbol.species/symbol-species.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/RegExp/call_with_non_regexp_same_constructor.js :: it threw an object with no name: RegExp returns its input argument Expected SameValue(«/[object Object]/», «[object Object]») to be true
-built-ins/RegExp/call_with_non_regexp_same_constructor.js (strict) :: it threw an object with no name: RegExp returns its input argument Expected SameValue(«/[object Object]/», «[object Object]») to be true
-built-ins/RegExp/call_with_regexp_match_falsy.js :: it threw an object with no name: RegExp returns new object Expected SameValue(«/(?:)/», «/(?:)/») to be false
-built-ins/RegExp/call_with_regexp_match_falsy.js (strict) :: it threw an object with no name: RegExp returns new object Expected SameValue(«/(?:)/», «/(?:)/») to be false
-built-ins/RegExp/call_with_regexp_not_same_constructor.js :: it threw an object with no name: RegExp returns new object Expected SameValue(«/(?:)/», «/(?:)/») to be false
-built-ins/RegExp/call_with_regexp_not_same_constructor.js (strict) :: it threw an object with no name: RegExp returns new object Expected SameValue(«/(?:)/», «/(?:)/») to be false
 built-ins/RegExp/escape/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/RegExp/escape/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/from-regexp-like-flag-override.js :: it threw an object with no name: @@match specified as a primitive boolean Expected SameValue(«"[object Object]"», «"source text"») to be true
-built-ins/RegExp/from-regexp-like-flag-override.js (strict) :: it threw an object with no name: @@match specified as a primitive boolean Expected SameValue(«"[object Object]"», «"source text"») to be true
-built-ins/RegExp/from-regexp-like-get-ctor-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/RegExp/from-regexp-like-get-ctor-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/RegExp/from-regexp-like-get-flags-err.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/RegExp/from-regexp-like-get-flags-err.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/RegExp/from-regexp-like-get-source-err.js :: it threw an object with no name: Expected a CustomError to be thrown but no exception was thrown at all
-built-ins/RegExp/from-regexp-like-get-source-err.js (strict) :: it threw an object with no name: Expected a CustomError to be thrown but no exception was thrown at all
-built-ins/RegExp/from-regexp-like-short-circuit.js :: it threw an object with no name: Expected SameValue(«/[object Object]/», «[object Object]») to be true
-built-ins/RegExp/from-regexp-like-short-circuit.js (strict) :: it threw an object with no name: Expected SameValue(«/[object Object]/», «[object Object]») to be true
-built-ins/RegExp/from-regexp-like.js :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"source text"») to be true
-built-ins/RegExp/from-regexp-like.js (strict) :: it threw an object with no name: Expected SameValue(«"[object Object]"», «"source text"») to be true
 built-ins/RegExp/lookBehind/back-references-to-captures.js :: it threw an object with no name: Actual [c, b] and expected [c, ab] should have the same contents. #3
 built-ins/RegExp/lookBehind/back-references-to-captures.js (strict) :: it threw an object with no name: Actual [c, b] and expected [c, ab] should have the same contents. #3
 built-ins/RegExp/lookBehind/captures.js :: it threw an object with no name: Actual [def, c] and expected [def, a] should have the same contents. #4
@@ -2596,10 +2576,6 @@ built-ins/RegExp/prototype/Symbol.match/builtin-infer-unicode.js :: it threw an 
 built-ins/RegExp/prototype/Symbol.match/builtin-infer-unicode.js (strict) :: it threw an object with no name: Expected SameValue(«�», «null») to be true
 built-ins/RegExp/prototype/Symbol.match/u-advance-after-empty.js :: it threw an object with no name: Expected SameValue(«2», «1») to be true
 built-ins/RegExp/prototype/Symbol.match/u-advance-after-empty.js (strict) :: it threw an object with no name: Expected SameValue(«2», «1») to be true
-built-ins/RegExp/prototype/Symbol.matchAll/isregexp-called-once.js :: it threw an object with no name: Expected SameValue(«3», «4») to be true
-built-ins/RegExp/prototype/Symbol.matchAll/isregexp-called-once.js (strict) :: it threw an object with no name: Expected SameValue(«3», «4») to be true
-built-ins/RegExp/prototype/Symbol.matchAll/isregexp-this-throws.js :: it threw an object with no name: Expected a Test262Error but got a SyntaxError
-built-ins/RegExp/prototype/Symbol.matchAll/isregexp-this-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a SyntaxError
 built-ins/RegExp/prototype/Symbol.replace/coerce-global.js :: it threw ReferenceError: print is not defined
 built-ins/RegExp/prototype/Symbol.replace/coerce-global.js (strict) :: it threw ReferenceError: print is not defined
 built-ins/RegExp/prototype/Symbol.replace/coerce-lastindex.js :: it threw an object with no name: Expected SameValue(«4294967295», «9007199254740992») to be true
