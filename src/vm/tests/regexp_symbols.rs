@@ -583,3 +583,76 @@ fn the_iterator_advances_only_past_a_match_that_consumed_nothing() {
     );
     assert_eq!(run("Array.from('aaa'.matchAll(/a/g)).length"), "3");
 }
+
+#[test]
+fn match_all_asks_the_receiver_for_a_species_and_hands_it_the_flags_unchanged() {
+    // §22.2.6.8 step 6 — `Construct(C, «R, flags»)`. The receiver itself and its flags **as they
+    // are**: §22.2.6.14 adds a `y` to what it hands over and this one does not, which is the only
+    // place the two clauses differ in what they construct.
+    assert_eq!(
+        run("var re = /\\d/u; var seen;
+             re.constructor = { }; \
+             re.constructor[Symbol.species] = function (r, f) { seen = [r === re, f]; \
+               return /\\w/g; };
+             re[Symbol.matchAll]('a*b'); JSON.stringify(seen)"),
+        r#"[true,"u"]"#
+    );
+    // Steps 9 to 12 — `global` comes from the **receiver's** flags and not the matcher's. Here the
+    // receiver has none and the matcher is global, so the walk answers once. Reading it off the
+    // matcher would walk to the end of the subject, and every ordinary `matchAll` agrees either way.
+    assert_eq!(
+        run("var re = /\\d/u;
+             re.constructor = { }; \
+             re.constructor[Symbol.species] = function () { return /\\w/g; };
+             var out = Array.from(re[Symbol.matchAll]('a*b'), function (m) { return m[0]; });
+             JSON.stringify(out)"),
+        r#"["a"]"#
+    );
+    // Step 4 — the refusals `SpeciesConstructor` makes, which were answers before this.
+    assert_eq!(
+        run("var re = /a/; re.constructor = null;
+             try { re[Symbol.matchAll]('a'); 'no throw' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    assert_eq!(
+        run(
+            "var re = /a/; re.constructor = { }; re.constructor[Symbol.species] = true;
+             try { re[Symbol.matchAll]('a'); 'no throw' } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+}
+
+#[test]
+fn match_all_asks_for_a_species_before_it_reads_the_flags() {
+    // §22.2.6.8 steps 4 and 5 in that order. Both are `Get`s on the same object, so only a pair of
+    // getters can tell them apart — and the answer is identical whichever way round they run.
+    assert_eq!(
+        run("var order = [];
+             var re = { get flags() { order.push('flags'); return ''; } };
+             re.constructor = { get [Symbol.species]() { order.push('species'); \
+               return function () { return /a/; }; } };
+             RegExp.prototype[Symbol.matchAll].call(re, ''); order.join()"),
+        "species,flags"
+    );
+}
+
+#[test]
+fn match_all_starts_the_matcher_where_the_receiver_had_got_to() {
+    // §22.2.6.8 steps 7 and 8 — the position is copied onto the matcher, so a pattern already
+    // part-way through a subject continues rather than starting over.
+    assert_eq!(
+        run("var re = /a/g; re.lastIndex = 2; \
+             Array.from(re[Symbol.matchAll]('aaa'), function (m) { return m.index; }).join()"),
+        "2"
+    );
+    // A negative position starts at the beginning rather than wrapping to an enormous one, which
+    // would answer an empty walk and look like a pattern that did not match. This pins the
+    // behaviour and not the spelling: `ToLength` and the narrowing cast agree here, which is why
+    // the code says so above rather than naming the abstract operation it is not.
+    assert_eq!(
+        run("var re = /a/g; re.lastIndex = -5; \
+             Array.from(re[Symbol.matchAll]('aa'), function (m) { return m.index; }).join()"),
+        "0,1"
+    );
+}

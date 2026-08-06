@@ -2602,20 +2602,6 @@ built-ins/RegExp/prototype/Symbol.matchAll/isregexp-called-once.js :: it threw a
 built-ins/RegExp/prototype/Symbol.matchAll/isregexp-called-once.js (strict) :: it threw an object with no name: Expected SameValue(«3», «4») to be true
 built-ins/RegExp/prototype/Symbol.matchAll/isregexp-this-throws.js :: it threw an object with no name: Expected a Test262Error but got a SyntaxError
 built-ins/RegExp/prototype/Symbol.matchAll/isregexp-this-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a SyntaxError
-built-ins/RegExp/prototype/Symbol.matchAll/regexpcreate-this-throws.js :: it threw an object with no name: Expected a Test262Error but got a SyntaxError
-built-ins/RegExp/prototype/Symbol.matchAll/regexpcreate-this-throws.js (strict) :: it threw an object with no name: Expected a Test262Error but got a SyntaxError
-built-ins/RegExp/prototype/Symbol.matchAll/species-constructor-get-constructor-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/RegExp/prototype/Symbol.matchAll/species-constructor-get-constructor-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/RegExp/prototype/Symbol.matchAll/species-constructor-get-species-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/RegExp/prototype/Symbol.matchAll/species-constructor-get-species-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/RegExp/prototype/Symbol.matchAll/species-constructor-is-not-object-throws.js :: it threw an object with no name: `constructor` value is null Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/RegExp/prototype/Symbol.matchAll/species-constructor-is-not-object-throws.js (strict) :: it threw an object with no name: `constructor` value is null Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/RegExp/prototype/Symbol.matchAll/species-constructor-species-is-not-constructor.js :: it threw an object with no name: `constructor[Symbol.species]` value is Boolean Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/RegExp/prototype/Symbol.matchAll/species-constructor-species-is-not-constructor.js (strict) :: it threw an object with no name: `constructor[Symbol.species]` value is Boolean Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/RegExp/prototype/Symbol.matchAll/species-constructor-species-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/RegExp/prototype/Symbol.matchAll/species-constructor-species-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/RegExp/prototype/Symbol.matchAll/species-constructor.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/RegExp/prototype/Symbol.matchAll/species-constructor.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/RegExp/prototype/Symbol.replace/coerce-global.js :: it threw ReferenceError: print is not defined
 built-ins/RegExp/prototype/Symbol.replace/coerce-global.js (strict) :: it threw ReferenceError: print is not defined
 built-ins/RegExp/prototype/Symbol.replace/coerce-lastindex.js :: it threw an object with no name: Expected SameValue(«4294967295», «9007199254740992») to be true

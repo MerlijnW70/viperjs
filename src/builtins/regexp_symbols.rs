@@ -351,34 +351,49 @@ fn symbol_split(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completi
 
 /// §22.2.6.8 `RegExp.prototype[Symbol.matchAll]`.
 fn symbol_match_all(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    // Step 2.
     let object = this_object(call.this_value)?;
+    // Step 3.
     let subject = subject_of(vm, heap, call.argument(0))?;
-    // Steps 4 and 5 — the iterator walks a **copy**, so a program that moves the original's
-    // `lastIndex` half-way through a `for`-`of` does not disturb the walk. Both objects are
-    // reachable and both are observable, which is why this is a copy and not a borrow.
+    // Step 4 — asked **before** `flags`, which a getter on either can tell apart.
+    let default = vm.realm().regexp_constructor();
+    let constructor = super::promise::species_of(vm, heap, object, default)?;
+    // Step 5.
     let flags_name = key(heap, "flags");
     let held = vm.get_property_key(Value::Object(object), flags_name, heap)?;
     let spelled = vm.to_string(held, heap)?;
     let letters = heap.string(spelled).unwrap_or(&[]).to_vec();
-    let source_name = key(heap, "source");
-    let source = vm.get_property_key(Value::Object(object), source_name, heap)?;
-    let source = Value::String(vm.to_string(source, heap)?);
-    let copy = super::regexp::make(vm, heap, source, Value::String(spelled))?;
-    // Step 6 — the copy starts where the original had got to, so `matchAll` on a pattern already
+    // Step 6 — the walk goes through a **second object**, so a program that moves the original's
+    // `lastIndex` half-way through a `for`-`of` does not disturb it. The flags are handed over
+    // unchanged, unlike §22.2.6.14's, which adds a `y`.
+    let matcher = vm.construct_value(
+        Value::Object(constructor),
+        &[Value::Object(object), Value::String(spelled)],
+        heap,
+    )?;
+    let Value::Object(matcher) = matcher else {
+        return Err(Abrupt::type_error("the species did not make an object"));
+    };
+    // Steps 7 and 8 — it starts where the original had got to, so `matchAll` on a pattern already
     // part-way through a subject continues rather than starting over.
     let index_name = key(heap, "lastIndex");
     let at = vm.get_property_key(Value::Object(object), index_name, heap)?;
     let at = vm.to_number(at, heap)?;
+    // Step 7 is `ToLength` and this is not the spelling of it, deliberately: `set_last_index`
+    // narrows to `u32` below, so the clamp at 2^53 - 1 that `ToLength` adds is one no program can
+    // reach from here. Both spellings answer zero for a negative position and for a NaN.
     let at = usize::try_from(at.max(0.0) as u64).unwrap_or(usize::MAX);
-    set_last_index(vm, heap, copy, at)?;
+    set_last_index(vm, heap, matcher, at)?;
     let text = heap.intern(&subject);
     let iterator = heap.new_object(Some(vm.realm().regexp_string_iterator_prototype()));
     if let Some(found) = heap.object_mut(iterator) {
         found.set_matches(crate::heap::Matches {
-            regexp: copy,
+            regexp: matcher,
             subject: text,
-            // Steps 8 and 9 — read **once**. A `flags` getter cannot change what the walk does
-            // between one step and the next.
+            // Steps 9 to 12 — from the flags read at step 5, which are the **receiver's**. The
+            // matcher is free to carry different ones, so `/\d/u` whose species answers `/\w/g`
+            // walks once rather than to the end. Read once, too: a `flags` getter cannot change
+            // what the walk does between one step and the next.
             global: letters.contains(&u16::from(b'g')),
             unicode: letters.contains(&u16::from(b'u')) || letters.contains(&u16::from(b'v')),
             done: false,
