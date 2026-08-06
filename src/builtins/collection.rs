@@ -63,6 +63,11 @@ fn build(
     super::define_fixed(heap, constructor, "prototype", Value::Object(prototype));
     define_value(heap, global, name, Value::Object(constructor));
     define_value(heap, prototype, "constructor", Value::Object(constructor));
+    // §24.1.4.2 and §24.2.4.2 — `get Map[@@species]` and `get Set[@@species]`, both of which
+    // answer the receiver. Neither `Map` nor `Set` has a method that *uses* one, which is why this
+    // could be missing without anything noticing: the accessor exists for a subclass that wants to
+    // be asked, and §24.3 and §24.4 deliberately give `WeakMap` and `WeakSet` none at all.
+    super::buffer::define_species(heap, realm, constructor);
     // §24.1.2.1 — `Map.groupBy`, and only on `Map`: §24.2.2 gives `Set` no such static, because a
     // Set has no value to hold the group in.
     if map {

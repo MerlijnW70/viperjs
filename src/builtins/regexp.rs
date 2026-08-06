@@ -612,6 +612,10 @@ pub(super) fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let constructor = heap.new_native_constructor(realm.function_prototype(), construct);
     super::define_function_metadata(heap, constructor, "RegExp", 2);
     define_value(heap, global, "RegExp", Value::Object(constructor));
+    // §22.2.5.2 — `get RegExp[@@species]`, which answers the receiver. §22.2.6.8 and §22.2.6.14
+    // both ask for it, so this is the accessor those two clauses fall back through: without it a
+    // subclass of `RegExp` could not decide what its own `split` builds with.
+    super::buffer::define_species(heap, realm, constructor);
     super::define_fixed(heap, constructor, "prototype", Value::Object(prototype));
     define_value(heap, prototype, "constructor", Value::Object(constructor));
 

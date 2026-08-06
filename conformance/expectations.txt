@@ -1594,8 +1594,6 @@ built-ins/Function/prototype/toString/private-static-method-class-expression.js 
 built-ins/Function/prototype/toString/private-static-method-class-expression.js (strict) :: it threw an object with no name: Conforms to NativeFunction Syntax: "function #f() { [native code] }" (#f /* a */ ( /* b */ ) /* c */ { /* d */ })
 built-ins/Function/prototype/toString/private-static-method-class-statement.js :: it threw an object with no name: Conforms to NativeFunction Syntax: "function #f() { [native code] }" (#f /* a */ ( /* b */ ) /* c */ { /* d */ })
 built-ins/Function/prototype/toString/private-static-method-class-statement.js (strict) :: it threw an object with no name: Conforms to NativeFunction Syntax: "function #f() { [native code] }" (#f /* a */ ( /* b */ ) /* c */ { /* d */ })
-built-ins/Function/prototype/toString/symbol-named-builtins.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Function/prototype/toString/symbol-named-builtins.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/GeneratorFunction/instance-length.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 built-ins/GeneratorFunction/instance-length.js (strict) :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 built-ins/GeneratorFunction/proto-from-ctor-realm-prototype.js :: it threw TypeError: what was called is not a function
@@ -1960,14 +1958,6 @@ built-ins/JSON/stringify/value-bigint-tojson.js :: it threw TypeError: a BigInt 
 built-ins/JSON/stringify/value-bigint-tojson.js (strict) :: it threw TypeError: a BigInt cannot be serialised to JSON
 built-ins/JSON/stringify/value-bigint.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/JSON/stringify/value-bigint.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Map/Symbol.species/length.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Map/Symbol.species/length.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Map/Symbol.species/return-value.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Map/Symbol.species/return-value.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Map/Symbol.species/symbol-species-name.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Map/Symbol.species/symbol-species-name.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Map/Symbol.species/symbol-species.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Map/Symbol.species/symbol-species.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Map/iterator-close-after-set-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/Map/iterator-close-after-set-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/Map/iterator-close-failure-after-set-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
@@ -2399,14 +2389,6 @@ built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js :: it threw TypeErr
 built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Reflect/set/receiver-is-not-object.js :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
 built-ins/Reflect/set/receiver-is-not-object.js (strict) :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
-built-ins/RegExp/Symbol.species/length.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/RegExp/Symbol.species/length.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/RegExp/Symbol.species/return-value.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/RegExp/Symbol.species/return-value.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/RegExp/Symbol.species/symbol-species-name.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/RegExp/Symbol.species/symbol-species-name.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/RegExp/Symbol.species/symbol-species.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/RegExp/Symbol.species/symbol-species.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/RegExp/escape/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/RegExp/escape/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/RegExp/lookBehind/back-references-to-captures.js :: it threw an object with no name: Actual [c, b] and expected [c, ab] should have the same contents. #3
@@ -2495,14 +2477,6 @@ built-ins/RegExp/prototype/unicodeSets/cross-realm.js :: it threw TypeError: wha
 built-ins/RegExp/prototype/unicodeSets/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/RegExp/unicode_full_case_folding.js :: it threw an object with no name: \u0390 does not match \u1fd3
 built-ins/RegExp/unicode_full_case_folding.js (strict) :: it threw an object with no name: \u0390 does not match \u1fd3
-built-ins/Set/Symbol.species/length.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Set/Symbol.species/length.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Set/Symbol.species/return-value.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Set/Symbol.species/return-value.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Set/Symbol.species/symbol-species-name.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Set/Symbol.species/symbol-species-name.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Set/Symbol.species/symbol-species.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Set/Symbol.species/symbol-species.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Set/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Set/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Set/prototype/isDisjointFrom/set-like-class-mutation.js :: it threw an object with no name: Set.prototype.isDisjointFrom should not call its argument's has method with values from this which have been deleted before visiting
@@ -2775,12 +2749,8 @@ built-ins/Symbol/replace/cross-realm.js :: it threw TypeError: what was called i
 built-ins/Symbol/replace/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Symbol/search/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Symbol/search/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Symbol/species/builtin-getter-name.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Symbol/species/builtin-getter-name.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Symbol/species/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Symbol/species/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Symbol/species/subclassing.js :: it threw an object with no name: Expected SameValue(«undefined», «function MyRegExp() { [native code] }») to be true
-built-ins/Symbol/species/subclassing.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «function MyRegExp() { [native code] }») to be true
 built-ins/Symbol/split/cross-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Symbol/split/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Symbol/toPrimitive/cross-realm.js :: it threw TypeError: what was called is not a function

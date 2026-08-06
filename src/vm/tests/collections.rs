@@ -484,3 +484,41 @@ fn group_by_keeps_the_order_the_keys_were_first_seen() {
         "2,2,undefined"
     );
 }
+
+#[test]
+fn map_set_and_regexp_each_have_the_species_accessor_their_clause_gives_them() {
+    // §24.1.4.2, §24.2.4.2 and §22.2.5.2 — a getter answering the receiver, not enumerable and
+    // configurable. Nothing in `Map` or `Set` *uses* one, which is why all three could be missing
+    // without a single ordinary program noticing: the accessor exists so a subclass can be asked.
+    for name in ["Map", "Set", "RegExp"] {
+        assert_eq!(
+            run(&format!(
+                "(function () {{ var d = Object.getOwnPropertyDescriptor({name}, Symbol.species);                  return (typeof d.get) + ',' + String(d.set) + ',' + d.enumerable + ','                  + d.configurable + ',' + ({name}[Symbol.species] === {name}) + ',' + d.get.name; }})()"
+            )),
+            "function,undefined,false,true,true,get [Symbol.species]",
+            "for `{name}`"
+        );
+    }
+    // It answers **the receiver**, so a subclass gets itself rather than the base — which is the
+    // whole reason it is a getter and not a fixed value.
+    assert_eq!(
+        run("(function () { class M extends Map {} return M[Symbol.species] === M; })()"),
+        "true"
+    );
+    // §24.3 and §24.4 give `WeakMap` and `WeakSet` none, and that is a decision rather than an
+    // oversight: neither has a method that would build a second one.
+    assert_eq!(
+        run(
+            "String(Object.getOwnPropertyDescriptor(WeakMap, Symbol.species)) + ','              + String(Object.getOwnPropertyDescriptor(WeakSet, Symbol.species))"
+        ),
+        "undefined,undefined"
+    );
+    // §23.2.2.4's belongs to `%TypedArray%` itself and the nine inherit it, so a concrete kind has
+    // no own one and still answers.
+    assert_eq!(
+        run(
+            "(function () {              return String(Object.getOwnPropertyDescriptor(Int8Array, Symbol.species)) + ','              + (Int8Array[Symbol.species] === Int8Array); })()"
+        ),
+        "undefined,true"
+    );
+}
