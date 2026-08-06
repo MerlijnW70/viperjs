@@ -34,6 +34,16 @@ dependencies, so there is no `unsafe` block and no third-party code to audit. If
 around that — an unsound `std` interaction, a build that slips the attribute — it is very much
 a report worth making.
 
+## Acknowledgements
+
+People who have reported a vulnerability here, with thanks. A report that arrives privately, with
+a reproduction that runs, is worth more to this project than almost anything else that lands in
+the tracker — and this one did more than report.
+
+| Reporter | What | Fixed in |
+| --- | --- | --- |
+| [@Zniece](https://github.com/Zniece) | [GHSA-6976-qm5m-7mcj](https://github.com/MerlijnW70/viperjs/security/advisories/GHSA-6976-qm5m-7mcj) — a `BigInt` division at the limb ceiling panicked in the embedder's process, and answered two other values wrongly in silence. Reported *and* fixed, with the silent wrong answers named rather than stopping at the crash. [The long version.](https://github.com/MerlijnW70/viperjs/discussions/4) | [0.2.2](https://github.com/MerlijnW70/viperjs/releases/tag/v0.2.2) |
+
 ## Supported versions
 
 ViperJS is pre-1.0 and under active development. Only the latest released version is supported;
