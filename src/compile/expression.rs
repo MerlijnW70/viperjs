@@ -753,7 +753,8 @@ impl Compiler<'_> {
                 Some(MethodKind::Set) => self.chunk.emit(Instruction::DefineSetter),
                 // §15.4.4's ordinary method is a data property like any other. What makes it a
                 // method rather than a function *expression* is the `name` and the missing
-                // `prototype`, and neither is here yet.
+                // `prototype` — both of which it has: `({ m(){} }).m.name` is `"m"` and its
+                // `prototype` is `undefined`. The comment here said "neither is here yet".
                 _ => self.chunk.emit(Instruction::DefineField),
             }
         }
@@ -1123,8 +1124,9 @@ impl Compiler<'_> {
     /// the addition cannot be string concatenation, whatever was there before.
     ///
     /// `ToNumeric` rather than `ToNumber` is what the specification says, and the difference is
-    /// BigInt: `1n++` is 2n and never becomes a Number. There are no BigInt values yet, so the
-    /// two agree on every value that exists, and this changes when they stop agreeing.
+    /// BigInt: `1n++` is `2n` and never becomes a Number. This used to add "there are no BigInt
+    /// values yet, so the two agree on every value that exists" — they exist, and the two no
+    /// longer agree, which is why the instruction has to be the one the clause names.
     /// Kept out of line, deliberately.
     ///
     /// [`Compiler::expression_inner`] recurses, so its stack frame is paid once per level of a

@@ -36,11 +36,17 @@
 //! what an absent property gives too. Telling those apart is the reason there is a boundary here at
 //! all, so every value the host passes in is checked first.
 //!
-//! # What is not here
+//! # Stopping a script that will not stop
 //!
-//! **Stopping a script that will not stop.** There is no deadline and no interrupt, so
-//! `while (true) {}` runs until the process does not. DR-0021 says why that is a separate record:
-//! it is a change to the interpreter loop and needs a measurement, not a surface.
+//! [`Engine::set_time_budget`] does it, and exceeding the budget is **not a throw** — a budget a
+//! script can `catch` is not a budget, so `try { while (true) {} } catch (e) {}` still ends.
+//! DR-0022 is the record; this section said "there is no deadline and no interrupt, so
+//! `while (true) {}` runs until the process does not", which was true of DR-0021 and was answered
+//! by the very next record.
+//!
+//! What the budget does **not** reach is a §22.2 match already running and a host function that
+//! blocks: `/(a+)+b/` against 22 `a`s takes about 700 ms against a 10 ms budget, which is a test
+//! rather than a sentence.
 
 use crate::compile::{Chunk, compile_script};
 use crate::heap::{Heap, Native, ObjectId, PropertyDescriptor, PropertyKey};

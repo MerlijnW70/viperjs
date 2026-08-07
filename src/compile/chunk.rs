@@ -470,9 +470,10 @@ pub enum Instruction {
     /// Store the top value into a global, **without** taking it off the stack.
     ///
     /// §6.2.5.6 `PutValue`, in the sloppy-mode half: assigning to a name that is nowhere creates
-    /// it on the global object. Strict code throws a ReferenceError instead, and nothing carries
-    /// a strictness this far yet — so this is the answer that is right for a Script's default,
-    /// and the conformance failures name the tests that want the other one.
+    /// it on the global object. Strict code throws a ReferenceError instead, and it does — the
+    /// strictness reaches here and step 6 is implemented. This said "nothing carries a strictness
+    /// this far yet, so this is the answer that is right for a Script's default", which was true
+    /// when it was written and had stopped being true well before it was read again.
     StoreGlobal(u32),
     /// Push the `typeof` of a global, or `"undefined"` when there is no such global.
     ///

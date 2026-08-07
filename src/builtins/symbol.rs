@@ -18,10 +18,15 @@
 //! `Symbol.iterator` by identity, not by name, and a script that shadows the property must not be
 //! able to change what the loop reaches for.
 //!
-//! Every one of them is installed even though ViperJS acts on only some of them yet. A well-known
-//! Symbol that exists but is never consulted is a property a script can put a method under and see
-//! ignored; one that does not exist at all is a `TypeError` on the line that mentions it, which is
-//! a worse answer to give and a harder one to grow out of.
+//! All thirteen are installed and all thirteen are now consulted — `@@unscopables` by `with`,
+//! `@@toStringTag` by `Object.prototype.toString`, `@@isConcatSpreadable` by `concat`, and the
+//! rest by the clauses that name them. This said "ViperJS acts on only some of them yet", which
+//! was the reason for installing them all at once and is no longer a caveat.
+//!
+//! The reason is worth keeping even so: a well-known Symbol that exists but is never consulted is
+//! a property a script can put a method under and see ignored; one that does not exist at all is a
+//! `TypeError` on the line that mentions it, which is a worse answer and a harder one to grow out
+//! of. That is why the table was complete before the clauses were.
 
 use super::{define_function_metadata, define_method, define_value};
 use crate::heap::{Heap, NativeCall, ObjectId, PropertyDescriptor, StringId};

@@ -40,12 +40,14 @@
 //! The last two are Syntax Errors, and no rule about them says "block" or "loop body" — the reset
 //! is the rule.
 //!
-//! # What is not here yet
+//! # Function boundaries
 //!
-//! Function boundaries. §14.8.1 and §14.9.1 both say "not crossing function or static
-//! initialization block boundaries", and §8.3's operations stop at a `FunctionStatementList` — so
-//! a `break` inside a function nested in a loop is an error, not a break of the outer loop. There
-//! are no functions to cross yet; when there are, this walk stops at them.
+//! §14.8.1 and §14.9.1 both say "not crossing function or static initialization block boundaries",
+//! and §8.3's operations stop at a `FunctionStatementList` — so a `break` inside a function nested
+//! in a loop is a Syntax Error rather than a break of the outer loop, and it is one today.
+//!
+//! This said "there are no functions to cross yet; when there are, this walk stops at them". They
+//! arrived and it does; the sentence outlived its condition by most of the project.
 
 use crate::ast::{Stmt, StmtKind};
 use crate::span::Span;

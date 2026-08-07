@@ -635,11 +635,13 @@ pub(super) fn this_object(call: &NativeCall<'_>, wanted: &'static str) -> Comple
     to_object(call.this_value, wanted)
 }
 
-/// §7.1.18 `ToObject`, in the part that does not need a wrapper.
+/// §7.1.18 `ToObject` — the wrapper included.
 ///
-/// §7.1.18 wraps a primitive and refuses only `undefined` and `null`. There is nothing to wrap
-/// one in yet, so the two cases share a message — and the message is passed in, because "requires
-/// an object" is useless without saying what did.
+/// It wraps a primitive and refuses only `undefined` and `null`, and the wrapping is real:
+/// `Object.keys("ab")` is `["0", "1"]` because the String object it stands for has those keys.
+/// The heading said "in the part that does not need a wrapper" and the body added "there is
+/// nothing to wrap one in yet" — the five wrapper prototypes have existed for a long time, and
+/// [`crate::vm::Vm::wrapped`] is what makes them.
 pub(super) fn coerced(vm: &mut Vm, heap: &mut Heap, value: Value) -> Completion<ObjectId> {
     // §7.1.18 proper, which is not the same question as "is this an object". Most of §20.1.2's
     // statics begin with `ToObject` and so answer about a *primitive* rather than refusing it:

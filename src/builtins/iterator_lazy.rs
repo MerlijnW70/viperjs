@@ -9,10 +9,15 @@
 //!
 //! # Why the state is a struct rather than a suspended frame
 //!
-//! §27.1.5 models each of these as a generator, and ViperJS has no generators yet. What a generator
+//! §27.1.5 models each of these as a generator, and these are not written as one. What a generator
 //! would keep in its frame is kept in [`crate::heap::Helper`] instead: the iterator it draws from,
-//! what it does to what it draws, and how far it has got. Every observable step is the same, and
-//! when frames can be suspended this could become one without a program noticing.
+//! what it does to what it draws, and how far it has got. Every observable step is the same.
+//!
+//! **That was once because there were no generators, and is now a choice.** DR-0017's suspendable
+//! frames arrived and this did not change: a struct with three fields is cheaper than parking an
+//! execution per helper, and the clause is a *model* rather than an instruction to build one. If
+//! that ever stops being true the swap is invisible to a program, which is the property worth
+//! keeping — but nothing is waiting on anything any more.
 //!
 //! # The two prototypes
 //!

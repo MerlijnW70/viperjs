@@ -11,11 +11,17 @@
 //! stands for it, and that decision needs a prototype, which needs a realm. Keeping the two apart
 //! is what lets `value/` stay a description of values rather than of a running engine.
 //!
-//! # What is missing, and how you can tell
+//! # What is here, and how you can tell what is not
 //!
-//! §9.3 lists about two hundred intrinsics. `Object` and the error hierarchy are here; everything
-//! else — `Array`, `String`, `Number`, `Function.prototype`'s methods — is not, and the
-//! conformance expectations name every test that notices.
+//! §9.3 lists about two hundred intrinsics and most of them are built. This section read "`Object`
+//! and the error hierarchy are here; everything else — `Array`, `String`, `Number`,
+//! `Function.prototype`'s methods — is not", which describes the engine as it stood around M3 and
+//! has been wrong for the whole of §22 through §28.
+//!
+//! What is still absent is named by the conformance expectations rather than by a list here, for
+//! the reason that list demonstrates: a file naming absences goes stale the moment one is filled,
+//! and the expectations file cannot, because a test that starts passing fails the build until its
+//! line is deleted.
 
 use crate::heap::{Heap, ObjectId, PropertyDescriptor, PropertyKey, SymbolId};
 use crate::value::Value;

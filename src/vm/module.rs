@@ -17,13 +17,17 @@
 //! Keeping the resolution outside is the same division DR-0014 makes for the time zone: the engine
 //! implements the clause and the host supplies the one fact the clause cannot know.
 //!
-//! # What is not here yet
+//! # Cycles, and what a self-import reads
 //!
 //! A cycle evaluates in the order the depth-first walk reaches it, which is §16.2.1.6's order, but
 //! there is no `[[Status]]` machinery to make a *self*-import legal — a module that imports itself
 //! reads its own bindings in the dead zone, which is what the specification says and is reached
-//! here by having nothing else. `export *` and re-exports are refused when the module is compiled,
-//! so nothing here has to answer for them.
+//! here by having nothing else.
+//!
+//! This paragraph ended "`export *` and re-exports are refused when the module is compiled, so
+//! nothing here has to answer for them." They are not refused: §16.2.1.6.3's `ResolveExport` walks
+//! a graph, `export *` is implemented including its ambiguity rule, and this file is what answers
+//! for them.
 //!
 //! A namespace object (`import * as n`) is made here, by §16.2.1.10 — one per module however many
 //! importers ask for one, which is what makes two importers' namespaces the same object.

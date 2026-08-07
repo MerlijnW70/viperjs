@@ -20,12 +20,17 @@
 //! is deleted. Afterwards the two names are two variables and nothing joins them again — so this
 //! is a slot per index rather than a count of how many are still mapped.
 //!
-//! # What is deliberately not here
+//! # The unmapped kind is here too
 //!
-//! An *unmapped* arguments object. §10.4.4 makes one for a strict function, or one whose parameter
-//! list is not simple, and ViperJS has neither: the interpreter tracks no strictness yet, and
-//! default, rest and destructuring parameters are refused. Every arguments object it can build is
-//! a mapped one, so there is one path here rather than two.
+//! §10.4.4 makes one for a strict function, or one whose parameter list is not simple, and both
+//! arrive today: `(function (a) { 'use strict'; a = 99; return arguments[0] })(1)` is `1` where the
+//! sloppy spelling is `99`, and a default, a rest or a destructuring parameter answers the same way
+//! in either mode. A strict one's `callee` throws rather than answering.
+//!
+//! This section read "What is deliberately not here", on the grounds that "the interpreter tracks
+//! no strictness yet, and default, rest and destructuring parameters are refused". All three
+//! conditions passed several milestones ago. The *mapping* is what this file is about and the two
+//! kinds differ only in whether it exists — which is why one file still serves both.
 
 use crate::heap::{EnvironmentId, Heap, ObjectId, PropertyKey};
 use crate::value::Value;

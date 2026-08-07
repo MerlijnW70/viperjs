@@ -121,7 +121,9 @@ pub struct Class {
 
 /// One element of a class body (§15.7), other than the `;` that declares nothing.
 ///
-/// Private names are the remaining `ClassElementName` alternative and are not here yet.
+/// Every `ClassElementName` alternative is represented, private names included — see
+/// [`crate::ast::PropertyKey::Private`]. This said they "are not here yet"; `class C { #x = 1 }`
+/// has compiled and run for several milestones.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ClassElement {
     /// `m() {}`, `get a() {}`, `static *m() {}` — a `MethodDefinition`.

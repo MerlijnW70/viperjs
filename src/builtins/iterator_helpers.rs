@@ -20,7 +20,9 @@
 //! when the fault was the caller's.
 //!
 //! The methods that *make* an iterator rather than consuming one — `map`, `filter`, `take`, `drop`
-//! and `flatMap` — need a helper object with state of its own and are not here yet.
+//! and `flatMap` — need a helper object with state of its own, and it is
+//! [`crate::heap::Helper`] in [`super::iterator_lazy`]. This said they "are not here yet"; all
+//! eleven of §27.1.4's methods answer today, which a `typeof` over the prototype settles in a line.
 
 use super::iterator::Walk;
 use super::{define_method, key};

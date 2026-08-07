@@ -25,10 +25,12 @@
 //! becomes a *binding* — DR-0015 — which is [`super::function`]'s doing, because the body compiler is
 //! what declares it.
 //!
-//! # What is not here yet
+//! # Private names
 //!
-//! Private names. Refused by name rather than mis-compiled, because a class that silently dropped a
-//! `#x` would be worse than one that would not compile.
+//! A `#x` is a slot in the class scope rather than a property, minted at the definition and
+//! reached through the environment chain — which is what lets a method see one and
+//! `Object.keys` not. This section read "What is not here yet: private names. Refused by name
+//! rather than mis-compiled"; nothing is refused, and `class C { #x = 1 }` runs.
 
 use super::CompileError;
 use super::function::{Asynchrony, Body, Lexical, Naming, Strict};

@@ -86,9 +86,10 @@ impl Compiler<'_> {
                 }
                 Ok(())
             }
-            // §14.2 — a block is its statements. No scope of its own yet: a block only *has* one
-            // when something lexical is declared inside it, and `let` and `const` are refused
-            // below until they can throw on a use before their declaration.
+            // §14.2 — a block is its statements, and it gets a scope of its own exactly when
+            // something lexical is declared inside it: `Compiler::block` emits the `PushScope`.
+            // This said `let` and `const` were "refused below until they can throw on a use before
+            // their declaration"; the temporal dead zone is implemented and nothing is refused.
             StmtKind::Block(body) => self.block(body),
             StmtKind::Declaration(declaration) => self.declaration(declaration, span),
             // §14.6 — the test is thrown away and exactly one branch runs. An `if` with no `else`
