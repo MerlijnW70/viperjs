@@ -111,6 +111,14 @@ use std::rc::Rc;
 /// Re-measure with `cargo rustc -p viperjs --lib -- --emit asm` and read `.seh_stackalloc` under
 /// `Vm::execute` — seconds, against minutes for a bisection, so an arm can be moved and judged one
 /// at a time. `lab`'s `reentry-cost` is what turns a frame figure back into a depth.
+///
+/// **Still 13,728 on 2026-08-08**, re-measured after DR-0025 gave a call a realm to carry. Worth
+/// the minute it cost: adding a field to a `Frame` looks like it should move this and cannot, since
+/// a frame is a record in a `Vec` and not a Rust stack frame. What *would* move it is a local live
+/// across the `match`, and the realm switch is in `enter` rather than here. **Read the release
+/// figure as a different measurement, not a better one** — the same prologue is 3,304 bytes
+/// optimised, and the cap is set against a debug build because that is the one whose stack a test
+/// can exhaust.
 const MAX_REENTRY_DEPTH: usize = 32;
 
 impl Vm {

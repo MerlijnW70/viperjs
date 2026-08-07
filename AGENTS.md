@@ -155,16 +155,24 @@ refused wholesale until DR-0008's second amendment. A pattern carrying neither `
 `/}/` as a brace, `/\1/` with no group as a legacy octal escape, `/\8/` as an `8`, `/\c1/` as three
 characters and `/[\d-x]/` as a union. See the section below for the shape of it.
 
-Conformance as of this commit is **about 84% of test262** — 78,222 of 93,161 runs on the run this
+**And a second §9.3 realm exists**, which is DR-0025 and was worth **+383 runs** across five slices
+— the largest single area since the generator work. `$262.createRealm` builds one; a function
+carries the `[[Realm]]` it was made in; §10.1.14 `GetFunctionRealm` answers for a bound function and
+a Proxy by recursing; and §10.3.1 step 3 makes a call run in the **callee's** realm, saved on the
+frame beside the `this` and the `new.target` it already saved. §10.1.13 is a real `Get` now and
+takes its default from the constructor's realm, which fixed every built-in constructor at once. See
+the section below for the three ordering faults that fell out of it.
+
+Conformance as of this commit is **85.56% of test262** — 79,710 of 93,161 runs on the run this
 sentence was written from, and a few hundred either way on the next. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
-Only 320 runs are now *stopped* before anything executes. **One of them was misfiled here for a
+Only 316 runs are now *stopped* before anything executes. **One of them was misfiled here for a
 long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
 property of strings is **not** a proposal — `regexp-v-flag` sits unmarked in test262's
 `features.txt` and shipped in ES2024. `\q{…}` was 54 of those and is now built; what is left of the
-flag is the 86 runs that need Unicode emoji sequence data. The rest is `$262.agent` 18, `super`
-in an arrow's direct `eval` 16, and two dozen module-beside-the-test parse failures that are
-proposals.
+flag is the 86 runs that need Unicode emoji sequence data (92 on the current run, six of them the
+`v`-flag's other stragglers). The rest is `this agent cannot block` 14, `super` in an arrow's direct
+`eval` 16, and two dozen module-beside-the-test parse failures that are proposals.
 
 **The failure buckets are the whole work list now.** Sorted by reason the largest look actionable
 and mostly are not, which is worth doing once and writing down rather than re-deriving:
@@ -172,13 +180,14 @@ and mostly are not, which is worth doing once and writing down rather than re-de
 | Runs | Reason | What it really is |
 | --- | --- | --- |
 | 8,316 | `Temporal is not defined` | a proposal — see below |
-| ~821 | `what was called is not a function` | **now mostly proposals**: `Array.fromAsync`, `Iterator.zip`/`zipKeyed`/`concat`, `Promise.allKeyed`/`allSettledKeyed`, `Map`/`WeakMap`'s `getOrInsert`, `Uint8Array` base64, `DataView`'s `getFloat16`, `Math.sumPrecise`, `JSON.rawJSON`. It was **939** and this file said the same thing about it then, while seven *shipped* functions were hiding in it — see below. **Ask the engine what it has** before believing this row |
-| ~898 | the heap budget | almost all are `RegExp/property-escapes`, and the lab has **parked** them — see below. The count shuffles between this row and the ten-second budget from run to run; it is one bucket wearing two names |
-| ~290 | `cannot read a property…` | **Atomics 224, and every one of them is `$262.agent`** — the row is `$262.agent.start` reading a property of `undefined`. Done as a target, see below. Beside it `Error.prototype.stack` 64, a proposal |
+| 407 | `what was called is not a function` | proposals now, and only now: `Array.fromAsync`, `Iterator.zip`/`zipKeyed`/`concat`, `Promise.allKeyed`/`allSettledKeyed`, `Map`/`WeakMap`'s `getOrInsert`, `Uint8Array` base64, `DataView`'s `getFloat16`. **It was 939, then 821, and this file called it "mostly proposals" at both figures — twice wrongly.** Seven *shipped* functions were hiding in it the first time and **369 runs of `$262.createRealm`** the second, which is nearly half. It is 407 because both were built. **Ask the engine what it has** before believing this row; it has misled two readers already |
+| 352 | `cannot read a property…` | **Atomics 224, and every one of them is `$262.agent`** — the row is `$262.agent.start` reading a property of `undefined`. Done as a target, see below. Beside it `Error.prototype.stack` 64, a proposal, and `legacy-accessors` 24, which is another |
+| 208 | `$DONE with what was called is not a function` | the asynchronous half of the row above, and the same proposals |
 | 293 | `expected 'meta', found an identifier` | `import.defer` and `import.source` — two proposals, not `import.meta` |
 | 238 | `Calling as constructor…` | all `Temporal` |
 | 224 | `expected ';', found an identifier` | `using` / `await using` — explicit resource management, a proposal |
-| 176 + 142 | `DisposableStack`, `AsyncDisposableStack` | the same proposal's library half |
+| 178 + 144 | `DisposableStack`, `AsyncDisposableStack` | the same proposal's library half |
+| 118 | `ShadowRealm is not defined` | a proposal, and **not** DR-0025's realm: that one shares a heap and passes objects freely, where this puts a membrane between the two sides |
 | 34 | `it did not parse: unexpected character` | **decorators**, a proposal — and the one row here whose reason says nothing at all about what it is. Its paths do |
 
 **Two buckets have been costed and must not be re-costed.**
@@ -197,6 +206,58 @@ and mostly are not, which is worth doing once and writing down rather than re-de
 - **`Temporal` is a Stage 3 proposal with a surface larger than `Date`, `Intl` and `RegExp`
   combined.** Building it would raise the number while making the engine no more of a JavaScript
   engine, and it will sit at the top of that list for as long as this file is worth reading.
+
+### A second realm, and the five things that had never had to say *whose* intrinsics — DR-0025
+
++383 across five slices, 79,307 to 79,690, and the largest actionable area since the generators.
+`$262.createRealm` was 381 runs on its own, and it was hiding in a bucket this file had twice called
+"mostly proposals". Read the record before touching any of it; what follows is what the record could
+not know in advance.
+
+**The order in the record was wrong and the buckets said so.** It put the host binding last, so that
+no test could go green against half an implementation. Measured instead: of the 195 files that need
+a second realm, 111 only take an object or a constructor across and 17 run code in it — so most were
+never waiting on the machine's realm at all. Binding `$262.createRealm` **second** turned a guess
+about what remained into a measurement, and 168 runs came back before any of the engine work.
+
+**Two bugs were older than the feature and could not be seen from inside one realm.** The
+well-known Symbols were built by `Realm::new`, so a second realm would have made a second
+`Symbol.iterator` — and the failure would have been silent, since an object carrying one realm's
+`@@iterator` is not iterable in the other rather than erroring. And `Realm::intrinsics` was a
+*ceiling*: a realm built second would have rooted everything older than it, leaving DR-0023's
+collector sound and blind. Both are the same shape — **a fact that is only wrong when there are two
+of something**, in a codebase that had one for its whole life.
+
+**Three ordering faults fell out of §10.1.13 becoming a real `Get`.** Reading an own data property
+observes nothing, so *when* it ran had never mattered; a `Get` can call a getter, and then it does:
+
+- `AllocateArrayBuffer` step 3.a's RangeError comes before step 4's `OrdinaryCreateFromConstructor`.
+- §23.2.5.1's two branches allocate in **opposite** orders — step 6.b.i first for an Object
+  argument, step 6.c.ii's `ToIndex` first for anything else.
+- §10.2.2 removes the callee's context at step 13 and runs step 14's TypeError and step 15's
+  `GetThisBinding` after it, so both belong to the **caller's** realm.
+
+**And `enter_native` put the realm back one line too early.** `settle` is where an `Abrupt` becomes
+an error *object*, and §10.3.1's context is still the callee's when it does — so a built-in from
+another realm threw the caller's `TypeError`. Eighteen runs ask for the other one by identity.
+
+**A `Frame` must carry a `RealmId` and not a `Realm`, and I got that wrong first.** The record made
+the argument about *function objects* — a `Realm` is 616 bytes and a function is made per closure —
+and the same argument is sharper for a frame, which is pushed per **call**. Holding the realm itself
+took a frame from 128 bytes to **736**, against DR-0019's measured 74 bytes of retained cost per
+call. Nothing a program does distinguishes the two, so no behavioural test failed and none could;
+what holds it now is a structural test beside `Frame`. **When a record gives a reason, check every
+place the reason applies rather than the one it names.**
+
+**`own_realm` exists beside `realm_of` for one distinction.** §10.5.12 is an *internal method*, not
+a built-in: calling through a Proxy pushes no execution context, so the running realm stays the
+caller's and the trap's arguments array is made in it. ViperJS gives a proxy its `[[Call]]` through
+`make_callable`, so it does carry a realm — whoever built the proxy — and switching on it regresses
+`Proxy/apply/arguments-realm.js`, which is the test that exists to notice.
+
+**What is left of the area is a long tail rather than a slice**: ~84 runs across `MakeConstructor`
+step 7.a's `%Object.prototype%`, `bind`'s prototype, `Symbol.split`'s splitter and a dozen others,
+each two to ten runs and each its own clause. `ShadowRealm`'s 118 are a different proposal.
 
 ### §25.4's three waits do not share a fate, and one of them works with a single agent
 
@@ -1032,9 +1093,20 @@ doc says which line to change if data ever arrives.
   - **`[[IsHTMLDDA]]` — 50 runs.** §B.3.6's three carve-outs (`ToBoolean`, `IsLooselyEqual`,
     `typeof`) are small; what is not small is that the slot belongs to a *host* object, so the
     embedding surface has to be able to make one and `conformance` builds its `$262` by writing
-    JavaScript source.
+    JavaScript source. **Half of that sentence expired on 2026-08-07**: `$262` is built in Rust now,
+    through `api.rs`. What is still true is that a host cannot make an object with a slot the engine
+    treats specially — see `api.rs`'s own list of what a host cannot bind, which has two more of the
+    same kind on it.
+  - **A host-bound *constructor*, and a `Uint8Array` a host can build — 0 runs and two real
+    packages.** `Engine::bind` and `bind_namespace` make functions with no `[[Construct]]`, and the
+    view constructors are crate-private, so `new TextEncoder()` cannot be offered and neither can
+    what it would answer with. `pako` wants both. **`crypto.getRandomValues` cannot be offered by
+    this crate at all** — OS entropy needs a dependency (DR-0001) or `unsafe` (DR-0002), and a
+    clock-seeded generator under that name is worse than an absent one, because a library that finds
+    it missing says so and one that finds a fake generates keys with it. It belongs to the embedder.
   - **`Atomics` is finished** — see the section below. 170 runs came out of it, and the 224 that
-    remain are `$262.agent` to the last file: 112 of the 127 failing files name it, and the other
+    remain are `$262.agent` to the last file (still 224 on 2026-08-08; `createRealm` was a different
+    host function and touched none of them): 112 of the 127 failing files name it, and the other
     15 are proposals (the immutable-`ArrayBuffer` harness, `Atomics.pause`). The estimate that
     stood here — "~80 winnable" — was low by more than double, which is what came of costing it
     from the failing paths instead of asking the engine what it had.

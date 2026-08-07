@@ -7,6 +7,30 @@ public API is not stable and may change in any release.
 
 ## [Unreleased]
 
+### Added
+
+- **A second ECMAScript realm.** `Vm::create_realm` builds a whole new set of §9.3 intrinsics on the
+  same heap — its own global, its own `Object.prototype`, its own constructors — and a function now
+  records the realm it was made in. §10.1.14 `GetFunctionRealm` answers for a bound function and a
+  `Proxy` by recursing into their targets, and a call runs in the **callee's** realm as §10.3.1
+  step 3 requires. An embedder wanting a sandbox per tenant wants exactly this. See DR-0025.
+- The well-known Symbols moved to the heap, so every realm shares one `Symbol.iterator` as
+  §6.1.5.1 requires.
+
+### Fixed
+
+- **§10.1.13 `GetPrototypeFromConstructor` now performs a real `Get`.** Every built-in constructor
+  read `new.target`'s `prototype` as an own data property, so a throwing accessor there did not
+  propagate and a `Proxy`'s `get` trap was never consulted — and the value a non-throwing accessor
+  answered was discarded, giving the instance the wrong prototype. Its intrinsic default also comes
+  from the constructor's realm now, and is the *concrete* one: a `Float64Array` falls back to
+  `Float64Array.prototype` and a `URIError` to `URIError.prototype`.
+- **A lexical `for` head binds its names around the expression it iterates**, uninitialised — so
+  `let x = 1; for (let x in { x })` is the ReferenceError §14.7.5.6 step 2 asks for.
+- `arguments` is refused in a direct `eval` written in a static class field's initialiser (§15.7.1).
+- Three ordering faults that only a real `Get` could expose: `AllocateArrayBuffer`'s length check,
+  §23.2.5.1's two branches, and §10.2.2's steps 14 and 15 belonging to the caller.
+
 ## [0.2.2] — 2026-08-06
 
 ### Security

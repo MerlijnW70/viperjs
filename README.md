@@ -12,7 +12,7 @@
 
 </div>
 
-It runs about **84% of test262** — classes, generators, `async`/`await`, ES modules, `Proxy`,
+It runs about **85% of test262** — classes, generators, `async`/`await`, ES modules, `Proxy`,
 `BigInt`, TypedArrays, and its own regular-expression engine. No `unsafe`, no crates, and no input
 makes it panic.
 
@@ -122,24 +122,26 @@ cargo run --release -p conformance -- --test262 ../test262
 ```
 
 ```
-78222 passed, 14619 failed, 320 not run
-84.25% of what ran — 83.96% of the whole suite
+79710 passed, 13135 failed, 316 not run
+85.85% of what ran — 85.56% of the whole suite
 ```
 
 **Two caveats, both honest.** The second percentage is the one to quote; the first flatters an
 engine that declines most of the suite, and it *falls* whenever the engine learns to compile
 something new.
 
-And the number **moves by a couple of hundred runs between invocations.** Three consecutive runs of
-one unchanged commit on an idle machine gave 78,222, then 78,504, then 78,566 passing. That spread
-is not progress: roughly 900 `RegExp/property-escapes` files sit exactly on the harness's
-ten-second per-test budget and cross it in either direction with machine load — the same file
-reports "the heap has grown past what this engine will allocate" on one run and "it did not finish
-within 10 seconds" on the next. Taking the intersection of those three runs, every one of the 490
-tests that "newly passed" had been failing on the heap budget, and none lay outside that one
-directory.
+The number **used to move by a couple of hundred runs between invocations**, and that is worth
+knowing about because the cause was the harness rather than the engine. Three consecutive runs of
+one unchanged commit gave 78,222, then 78,504, then 78,566 passing: roughly 900
+`RegExp/property-escapes` files sat exactly on the ten-second per-test budget and crossed it in
+either direction with machine load, reporting a heap failure on one run and a timeout on the next.
 
-So quote the low end, and treat a jump in that bucket as weather.
+The cause was one worker per hardware thread. Every worker is a process running JavaScript, so at
+full subscription each test is slower than the same test run alone. **The default is half the
+threads now**, and three consecutive runs of one commit are identical — which is what makes the
+expectations file usable as a ratchet rather than a weather report. `--workers` and `--budget` make
+it measurable, and a run prints both, because a number is comparable only with one taken under the
+same pair.
 `conformance/expectations.txt` is the real record — it may only shrink, so a genuine regression is
 still a hard failure.
 
