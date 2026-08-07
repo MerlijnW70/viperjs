@@ -42,7 +42,7 @@ pub fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
     if let Value::Object(target) = call.new_target
         && target != call.function
     {
-        let prototype = super::prototype_from(heap, call, vm.realm().object_prototype());
+        let prototype = super::prototype_from(vm, heap, call, Realm::object_prototype)?;
         return Ok(Value::Object(heap.new_object(Some(prototype))));
     }
     match call.argument(0) {

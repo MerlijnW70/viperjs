@@ -111,7 +111,7 @@ fn make_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completio
     };
     match call.constructing() {
         true => {
-            let prototype = super::prototype_from(heap, call, vm.realm().string_prototype());
+            let prototype = super::prototype_from(vm, heap, call, Realm::string_prototype)?;
             Ok(Value::Object(heap.new_string_object(prototype, data)))
         }
         false => Ok(Value::String(data)),

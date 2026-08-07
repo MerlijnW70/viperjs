@@ -218,3 +218,50 @@ fn something_with_no_realm_of_its_own_answers_the_running_realm() {
 
     assert_eq!(vm.realm_of(plain, &heap).global(), vm.realm().global());
 }
+
+#[test]
+fn a_proxy_has_no_realm_of_its_own_however_callable_it_is() {
+    // The distinction `own_realm` exists for, and it decides where a *call* runs. §10.5.12 is an
+    // **internal method**: calling through a proxy pushes no execution context, so the running realm
+    // stays the caller's and the trap's arguments array is made in it. A built-in's `[[Call]]` is
+    // the opposite — §10.3.1 step 3 makes the callee's realm the running one.
+    //
+    // ViperJS gives a proxy its `[[Call]]` through `Heap::make_callable`, so it really does hold a
+    // `Callable::Native` carrying a realm — whoever built the proxy. Answering `Some` for that would
+    // switch the running realm on every call through a proxy, and
+    // `Proxy/apply/arguments-realm.js` is what notices.
+    let mut heap = Heap::new();
+    let mut vm = Vm::new(&mut heap);
+    let second = vm.create_realm(&mut heap);
+    let theirs =
+        crate::builtins::global_object(&mut heap, &second, "Array").expect("a realm has Array"); // the test is which realm answers
+    let handler = heap.new_object(None);
+
+    // A real function has one, and it is the realm that made it.
+    assert_eq!(
+        vm.own_realm(theirs, &heap).map(|realm| realm.global()),
+        Some(second.global())
+    );
+
+    let proxy = heap.new_object(None);
+    if let Some(object) = heap.object_mut(proxy) {
+        object.set_proxy(crate::heap::Proxy::new(theirs, handler));
+    }
+    heap.make_callable(proxy, refuses, false, vm.realm().id());
+
+    // Callable, carrying a realm on its `Callable::Native`, and still `None` — because the clause
+    // gives it no slot. `realm_of` above answers `second` for the same object by recursing into the
+    // target, which is the other half of the same distinction.
+    assert!(heap.is_callable(Value::Object(proxy)));
+    assert!(vm.own_realm(proxy, &heap).is_none());
+    assert_eq!(vm.realm_of(proxy, &heap).global(), second.global());
+}
+
+/// A body for a proxy's `[[Call]]` that the test never runs — `own_realm` reads the slot, not this.
+fn refuses(
+    _vm: &mut Vm,
+    _heap: &mut Heap,
+    _call: &crate::heap::NativeCall<'_>,
+) -> crate::value::Completion<Value> {
+    Ok(Value::Undefined)
+}

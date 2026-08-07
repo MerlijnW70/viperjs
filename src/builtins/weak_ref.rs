@@ -90,7 +90,7 @@ fn construct_ref(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
             "a WeakRef target must be an object or an unregistered symbol",
         ));
     };
-    let prototype = super::prototype_from(heap, call, vm.realm().weak_ref_prototype());
+    let prototype = super::prototype_from(vm, heap, call, Realm::weak_ref_prototype)?;
     let object = heap.new_object(Some(prototype));
     if let Some(found) = heap.object_mut(object) {
         found.set_weak(Weak::Ref(target));
@@ -134,7 +134,7 @@ fn construct_registry(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Co
     if !heap.is_callable(cleanup) {
         return Err(Abrupt::type_error("the cleanup callback is not a function"));
     }
-    let prototype = super::prototype_from(heap, call, vm.realm().finalization_registry_prototype());
+    let prototype = super::prototype_from(vm, heap, call, Realm::finalization_registry_prototype)?;
     let object = heap.new_object(Some(prototype));
     if let Some(found) = heap.object_mut(object) {
         found.set_weak(Weak::Registry(Registry {

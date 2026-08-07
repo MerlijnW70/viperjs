@@ -146,7 +146,7 @@ fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
     if !heap.is_callable(executor) {
         return Err(Abrupt::type_error("the Promise executor is not a function"));
     }
-    let prototype = super::prototype_from(heap, call, vm.realm().promise_prototype());
+    let prototype = super::prototype_from(vm, heap, call, Realm::promise_prototype)?;
     let promise = heap.new_promise(Some(prototype));
     let (resolve, reject) = resolving_functions(heap, vm, promise);
 

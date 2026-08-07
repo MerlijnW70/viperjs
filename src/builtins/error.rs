@@ -36,7 +36,7 @@ use super::{define_method, define_value, key, text};
 pub fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     // §10.1.13 `GetPrototypeFromConstructor` — new.target's own `prototype`, and
     // `%Error.prototype%` when a script has replaced it with something that is not an object.
-    let prototype = super::prototype_from(heap, call, vm.realm().error_prototype());
+    let prototype = super::prototype_from(vm, heap, call, Realm::error_prototype)?;
     let error = heap.new_object(Some(prototype));
     // §20.5.1.1 step 2's `« [[ErrorData]] »`, which is the slot §20.1.3.6 step 7 asks for.
     if let Some(object) = heap.object_mut(error) {
@@ -64,7 +64,7 @@ pub fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
 /// is the characters of `"oops"`, and that is not a mistake in the specification — the first
 /// argument is an iterable of what went wrong and the second is what to say about it.
 fn aggregate_construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let prototype = super::prototype_from(heap, call, vm.realm().aggregate_error_prototype());
+    let prototype = super::prototype_from(vm, heap, call, Realm::aggregate_error_prototype)?;
     let error = heap.new_object(Some(prototype));
     // §20.5.1.1 step 2's `« [[ErrorData]] »`, which is the slot §20.1.3.6 step 7 asks for.
     if let Some(object) = heap.object_mut(error) {

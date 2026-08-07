@@ -383,7 +383,7 @@ fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
             utc_from_local(make_date(day, time))
         }
     };
-    let prototype = super::prototype_from(heap, call, vm.realm().date_prototype());
+    let prototype = super::prototype_from(vm, heap, call, Realm::date_prototype)?;
     Ok(Value::Object(heap.new_date(prototype, time_clip(time))))
 }
 

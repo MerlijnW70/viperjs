@@ -193,6 +193,7 @@ impl Vm {
         self.environment = frame.environment;
         self.this_value = frame.this_value;
         self.new_target = frame.new_target;
+        self.realm = frame.realm;
         *current = frame.code;
         *at = frame.at;
         Ok(parked)
@@ -228,6 +229,9 @@ impl Vm {
             at: *at,
             this_value: self.this_value,
             new_target: self.new_target,
+            // A revival goes back to whatever realm was running when it was asked for, and the
+            // parked body's own realm is restored below out of the suspension.
+            realm: self.realm,
             environment: self.environment,
             stack_base: base,
             handlers_base: self.handlers.len(),

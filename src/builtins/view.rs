@@ -130,7 +130,7 @@ fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
     if detached(heap, buffer) {
         return Err(Abrupt::type_error("this ArrayBuffer has been detached"));
     }
-    let prototype = super::prototype_from(heap, call, vm.realm().data_view_prototype());
+    let prototype = super::prototype_from(vm, heap, call, Realm::data_view_prototype)?;
     let object = heap.new_object(Some(prototype));
     if let Some(found) = heap.object_mut(object) {
         found.set_view(View {

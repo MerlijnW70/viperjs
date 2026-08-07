@@ -345,7 +345,7 @@ fn dynamic_function(
 
     // §20.2.1.1.1 step 28 — the prototype comes from `new.target` when there was one, which is what
     // makes a subclass of `Function` produce instances of itself.
-    let prototype = super::prototype_from(heap, call, kind.prototype(&vm.realm()));
+    let prototype = super::prototype_from(vm, heap, call, |realm| kind.prototype(realm))?;
     // Step 30 — the global environment, and an empty one of its own so that the body's own slots
     // have somewhere to live. Its parent is `None`: there is nothing outside a dynamic function.
     let environment = heap.new_environment(None, 0);

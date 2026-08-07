@@ -24,7 +24,7 @@ use super::{define_method, define_value, key};
 pub fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     // §23.1.1.1 step 1 — `ArrayCreate(…, proto)` where the proto comes from new.target, so a
     // `class D extends Array {}` makes arrays that inherit `D.prototype`.
-    let prototype = super::prototype_from(heap, call, vm.realm().array_prototype());
+    let prototype = super::prototype_from(vm, heap, call, Realm::array_prototype)?;
     if call.arguments.len() == 1
         && let Value::Number(length) = call.argument(0)
     {

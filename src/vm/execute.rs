@@ -2013,6 +2013,7 @@ impl Vm {
         self.environment = frame.environment;
         self.this_value = frame.this_value;
         self.new_target = frame.new_target;
+        self.realm = frame.realm;
         *current = frame.code;
         *at = frame.at;
         Ok(())
@@ -2024,6 +2025,32 @@ impl Vm {
     /// binding being unbound is how a constructor that never called `super()` becomes a
     /// ReferenceError rather than answering with nothing; and every other primitive is a TypeError
     /// where a base constructor would have ignored it.
+    /// Raise as though the callee's execution context were already gone — §10.2.2 step 13.
+    ///
+    /// `[[Construct]]` removes the callee's context at step 13 and only *then* runs step 14's
+    /// TypeError and step 15's `GetThisBinding`. So both of those belong to the **caller's** realm,
+    /// which is a distinction with exactly one observable consequence: which realm's `ReferenceError`
+    /// a class from another realm throws when its constructor returns before calling `super()`.
+    ///
+    /// Swapped rather than assigned, because the throw may be *caught* inside the constructor and
+    /// the body would then carry on in the wrong realm. The frame is still on the stack here —
+    /// `CompleteDerivedReturn` runs before `Return` pops it — which is why the caller's realm has to
+    /// be read off it rather than simply being the one in force.
+    fn raise_as_caller(
+        &mut self,
+        error: Abrupt,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let caller = self.frames.last().map_or(self.realm, |frame| frame.realm);
+        let inside = std::mem::replace(&mut self.realm, caller);
+        let outcome = self.raise(error, heap, root, current, at);
+        self.realm = inside;
+        outcome
+    }
+
     fn complete_derived_return(
         &mut self,
         index: u32,
@@ -2043,7 +2070,7 @@ impl Vm {
                 None => return Err(Fault::MissingLocal),
                 Some(Some(bound)) => self.stack.push(bound),
                 Some(None) => {
-                    self.raise(
+                    self.raise_as_caller(
                         Abrupt::reference_error(
                             "a derived constructor returned before calling `super`",
                         ),
@@ -2058,7 +2085,7 @@ impl Vm {
             // …step 13c — and every other primitive is a TypeError, where a base
             // constructor would have ignored it and answered with the object it made.
             _ => {
-                self.raise(
+                self.raise_as_caller(
                     Abrupt::type_error(
                         "a derived constructor returned something that is not an object",
                     ),
@@ -2267,6 +2294,7 @@ impl Vm {
         self.environment = frame.environment;
         self.this_value = frame.this_value;
         self.new_target = frame.new_target;
+        self.realm = frame.realm;
         *current = frame.code;
         *at = frame.at;
         Ok(())

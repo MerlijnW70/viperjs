@@ -91,7 +91,7 @@ fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
             "this SharedArrayBuffer is larger than this engine will allocate",
         ));
     }
-    let prototype = super::prototype_from(heap, call, vm.realm().shared_buffer_prototype());
+    let prototype = super::prototype_from(vm, heap, call, Realm::shared_buffer_prototype)?;
     let object = heap.new_object(Some(prototype));
     heap.charge_buffer(asked);
     if let Some(found) = heap.object_mut(object) {

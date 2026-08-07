@@ -274,18 +274,35 @@ pub(crate) fn define_metadata(heap: &mut Heap, function: ObjectId, length: Value
 /// from `D.prototype` all the same. A plain call has no target, and §20.5.1.1 step 1 says to use the
 /// active function object then — so `Error("x")` still inherits from `Error.prototype`.
 ///
-/// `default` is the clause's *intrinsic default prototype*, used when the constructor's `prototype`
-/// is not an object. §10.1.13 says to fall back rather than to throw, which is why
+/// `default` names the clause's *intrinsic default prototype* — as a function of a realm rather
+/// than as one object, because step 4 says **whose**. It is used when the constructor's `prototype`
+/// is not an object; §10.1.13 falls back rather than throwing, which is why
 /// `Error.prototype = 1; new Error()` is an ordinary error and not a TypeError.
-pub(crate) fn prototype_from(heap: &Heap, call: &NativeCall<'_>, default: ObjectId) -> ObjectId {
+///
+/// Two things this had wrong until DR-0025, and each was invisible from inside one realm:
+///
+/// - **Step 3 is `Get(constructor, "prototype")`, and it is a `?`.** Reading an own *data* property
+///   instead walks past a `prototype` accessor and past a Proxy's `get` trap, so a getter that
+///   throws never reached the caller and one that answered was never asked. Both then fell through
+///   to the default and looked like an ordinary construction.
+/// - **Step 4's realm is the constructor's, not the running one.** `GetFunctionRealm` decides it,
+///   which is what makes `Reflect.construct(Array, [], otherRealmFunction)` produce something
+///   inheriting from the *other* realm's `Array.prototype`.
+pub(crate) fn prototype_from(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    call: &NativeCall<'_>,
+    default: impl Fn(&Realm) -> ObjectId,
+) -> Completion<ObjectId> {
     let constructor = match call.new_target {
         Value::Object(target) => target,
         _ => call.function,
     };
-    match own_value(heap, constructor, "prototype") {
-        Some(Value::Object(prototype)) => prototype,
-        _ => default,
+    let name = key(heap, "prototype");
+    if let Value::Object(prototype) = vm.get_property_key(Value::Object(constructor), name, heap)? {
+        return Ok(prototype);
     }
+    Ok(default(&vm.realm_of(constructor, heap)))
 }
 
 /// An object's own property value, if it has one that is a value rather than an accessor.

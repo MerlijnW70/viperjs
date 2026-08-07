@@ -189,7 +189,7 @@ fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
         // Step 6.
         (pattern, flags)
     };
-    let prototype = super::prototype_from(heap, call, vm.realm().regexp_prototype());
+    let prototype = super::prototype_from(vm, heap, call, Realm::regexp_prototype)?;
     let object = heap.new_object(Some(prototype));
     initialize(vm, heap, object, pattern, flags)?;
     Ok(Value::Object(object))

@@ -588,6 +588,9 @@ impl Vm {
             at: 0,
             this_value: outer_this,
             new_target: outer_target,
+            // §16.2.1.6.2 gives a module a realm of its own; ViperJS has one graph in one realm, so
+            // a module body runs in the realm that asked for it and goes back to the same.
+            realm: self.realm,
             environment: outer_environment,
             stack_base: base,
             handlers_base,
@@ -640,24 +643,48 @@ impl Vm {
             .unwrap_or(self.realm)
     }
 
+    /// Only the `[[Realm]]` slot §10.1.14 step 2 reads — `None` where the clause has none.
+    ///
+    /// The half of [`Vm::realm_of`] that does **not** recurse and does not fall back, which is what
+    /// a caller wants when the absence is the answer rather than a reason to guess. §10.3.1's realm
+    /// switch is that caller: a built-in runs in its own realm, and something with no realm of its
+    /// own must not move the running one at all.
+    #[must_use]
+    pub fn own_realm(&self, function: crate::heap::ObjectId, heap: &Heap) -> Option<Realm> {
+        let object = heap.object(function)?;
+        // A proxy is asked about first for the reason `realm_of` gives: §10.5 gives it a
+        // `[[Call]]` through `Heap::make_callable`, so it carries a `Callable::Native` and a realm
+        // the clause never gave it. `None` here is the whole point — §10.5.12 is an *internal
+        // method* and not a built-in function, so calling through a proxy pushes no execution
+        // context and the running realm stays the caller's. `Proxy/apply/arguments-realm.js`
+        // measures exactly that, by asking which realm made the trap's arguments array.
+        if object.proxy().is_some() {
+            return None;
+        }
+        match object.call()? {
+            crate::heap::Callable::Bytecode { realm, .. }
+            | crate::heap::Callable::Native { realm, .. } => Some(self.realm_by_id(*realm)),
+            _ => None,
+        }
+    }
+
     /// §10.1.14 `GetFunctionRealm` — which realm `function` belongs to.
     ///
-    /// Step 2 reads the `[[Realm]]` slot, which here is the one recorded on the [`crate::heap::Callable`] when
-    /// the function was made. Steps 3 and 4 are the two exotic objects that have no slot of their
-    /// own and answer by recursing: a **bound function** into its `[[BoundTargetFunction]]`, a
-    /// **Proxy** into its `[[ProxyTarget]]`. Step 5 — anything else — is the *current* realm, which
-    /// is where §27.5.1's resumption methods and §27.7.5.3's revive closures land.
+    /// Step 2 reads the `[[Realm]]` slot, which here is [`Vm::own_realm`]. Steps 3 and 4 are the
+    /// two exotic objects that have none of their own and answer by recursing: a **bound function**
+    /// into its `[[BoundTargetFunction]]`, a **Proxy** into its `[[ProxyTarget]]`. Step 5 — anything
+    /// else — is the *current* realm, which is where §27.5.1's resumption methods and §27.7.5.3's
+    /// revive closures land.
     ///
     /// **Written as a loop rather than as the recursion the clause is spelled with**, because the
     /// depth is a program's to choose: `Proxy` over `Proxy` over a bound function nests as far as a
     /// script cares to build, and DR-0006 already says a nesting the input decides is counted
-    /// rather than trusted to the Rust stack. The bound comes from the same place as
-    /// `MAX_CALL_DEPTH`'s reasoning — a chain longer than this is a program
-    /// trying to find the wall, and answering the running realm is what the last step says anyway.
+    /// rather than trusted to the Rust stack. A chain longer than `MAX_REALM_CHAIN` is a program
+    /// looking for the wall, and what it gets is step 5's answer rather than a wrong one.
     ///
-    /// A **revoked** Proxy has neither target nor handler, and §10.1.14 step 4.a throws a TypeError
-    /// for it. This answers the running realm instead, deliberately: every caller here is looking
-    /// for a *default prototype*, and a revoked proxy cannot be a `new.target` that got this far —
+    /// A **revoked** Proxy has neither target nor handler, and §10.1.14 throws a TypeError for it.
+    /// This answers the running realm instead, deliberately: every caller here is looking for a
+    /// *default prototype*, and a revoked proxy cannot be a `new.target` that got this far —
     /// §7.3.13 `Construct` refuses it several steps earlier with a TypeError of its own. Turning
     /// this into a `Completion` for a case no program can reach would put a `?` on every caller.
     #[must_use]
@@ -973,6 +1000,7 @@ impl Vm {
             self.environment = frame.environment;
             self.this_value = frame.this_value;
             self.new_target = frame.new_target;
+            self.realm = frame.realm;
             *current = frame.code;
             *at = frame.at;
         }

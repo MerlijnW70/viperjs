@@ -238,11 +238,10 @@ fn construct(
             false => "Set must be called with new",
         }));
     }
-    let default = match map {
-        true => vm.realm().map_prototype(),
-        false => vm.realm().set_prototype(),
-    };
-    let prototype = super::prototype_from(heap, call, default);
+    let prototype = super::prototype_from(vm, heap, call, |realm| match map {
+        true => realm.map_prototype(),
+        false => realm.set_prototype(),
+    })?;
     let object = heap.new_object(Some(prototype));
     if let Some(found) = heap.object_mut(object) {
         found.set_collection(Collection::new(kind));

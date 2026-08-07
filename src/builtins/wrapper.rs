@@ -148,13 +148,7 @@ fn constructor(
 /// truthy however it was made.
 fn make_boolean(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let value = Value::Boolean(call.argument(0).to_boolean(heap));
-    Ok(wrap_or_convert(
-        vm,
-        heap,
-        call,
-        value,
-        vm.realm().boolean_prototype(),
-    ))
+    wrap_or_convert(vm, heap, call, value, Realm::boolean_prototype)
 }
 
 /// §21.1.1.1 `Number(value)` and `new Number(value)`.
@@ -176,31 +170,25 @@ fn make_number(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completio
         }),
         None => Value::Number(0.0),
     };
-    Ok(wrap_or_convert(
-        vm,
-        heap,
-        call,
-        value,
-        vm.realm().number_prototype(),
-    ))
+    wrap_or_convert(vm, heap, call, value, Realm::number_prototype)
 }
 
 /// The shape both constructors share: a wrapper when constructed, the primitive when called.
 fn wrap_or_convert(
-    _vm: &mut Vm,
+    vm: &mut Vm,
     heap: &mut Heap,
     call: &NativeCall<'_>,
     value: Value,
-    prototype: ObjectId,
-) -> Value {
+    default: impl Fn(&Realm) -> ObjectId,
+) -> Completion<Value> {
     match call.constructing() {
         // §10.1.13 again — the prototype comes from new.target, so `class D extends Number {}`
         // makes wrappers that inherit `D.prototype`. The intrinsic passed in is the default.
         true => {
-            let prototype = super::prototype_from(heap, call, prototype);
-            Value::Object(heap.new_wrapper(prototype, value))
+            let prototype = super::prototype_from(vm, heap, call, default)?;
+            Ok(Value::Object(heap.new_wrapper(prototype, value)))
         }
-        false => value,
+        false => Ok(value),
     }
 }
 

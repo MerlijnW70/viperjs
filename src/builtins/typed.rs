@@ -151,8 +151,15 @@ fn construct_concrete(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Co
     let Some((element, clamped)) = kind_of(heap, call) else {
         return Err(Abrupt::type_error("this is not a TypedArray constructor"));
     };
-    let prototype = super::prototype_from(heap, call, vm.realm().typed_array_prototype());
-
+    // **Where `AllocateTypedArray` runs is decided per branch, and the two branches disagree.**
+    // §23.2.5.1 step 6.b.i allocates *first* for an Object argument; step 6.c.ii runs `ToIndex` on
+    // anything else and only then allocates at 6.c.iii. So `new Int8Array(Symbol())` is a TypeError
+    // from the conversion and a `new.target` whose `prototype` getter throws never runs — where
+    // `new Int8Array(someBuffer)` reads that getter before it looks at the buffer at all.
+    //
+    // Invisible while §10.1.13 read an own data property: nothing observed the order. It became a
+    // regression the moment the read turned into a real `Get`, which is what the test that measures
+    // it is called.
     match call.argument(0) {
         // §23.2.5.1 step 4 — a *number* is a length, and the buffer is made here. Every other case
         // is an object, and which kind of object decides everything else.
@@ -162,11 +169,16 @@ fn construct_concrete(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Co
                 .and_then(crate::heap::Object::buffer)
                 .is_some() =>
         {
+            let prototype = super::prototype_from(vm, heap, call, Realm::typed_array_prototype)?;
             from_buffer(vm, heap, call, source, prototype, element, clamped)
         }
-        Value::Object(source) => from_object(vm, heap, source, prototype, element, clamped),
+        Value::Object(source) => {
+            let prototype = super::prototype_from(vm, heap, call, Realm::typed_array_prototype)?;
+            from_object(vm, heap, source, prototype, element, clamped)
+        }
         length => {
             let count = super::buffer::to_index(vm, heap, length)?;
+            let prototype = super::prototype_from(vm, heap, call, Realm::typed_array_prototype)?;
             allocate(vm, heap, prototype, element, clamped, count)
         }
     }

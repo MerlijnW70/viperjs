@@ -206,7 +206,7 @@ fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
             "Iterator is abstract and cannot be constructed directly",
         ));
     }
-    let prototype = super::prototype_from(heap, call, vm.realm().iterator_prototype());
+    let prototype = super::prototype_from(vm, heap, call, Realm::iterator_prototype)?;
     Ok(Value::Object(heap.new_object(Some(prototype))))
 }
 

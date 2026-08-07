@@ -110,6 +110,20 @@ fn receiver(_: &mut Vm, _: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
     Ok(call.this_value)
 }
 
+/// `AllocateArrayBuffer` step 3.a — a buffer cannot start out longer than it may ever be.
+///
+/// A RangeError and not a clamp, for the reason `ToIndex` gives: a buffer that quietly became a
+/// different size than asked for surfaces somewhere else entirely. Its own function because *where*
+/// it runs is observable — see the call in `construct`.
+fn refuse_longer_than_max(length: usize, max: Option<usize>) -> Completion<()> {
+    if max.is_some_and(|max| length > max) {
+        return Err(Abrupt::range_error(
+            "this ArrayBuffer is longer than its maxByteLength allows",
+        ));
+    }
+    Ok(())
+}
+
 /// §25.1.3.1 — `new ArrayBuffer(length)`.
 fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     if !call.constructing() {
@@ -122,7 +136,12 @@ fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
     // §25.1.3.1 step 3 `GetArrayBufferMaxByteLengthOption`, read *after* the length, which a
     // `valueOf` on either can observe.
     let max = max_byte_length_option(vm, heap, call.argument(1))?;
-    let prototype = super::prototype_from(heap, call, vm.realm().array_buffer_prototype());
+    // `AllocateArrayBuffer` step 3.a, and its position is the whole of what it decides: the
+    // RangeError comes **before** step 4's `OrdinaryCreateFromConstructor`, so a `new.target` whose
+    // `prototype` getter throws never runs it. Unobservable while §10.1.13 read an own data
+    // property, and a regression the moment it became a real `Get`.
+    refuse_longer_than_max(length, max)?;
+    let prototype = super::prototype_from(vm, heap, call, Realm::array_buffer_prototype)?;
     allocate(heap, prototype, length, max)
 }
 
@@ -162,14 +181,6 @@ fn allocate(
     length: usize,
     max: Option<usize>,
 ) -> Completion<Value> {
-    // §25.1.3.1 step 4 — a buffer cannot start out longer than it may ever be. A RangeError and
-    // not a clamp, for the reason `ToIndex` gives above: a buffer that quietly became a different
-    // size than asked for surfaces somewhere else entirely.
-    if max.is_some_and(|max| length > max) {
-        return Err(Abrupt::range_error(
-            "this ArrayBuffer is longer than its maxByteLength allows",
-        ));
-    }
     // DR-0013 — the budget is what refuses an absurd length rather than a limit written here, and
     // a buffer is the easiest thing in the language to ask too much of. Checked *before* the
     // allocation, because the point is not to make it.

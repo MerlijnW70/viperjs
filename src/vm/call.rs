@@ -374,6 +374,7 @@ impl Vm {
             at: *at,
             this_value: self.this_value,
             new_target: self.new_target,
+            realm: self.realm,
             environment: self.environment,
             stack_base: receiver_at,
             handlers_base: self.handlers.len(),
@@ -407,6 +408,14 @@ impl Vm {
             None => receiver,
         };
         self.new_target = new_target;
+        // §10.2.1 step 3 — the execution context this call pushes has the **callee's** realm, so a
+        // function taken out of another realm and called here resolves its intrinsics against the
+        // realm it was written in. `own_realm` rather than `realm_of`: what is being entered has a
+        // `[[Realm]]` of its own or it is not a body, and something without one must not move the
+        // running realm at all.
+        if let Some(callee_realm) = self.own_realm(object, heap) {
+            self.realm = callee_realm;
+        }
         *current = Some(body);
         *at = 0;
         Ok(())
@@ -563,7 +572,24 @@ impl Vm {
                 Entry::Plain | Entry::Method => Value::Undefined,
             },
         };
+        // §10.3.1 step 3 — a built-in runs with **its own** realm as the running one, not with the
+        // caller's. That is what makes `new other.Function()` produce a function belonging to the
+        // other realm, and what makes an error thrown out of `other.Array.prototype.map` be the
+        // other realm's TypeError. Restored afterwards whatever the call came to, because a throw
+        // leaves through this same path — DR-0025.
+        //
+        // Saved and put back here rather than on a `Frame`, because a native pushes none: it runs to
+        // completion inside this Rust call, which is the same reason its receiver and arguments are
+        // handled here instead of by the machinery below.
+        // `own_realm` and not `realm_of`: a proxy has no `[[Realm]]`, and §10.5.12 is an *internal
+        // method* rather than a built-in — calling through one pushes no execution context, so the
+        // running realm stays the caller's and the trap's arguments array is made in it.
+        let caller_realm = self.realm;
+        if let Some(callee_realm) = self.own_realm(function, heap) {
+            self.realm = callee_realm;
+        }
         let answer = native(self, heap, &call);
+        self.realm = caller_realm;
         // The callee, its receiver and its arguments all go, and the answer takes their place —
         // exactly what a return from a JavaScript function leaves behind.
         self.stack.truncate(receiver_at);
@@ -658,6 +684,14 @@ pub(super) struct Frame {
     /// and a return has to put both back or a constructor that called a plain function would find
     /// its own `new.target` gone when the call came back.
     pub(super) new_target: Value,
+    /// The realm to go back to — §10.2.1's execution context has one, and so does the caller's.
+    ///
+    /// Saved beside the `this` and the `new.target` for the same reason and by the same rule: a call
+    /// decides it, and a return has to put it back. What decides it is §10.3.1 step 3 and §10.2.1
+    /// step 3 together — a function runs with **its own** realm as the running one, so a function
+    /// taken out of another realm and called here resolves its intrinsics against the realm it was
+    /// written in. DR-0025.
+    pub(super) realm: crate::realm::Realm,
     /// The environment to go back to.
     ///
     /// Not the callee's — that one may outlive the call, if the callee made a closure over it.

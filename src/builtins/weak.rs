@@ -60,11 +60,10 @@ fn construct(
             false => "WeakSet must be called with new",
         }));
     }
-    let default = match kind.keyed() {
-        true => vm.realm().weak_map_prototype(),
-        false => vm.realm().weak_set_prototype(),
-    };
-    let prototype = super::prototype_from(heap, call, default);
+    let prototype = super::prototype_from(vm, heap, call, |realm| match kind.keyed() {
+        true => realm.weak_map_prototype(),
+        false => realm.weak_set_prototype(),
+    })?;
     let object = heap.new_object(Some(prototype));
     if let Some(found) = heap.object_mut(object) {
         found.set_collection(Collection::new(kind));
