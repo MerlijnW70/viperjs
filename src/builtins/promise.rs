@@ -34,7 +34,8 @@ use crate::vm::{Job, Vm};
 /// Build `Promise` into `heap` as a property of the global object.
 pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let prototype = realm.promise_prototype();
-    let constructor = heap.new_native_constructor(realm.function_prototype(), construct);
+    let constructor =
+        heap.new_native_constructor(realm.function_prototype(), construct, realm.id());
     super::define_function_metadata(heap, constructor, "Promise", 1);
     super::define_fixed(heap, constructor, "prototype", Value::Object(prototype));
     define_value(heap, global, "Promise", Value::Object(constructor));
@@ -98,7 +99,7 @@ fn define_species_getter(heap: &mut Heap, realm: &Realm, constructor: ObjectId) 
     let Some(species) = heap.well_known(super::well_known_at("species")) else {
         return;
     };
-    let getter = heap.new_native_function(realm.function_prototype(), species_getter);
+    let getter = heap.new_native_function(realm.function_prototype(), species_getter, realm.id());
     super::define_function_metadata(heap, getter, "get [Symbol.species]", 0);
     let _ = heap.define_own_property(
         constructor,
@@ -169,8 +170,9 @@ pub(crate) fn resolving_functions(heap: &mut Heap, vm: &Vm, promise: ObjectId) -
     // of them is called first settles the promise and the other finds nothing left to do.
     let settler = Settler::new(promise);
     let prototype = vm.realm().function_prototype();
+    let realm = vm.realm().id();
     let mut make = |native: Native, role: Role| {
-        let function = heap.new_native_function(prototype, native);
+        let function = heap.new_native_function(prototype, native, realm);
         super::define_function_metadata(heap, function, "", 1);
         if let Some(object) = heap.object_mut(function) {
             object.set_role(role);
@@ -463,7 +465,8 @@ fn finally(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Va
 
 /// A one-argument built-in carrying `role` where the specification writes a captured variable.
 fn wrapper(vm: &Vm, heap: &mut Heap, native: Native, role: Role) -> Value {
-    let function = heap.new_native_function(vm.realm().function_prototype(), native);
+    let function =
+        heap.new_native_function(vm.realm().function_prototype(), native, vm.realm().id());
     super::define_function_metadata(heap, function, "", 1);
     if let Some(object) = heap.object_mut(function) {
         object.set_role(role);
@@ -609,7 +612,11 @@ pub(crate) fn new_promise_capability(
     // Steps 4 and 5 — the executor is an ordinary function object whose `[[Capability]]` is where
     // the constructor's two arguments end up. §27.2.1.5.1 step 2 refuses a second call, which is
     // what stops a constructor handing out two pairs for one promise.
-    let executor = heap.new_native_function(vm.realm().function_prototype(), capabilities_executor);
+    let executor = heap.new_native_function(
+        vm.realm().function_prototype(),
+        capabilities_executor,
+        vm.realm().id(),
+    );
     super::define_function_metadata(heap, executor, "", 2);
     if let Some(object) = heap.object_mut(executor) {
         object.set_role(Role::Executor {

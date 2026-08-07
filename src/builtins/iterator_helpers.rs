@@ -288,9 +288,9 @@ fn define_pair(
     label: &str,
     pair: (Native, Native),
 ) {
-    let getter = heap.new_native_function(realm.function_prototype(), pair.0);
+    let getter = heap.new_native_function(realm.function_prototype(), pair.0, realm.id());
     super::define_function_metadata(heap, getter, &format!("get {label}"), 0);
-    let setter = heap.new_native_function(realm.function_prototype(), pair.1);
+    let setter = heap.new_native_function(realm.function_prototype(), pair.1, realm.id());
     super::define_function_metadata(heap, setter, &format!("set {label}"), 1);
     let _ = heap.define_own_property(
         object,
@@ -308,7 +308,8 @@ fn define_pair(
 /// Build §27.1's `Iterator` onto the global, and §27.1.4's consumers onto its prototype.
 pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let prototype = realm.iterator_prototype();
-    let constructor = heap.new_native_constructor(realm.function_prototype(), construct);
+    let constructor =
+        heap.new_native_constructor(realm.function_prototype(), construct, realm.id());
     super::define_function_metadata(heap, constructor, "Iterator", 0);
     super::define_fixed(heap, constructor, "prototype", Value::Object(prototype));
     super::define_value(heap, global, "Iterator", Value::Object(constructor));

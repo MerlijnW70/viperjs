@@ -37,7 +37,7 @@ use crate::vm::Vm;
 pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let prototype = realm.typed_array_prototype();
     let abstract_constructor =
-        heap.new_native_constructor(realm.function_prototype(), construct_abstract);
+        heap.new_native_constructor(realm.function_prototype(), construct_abstract, realm.id());
     super::define_function_metadata(heap, abstract_constructor, "TypedArray", 0);
     super::define_fixed(
         heap,
@@ -66,7 +66,8 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     // string: it answers the *name of the kind*, so one function serves all nine, and answers
     // `undefined` for anything that is not a TypedArray at all rather than throwing.
     if let Some(symbol) = heap.well_known(super::well_known_at("toStringTag")) {
-        let getter = heap.new_native_function(realm.function_prototype(), to_string_tag);
+        let getter =
+            heap.new_native_function(realm.function_prototype(), to_string_tag, realm.id());
         super::define_function_metadata(heap, getter, "get [Symbol.toStringTag]", 0);
         let _ = heap.define_own_property(
             prototype,
@@ -87,7 +88,8 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     // link is what makes every method shared rather than copied nine times.
     for (name, element, _) in crate::heap::KINDS {
         let kind_prototype = heap.new_object(Some(prototype));
-        let constructor = heap.new_native_constructor(abstract_constructor, construct_concrete);
+        let constructor =
+            heap.new_native_constructor(abstract_constructor, construct_concrete, realm.id());
         super::define_function_metadata(heap, constructor, name, 3);
         super::define_fixed(
             heap,
@@ -113,7 +115,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
 
 /// One of §23.2.3's accessors, which are accessors so that they read the view each time.
 fn accessor(heap: &mut Heap, realm: &Realm, prototype: ObjectId, name: &str, native: Native) {
-    let getter = heap.new_native_function(realm.function_prototype(), native);
+    let getter = heap.new_native_function(realm.function_prototype(), native, realm.id());
     super::define_function_metadata(heap, getter, &format!("get {name}"), 0);
     let key = key(heap, name);
     let _ = heap.define_own_property(

@@ -121,3 +121,100 @@ fn a_second_realms_intrinsics_survive_a_collection() {
     assert!(heap.object(array).is_some());
     assert!(heap.object(second.object_prototype()).is_some());
 }
+
+#[test]
+fn a_function_answers_the_realm_it_was_made_in() {
+    // §10.1.14 step 2 — the `[[Realm]]` slot, which here is recorded on the `Callable` when the
+    // function object is built. Every intrinsic of a realm is one of its functions, so this is the
+    // question `other.Array` has to answer differently from `Array`.
+    let mut heap = Heap::new();
+    let mut vm = Vm::new(&mut heap);
+    let first = vm.realm();
+    let second = vm.create_realm(&mut heap);
+
+    let ours =
+        crate::builtins::global_object(&mut heap, &first, "Array").expect("a realm has Array"); // the test is which realm answers
+    let theirs =
+        crate::builtins::global_object(&mut heap, &second, "Array").expect("a realm has Array"); // same
+
+    assert_eq!(vm.realm_of(ours, &heap).global(), first.global());
+    assert_eq!(vm.realm_of(theirs, &heap).global(), second.global());
+}
+
+#[test]
+fn a_bound_function_answers_the_realm_of_what_it_is_bound_to() {
+    // §10.1.14 step 3 — a bound function exotic object has no `[[Realm]]` of its own and recurses
+    // into its `[[BoundTargetFunction]]`. Binding one of the *other* realm's functions here in this
+    // one is exactly the case a slot copied at binding time would get wrong.
+    let mut heap = Heap::new();
+    let mut vm = Vm::new(&mut heap);
+    let second = vm.create_realm(&mut heap);
+    let theirs =
+        crate::builtins::global_object(&mut heap, &second, "Array").expect("a realm has Array"); // the test is which realm answers
+
+    let bound = heap.new_bound_function(
+        Some(vm.realm().function_prototype()),
+        crate::heap::Bound {
+            constructs: true,
+            target: theirs,
+            this_value: Value::Undefined,
+            arguments: Vec::new(),
+        },
+    );
+    assert_eq!(vm.realm_of(bound, &heap).global(), second.global());
+
+    // …and a chain of them, because the clause recurses and this is written as a loop.
+    let twice = heap.new_bound_function(
+        Some(vm.realm().function_prototype()),
+        crate::heap::Bound {
+            constructs: true,
+            target: bound,
+            this_value: Value::Undefined,
+            arguments: Vec::new(),
+        },
+    );
+    assert_eq!(vm.realm_of(twice, &heap).global(), second.global());
+}
+
+#[test]
+fn a_proxy_answers_the_realm_of_its_target_and_a_revoked_one_answers_the_running_realm() {
+    // §10.1.14 step 4 — a Proxy recurses into its `[[ProxyTarget]]`. Asked *before* the `[[Call]]`,
+    // because §10.5 gives a proxy its call through `make_callable` and so it does carry a Callable
+    // with a realm on it — the realm of whoever built the proxy, which the clause never asks for.
+    let mut heap = Heap::new();
+    let mut vm = Vm::new(&mut heap);
+    let second = vm.create_realm(&mut heap);
+    let theirs =
+        crate::builtins::global_object(&mut heap, &second, "Array").expect("a realm has Array"); // the test is which realm answers
+    let handler = heap.new_object(None);
+
+    let proxy = heap.new_object(None);
+    if let Some(object) = heap.object_mut(proxy) {
+        object.set_proxy(crate::heap::Proxy::new(theirs, handler));
+    }
+    assert_eq!(vm.realm_of(proxy, &heap).global(), second.global());
+
+    // Revoked, it has no target to ask. The clause throws; this answers the running realm, because
+    // every caller wants a default prototype and a revoked proxy is refused by `Construct` long
+    // before it could reach one — see `Vm::realm_of`.
+    if let Some(found) = heap
+        .object_mut(proxy)
+        .and_then(crate::heap::Object::proxy_mut)
+    {
+        found.revoke();
+    }
+    assert_eq!(vm.realm_of(proxy, &heap).global(), vm.realm().global());
+}
+
+#[test]
+fn something_with_no_realm_of_its_own_answers_the_running_realm() {
+    // §10.1.14 step 5. Reached by every callable that is not one of the four above — §27.5.1's
+    // resumption methods and §27.7.5.3's revive closures — and by an object that is not callable at
+    // all, which is what a caller holding a `new.target` that is not a constructor would have.
+    let mut heap = Heap::new();
+    let mut vm = Vm::new(&mut heap);
+    vm.create_realm(&mut heap);
+    let plain = heap.new_object(None);
+
+    assert_eq!(vm.realm_of(plain, &heap).global(), vm.realm().global());
+}

@@ -161,7 +161,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     // instances carry a property no other error has. Its `[[Prototype]]` is `Error`, exactly as a
     // native error's is, so it inherits the constructor's properties in the same way.
     let aggregate = realm.aggregate_error_prototype();
-    let made = heap.new_native_constructor(error, aggregate_construct);
+    let made = heap.new_native_constructor(error, aggregate_construct, realm.id());
     super::define_function_metadata(heap, made, "AggregateError", 2);
     let key = key(heap, "prototype");
     let descriptor = PropertyDescriptor {
@@ -205,7 +205,7 @@ fn constructor(
     inherits: Option<ObjectId>,
 ) -> ObjectId {
     let parent = inherits.unwrap_or_else(|| realm.function_prototype());
-    let function = heap.new_native_constructor(parent, construct);
+    let function = heap.new_native_constructor(parent, construct, realm.id());
     super::define_function_metadata(heap, function, name, 1);
 
     // §20.5.2 — `Error.prototype` on the constructor is **not** writable and **not**

@@ -380,7 +380,8 @@ impl Engine {
     /// because there was nothing else to write.
     pub fn bind(&mut self, name: &str, length: u32, native: Native) {
         let prototype = self.vm.realm().function_prototype();
-        let function = self.heap.new_native_function(prototype, native);
+        let realm = self.vm.realm().id();
+        let function = self.heap.new_native_function(prototype, native, realm);
         crate::builtins::define_function_metadata(&mut self.heap, function, name, length);
         // Made a line ago, so it cannot have been collected — the `Result` is the host's concern
         // and not this one's.
@@ -410,7 +411,8 @@ impl Engine {
             .new_object(Some(self.vm.realm().object_prototype()));
         for (method, length, native) in methods {
             let prototype = self.vm.realm().function_prototype();
-            let function = self.heap.new_native_function(prototype, *native);
+            let realm = self.vm.realm().id();
+            let function = self.heap.new_native_function(prototype, *native, realm);
             // §10.3.3's name for a method of a namespace is the qualified one, which is what a
             // stack trace and `console.log.name` should both say.
             let spelled = format!("{name}.{method}");

@@ -22,7 +22,7 @@
 //! of what a function *is*, and the heap is where a function lives. Nothing here calls anything;
 //! the interpreter does that.
 
-use super::{Heap, ObjectId};
+use super::{Heap, ObjectId, RealmId};
 use crate::compile::Chunk;
 use crate::value::{Completion, Value};
 use crate::vm::Vm;
@@ -35,13 +35,25 @@ pub enum Callable {
     ///
     /// The environment it closed over is the object's own, because a closure is that field and
     /// nothing else. See [`Heap::new_function`].
-    Bytecode(Rc<Chunk>),
+    Bytecode {
+        /// The compiled body.
+        code: Rc<Chunk>,
+        /// §10.2.3's `[[Realm]]` — the realm the function was created in, which is the one
+        /// `GetFunctionRealm` answers and §10.1.13 step 4 takes a default prototype from.
+        realm: RealmId,
+    },
     /// A function written in Rust — §10.3's built-in function objects.
     Native {
         /// The Rust function this runs.
         native: Native,
         /// Whether §10.3.2 gives it a `[[Construct]]` — see [`Callable::constructs`].
         constructs: bool,
+        /// §10.3.4 step 4's `[[Realm]]`.
+        ///
+        /// Meaningless for the one caller that is not building a built-in: §10.5's proxy is given a
+        /// `[[Call]]` through [`Heap::make_callable`], and `GetFunctionRealm` answers a proxy by
+        /// recursing into its target rather than by reading a slot the clause does not give it.
+        realm: RealmId,
     },
     /// What `bind` made — §10.4.1's bound function exotic objects.
     ///
@@ -125,7 +137,7 @@ impl Callable {
             // ever inherits from — a generator's instances come from calling it, not from `new`.
             // …and §15.8.3 for an `async` function, which is a fourth: what `new` would construct
             // is a promise, and a promise is not an instance of anything the call could name.
-            Self::Bytecode(body) => {
+            Self::Bytecode { code: body, .. } => {
                 !body.is_arrow() && !body.is_method() && !body.is_generator() && !body.is_async()
             }
             Self::Native { constructs, .. } => *constructs,

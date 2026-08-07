@@ -257,7 +257,8 @@ fn handlers(
     // slot once. `all` has one function and shares the record with nothing.
     let called = Rc::new(Cell::new(false));
     let mut make = |native: Native, kind: ReactionKind| {
-        let function = heap.new_native_function(vm.realm().function_prototype(), native);
+        let function =
+            heap.new_native_function(vm.realm().function_prototype(), native, vm.realm().id());
         super::define_function_metadata(heap, function, "", 1);
         if let Some(object) = heap.object_mut(function) {
             object.set_role(Role::Element {

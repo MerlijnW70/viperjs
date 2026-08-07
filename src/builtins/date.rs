@@ -284,7 +284,7 @@ pub(super) fn now_ms() -> f64 {
 /// Build `Date` and its prototype into `heap`.
 pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let prototype = realm.date_prototype();
-    let date = heap.new_native_constructor(realm.function_prototype(), construct);
+    let date = heap.new_native_constructor(realm.function_prototype(), construct, realm.id());
     define_function_metadata(heap, date, "Date", 7);
     define_fixed(heap, date, "prototype", Value::Object(prototype));
     define_value(heap, prototype, "constructor", Value::Object(date));
@@ -298,7 +298,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     // one, and the whole reason `date + 1` concatenates where `date - 1` subtracts. Not writable
     // and *configurable*, which is §21.4.4.45's own line and not §17's usual attributes.
     if let Some(symbol) = heap.well_known(super::well_known_at("toPrimitive")) {
-        let method = heap.new_native_function(realm.function_prototype(), to_primitive);
+        let method = heap.new_native_function(realm.function_prototype(), to_primitive, realm.id());
         define_function_metadata(heap, method, "[Symbol.toPrimitive]", 1);
         let _ = heap.define_own_property(
             prototype,

@@ -293,7 +293,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     // §27.1.2.1 — `[@@iterator]` answers the receiver. An iterator is iterable, which is what lets
     // one be passed anywhere an iterable is wanted.
     let shared = realm.iterator_prototype();
-    let itself = heap.new_native_function(realm.function_prototype(), same);
+    let itself = heap.new_native_function(realm.function_prototype(), same, realm.id());
     super::define_function_metadata(heap, itself, "[Symbol.iterator]", 0);
     if let Some(symbol) = heap.well_known(super::well_known_at("iterator")) {
         let name = crate::heap::PropertyKey::from_symbol(symbol);

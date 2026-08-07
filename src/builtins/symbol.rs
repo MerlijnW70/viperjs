@@ -59,7 +59,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let prototype = realm.symbol_prototype();
     // §20.4.1 — callable and *not* constructible, which is the only constructor of which that is
     // true. See the module comment for why.
-    let symbol = heap.new_native_function(realm.function_prototype(), make_symbol);
+    let symbol = heap.new_native_function(realm.function_prototype(), make_symbol, realm.id());
     define_function_metadata(heap, symbol, "Symbol", 0);
     super::define_fixed(heap, symbol, "prototype", Value::Object(prototype));
     define_value(heap, prototype, "constructor", Value::Object(symbol));
@@ -112,7 +112,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     // `Object(sym) == sym` is true: the wrapper is asked for a primitive and gives back the very
     // Symbol it wraps, where §20.4.3.3's `toString` would have refused.
     if let Some(symbol) = heap.well_known(super::well_known_at("toPrimitive")) {
-        let method = heap.new_native_function(realm.function_prototype(), to_primitive);
+        let method = heap.new_native_function(realm.function_prototype(), to_primitive, realm.id());
         define_function_metadata(heap, method, "[Symbol.toPrimitive]", 1);
         let _ = heap.define_own_property(
             prototype,
@@ -128,7 +128,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     }
     // §20.4.3.2 `description` is an accessor and not a value: it has to read the receiver, and a
     // data property could only hold one Symbol's answer.
-    let getter = heap.new_native_function(realm.function_prototype(), description);
+    let getter = heap.new_native_function(realm.function_prototype(), description, realm.id());
     define_function_metadata(heap, getter, "get description", 0);
     let key = super::key(heap, "description");
     let _ = heap.define_own_property(

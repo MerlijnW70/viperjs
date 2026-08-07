@@ -80,6 +80,14 @@ use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
 use std::rc::Rc;
 
+/// How far [`Vm::realm_of`] follows a chain of proxies and bound functions before it stops.
+///
+/// §10.1.14 recurses and the depth is the program's: `bind` over `bind` over a `Proxy` nests as far
+/// as a script cares to build one. DR-0006's rule is that a nesting the input decides is *counted*,
+/// and the number is generous for the same reason `MAX_CALL_DEPTH` is — a chain this long is a
+/// program looking for the wall, and what it gets is step 5's answer rather than a wrong one.
+const MAX_REALM_CHAIN: usize = 1_000;
+
 /// A chunk that does not make sense.
 ///
 /// Never reachable from a script. Reachable from a hand-written chunk, which is how it is tested,
@@ -230,17 +238,18 @@ pub struct Vm {
     stack: Vec<Value>,
     /// The intrinsics a thrown error is built from — the realm this machine is running in.
     realm: Realm,
-    /// Every *other* realm this machine has built, in the order [`Vm::create_realm`] made them.
+    /// Every realm this machine has built, indexed by its [`RealmId`] — the first at zero.
     ///
-    /// Not the same question as `realm` above and not a second spelling of it: that one is **which**
-    /// realm is running, this is **what else exists**, and the union of the two is every realm the
-    /// collector must keep alive. §9.3 does not destroy a realm and neither does this, so nothing
-    /// is ever removed here.
+    /// This is what a function's `[[Realm]]` names, and it is what the collector walks. §9.3 does
+    /// not destroy a realm and neither does this, so nothing is ever removed and an id stays valid
+    /// for the life of the machine.
     ///
-    /// It stays a plain list rather than the `RealmId` index DR-0025 describes until something can
-    /// *run* in one of them: an index that is always zero is dead data, and the record's frame
-    /// field is what will give it a second value to hold.
-    other_realms: Vec<Realm>,
+    /// The running realm above is `realms[0]` today, and the repetition is deliberate rather than
+    /// missed: `realm` answers **which one is running** and this answers **which one is number n**.
+    /// They come apart the moment a frame can carry a realm, which is DR-0025's next step; until
+    /// then a `Realm` is `Copy` and is never mutated after `Realm::new` returns, so the two have no
+    /// way to disagree.
+    realms: Vec<Realm>,
     /// A throw that nothing caught, kept until the loop can stop.
     ///
     /// The loop cannot return from inside the `match` — an operation that throws has to leave the
@@ -433,6 +442,8 @@ impl Vm {
     /// Takes the heap because a machine cannot run without intrinsics: the first TypeError it
     /// throws needs a prototype to be an instance of.
     pub fn new(heap: &mut Heap) -> Self {
+        // Realm zero, and the machine's realm table starts with it — DR-0025.
+        let first = Realm::new(heap, crate::heap::RealmId(0));
         Self {
             waiters: Vec::new(),
             modules: std::collections::BTreeMap::new(),
@@ -440,8 +451,8 @@ impl Vm {
             edges: std::collections::BTreeMap::new(),
             keys: std::collections::BTreeMap::new(),
             loader: None,
-            realm: Realm::new(heap),
-            other_realms: Vec::new(),
+            realm: first,
+            realms: vec![first],
             escaped: None,
             jobs: std::collections::VecDeque::new(),
             stack: Vec::new(),
@@ -614,6 +625,71 @@ impl Vm {
         self.realm
     }
 
+    /// The realm an id names, or the running one if it names none.
+    ///
+    /// An id is only ever handed out by [`Vm::create_realm`] and a realm is never removed, so the
+    /// fallback is not a case a program can reach through an id. It is reachable through a
+    /// *function* that has no `[[Realm]]` at all, which is what [`Vm::realm_of`] leans on — and
+    /// making that the same answer in both places is what keeps this total without a branch nothing
+    /// can take.
+    #[must_use]
+    pub fn realm_by_id(&self, id: crate::heap::RealmId) -> Realm {
+        self.realms
+            .get(id.0 as usize)
+            .copied()
+            .unwrap_or(self.realm)
+    }
+
+    /// §10.1.14 `GetFunctionRealm` — which realm `function` belongs to.
+    ///
+    /// Step 2 reads the `[[Realm]]` slot, which here is the one recorded on the [`crate::heap::Callable`] when
+    /// the function was made. Steps 3 and 4 are the two exotic objects that have no slot of their
+    /// own and answer by recursing: a **bound function** into its `[[BoundTargetFunction]]`, a
+    /// **Proxy** into its `[[ProxyTarget]]`. Step 5 — anything else — is the *current* realm, which
+    /// is where §27.5.1's resumption methods and §27.7.5.3's revive closures land.
+    ///
+    /// **Written as a loop rather than as the recursion the clause is spelled with**, because the
+    /// depth is a program's to choose: `Proxy` over `Proxy` over a bound function nests as far as a
+    /// script cares to build, and DR-0006 already says a nesting the input decides is counted
+    /// rather than trusted to the Rust stack. The bound comes from the same place as
+    /// `MAX_CALL_DEPTH`'s reasoning — a chain longer than this is a program
+    /// trying to find the wall, and answering the running realm is what the last step says anyway.
+    ///
+    /// A **revoked** Proxy has neither target nor handler, and §10.1.14 step 4.a throws a TypeError
+    /// for it. This answers the running realm instead, deliberately: every caller here is looking
+    /// for a *default prototype*, and a revoked proxy cannot be a `new.target` that got this far —
+    /// §7.3.13 `Construct` refuses it several steps earlier with a TypeError of its own. Turning
+    /// this into a `Completion` for a case no program can reach would put a `?` on every caller.
+    #[must_use]
+    pub fn realm_of(&self, function: crate::heap::ObjectId, heap: &Heap) -> Realm {
+        let mut at = function;
+        for _ in 0..MAX_REALM_CHAIN {
+            let Some(object) = heap.object(at) else {
+                return self.realm;
+            };
+            // Asked before the `[[Call]]` below, because §10.5 gives a proxy its `[[Call]]` through
+            // `Heap::make_callable` — so a proxy *does* hold a `Callable::Native` here, carrying a
+            // realm the clause never gives it. Reading that would answer whoever built the proxy
+            // rather than whoever wrote the target.
+            if let Some(proxy) = object.proxy() {
+                match proxy.parts() {
+                    Some((target, _)) => at = target,
+                    None => return self.realm,
+                }
+                continue;
+            }
+            match object.call() {
+                Some(crate::heap::Callable::Bytecode { realm, .. })
+                | Some(crate::heap::Callable::Native { realm, .. }) => {
+                    return self.realm_by_id(*realm);
+                }
+                Some(crate::heap::Callable::Bound(bound)) => at = bound.target,
+                _ => return self.realm,
+            }
+        }
+        self.realm
+    }
+
     /// Build a second §9.3 realm on the same heap, and answer it — DR-0025.
     ///
     /// A whole new set of intrinsics: its own `Object.prototype`, its own `Array`, its own global.
@@ -633,8 +709,11 @@ impl Vm {
     /// function taken from the new global still resolves its intrinsics against the old one. See
     /// DR-0025 for the two steps that finish it.
     pub fn create_realm(&mut self, heap: &mut Heap) -> Realm {
-        let realm = Realm::new(heap);
-        self.other_realms.push(realm);
+        // The id is taken *before* the realm is built, because everything `Realm::new` makes stamps
+        // it onto the functions it creates — a realm has to know its own number to build itself.
+        let id = crate::heap::RealmId(u32::try_from(self.realms.len()).unwrap_or(u32::MAX));
+        let realm = Realm::new(heap, id);
+        self.realms.push(realm);
         realm
     }
 
@@ -1095,10 +1174,9 @@ impl Vm {
         values.extend(self.templates.values().copied().map(Value::Object));
         // Everything the realm built before a script ran. Not the individual intrinsics, because a
         // list of those is one an intrinsic added later is left out of — see `Realm::intrinsics`.
-        values.extend(self.realm.intrinsics().map(Value::Object));
-        // …and the same for every realm `create_realm` built. Each has its own range rather than a
-        // ceiling, so a second realm roots what *it* made and not everything older than it.
-        for realm in &self.other_realms {
+        // Every realm, not only the running one. Each has its own range rather than a ceiling, so a
+        // realm built second roots what *it* made and not everything older than it.
+        for realm in &self.realms {
             values.extend(realm.intrinsics().map(Value::Object));
         }
         root.names(&mut values);

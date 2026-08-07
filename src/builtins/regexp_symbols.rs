@@ -512,7 +512,7 @@ pub(super) fn install(heap: &mut Heap, realm: &Realm) {
         let Some(symbol) = heap.well_known(super::well_known_at(name)) else {
             continue;
         };
-        let function = heap.new_native_function(realm.function_prototype(), native);
+        let function = heap.new_native_function(realm.function_prototype(), native, realm.id());
         super::define_function_metadata(heap, function, &format!("[Symbol.{name}]"), length);
         let slot = crate::heap::PropertyKey::from_symbol(symbol);
         let _ = heap.define_own_property(

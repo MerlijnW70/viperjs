@@ -250,6 +250,18 @@ pub struct StringId(pub(super) usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct BigIntId(pub(super) usize);
 
+/// Which §9.3 realm a function belongs to — its `[[Realm]]`, as an index rather than the realm.
+///
+/// An index because a [`crate::realm::Realm`] is fifty-odd handles and `Copy`, so a function object
+/// holding one would carry several hundred bytes for a fact that fits in four. The table it indexes
+/// is the machine's, which is also where `GetFunctionRealm` has to be asked from — a heap on its own
+/// cannot answer it, and that is the seam rather than an oversight. DR-0025.
+///
+/// `RealmId(0)` is the realm every `Vm` is built with, so a default is not wrong so much as
+/// *unearned*: the type deliberately has none, and every function is told which realm made it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct RealmId(pub(crate) u32);
+
 /// How much a heap may hand out, as a type whose `Default` is [`MAX_HEAP_BYTES`].
 ///
 /// A newtype for one number, and the reason is the shape of the mistake it prevents. `Heap` derives

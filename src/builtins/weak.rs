@@ -265,6 +265,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
                 true => construct_weak_map,
                 false => construct_weak_set,
             },
+            realm.id(),
         );
         super::define_function_metadata(heap, constructor, kind.name(), 0);
         super::define_fixed(heap, constructor, "prototype", Value::Object(prototype));

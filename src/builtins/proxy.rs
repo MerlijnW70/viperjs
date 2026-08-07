@@ -48,7 +48,10 @@ fn create(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Obj
         let constructs = heap
             .object(target)
             .is_some_and(crate::heap::Object::is_constructor);
-        heap.make_callable(object, through, constructs);
+        // §10.5 gives a proxy no `[[Realm]]`: `GetFunctionRealm` answers one by recursing into
+        // its target, so the id recorded here is never read and the running realm is as honest a
+        // placeholder as any.
+        heap.make_callable(object, through, constructs, vm.realm().id());
     }
     let _ = vm;
     Ok(object)
@@ -82,7 +85,8 @@ fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
 /// to use the proxy, and a method on the proxy would be neither.
 fn revocable(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let proxy = create(vm, heap, call)?;
-    let revoker = heap.new_native_function(vm.realm().function_prototype(), revoke);
+    let revoker =
+        heap.new_native_function(vm.realm().function_prototype(), revoke, vm.realm().id());
     super::define_function_metadata(heap, revoker, "", 0);
     // §28.2.2.1.1's `[[RevocableProxy]]` — carried on the function object, because a built-in's
     // body is a bare function pointer holding no state. The same shape §27.2's resolve functions
@@ -119,7 +123,8 @@ fn revoke(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
 
 /// Build `Proxy` onto the global.
 pub(super) fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
-    let constructor = heap.new_native_constructor(realm.function_prototype(), construct);
+    let constructor =
+        heap.new_native_constructor(realm.function_prototype(), construct, realm.id());
     super::define_function_metadata(heap, constructor, "Proxy", 2);
     define_value(heap, global, "Proxy", Value::Object(constructor));
     define_method(heap, realm, constructor, "revocable", 2, revocable);

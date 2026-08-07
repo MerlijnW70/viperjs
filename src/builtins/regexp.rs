@@ -609,7 +609,8 @@ fn flag_of(vm: &Vm, heap: &Heap, receiver: Value, read: fn(Flags) -> bool) -> Co
 /// Build `RegExp` and `RegExp.prototype` into `heap`.
 pub(super) fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let prototype = realm.regexp_prototype();
-    let constructor = heap.new_native_constructor(realm.function_prototype(), construct);
+    let constructor =
+        heap.new_native_constructor(realm.function_prototype(), construct, realm.id());
     super::define_function_metadata(heap, constructor, "RegExp", 2);
     define_value(heap, global, "RegExp", Value::Object(constructor));
     // §22.2.5.2 — `get RegExp[@@species]`, which answers the receiver. §22.2.6.8 and §22.2.6.14
@@ -659,7 +660,7 @@ pub(super) fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         }),
     ];
     for (name, native) in accessors {
-        let getter = heap.new_native_function(realm.function_prototype(), native);
+        let getter = heap.new_native_function(realm.function_prototype(), native, realm.id());
         super::define_function_metadata(heap, getter, &format!("get {name}"), 0);
         let slot = key(heap, name);
         let _ = heap.define_own_property(

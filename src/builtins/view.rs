@@ -26,7 +26,8 @@ use crate::vm::Vm;
 /// Build `DataView` into `heap` as a property of the global object.
 pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let prototype = realm.data_view_prototype();
-    let constructor = heap.new_native_constructor(realm.function_prototype(), construct);
+    let constructor =
+        heap.new_native_constructor(realm.function_prototype(), construct, realm.id());
     super::define_function_metadata(heap, constructor, "DataView", 1);
     super::define_fixed(heap, constructor, "prototype", Value::Object(prototype));
     define_value(heap, global, "DataView", Value::Object(constructor));
@@ -46,7 +47,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         ("byteLength", byte_length),
         ("byteOffset", byte_offset),
     ] {
-        let getter = heap.new_native_function(realm.function_prototype(), native);
+        let getter = heap.new_native_function(realm.function_prototype(), native, realm.id());
         super::define_function_metadata(heap, getter, &format!("get {name}"), 0);
         let key = key(heap, name);
         let _ = heap.define_own_property(

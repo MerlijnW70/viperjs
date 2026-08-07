@@ -89,7 +89,7 @@ pub fn is_array(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
 /// Build `Array` into `heap`.
 pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let prototype = realm.array_prototype();
-    let function = heap.new_native_constructor(realm.function_prototype(), construct);
+    let function = heap.new_native_constructor(realm.function_prototype(), construct, realm.id());
     super::define_function_metadata(heap, function, "Array", 1);
 
     // §23.1.4 — `Array.prototype` is not writable, not enumerable and not configurable, for the

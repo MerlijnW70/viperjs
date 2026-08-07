@@ -60,6 +60,11 @@ pub struct Realm {
     /// An ordinary object, like `Number.prototype` and unlike `String.prototype`: there is nothing
     /// a Symbol wrapper has of its own, so §20.4.3 needs no exotic object to hold it.
     symbol_prototype: ObjectId,
+    /// Which realm this is, as the machine's table numbers them — its own `[[Realm]]` handle.
+    ///
+    /// Carried by the realm so that everything built during `Realm::new` can stamp it onto the
+    /// functions it makes without the id being threaded separately beside the realm it belongs to.
+    id: crate::heap::RealmId,
     /// How many objects the heap held **before** this realm began building — see
     /// [`Realm::intrinsics`].
     first_intrinsic: usize,
@@ -242,7 +247,7 @@ impl Realm {
     /// ends. §20.5.5's error prototypes inherit from `Error.prototype`, which inherits from
     /// `Object.prototype` — so `e instanceof Error` will be true of a TypeError, once
     /// `instanceof` exists to ask.
-    pub fn new(heap: &mut Heap) -> Self {
+    pub fn new(heap: &mut Heap, id: crate::heap::RealmId) -> Self {
         // Taken before the first allocation, so `intrinsics` is a range this realm owns rather than
         // a ceiling that swallows whatever came before it. Zero for the first realm — DR-0025.
         let first_intrinsic = heap.object_count();
@@ -320,7 +325,7 @@ impl Realm {
         // §10.2.4.1 %ThrowTypeError% — a function whose whole behaviour is to refuse, made here
         // rather than in a builtin module because it is not reachable by name from any script:
         // its only appearances are as an accessor pair the specification puts in place.
-        let thrower = heap.new_native_function(function_prototype, refuse);
+        let thrower = heap.new_native_function(function_prototype, refuse, id);
         // §10.2.4.1's own shape, and it is stricter than any other built-in's. `length` is 0 and
         // `name` is the **empty string** — not `"ThrowTypeError"`, which is the specification's
         // name for it and not a name any program may read — and both are non-writable *and*
@@ -403,6 +408,7 @@ impl Realm {
             date_prototype,
             string_prototype,
             symbol_prototype,
+            id,
             first_intrinsic,
             intrinsics: 0,
             array_buffer_prototype,
@@ -797,6 +803,12 @@ impl Realm {
         self.string_iterator_prototype
     }
 
+    /// Which realm this is — what a function created here records as its `[[Realm]]`.
+    #[must_use]
+    pub fn id(&self) -> crate::heap::RealmId {
+        self.id
+    }
+
     /// Every object this realm built, as roots for the collector.
     ///
     /// A *range* rather than a list of the forty-odd intrinsic fields, and deliberately: a list
@@ -984,10 +996,16 @@ mod tests {
         // delete it. `constructor` is writable *and* configurable. Both are hidden from
         // enumeration, which is why `for (var k in new F())` finds nothing.
         let mut heap = Heap::new();
-        let realm = Realm::new(&mut heap);
+        let realm = Realm::new(&mut heap, crate::heap::RealmId(0));
         let environment = heap.new_environment(None, 0);
         let body = std::rc::Rc::new(crate::compile::Chunk::from_parts(Vec::new(), Vec::new()));
-        let function = heap.new_function(realm.function_prototype(), body, environment, None);
+        let function = heap.new_function(
+            realm.function_prototype(),
+            body,
+            environment,
+            None,
+            realm.id(),
+        );
         realm.make_constructor(&mut heap, function);
 
         let on_the_function = attributes(&heap, function, "prototype").expect("made"); // the test is about it
@@ -1024,7 +1042,7 @@ mod tests {
     #[test]
     fn every_prototype_chain_ends_at_object_prototype() {
         let mut heap = Heap::new();
-        let realm = Realm::new(&mut heap);
+        let realm = Realm::new(&mut heap, crate::heap::RealmId(0));
         // §20.5.5 — a native error's prototype inherits from `Error.prototype`, which inherits
         // from `Object.prototype`. Three links, and the last one ends: `Object.prototype` has a
         // null prototype, which is where every chain in the language stops.
@@ -1052,7 +1070,7 @@ mod tests {
     #[test]
     fn the_name_comes_from_the_kind_and_the_message_from_the_error() {
         let mut heap = Heap::new();
-        let realm = Realm::new(&mut heap);
+        let realm = Realm::new(&mut heap, crate::heap::RealmId(0));
         let Value::Object(error) = realm.error(&mut heap, NativeError::Range, "out of range")
         else {
             panic!("an error is an object")
@@ -1079,7 +1097,7 @@ mod tests {
         // §20.5.1.1 step 4 — the property is only made when there is a message, so
         // `new TypeError()` inherits the empty one rather than owning it.
         let mut heap = Heap::new();
-        let realm = Realm::new(&mut heap);
+        let realm = Realm::new(&mut heap, crate::heap::RealmId(0));
         let Value::Object(error) = realm.error(&mut heap, NativeError::Type, "") else {
             panic!("an error is an object")
         };
@@ -1094,7 +1112,7 @@ mod tests {
         // §17's convention, and it is observable: enumerating an error does not list `name`, so
         // `for (var k in e)` over a fresh TypeError finds nothing at all.
         let mut heap = Heap::new();
-        let realm = Realm::new(&mut heap);
+        let realm = Realm::new(&mut heap, crate::heap::RealmId(0));
         let prototype = realm.error_prototype();
         let keys = heap
             .object(prototype)

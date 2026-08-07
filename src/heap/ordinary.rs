@@ -44,9 +44,10 @@ impl Heap {
         body: Rc<Chunk>,
         environment: EnvironmentId,
         lexical: Option<Lexical>,
+        realm: crate::heap::RealmId,
     ) -> ObjectId {
         let mut object = Object::new(Some(prototype));
-        object.call = Some(Callable::Bytecode(body));
+        object.call = Some(Callable::Bytecode { code: body, realm });
         object.environment = Some(environment);
         // An arrow's home comes from the same capture as its `this`, so the three cannot be captured
         // separately and disagree about which method the arrow was written in. A method's own home is
@@ -95,8 +96,13 @@ impl Heap {
     ///
     /// The `name` and `length` §10.3.3 requires are properties like any others and are given by
     /// the caller, because only the caller knows them.
-    pub fn new_native_function(&mut self, prototype: ObjectId, native: Native) -> ObjectId {
-        self.built_in(prototype, native, false)
+    pub fn new_native_function(
+        &mut self,
+        prototype: ObjectId,
+        native: Native,
+        realm: crate::heap::RealmId,
+    ) -> ObjectId {
+        self.built_in(prototype, native, false, realm)
     }
 
     /// The same, for a built-in that §10.3.2 gives a `[[Construct]]` — a *constructor*.
@@ -105,14 +111,29 @@ impl Heap {
     /// the two are unequal in number: nearly every built-in is a method and cannot be constructed,
     /// and defaulting the other way would make `new Math.max()` an object rather than the
     /// TypeError §10.3 asks for.
-    pub fn new_native_constructor(&mut self, prototype: ObjectId, native: Native) -> ObjectId {
-        self.built_in(prototype, native, true)
+    pub fn new_native_constructor(
+        &mut self,
+        prototype: ObjectId,
+        native: Native,
+        realm: crate::heap::RealmId,
+    ) -> ObjectId {
+        self.built_in(prototype, native, true, realm)
     }
 
     /// `CreateBuiltinFunction` (§10.3.4), for both kinds.
-    fn built_in(&mut self, prototype: ObjectId, native: Native, constructs: bool) -> ObjectId {
+    fn built_in(
+        &mut self,
+        prototype: ObjectId,
+        native: Native,
+        constructs: bool,
+        realm: crate::heap::RealmId,
+    ) -> ObjectId {
         let mut object = Object::new(Some(prototype));
-        object.call = Some(Callable::Native { native, constructs });
+        object.call = Some(Callable::Native {
+            native,
+            constructs,
+            realm,
+        });
         self.objects.place(object)
     }
 
@@ -121,9 +142,19 @@ impl Heap {
     /// For §10.5 alone. Every other callable is *made* callable, because what it runs is decided
     /// with it; a proxy is made first and then finds out whether its target was a function, and
     /// §10.5 says it has a `[[Call]]` exactly when the target did.
-    pub fn make_callable(&mut self, object: ObjectId, native: Native, constructs: bool) {
+    pub fn make_callable(
+        &mut self,
+        object: ObjectId,
+        native: Native,
+        constructs: bool,
+        realm: crate::heap::RealmId,
+    ) {
         if let Some(found) = self.object_mut(object) {
-            found.call = Some(Callable::Native { native, constructs });
+            found.call = Some(Callable::Native {
+                native,
+                constructs,
+                realm,
+            });
         }
     }
 

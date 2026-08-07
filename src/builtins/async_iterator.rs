@@ -34,7 +34,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     // §7.4.3's synchronous path, and reads a `Symbol.iterator` the specification says it must not
     // even look for.
     let shared = realm.async_iterator_prototype();
-    let itself = heap.new_native_function(realm.function_prototype(), same);
+    let itself = heap.new_native_function(realm.function_prototype(), same, realm.id());
     super::define_function_metadata(heap, itself, "[Symbol.asyncIterator]", 0);
     if let Some(symbol) = heap.well_known(super::well_known_at("asyncIterator")) {
         let name = PropertyKey::from_symbol(symbol);
@@ -307,7 +307,7 @@ fn continuation(
         true => finished,
         false => carrying_on,
     };
-    let unwrap = heap.new_native_function(vm.realm().function_prototype(), native);
+    let unwrap = heap.new_native_function(vm.realm().function_prototype(), native, vm.realm().id());
     super::define_function_metadata(heap, unwrap, "", 1);
     let Value::Object(wrapper) = wrapper else {
         return Ok(reject_with(
@@ -323,8 +323,11 @@ fn continuation(
     let on_rejected = match closing {
         None => Value::Undefined,
         Some(iterator) => {
-            let closer =
-                heap.new_native_function(vm.realm().function_prototype(), close_and_rethrow);
+            let closer = heap.new_native_function(
+                vm.realm().function_prototype(),
+                close_and_rethrow,
+                vm.realm().id(),
+            );
             super::define_function_metadata(heap, closer, "", 1);
             if let Some(object) = heap.object_mut(closer) {
                 object.set_role(Role::SyncIterator {

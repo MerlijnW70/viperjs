@@ -207,9 +207,9 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     // script reads the two halves off the descriptor and calls them on other receivers, which is
     // how `Object.getOwnPropertyDescriptor(Object.prototype, "__proto__").set.call(o, p)` works
     // and why a special case in the property lookup would not do.
-    let getter = heap.new_native_function(realm.function_prototype(), get_proto);
+    let getter = heap.new_native_function(realm.function_prototype(), get_proto, realm.id());
     super::define_function_metadata(heap, getter, "get __proto__", 0);
-    let setter = heap.new_native_function(realm.function_prototype(), set_proto);
+    let setter = heap.new_native_function(realm.function_prototype(), set_proto, realm.id());
     super::define_function_metadata(heap, setter, "set __proto__", 1);
     let slot = super::key(heap, "__proto__");
     let _ = heap.define_own_property(

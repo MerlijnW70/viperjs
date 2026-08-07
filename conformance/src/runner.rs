@@ -352,7 +352,7 @@ fn install_host(heap: &mut Heap, realm: &viperjs::realm::Realm) -> viperjs::heap
         ("evalScript", eval_script),
         ("createRealm", create_realm),
     ] {
-        let function = heap.new_native_function(function_prototype, native);
+        let function = heap.new_native_function(function_prototype, native, realm.id());
         define(heap, name, viperjs::value::Value::Object(function));
     }
     let units: Vec<u16> = "$262".encode_utf16().collect();

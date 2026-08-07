@@ -58,6 +58,7 @@ fn build(
     let constructor = heap.new_native_constructor(
         realm.function_prototype(),
         if map { construct_map } else { construct_set },
+        realm.id(),
     );
     super::define_function_metadata(heap, constructor, name, 0);
     super::define_fixed(heap, constructor, "prototype", Value::Object(prototype));
@@ -137,6 +138,7 @@ fn build(
     let getter = heap.new_native_function(
         realm.function_prototype(),
         if map { map_size } else { set_size },
+        realm.id(),
     );
     super::define_function_metadata(heap, getter, "get size", 0);
     let name_key = key(heap, "size");

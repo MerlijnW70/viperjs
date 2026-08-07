@@ -225,7 +225,7 @@ pub(crate) fn define_method(
     length: u32,
     native: Native,
 ) {
-    let function = heap.new_native_function(realm.function_prototype(), native);
+    let function = heap.new_native_function(realm.function_prototype(), native, realm.id());
     define_function_metadata(heap, function, name, length);
     define_value(heap, object, name, Value::Object(function));
 }

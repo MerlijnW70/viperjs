@@ -275,7 +275,7 @@ impl Heap {
             // [`Chunk::names`], which is in `compile` so that a field added to a chunk cannot be
             // forgotten here.
             match object.call() {
-                Some(crate::heap::Callable::Bytecode(chunk)) => {
+                Some(crate::heap::Callable::Bytecode { code: chunk, .. }) => {
                     let mut named = Vec::new();
                     chunk.names(&mut named);
                     for value in named {
@@ -1028,7 +1028,7 @@ mod tests {
         assert!(heap.set_variable(captured, 0, Value::Object(held)));
         let body = std::rc::Rc::new(crate::compile::Chunk::from_parts(Vec::new(), Vec::new()));
         let prototype = heap.new_object(None);
-        let function = heap.new_function(prototype, body, captured, None);
+        let function = heap.new_function(prototype, body, captured, None, crate::heap::RealmId(0));
 
         let roots = Roots {
             values: vec![Value::Object(function)],
@@ -1061,6 +1061,7 @@ mod tests {
                 new_target: Value::Undefined,
                 home: None,
             }),
+            crate::heap::RealmId(0),
         );
 
         let roots = Roots {
@@ -1086,6 +1087,7 @@ mod tests {
                 new_target: Value::Object(target),
                 home: None,
             }),
+            crate::heap::RealmId(0),
         );
         let roots = Roots {
             values: vec![Value::Object(arrow)],
@@ -1109,6 +1111,7 @@ mod tests {
                 new_target: Value::Undefined,
                 home: None,
             }),
+            crate::heap::RealmId(0),
         );
         let roots = Roots {
             values: vec![Value::Object(arrow)],

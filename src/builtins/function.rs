@@ -349,7 +349,7 @@ fn dynamic_function(
     // Step 30 — the global environment, and an empty one of its own so that the body's own slots
     // have somewhere to live. Its parent is `None`: there is nothing outside a dynamic function.
     let environment = heap.new_environment(None, 0);
-    let object = heap.new_function(prototype, inner, environment, None);
+    let object = heap.new_function(prototype, inner, environment, None, vm.realm().id());
     // §20.2.1.1.1 steps 31 to 33 — `length` is how many parameters were written, `name` is
     // `"anonymous"` whatever the source says, and it is a constructor like any ordinary function.
     let length = u32::try_from(parameters.len()).unwrap_or(u32::MAX);
@@ -399,7 +399,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     // Not a curiosity. §7.3.22 step 1 answers `false` for a receiver that is not callable, so
     // `[] instanceof Function.prototype` reached that `false` and answered instead of running
     // step 4, which is where reading a `prototype` of `""` is the TypeError test262 asks for.
-    heap.make_callable(prototype, returns_undefined, false);
+    heap.make_callable(prototype, returns_undefined, false, realm.id());
     // …and being a function object, it has §10.3.3's two own properties like any other: a `length`
     // of +0 and a `name` of the **empty string**. Both are what §20.2.3 writes down rather than a
     // consequence of anything, which is why they are stated here and not derived.
@@ -417,7 +417,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     // §20.2.2 — the constructor, and the `prototype` that every function in the realm already
     // inherits from. Not writable, not enumerable and not configurable, for the reason
     // `Object.prototype` is not: everything callable points at it.
-    let function = heap.new_native_constructor(prototype, construct);
+    let function = heap.new_native_constructor(prototype, construct, realm.id());
     crate::builtins::define_function_metadata(heap, function, "Function", 1);
     crate::builtins::define_fixed(heap, function, "prototype", Value::Object(prototype));
     define_value(heap, prototype, "constructor", Value::Object(function));
@@ -427,7 +427,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     // `Function.prototype` that is neither writable nor configurable. §17's usual attributes would
     // let a program replace it and change what the operator means for every function in the realm
     // at once; they would also make `Vm::is_default_has_instance` a guess rather than a fact.
-    let has_instance = heap.new_native_function(prototype, has_instance);
+    let has_instance = heap.new_native_function(prototype, has_instance, realm.id());
     crate::builtins::define_function_metadata(heap, has_instance, "[Symbol.hasInstance]", 1);
     if let Some(symbol) = heap.well_known(crate::builtins::well_known_at("hasInstance")) {
         let _ = heap.define_own_property(
@@ -448,7 +448,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     // has to exist for that route to lead anywhere. Its own `[[Prototype]]` is `%Function%`,
     // which is what makes `AsyncFunction instanceof Function` true.
     let async_prototype = realm.async_function_prototype();
-    let async_function = heap.new_native_constructor(function, async_construct);
+    let async_function = heap.new_native_constructor(function, async_construct, realm.id());
     crate::builtins::define_function_metadata(heap, async_function, "AsyncFunction", 1);
     crate::builtins::define_fixed(
         heap,
@@ -487,7 +487,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
             async_generator_construct as crate::heap::Native,
         ),
     ] {
-        let made = heap.new_native_constructor(function, build);
+        let made = heap.new_native_constructor(function, build, realm.id());
         crate::builtins::define_function_metadata(heap, made, name, 1);
         // §27.3.2.1 — `prototype` here is **not configurable**, which is the one attribute that
         // differs from the `constructor` pointing the other way. Two links between the same pair of

@@ -27,7 +27,7 @@ use crate::vm::Vm;
 /// Build `String` and `String.prototype` into `heap`.
 pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let prototype = realm.string_prototype();
-    let string = heap.new_native_constructor(realm.function_prototype(), make_string);
+    let string = heap.new_native_constructor(realm.function_prototype(), make_string, realm.id());
     define_function_metadata(heap, string, "String", 1);
     super::define_fixed(heap, string, "prototype", Value::Object(prototype));
     define_value(heap, prototype, "constructor", Value::Object(string));

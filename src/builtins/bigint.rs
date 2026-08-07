@@ -23,7 +23,7 @@ use crate::vm::Vm;
 /// Build §21.2.1's constructor and §21.2.3's prototype.
 pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let prototype = realm.bigint_prototype();
-    let constructor = heap.new_native_function(realm.function_prototype(), convert);
+    let constructor = heap.new_native_function(realm.function_prototype(), convert, realm.id());
     define_function_metadata(heap, constructor, "BigInt", 1);
     super::define_fixed(heap, constructor, "prototype", Value::Object(prototype));
     define_value(heap, prototype, "constructor", Value::Object(constructor));

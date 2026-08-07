@@ -631,7 +631,8 @@ fn is_lock_free(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completi
 /// Build §25.2's `SharedArrayBuffer` and §25.4's `Atomics` onto the global.
 pub(super) fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let prototype = realm.shared_buffer_prototype();
-    let constructor = heap.new_native_constructor(realm.function_prototype(), construct);
+    let constructor =
+        heap.new_native_constructor(realm.function_prototype(), construct, realm.id());
     super::define_function_metadata(heap, constructor, "SharedArrayBuffer", 1);
     super::define_fixed(heap, constructor, "prototype", Value::Object(prototype));
     define_value(
@@ -648,7 +649,7 @@ pub(super) fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         ("growable", growable),
         ("maxByteLength", max_byte_length),
     ] {
-        let getter = heap.new_native_function(realm.function_prototype(), native);
+        let getter = heap.new_native_function(realm.function_prototype(), native, realm.id());
         super::define_function_metadata(heap, getter, &format!("get {name}"), 0);
         let name = key(heap, name);
         let _ = heap.define_own_property(

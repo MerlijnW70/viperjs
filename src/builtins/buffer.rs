@@ -25,7 +25,8 @@ use crate::vm::Vm;
 /// Build `ArrayBuffer` into `heap` as a property of the global object.
 pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let prototype = realm.array_buffer_prototype();
-    let constructor = heap.new_native_constructor(realm.function_prototype(), construct);
+    let constructor =
+        heap.new_native_constructor(realm.function_prototype(), construct, realm.id());
     super::define_function_metadata(heap, constructor, "ArrayBuffer", 1);
     super::define_fixed(heap, constructor, "prototype", Value::Object(prototype));
     define_value(heap, global, "ArrayBuffer", Value::Object(constructor));
@@ -65,7 +66,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         ("resizable", resizable),
         ("maxByteLength", max_byte_length),
     ] {
-        let getter = heap.new_native_function(realm.function_prototype(), native);
+        let getter = heap.new_native_function(realm.function_prototype(), native, realm.id());
         super::define_function_metadata(heap, getter, &format!("get {name}"), 0);
         let key = key(heap, name);
         let _ = heap.define_own_property(
@@ -90,7 +91,7 @@ pub(super) fn define_species(heap: &mut Heap, realm: &Realm, constructor: Object
     let Some(symbol) = heap.well_known(super::well_known_at("species")) else {
         return;
     };
-    let getter = heap.new_native_function(realm.function_prototype(), receiver);
+    let getter = heap.new_native_function(realm.function_prototype(), receiver, realm.id());
     super::define_function_metadata(heap, getter, "get [Symbol.species]", 0);
     let _ = heap.define_own_property(
         constructor,

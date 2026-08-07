@@ -210,7 +210,8 @@ fn unregister(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
 /// Build `WeakRef` and `FinalizationRegistry` into `heap`.
 pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let reference = realm.weak_ref_prototype();
-    let constructor = heap.new_native_constructor(realm.function_prototype(), construct_ref);
+    let constructor =
+        heap.new_native_constructor(realm.function_prototype(), construct_ref, realm.id());
     super::define_function_metadata(heap, constructor, "WeakRef", 1);
     super::define_fixed(heap, constructor, "prototype", Value::Object(reference));
     define_value(heap, global, "WeakRef", Value::Object(constructor));
@@ -219,7 +220,8 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     tag_with(heap, reference, "WeakRef");
 
     let registry = realm.finalization_registry_prototype();
-    let constructor = heap.new_native_constructor(realm.function_prototype(), construct_registry);
+    let constructor =
+        heap.new_native_constructor(realm.function_prototype(), construct_registry, realm.id());
     super::define_function_metadata(heap, constructor, "FinalizationRegistry", 1);
     super::define_fixed(heap, constructor, "prototype", Value::Object(registry));
     define_value(

@@ -140,7 +140,7 @@ impl Vm {
             // was one no program could reach — which is what `in_derived_constructor` below already
             // says the same way.
             .is_some_and(|callable| {
-                matches!(callable, crate::heap::Callable::Bytecode(chunk)
+                matches!(callable, crate::heap::Callable::Bytecode { code: chunk, .. }
                     if chunk.lexical_new_target())
             });
         crate::parser::EvalContext {
@@ -165,7 +165,7 @@ impl Vm {
                 .is_some_and(|callable| {
                     matches!(
                         callable,
-                        crate::heap::Callable::Bytecode(body) if body.derived_this().is_some()
+                        crate::heap::Callable::Bytecode { code: body, .. } if body.derived_this().is_some()
                     )
                 }),
         }

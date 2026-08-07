@@ -169,7 +169,7 @@ impl Vm {
                     at,
                 );
             }
-            Callable::Bytecode(body) => body,
+            Callable::Bytecode { code: body, .. } => body,
         };
 
         // §15.7.14 — a class constructor has a `[[Construct]]` and its `[[Call]]` does nothing but

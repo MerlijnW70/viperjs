@@ -1325,7 +1325,13 @@ impl Vm {
             (true, false) => self.realm.async_function_prototype(),
             (true, true) => self.realm.async_generator_function_prototype(),
         };
-        let object = heap.new_function(inherits, body.clone(), self.environment, lexical);
+        let object = heap.new_function(
+            inherits,
+            body.clone(),
+            self.environment,
+            lexical,
+            self.realm.id(),
+        );
         // §20.2.4.1 — `length` is what the function says it needs, which stops at the
         // first default and never counts a rest parameter. Not writable and not
         // enumerable, and *configurable*, which is what lets a decorator replace it.
@@ -1801,6 +1807,7 @@ impl Vm {
             body.clone(),
             self.environment,
             None,
+            self.realm.id(),
         );
         let key = property_name(heap, "length");
         heap.define_own_property(

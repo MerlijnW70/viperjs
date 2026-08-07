@@ -144,7 +144,14 @@ fn a_yield_outside_a_generator_is_a_chunk_that_does_not_make_sense() {
         vec![Value::Number(1.0)],
     ));
     let environment = heap.new_environment(None, 0);
-    let ordinary = heap.new_function(vm.realm().object_prototype(), body, environment, None);
+    let realm = vm.realm().id();
+    let ordinary = heap.new_function(
+        vm.realm().object_prototype(),
+        body,
+        environment,
+        None,
+        realm,
+    );
     let calls = Chunk::from_parts(
         vec![
             Instruction::Constant(0),
