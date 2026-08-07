@@ -345,6 +345,18 @@ pub struct Heap {
     /// outlives every realm by design: the specification says so in as many words, and it is the
     /// reason two frames can agree on a key without sharing an object.
     registry: HashMap<StringId, SymbolId>,
+    /// §6.1.5.1's well-known Symbols — `Symbol.iterator` and its twelve siblings.
+    ///
+    /// Here rather than on [`crate::realm::Realm`] for the reason the registry above is here, and
+    /// the clause is as blunt: "unless otherwise specified, well-known symbols values are shared by
+    /// all realms". Built per realm they would be *different* Symbols, so an object carrying one
+    /// realm's `@@iterator` would not be iterable in the other — not an error, a silently absent
+    /// method, which is the worst answer this engine knows how to give. DR-0025.
+    ///
+    /// Empty until the first realm fills it, because building them needs the interning a `Default`
+    /// cannot do. Nothing can read it before then: reading one takes a running program, and a
+    /// program takes a realm.
+    well_known: Vec<SymbolId>,
     /// How many code units every String on this heap holds between them.
     ///
     /// Tracked rather than summed because [`Heap::footprint`] is asked in the interpreter's loop
@@ -647,6 +659,33 @@ impl Heap {
             description,
             registered: None,
         })
+    }
+
+    /// §6.1.5.1's well-known Symbol at `at` in `crate::builtins::WELL_KNOWN`.
+    ///
+    /// By index rather than by name because every use in the engine is a compile-time constant and
+    /// a name lookup would be a string comparison on a path that has none; `builtins::well_known_at`
+    /// turns a name into a position for the callers that start with one.
+    ///
+    /// `None` before any realm has been built, which no program can observe — see the field.
+    #[must_use]
+    pub fn well_known(&self, at: usize) -> Option<SymbolId> {
+        self.well_known.get(at).copied()
+    }
+
+    /// Fill §6.1.5.1's table with what `build` makes, and only if it is empty.
+    ///
+    /// The guard is the whole of DR-0025's symbol rule: the second realm to be built takes the
+    /// first realm's Symbols rather than making its own, so `other.Symbol.iterator` and
+    /// `Symbol.iterator` are one value. Answers nothing, because the table's home is here — a
+    /// caller that wants a Symbol asks [`Heap::well_known`] like everybody else.
+    ///
+    /// `build` is a closure rather than a list of names because the names belong with the
+    /// built-ins, and a heap that knew them would be reaching upward for a table it cannot use.
+    pub(crate) fn build_well_known(&mut self, build: impl FnOnce(&mut Self) -> Vec<SymbolId>) {
+        if self.well_known.is_empty() {
+            self.well_known = build(self);
+        }
     }
 
     /// The Symbol `key` names in §20.4.2.2's registry, made and filed if it is not there yet.

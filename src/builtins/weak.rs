@@ -289,6 +289,6 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         for (name, length, native) in methods {
             define_method(heap, realm, prototype, name, *length, *native);
         }
-        tag_with(heap, realm, prototype, kind.name());
+        tag_with(heap, prototype, kind.name());
     }
 }

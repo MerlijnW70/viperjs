@@ -263,7 +263,7 @@ fn set_constructor(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Compl
 
 /// The `[@@toStringTag]` half.
 fn set_tag(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let Some(symbol) = vm.realm().well_known(super::well_known_at("toStringTag")) else {
+    let Some(symbol) = heap.well_known(super::well_known_at("toStringTag")) else {
         return Ok(Value::Undefined);
     };
     ignoring_setter(vm, heap, call, PropertyKey::from_symbol(symbol))
@@ -337,7 +337,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         "Iterator.prototype.constructor",
         (get_constructor, set_constructor),
     );
-    if let Some(symbol) = realm.well_known(super::well_known_at("toStringTag")) {
+    if let Some(symbol) = heap.well_known(super::well_known_at("toStringTag")) {
         define_pair(
             heap,
             realm,

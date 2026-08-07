@@ -36,7 +36,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     let shared = realm.async_iterator_prototype();
     let itself = heap.new_native_function(realm.function_prototype(), same);
     super::define_function_metadata(heap, itself, "[Symbol.asyncIterator]", 0);
-    if let Some(symbol) = realm.well_known(super::well_known_at("asyncIterator")) {
+    if let Some(symbol) = heap.well_known(super::well_known_at("asyncIterator")) {
         let name = PropertyKey::from_symbol(symbol);
         let _ = heap.define_own_property(
             shared,
@@ -99,14 +99,14 @@ pub(crate) fn get_async_iterator(
     heap: &mut Heap,
     iterable: Value,
 ) -> Completion<(Value, Value)> {
-    if let Some(key) = well_known(vm, "asyncIterator")
+    if let Some(key) = well_known(heap, "asyncIterator")
         && let Some(method) = method_at(vm, heap, iterable, key)?
     {
         return from_method(vm, heap, iterable, method);
     }
     // Step 1.b — no async iterator, so the sync one is adapted. A thing with neither is a
     // TypeError, and this is where `for await (const x of 1)` is refused.
-    let sync = match well_known(vm, "iterator") {
+    let sync = match well_known(heap, "iterator") {
         Some(key) => method_at(vm, heap, iterable, key)?,
         None => None,
     };
@@ -160,9 +160,9 @@ fn method_at(
     Ok(Some(found))
 }
 
-/// The key one of §6.1.5.1's Symbols names, if this realm has it.
-fn well_known(vm: &Vm, symbol: &str) -> Option<PropertyKey> {
-    let id = vm.realm().well_known(super::well_known_at(symbol))?;
+/// The key one of §6.1.5.1's Symbols names, if this heap has it.
+fn well_known(heap: &Heap, symbol: &str) -> Option<PropertyKey> {
+    let id = heap.well_known(super::well_known_at(symbol))?;
     Some(PropertyKey::from_symbol(id))
 }
 

@@ -507,9 +507,9 @@ pub(super) fn install(heap: &mut Heap, realm: &Realm) {
     // `%IteratorPrototype%` and so is iterable without saying so itself.
     let iterating = realm.regexp_string_iterator_prototype();
     super::define_method(heap, realm, iterating, "next", 0, iterator_next);
-    super::collection::tag_with(heap, realm, iterating, "RegExp String Iterator");
+    super::collection::tag_with(heap, iterating, "RegExp String Iterator");
     for (name, length, native) in methods {
-        let Some(symbol) = realm.well_known(super::well_known_at(name)) else {
+        let Some(symbol) = heap.well_known(super::well_known_at(name)) else {
             continue;
         };
         let function = heap.new_native_function(realm.function_prototype(), native);

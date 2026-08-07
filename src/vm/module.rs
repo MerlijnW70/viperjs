@@ -760,11 +760,8 @@ impl Vm {
         let environment = self
             .environment_of(chunk)
             .unwrap_or_else(|| heap.new_environment(None, 0));
-        let object = heap.new_namespace(
-            environment,
-            self.realm
-                .well_known(crate::builtins::well_known_at("toStringTag")),
-        );
+        let tag = heap.well_known(crate::builtins::well_known_at("toStringTag"));
+        let object = heap.new_namespace(environment, tag);
         if let Some(record) = self.modules.get_mut(&identity(chunk)) {
             record.namespace = Some(object);
         }

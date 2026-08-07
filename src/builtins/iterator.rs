@@ -88,7 +88,7 @@ impl Walk {
     /// accepts an Array and answers `{}` for a `Map`, which is a wrong value rather than a
     /// refusal. `Object.fromEntries` did exactly that until this existed.
     pub(super) fn over(vm: &mut Vm, heap: &mut Heap, value: Value) -> Completion<Self> {
-        let method = match vm.realm().well_known(super::well_known_at("iterator")) {
+        let method = match heap.well_known(super::well_known_at("iterator")) {
             Some(symbol) => {
                 vm.get_property_key(value, crate::heap::PropertyKey::from_symbol(symbol), heap)?
             }
@@ -295,7 +295,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     let shared = realm.iterator_prototype();
     let itself = heap.new_native_function(realm.function_prototype(), same);
     super::define_function_metadata(heap, itself, "[Symbol.iterator]", 0);
-    if let Some(symbol) = realm.well_known(super::well_known_at("iterator")) {
+    if let Some(symbol) = heap.well_known(super::well_known_at("iterator")) {
         let name = crate::heap::PropertyKey::from_symbol(symbol);
         let _ = heap.define_own_property(
             shared,
@@ -317,7 +317,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
         define_method(heap, realm, prototype, "next", 0, next);
         // §23.1.5.2.2 and §22.1.5.2.2 — the tag is what tells the two apart in a message, and it
         // is the only thing that does: they are otherwise the same shape.
-        let Some(symbol) = realm.well_known(super::well_known_at("toStringTag")) else {
+        let Some(symbol) = heap.well_known(super::well_known_at("toStringTag")) else {
             continue;
         };
         let name = crate::heap::PropertyKey::from_symbol(symbol);

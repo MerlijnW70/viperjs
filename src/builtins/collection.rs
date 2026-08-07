@@ -127,7 +127,6 @@ fn build(
     // `Set`, and is the same function object as the one it names.
     alias_symbol(
         heap,
-        realm,
         prototype,
         "iterator",
         if map { "entries" } else { "values" },
@@ -151,14 +150,13 @@ fn build(
             ..PropertyDescriptor::EMPTY
         },
     );
-    tag_with(heap, realm, prototype, name);
+    tag_with(heap, prototype, name);
 
     // §24.1.5 and §24.2.5 — the iterator prototypes, which inherit from %IteratorPrototype% and so
     // get `[@@iterator]` from it.
     define_method(heap, realm, iterator_prototype, "next", 0, next);
     tag_with(
         heap,
-        realm,
         iterator_prototype,
         if map { "Map Iterator" } else { "Set Iterator" },
     );
@@ -173,9 +171,9 @@ fn alias(heap: &mut Heap, prototype: ObjectId, name: &str, existing: &str) {
 }
 
 /// The same, under a well-known Symbol.
-fn alias_symbol(heap: &mut Heap, realm: &Realm, prototype: ObjectId, symbol: &str, existing: &str) {
+fn alias_symbol(heap: &mut Heap, prototype: ObjectId, symbol: &str, existing: &str) {
     let (Some(found), Some(value)) = (
-        realm.well_known(super::well_known_at(symbol)),
+        heap.well_known(super::well_known_at(symbol)),
         super::own_value(heap, prototype, existing),
     ) else {
         return;
@@ -194,8 +192,8 @@ fn alias_symbol(heap: &mut Heap, realm: &Realm, prototype: ObjectId, symbol: &st
 }
 
 /// `[@@toStringTag]`, which is what `Object.prototype.toString` reads.
-pub(super) fn tag_with(heap: &mut Heap, realm: &Realm, object: ObjectId, text: &str) {
-    let Some(symbol) = realm.well_known(super::well_known_at("toStringTag")) else {
+pub(super) fn tag_with(heap: &mut Heap, object: ObjectId, text: &str) {
+    let Some(symbol) = heap.well_known(super::well_known_at("toStringTag")) else {
         return;
     };
     let value = super::text(heap, text);

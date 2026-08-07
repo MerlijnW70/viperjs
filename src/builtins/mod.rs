@@ -348,17 +348,11 @@ pub(crate) fn delete_or_throw(
 /// the same function object, so `===` finds them equal. Installing a second native with the same
 /// body would not satisfy that, which is why this copies the value across rather than defining
 /// another function.
-pub(crate) fn alias_to_symbol(
-    heap: &mut Heap,
-    realm: &Realm,
-    object: ObjectId,
-    from: &str,
-    symbol: &str,
-) {
+pub(crate) fn alias_to_symbol(heap: &mut Heap, object: ObjectId, from: &str, symbol: &str) {
     let Some(value) = read_method(heap, object, from) else {
         return;
     };
-    define_under_symbol(heap, realm, object, symbol, value);
+    define_under_symbol(heap, object, symbol, value);
 }
 
 /// The same, but the String name is *removed* — the method only ever had a Symbol key.
@@ -366,14 +360,8 @@ pub(crate) fn alias_to_symbol(
 /// §22.1.3.34's method has no String name at all: it is installed under one here because that is
 /// how [`define_method`] gives a function its `name` and `length`, and then the name is taken
 /// away. `String.prototype["[Symbol.iterator]"]` must not exist.
-pub(crate) fn move_to_symbol(
-    heap: &mut Heap,
-    realm: &Realm,
-    object: ObjectId,
-    from: &str,
-    symbol: &str,
-) {
-    alias_to_symbol(heap, realm, object, from, symbol);
+pub(crate) fn move_to_symbol(heap: &mut Heap, object: ObjectId, from: &str, symbol: &str) {
+    alias_to_symbol(heap, object, from, symbol);
     let name = key(heap, from);
     heap.delete_own_property(object, name);
 }
@@ -388,14 +376,8 @@ fn read_method(heap: &mut Heap, object: ObjectId, name: &str) -> Option<Value> {
 }
 
 /// Define `value` under a well-known Symbol, with §17's attributes for a method.
-fn define_under_symbol(
-    heap: &mut Heap,
-    realm: &Realm,
-    object: ObjectId,
-    symbol: &str,
-    value: Value,
-) {
-    let Some(found) = realm.well_known(well_known_at(symbol)) else {
+fn define_under_symbol(heap: &mut Heap, object: ObjectId, symbol: &str, value: Value) {
+    let Some(found) = heap.well_known(well_known_at(symbol)) else {
         return;
     };
     let name = PropertyKey::from_symbol(found);

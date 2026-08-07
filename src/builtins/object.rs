@@ -138,7 +138,7 @@ fn tagged(
     if matches!(receiver, Value::Undefined | Value::Null) {
         return Ok(None);
     }
-    let Some(symbol) = vm.realm().well_known(super::well_known_at("toStringTag")) else {
+    let Some(symbol) = heap.well_known(super::well_known_at("toStringTag")) else {
         return Ok(None);
     };
     let key = PropertyKey::from_symbol(symbol);

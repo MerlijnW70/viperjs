@@ -70,7 +70,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         0,
         string_index::iterate,
     );
-    super::move_to_symbol(heap, realm, prototype, "[Symbol.iterator]", "iterator");
+    super::move_to_symbol(heap, prototype, "[Symbol.iterator]", "iterator");
     // B.2.2.14 and B.2.2.15 — the same function object under a second name, not a second function.
     for (alias, of) in string_edit::ALIASES {
         let Some(function) = read(heap, prototype, of) else {

@@ -344,8 +344,7 @@ impl Vm {
                     callee: object,
                     thrower: self.realm.thrower(),
                     mapped: body.simple_parameters() && !body.is_strict(),
-                    iteration: self
-                        .realm
+                    iteration: heap
                         .well_known(crate::builtins::well_known_at("iterator"))
                         .map(|symbol| (symbol, self.realm.array_values())),
                 },

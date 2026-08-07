@@ -429,7 +429,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     // at once; they would also make `Vm::is_default_has_instance` a guess rather than a fact.
     let has_instance = heap.new_native_function(prototype, has_instance);
     crate::builtins::define_function_metadata(heap, has_instance, "[Symbol.hasInstance]", 1);
-    if let Some(symbol) = realm.well_known(crate::builtins::well_known_at("hasInstance")) {
+    if let Some(symbol) = heap.well_known(crate::builtins::well_known_at("hasInstance")) {
         let _ = heap.define_own_property(
             prototype,
             crate::heap::PropertyKey::from_symbol(symbol),

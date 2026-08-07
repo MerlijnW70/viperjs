@@ -62,6 +62,7 @@
 //! - `collections` — §24.1 and §24.2's `Map` and `Set`.
 //! - `promises` — §27.2, and the ordering that is the whole point of it.
 //! - `proxy` — §10.5 and §28.2, the one object whose behaviour is written in JavaScript.
+//! - `realms` — §9.3, when there is more than one of them, and what the second one may not share.
 //! - `reflection` — §28.1's `Reflect`, which is every internal method with a name.
 //! - `regexp` — §22.2's object, `exec`, and the literal that makes one.
 //! - `regexp_symbols` — §22.2.6's four `Symbol` methods, and what `String.prototype` does through
@@ -130,6 +131,7 @@ mod parameters;
 mod private;
 mod promises;
 mod proxy;
+mod realms;
 mod reflection;
 mod regexp;
 mod regexp_symbols;

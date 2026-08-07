@@ -81,7 +81,7 @@ pub(super) fn install(heap: &mut Heap, realm: &Realm, prototype: ObjectId, const
     }
     // §23.2.3.36 — `[@@iterator]` is the *same function object* as `values`, which a program can
     // see. It follows from a TypedArray's iteration being over its elements and nothing else.
-    if let Some(symbol) = realm.well_known(super::well_known_at("iterator"))
+    if let Some(symbol) = heap.well_known(super::well_known_at("iterator"))
         && let Some(found) = super::own_value(heap, prototype, "values")
     {
         let _ = heap.define_own_property(

@@ -23,7 +23,7 @@
 //! and the expectations file cannot, because a test that starts passing fails the build until its
 //! line is deleted.
 
-use crate::heap::{Heap, ObjectId, PropertyDescriptor, PropertyKey, SymbolId};
+use crate::heap::{Heap, ObjectId, PropertyDescriptor, PropertyKey};
 use crate::value::Value;
 
 /// The intrinsic objects, and the prototypes everything else is given.
@@ -60,13 +60,10 @@ pub struct Realm {
     /// An ordinary object, like `Number.prototype` and unlike `String.prototype`: there is nothing
     /// a Symbol wrapper has of its own, so §20.4.3 needs no exotic object to hold it.
     symbol_prototype: ObjectId,
-    /// §6.1.5.1's well-known Symbols, in the order [`crate::builtins::WELL_KNOWN`] names them.
-    ///
-    /// Held by the realm because the *engine* consults them by identity: `for`-`of` reaches for
-    /// this `Symbol.iterator` and not for whatever a script has since put under that name. A
-    /// property on the constructor would be the script's to move; this is not.
-    well_known: [SymbolId; crate::builtins::WELL_KNOWN.len()],
-    /// How many objects the heap held once this realm was built — see [`Realm::intrinsics`].
+    /// How many objects the heap held **before** this realm began building — see
+    /// [`Realm::intrinsics`].
+    first_intrinsic: usize,
+    /// How many it held once the realm was built — the other end of the same range.
     intrinsics: usize,
     /// %ArrayBuffer.prototype% — §25.1.5.
     array_buffer_prototype: ObjectId,
@@ -246,6 +243,9 @@ impl Realm {
     /// `Object.prototype` — so `e instanceof Error` will be true of a TypeError, once
     /// `instanceof` exists to ask.
     pub fn new(heap: &mut Heap) -> Self {
+        // Taken before the first allocation, so `intrinsics` is a range this realm owns rather than
+        // a ceiling that swallows whatever came before it. Zero for the first realm — DR-0025.
+        let first_intrinsic = heap.object_count();
         let object_prototype = heap.new_object(None);
         // §20.2.3 — every function inherits from this, and it is itself an ordinary object here.
         // It is callable in the specification, and callable with no arguments returning
@@ -334,11 +334,18 @@ impl Realm {
             object.prevent_extensions();
         }
         // §6.1.5.1 — each is described as `Symbol.iterator` and so on, which is what makes
-        // `String(Symbol.iterator)` answer `"Symbol(Symbol.iterator)"`.
-        let well_known = crate::builtins::WELL_KNOWN.map(|name| {
-            let units: Vec<u16> = format!("Symbol.{name}").encode_utf16().collect();
-            let description = heap.intern(&units);
-            heap.new_symbol(Some(description))
+        // `String(Symbol.iterator)` answer `"Symbol(Symbol.iterator)"`. They live on the heap and
+        // are built by whichever realm is built first, because the clause says they are shared by
+        // all realms and a second set would be a second `Symbol.iterator` — DR-0025.
+        heap.build_well_known(|heap| {
+            crate::builtins::WELL_KNOWN
+                .iter()
+                .map(|name| {
+                    let units: Vec<u16> = format!("Symbol.{name}").encode_utf16().collect();
+                    let description = heap.intern(&units);
+                    heap.new_symbol(Some(description))
+                })
+                .collect()
         });
         let empty = heap.intern(&[]);
         let string_prototype = heap.new_string_object(object_prototype, empty);
@@ -396,7 +403,7 @@ impl Realm {
             date_prototype,
             string_prototype,
             symbol_prototype,
-            well_known,
+            first_intrinsic,
             intrinsics: 0,
             array_buffer_prototype,
             // Replaced by `builtins::buffer::install`, which is where the constructor is made.
@@ -790,35 +797,30 @@ impl Realm {
         self.string_iterator_prototype
     }
 
-    /// The well-known Symbol at this position in [`crate::builtins::WELL_KNOWN`].
+    /// Every object this realm built, as roots for the collector.
     ///
-    /// By index rather than by name because the engine's uses are compile-time constants and a
-    /// name lookup would be a string comparison on a path that has none. The names those indices
-    /// have are the `WELL_KNOWN` table in `crate::builtins`, and `well_known_at` beside it turns
-    /// one into the other for the callers that have a name and not a position.
-    /// Every object that existed before any script did, as roots for the collector.
-    ///
-    /// A *ceiling* rather than a list of the forty-odd intrinsic fields, and deliberately: a list
+    /// A *range* rather than a list of the forty-odd intrinsic fields, and deliberately: a list
     /// written out by hand is one an intrinsic added later is left out of, and being left out of
     /// the root set does not fail to compile — it frees `%GeneratorPrototype%` while a generator
-    /// is still inheriting from it. Nothing a script can reach is below the ceiling, because the
-    /// ceiling is taken before a script runs.
+    /// is still inheriting from it. Nothing this realm built is outside the range, because both
+    /// ends are taken by `Realm::new` around the building.
     ///
     /// It over-approximates by whatever `Realm::new` allocated and threw away, which is a handful
     /// of objects that will never be collected. That is the price, and it is the right way round:
     /// the alternative fails by freeing something live.
+    ///
+    /// **A range and not a ceiling, which matters as soon as there are two realms.** A ceiling
+    /// taken by the second realm counts everything the first one made *and everything the program
+    /// allocated in between*, so DR-0023's collector would stay sound and go blind — a leak the
+    /// size of whatever ran before `create_realm`. The floor is `0` for the first realm, which is
+    /// why this is the same set it always was. DR-0025.
     pub fn intrinsics(&self) -> impl Iterator<Item = crate::heap::ObjectId> {
-        (0..self.intrinsics).map(crate::heap::ObjectId)
+        (self.first_intrinsic..self.intrinsics).map(crate::heap::ObjectId)
     }
 
-    /// Record that ceiling, once everything the realm builds is built.
+    /// Record the far end of that range, once everything the realm builds is built.
     fn seal(&mut self, heap: &Heap) {
         self.intrinsics = heap.object_count();
-    }
-
-    /// The well-known Symbol at `at` in `crate::builtins::WELL_KNOWN`.
-    pub fn well_known(&self, at: usize) -> Option<SymbolId> {
-        self.well_known.get(at).copied()
     }
 
     /// Give a function the `prototype` object its instances will inherit from — §10.2.5.

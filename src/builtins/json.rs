@@ -72,7 +72,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     );
     // §25.5.3 — the tag, which is what makes `Object.prototype.toString.call(JSON)` say `JSON`
     // rather than `Object`.
-    let Some(symbol) = realm.well_known(super::well_known_at("toStringTag")) else {
+    let Some(symbol) = heap.well_known(super::well_known_at("toStringTag")) else {
         return;
     };
     let units: Vec<u16> = "JSON".encode_utf16().collect();

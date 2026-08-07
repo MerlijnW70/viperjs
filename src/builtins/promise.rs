@@ -72,7 +72,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     }
     // §27.2.5.5 — `Promise.prototype[@@toStringTag]`, which is what makes
     // `Object.prototype.toString.call(Promise.resolve())` say `[object Promise]`.
-    define_tag(heap, realm, prototype);
+    define_tag(heap, prototype);
 }
 
 /// The `Promise` this realm installed, read back off the global object.
@@ -95,7 +95,7 @@ fn species_getter(_: &mut Vm, _: &mut Heap, call: &NativeCall<'_>) -> Completion
 /// §27.2.4.7 — an **accessor** and not a value, which is observable: `Promise[Symbol.species]`
 /// answers whatever it is read on, so a subclass reading it inherits the getter and gets itself.
 fn define_species_getter(heap: &mut Heap, realm: &Realm, constructor: ObjectId) {
-    let Some(species) = realm.well_known(super::well_known_at("species")) else {
+    let Some(species) = heap.well_known(super::well_known_at("species")) else {
         return;
     };
     let getter = heap.new_native_function(realm.function_prototype(), species_getter);
@@ -114,8 +114,8 @@ fn define_species_getter(heap: &mut Heap, realm: &Realm, constructor: ObjectId) 
 
 /// §27.2.5.5 — `Promise.prototype[@@toStringTag]`, which is what makes
 /// `Object.prototype.toString.call(Promise.resolve())` say `[object Promise]`.
-fn define_tag(heap: &mut Heap, realm: &Realm, prototype: ObjectId) {
-    let Some(symbol) = realm.well_known(super::well_known_at("toStringTag")) else {
+fn define_tag(heap: &mut Heap, prototype: ObjectId) {
+    let Some(symbol) = heap.well_known(super::well_known_at("toStringTag")) else {
         return;
     };
     let units: Vec<u16> = "Promise".encode_utf16().collect();
@@ -684,7 +684,7 @@ pub(super) fn species_of(
     let Value::Object(_) = constructor else {
         return Err(Abrupt::type_error("constructor is not an object"));
     };
-    let Some(species) = vm.realm().well_known(super::well_known_at("species")) else {
+    let Some(species) = heap.well_known(super::well_known_at("species")) else {
         return Ok(default);
     };
     let chosen = vm.get_property_key(constructor, PropertyKey::from_symbol(species), heap)?;

@@ -284,7 +284,7 @@ impl Vm {
                     self.pop()?;
                 }
                 Instruction::LoadWellKnown(at) => {
-                    let Some(symbol) = self.realm.well_known(at as usize) else {
+                    let Some(symbol) = heap.well_known(at as usize) else {
                         return Err(Fault::MissingConstant);
                     };
                     self.stack.push(Value::Symbol(symbol));

@@ -151,7 +151,7 @@ pub(super) fn array_species_create(
     // A primitive one is left alone and refused by step 7, which is why `a.constructor = 1` is a
     // TypeError rather than quietly making a plain Array.
     if let Value::Object(_) = constructor {
-        let Some(species) = vm.realm().well_known(super::well_known_at("species")) else {
+        let Some(species) = heap.well_known(super::well_known_at("species")) else {
             return Ok(Value::Object(new_array_checked(vm, heap, length)?));
         };
         constructor = vm.get_property_key(constructor, PropertyKey::from_symbol(species), heap)?;
@@ -578,7 +578,7 @@ pub fn install(heap: &mut Heap, realm: &crate::realm::Realm) {
     // §23.1.3.38 — `[@@iterator]` **is** `values`, the same function object rather than a second
     // one that behaves alike. A script comparing them with `===` finds them equal, and that is
     // what the clause says.
-    super::alias_to_symbol(heap, realm, prototype, "values", "iterator");
+    super::alias_to_symbol(heap, prototype, "values", "iterator");
 }
 
 /// §23.1.3.34 `Array.prototype.values`, and `[@@iterator]` — which is the same function object.

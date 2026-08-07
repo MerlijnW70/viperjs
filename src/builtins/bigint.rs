@@ -41,7 +41,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
 
     // §21.2.3.5 — `[object BigInt]` comes from here rather than from §20.1.3.6's table, which is
     // why deleting this property makes a BigInt wrapper tag as an ordinary object.
-    if let Some(symbol) = realm.well_known(super::well_known_at("toStringTag")) {
+    if let Some(symbol) = heap.well_known(super::well_known_at("toStringTag")) {
         let name = PropertyKey::from_symbol(symbol);
         let units: Vec<u16> = "BigInt".encode_utf16().collect();
         let value = Value::String(heap.intern(&units));

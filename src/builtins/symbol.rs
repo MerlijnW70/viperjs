@@ -69,7 +69,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     // enumerable and not configurable. A script cannot replace `Symbol.iterator`, which is what
     // lets the engine trust the one it holds.
     for (at, name) in WELL_KNOWN.into_iter().enumerate() {
-        let Some(well_known) = realm.well_known(at) else {
+        let Some(well_known) = heap.well_known(at) else {
             continue;
         };
         super::define_fixed(heap, symbol, name, Value::Symbol(well_known));
@@ -91,7 +91,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     // `Object.prototype.toString.call(sym)` say `[object Symbol]`. Not writable and not
     // enumerable, and *configurable*, which is the one of the three that surprises: a script may
     // delete it, and then a Symbol tags as an ordinary object again.
-    if let Some(tag) = realm.well_known(super::well_known_at("toStringTag")) {
+    if let Some(tag) = heap.well_known(super::well_known_at("toStringTag")) {
         let name = crate::heap::PropertyKey::from_symbol(tag);
         let units: Vec<u16> = "Symbol".encode_utf16().collect();
         let value = Value::String(heap.intern(&units));
@@ -111,7 +111,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     // Symbol survives a coercion that would otherwise reach `toString` and throw. It is why
     // `Object(sym) == sym` is true: the wrapper is asked for a primitive and gives back the very
     // Symbol it wraps, where §20.4.3.3's `toString` would have refused.
-    if let Some(symbol) = realm.well_known(super::well_known_at("toPrimitive")) {
+    if let Some(symbol) = heap.well_known(super::well_known_at("toPrimitive")) {
         let method = heap.new_native_function(realm.function_prototype(), to_primitive);
         define_function_metadata(heap, method, "[Symbol.toPrimitive]", 1);
         let _ = heap.define_own_property(

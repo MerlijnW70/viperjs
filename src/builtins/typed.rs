@@ -65,7 +65,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     // §23.2.3.32 — `get %TypedArray%.prototype[@@toStringTag]`, which is an accessor rather than a
     // string: it answers the *name of the kind*, so one function serves all nine, and answers
     // `undefined` for anything that is not a TypedArray at all rather than throwing.
-    if let Some(symbol) = realm.well_known(super::well_known_at("toStringTag")) {
+    if let Some(symbol) = heap.well_known(super::well_known_at("toStringTag")) {
         let getter = heap.new_native_function(realm.function_prototype(), to_string_tag);
         super::define_function_metadata(heap, getter, "get [Symbol.toStringTag]", 0);
         let _ = heap.define_own_property(

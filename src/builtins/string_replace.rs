@@ -53,7 +53,7 @@ pub(super) fn method_of(
 ) -> Completion<Option<Value>> {
     // As above: a Symbol the realm has not got names no property, so the answer is the one an
     // absent property gives.
-    let found = match vm.realm().well_known(super::well_known_at(symbol)) {
+    let found = match heap.well_known(super::well_known_at(symbol)) {
         Some(id) => vm.get_property_key(value, crate::heap::PropertyKey::from_symbol(id), heap)?,
         None => Value::Undefined,
     };
@@ -80,7 +80,7 @@ pub(super) fn is_pattern(vm: &mut Vm, heap: &mut Heap, value: Value) -> Completi
     };
     // A well-known Symbol the realm does not have is one nothing can be keyed by, so the lookup
     // answers exactly as an absent property does.
-    let matcher = match vm.realm().well_known(super::well_known_at("match")) {
+    let matcher = match heap.well_known(super::well_known_at("match")) {
         Some(id) => vm.get_property_key(value, crate::heap::PropertyKey::from_symbol(id), heap)?,
         None => Value::Undefined,
     };

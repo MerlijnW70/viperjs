@@ -53,7 +53,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
         (function_prototype, "GeneratorFunction"),
         (prototype, "Generator"),
     ] {
-        tag_with(heap, realm, object, tag);
+        tag_with(heap, object, tag);
     }
 
     // §27.3.3.2 — `%GeneratorFunction.prototype%.prototype` is %GeneratorPrototype%, and it is not
@@ -77,12 +77,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
     // §27.7.2's `constructor` is `%AsyncFunction%` and is written by `function::install`, beside
     // the two generator constructors and for the same reason: all three inherit from `%Function%`.
     // This comment used to say it "is not built", which stopped being true and read as a plan.
-    tag_with(
-        heap,
-        realm,
-        realm.async_function_prototype(),
-        "AsyncFunction",
-    );
+    tag_with(heap, realm.async_function_prototype(), "AsyncFunction");
 }
 
 /// §27.4.3 and §27.6.1 — the same four things again, for the async generator.
@@ -108,7 +103,7 @@ fn install_async(heap: &mut Heap, realm: &Realm) {
         (function_prototype, "AsyncGeneratorFunction"),
         (prototype, "AsyncGenerator"),
     ] {
-        tag_with(heap, realm, object, tag);
+        tag_with(heap, object, tag);
     }
     fixed(
         heap,
@@ -145,8 +140,8 @@ fn fixed(heap: &mut Heap, object: crate::heap::ObjectId, name: &str, value: Valu
 }
 
 /// §27.3.3.3's `[@@toStringTag]`, with the attributes that clause gives it.
-fn tag_with(heap: &mut Heap, realm: &Realm, object: crate::heap::ObjectId, tag: &str) {
-    let Some(symbol) = realm.well_known(super::well_known_at("toStringTag")) else {
+fn tag_with(heap: &mut Heap, object: crate::heap::ObjectId, tag: &str) {
+    let Some(symbol) = heap.well_known(super::well_known_at("toStringTag")) else {
         return;
     };
     let name = PropertyKey::from_symbol(symbol);

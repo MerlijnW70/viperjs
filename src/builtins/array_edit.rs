@@ -257,12 +257,9 @@ pub fn splice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
 /// `false` is not. `IsArray` at step 4 is only the answer when the property is absent, and
 /// `undefined` is the one value that means absent — a `null` there is falsy and refuses.
 fn spreadable(vm: &mut Vm, heap: &mut Heap, object: ObjectId) -> Completion<bool> {
-    // A well-known Symbol the realm does not have is one nothing can be keyed by, so the lookup
+    // A well-known Symbol the heap does not have is one nothing can be keyed by, so the lookup
     // answers exactly as an absent property does.
-    let flag = match vm
-        .realm()
-        .well_known(crate::builtins::well_known_at("isConcatSpreadable"))
-    {
+    let flag = match heap.well_known(crate::builtins::well_known_at("isConcatSpreadable")) {
         Some(id) => vm.get_property_key(
             Value::Object(object),
             crate::heap::PropertyKey::from_symbol(id),

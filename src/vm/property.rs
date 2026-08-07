@@ -804,10 +804,7 @@ impl Vm {
         target: Value,
         heap: &mut Heap,
     ) -> Completion<Option<Value>> {
-        let Some(symbol) = self
-            .realm
-            .well_known(crate::builtins::well_known_at("hasInstance"))
-        else {
+        let Some(symbol) = heap.well_known(crate::builtins::well_known_at("hasInstance")) else {
             return Ok(None);
         };
         let found = self.get_property_key(target, PropertyKey::from_symbol(symbol), heap)?;
@@ -826,10 +823,10 @@ impl Vm {
     /// than convenient: §20.2.3.6 makes the property **neither writable nor configurable**, so no
     /// program can put anything else there and the value found is the intrinsic by construction.
     fn is_default_has_instance(&mut self, handler: Value, heap: &mut Heap) -> bool {
-        // One chain rather than an early return for the missing Symbol: a realm always has the
-        // well-known ones, so a `false` of its own would be a branch no input could take.
-        self.realm
-            .well_known(crate::builtins::well_known_at("hasInstance"))
+        // One chain rather than an early return for the missing Symbol: a heap that has run a realm
+        // always has the well-known ones, so a `false` of its own would be a branch no input could
+        // take.
+        heap.well_known(crate::builtins::well_known_at("hasInstance"))
             .map(PropertyKey::from_symbol)
             .and_then(|key| {
                 heap.object(self.realm.function_prototype())

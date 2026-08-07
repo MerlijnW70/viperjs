@@ -228,8 +228,19 @@ pub(crate) struct Waiter {
 /// queue join it as the things that need them arrive.
 pub struct Vm {
     stack: Vec<Value>,
-    /// The intrinsics a thrown error is built from.
+    /// The intrinsics a thrown error is built from — the realm this machine is running in.
     realm: Realm,
+    /// Every *other* realm this machine has built, in the order [`Vm::create_realm`] made them.
+    ///
+    /// Not the same question as `realm` above and not a second spelling of it: that one is **which**
+    /// realm is running, this is **what else exists**, and the union of the two is every realm the
+    /// collector must keep alive. §9.3 does not destroy a realm and neither does this, so nothing
+    /// is ever removed here.
+    ///
+    /// It stays a plain list rather than the `RealmId` index DR-0025 describes until something can
+    /// *run* in one of them: an index that is always zero is dead data, and the record's frame
+    /// field is what will give it a second value to hold.
+    other_realms: Vec<Realm>,
     /// A throw that nothing caught, kept until the loop can stop.
     ///
     /// The loop cannot return from inside the `match` — an operation that throws has to leave the
@@ -430,6 +441,7 @@ impl Vm {
             keys: std::collections::BTreeMap::new(),
             loader: None,
             realm: Realm::new(heap),
+            other_realms: Vec::new(),
             escaped: None,
             jobs: std::collections::VecDeque::new(),
             stack: Vec::new(),
@@ -600,6 +612,30 @@ impl Vm {
     /// `%Object.prototype%` should not be holding a borrow of the machine it is running inside.
     pub fn realm(&self) -> Realm {
         self.realm
+    }
+
+    /// Build a second §9.3 realm on the same heap, and answer it — DR-0025.
+    ///
+    /// A whole new set of intrinsics: its own `Object.prototype`, its own `Array`, its own global.
+    /// **Not** its own well-known Symbols, which §6.1.5.1 shares between realms and the heap
+    /// therefore owns — so `other.Symbol.iterator` is `Symbol.iterator` and an object made here is
+    /// iterable there.
+    ///
+    /// One heap, so a value crosses freely and `Reflect.construct(OtherArray, [])` needs no
+    /// marshalling. That is what §9.3's realm is; a membrane between the two sides is `ShadowRealm`,
+    /// which is a different proposal and is not this.
+    ///
+    /// The realm is remembered so the collector keeps it — a caller that dropped the returned
+    /// `Realm` would otherwise leave every one of its intrinsics unreachable while a script still
+    /// held its global.
+    ///
+    /// What is **not** here yet is running code in it: nothing switches the machine's realm, so a
+    /// function taken from the new global still resolves its intrinsics against the old one. See
+    /// DR-0025 for the two steps that finish it.
+    pub fn create_realm(&mut self, heap: &mut Heap) -> Realm {
+        let realm = Realm::new(heap);
+        self.other_realms.push(realm);
+        realm
     }
 
     /// Run `chunk` to the end and answer the single value it leaves behind.
@@ -1060,6 +1096,11 @@ impl Vm {
         // Everything the realm built before a script ran. Not the individual intrinsics, because a
         // list of those is one an intrinsic added later is left out of — see `Realm::intrinsics`.
         values.extend(self.realm.intrinsics().map(Value::Object));
+        // …and the same for every realm `create_realm` built. Each has its own range rather than a
+        // ceiling, so a second realm roots what *it* made and not everything older than it.
+        for realm in &self.other_realms {
+            values.extend(realm.intrinsics().map(Value::Object));
+        }
         root.names(&mut values);
 
         for frame in &self.frames {

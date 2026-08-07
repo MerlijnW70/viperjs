@@ -357,10 +357,7 @@ impl Vm {
     /// `Date.prototype[Symbol.toPrimitive] = 1` breaks every coercion of every Date, which is what
     /// the clause says and is worth being able to see happen.
     fn exotic_to_primitive(&mut self, value: Value, heap: &mut Heap) -> Completion<Option<Value>> {
-        let Some(symbol) = self
-            .realm
-            .well_known(crate::builtins::well_known_at("toPrimitive"))
-        else {
+        let Some(symbol) = heap.well_known(crate::builtins::well_known_at("toPrimitive")) else {
             return Ok(None);
         };
         let found = self.get_property_key(value, PropertyKey::from_symbol(symbol), heap)?;

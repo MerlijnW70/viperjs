@@ -101,14 +101,11 @@ impl Vm {
         if !self.has_property_key(Value::Object(object), key, heap)? {
             return Ok(false);
         }
-        // Step 5 — `Get(bindingObject, @@unscopables)`. A realm always has the well-known symbols,
-        // so the `None` is not a case a program can produce; it is folded into "nothing blocks
-        // anything" rather than given a `return` of its own, because a branch no input can take is
-        // a branch no test can hold.
-        let unscopables = match self
-            .realm
-            .well_known(crate::builtins::well_known_at("unscopables"))
-        {
+        // Step 5 — `Get(bindingObject, @@unscopables)`. A heap that has run a realm always has the
+        // well-known symbols, so the `None` is not a case a program can produce; it is folded into
+        // "nothing blocks anything" rather than given a `return` of its own, because a branch no
+        // input can take is a branch no test can hold.
+        let unscopables = match heap.well_known(crate::builtins::well_known_at("unscopables")) {
             Some(symbol) => self.get_property_key(
                 Value::Object(object),
                 PropertyKey::from_symbol(symbol),

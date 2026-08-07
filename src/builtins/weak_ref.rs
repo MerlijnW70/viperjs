@@ -216,7 +216,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     define_value(heap, global, "WeakRef", Value::Object(constructor));
     define_value(heap, reference, "constructor", Value::Object(constructor));
     define_method(heap, realm, reference, "deref", 0, deref);
-    tag_with(heap, realm, reference, "WeakRef");
+    tag_with(heap, reference, "WeakRef");
 
     let registry = realm.finalization_registry_prototype();
     let constructor = heap.new_native_constructor(realm.function_prototype(), construct_registry);
@@ -231,5 +231,5 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     define_value(heap, registry, "constructor", Value::Object(constructor));
     define_method(heap, realm, registry, "register", 2, register);
     define_method(heap, realm, registry, "unregister", 1, unregister);
-    tag_with(heap, realm, registry, "FinalizationRegistry");
+    tag_with(heap, registry, "FinalizationRegistry");
 }

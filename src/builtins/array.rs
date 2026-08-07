@@ -117,7 +117,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     // `slice`. Without it every one of those answers a plain Array, and a subclass silently loses
     // its type on the first method call.
     super::buffer::define_species(heap, realm, function);
-    define_unscopables(heap, realm, prototype);
+    define_unscopables(heap, prototype);
 }
 
 /// §23.1.3.35 `Array.prototype [ %Symbol.unscopables% ]`.
@@ -149,7 +149,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
 /// properties a script may delete or overwrite, and `propertyHelper.js` verifies it. The property
 /// holding them is the other set: not writable, not enumerable, **configurable**. One helper for
 /// both would get exactly one of them wrong.
-fn define_unscopables(heap: &mut Heap, realm: &Realm, prototype: ObjectId) {
+fn define_unscopables(heap: &mut Heap, prototype: ObjectId) {
     // Step 1 — `OrdinaryObjectCreate(null)`. A null prototype because the keys are ordinary method
     // names: with `Object.prototype` under it, a `with` over an array would find `toString` and
     // `valueOf` here and read them as blocked.
@@ -174,7 +174,7 @@ fn define_unscopables(heap: &mut Heap, realm: &Realm, prototype: ObjectId) {
     ] {
         super::create_data_property(heap, list, name, Value::Boolean(true));
     }
-    let Some(symbol) = realm.well_known(super::well_known_at("unscopables")) else {
+    let Some(symbol) = heap.well_known(super::well_known_at("unscopables")) else {
         return;
     };
     let descriptor = PropertyDescriptor {
@@ -231,7 +231,7 @@ fn from(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
 /// §23.1.2.1 step 4 asks for, by way of the `ToObject` it would otherwise reach. A guard here
 /// would answer the same thing one step earlier.
 pub(super) fn iterator_of(vm: &mut Vm, heap: &mut Heap, items: Value) -> Completion<Option<Value>> {
-    let Some(symbol) = vm.realm().well_known(super::well_known_at("iterator")) else {
+    let Some(symbol) = heap.well_known(super::well_known_at("iterator")) else {
         return Ok(None);
     };
     let key = crate::heap::PropertyKey::from_symbol(symbol);

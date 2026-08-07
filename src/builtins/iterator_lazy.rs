@@ -344,7 +344,7 @@ fn flattenable(vm: &mut Vm, heap: &mut Heap, value: Value) -> Completion<(Object
     };
     // Step 2.b — `[@@iterator]` if it has one, and the object *itself* if it does not. So an
     // object with only a `next` is accepted, which is what makes a helper flattenable into another.
-    let method = match vm.realm().well_known(super::well_known_at("iterator")) {
+    let method = match heap.well_known(super::well_known_at("iterator")) {
         Some(symbol) => {
             vm.get_property_key(value, crate::heap::PropertyKey::from_symbol(symbol), heap)?
         }
@@ -463,10 +463,5 @@ pub(super) fn install(heap: &mut Heap, realm: &Realm, constructor: ObjectId) {
         define_method(heap, realm, target, "next", 0, helper_next);
         define_method(heap, realm, target, "return", 0, helper_return);
     }
-    super::collection::tag_with(
-        heap,
-        realm,
-        realm.iterator_helper_prototype(),
-        "Iterator Helper",
-    );
+    super::collection::tag_with(heap, realm.iterator_helper_prototype(), "Iterator Helper");
 }
