@@ -589,13 +589,19 @@ impl Vm {
             self.realm = callee_realm;
         }
         let answer = native(self, heap, &call);
-        self.realm = caller_realm;
         // The callee, its receiver and its arguments all go, and the answer takes their place —
         // exactly what a return from a JavaScript function leaves behind.
         self.stack.truncate(receiver_at);
         // `None` is a throw a handler took, and it has already moved the program counter — so
         // there is nothing to push and nothing else to do.
-        if let Some(value) = self.settle(answer, heap, chunk, current, at)? {
+        //
+        // **Settled before the realm goes back**, which is not tidiness: `settle` is where an
+        // `Abrupt` becomes an error *object*, and §10.3.1's context is still the callee's when it
+        // does. Restoring first gives a built-in from another realm the caller's `TypeError`, and
+        // `RegExp/prototype/*/cross-realm.js` asks for the other one by identity.
+        let settled = self.settle(answer, heap, chunk, current, at);
+        self.realm = caller_realm;
+        if let Some(value) = settled? {
             self.stack.push(value);
         }
         Ok(())

@@ -34,9 +34,29 @@ use super::{define_method, define_value, key, text};
 /// `NewTarget` only to pick a prototype and never to refuse. That is unusual and deliberate:
 /// nearly every other constructor in the language throws when called without `new`.
 pub fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    // §10.1.13 `GetPrototypeFromConstructor` — new.target's own `prototype`, and
-    // `%Error.prototype%` when a script has replaced it with something that is not an object.
-    let prototype = super::prototype_from(vm, heap, call, Realm::error_prototype)?;
+    // §10.1.13 `GetPrototypeFromConstructor` — new.target's own `prototype`, and the intrinsic
+    // default when a script has replaced it with something that is not an object.
+    //
+    // **Which** intrinsic is the part this had wrong: §20.5.6.2 gives a native error
+    // `%NativeError.prototype%`, so `URIError` falls back to `URIError.prototype` and not to
+    // `Error.prototype`. The six share one Rust body, so the name on the function object is what
+    // tells them apart — read *before* the call, because the closure may not hold the heap while
+    // `prototype_from` is writing to it. Unmeasured until the fallback started being reached: it
+    // takes a `new.target` whose `prototype` is not an object to see it at all.
+    let named = super::own_value(heap, call.function, "name").and_then(|value| match value {
+        Value::String(id) => heap.string(id).map(|units| {
+            char::decode_utf16(units.iter().copied())
+                .map(|found| found.unwrap_or(char::REPLACEMENT_CHARACTER))
+                .collect::<String>()
+        }),
+        _ => None,
+    });
+    let prototype = super::prototype_from(vm, heap, call, |realm| {
+        named
+            .as_deref()
+            .and_then(|name| realm.native_error_prototype(name))
+            .unwrap_or_else(|| realm.error_prototype())
+    })?;
     let error = heap.new_object(Some(prototype));
     // §20.5.1.1 step 2's `« [[ErrorData]] »`, which is the slot §20.1.3.6 step 7 asks for.
     if let Some(object) = heap.object_mut(error) {

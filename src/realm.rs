@@ -99,6 +99,15 @@ pub struct Realm {
     /// with, so a species of `undefined` fell back to a plain object and the copy tried to
     /// construct it.
     typed_constructors: [ObjectId; crate::heap::KINDS.len()],
+    /// §23.2.6's nine concrete prototypes — `%Int8Array.prototype%` and its eight siblings.
+    ///
+    /// Held by identity beside the constructors above and for the same reason: §23.2.5.1's default
+    /// prototype is the **concrete** one named by the constructor, so `Reflect.construct(Float64Array,
+    /// …, other)` falls back to that realm's `Float64Array.prototype` and not to its
+    /// `%TypedArray.prototype%`. Reading it off the constructor at the time would work — §23.2.6
+    /// makes it neither writable nor configurable — but it would be a property lookup standing in
+    /// for an intrinsic, which is the mistake `array_values` above records.
+    typed_prototypes: [ObjectId; crate::heap::KINDS.len()],
     /// %Map.prototype% — §24.1.3.
     map_prototype: ObjectId,
     /// %RegExp.prototype% — §22.2.6.
@@ -424,6 +433,7 @@ impl Realm {
             typed_array_prototype,
             // Replaced below, once `builtins::typed::install` has made them.
             typed_constructors: [typed_array_prototype; crate::heap::KINDS.len()],
+            typed_prototypes: [typed_array_prototype; crate::heap::KINDS.len()],
             map_prototype,
             regexp_prototype,
             // Replaced below, once the built-ins have made the real one. A prototype rather than a
@@ -508,6 +518,11 @@ impl Realm {
         for (at, (name, _, _)) in crate::heap::KINDS.into_iter().enumerate() {
             if let Some(found) = crate::builtins::global_object(heap, &realm, name) {
                 realm.typed_constructors[at] = found;
+                if let Some(crate::value::Value::Object(prototype)) =
+                    crate::builtins::own_value(heap, found, "prototype")
+                {
+                    realm.typed_prototypes[at] = prototype;
+                }
             }
         }
         // Last, so that everything above it is inside the ceiling — see `Realm::intrinsics`.
@@ -521,6 +536,17 @@ impl Realm {
     /// is both the constructor's `name` and the global it is installed under.
     pub fn native_error_prototypes(&self) -> impl Iterator<Item = (&'static str, ObjectId)> + '_ {
         NATIVE_ERRORS.into_iter().zip(self.native_error_prototypes)
+    }
+
+    /// §20.5.5's prototype for the native error *named* `name`, or `None` for anything else.
+    ///
+    /// By name because that is what a built-in has: the six share one Rust body, so the only thing
+    /// telling `TypeError` from `URIError` at call time is the `name` §10.3.3 put on the function
+    /// object — the same trick §23.2's nine TypedArray constructors use.
+    #[must_use]
+    pub fn native_error_prototype(&self, name: &str) -> Option<ObjectId> {
+        let at = NATIVE_ERRORS.iter().position(|known| *known == name)?;
+        self.native_error_prototypes.get(at).copied()
     }
 
     /// `%Object.prototype%` — what an object literal inherits from.
@@ -619,6 +645,30 @@ impl Realm {
     /// %TypedArray.prototype% — §23.2.3.
     pub fn typed_array_prototype(&self) -> ObjectId {
         self.typed_array_prototype
+    }
+
+    /// The intrinsic constructor for one of §23.2's eleven kinds — §23.2.4.2 step 1's default.
+    ///
+    /// Named by the pair that identifies a kind rather than by a string: `Uint8Array` and
+    /// `Uint8ClampedArray` read the same eight bits and are told apart only by the clamping, so an
+    /// `Element` alone would answer the wrong one of the two for half the programs that ask.
+    ///
+    /// `None` for a pair [`crate::heap::KINDS`] does not list, which no view can hold — a view's
+    /// element came from that table in the first place.
+    /// §23.2.6's prototype for one of §23.2's eleven kinds, by identity.
+    ///
+    /// Named by the same pair `typed_constructor` below is, and for the same reason. `None` for a
+    /// pair [`crate::heap::KINDS`] does not list.
+    #[must_use]
+    pub fn typed_prototype(
+        &self,
+        element: crate::heap::Element,
+        clamped: bool,
+    ) -> Option<ObjectId> {
+        let at = crate::heap::KINDS
+            .into_iter()
+            .position(|(_, known, known_clamped)| known == element && known_clamped == clamped)?;
+        self.typed_prototypes.get(at).copied()
     }
 
     /// The intrinsic constructor for one of §23.2's eleven kinds — §23.2.4.2 step 1's default.
@@ -1105,6 +1155,69 @@ mod tests {
         let key = PropertyKey::from_units(&mut heap, &"message".encode_utf16().collect::<Vec<_>>());
         let (owner, _) = heap.find_own(error, key).expect("inherited"); // the test is about it
         assert_eq!(owner, realm.error_prototype());
+    }
+
+    #[test]
+    fn each_native_error_names_its_own_prototype_and_not_the_one_they_share() {
+        // §20.5.6.2's intrinsic default is `%NativeError.prototype%` — `URIError.prototype` for a
+        // `URIError`. The six share one Rust body, so this lookup is the only thing telling them
+        // apart, and getting it wrong is invisible until a `new.target` whose `prototype` is not an
+        // object makes the fallback run at all.
+        let mut heap = Heap::new();
+        let realm = Realm::new(&mut heap, crate::heap::RealmId(0));
+
+        let uri = realm
+            .native_error_prototype("URIError")
+            .expect("a realm has URIError"); // the test is which prototype
+        let kind = realm
+            .native_error_prototype("TypeError")
+            .expect("a realm has TypeError"); // same
+        assert_ne!(uri, kind);
+        assert_eq!(uri, realm.native_error_prototypes[NativeError::Uri.at()]);
+        assert_eq!(kind, realm.native_error_prototypes[NativeError::Type.at()]);
+
+        // …and a name that is not one of the six is `None` rather than the nearest match, which is
+        // what makes the caller fall back to `%Error.prototype%` instead of to a wrong sibling.
+        assert!(realm.native_error_prototype("Error").is_none());
+        assert!(realm.native_error_prototype("URIErro").is_none());
+    }
+
+    #[test]
+    fn a_typed_arrays_prototype_is_named_by_its_element_and_its_clamping_together() {
+        // `Uint8Array` and `Uint8ClampedArray` read the same eight bits, so the element alone
+        // answers the wrong one of the two for half the programs that ask — which is why the lookup
+        // is a conjunction and why this asserts the pair rather than either half.
+        let mut heap = Heap::new();
+        let realm = Realm::new(&mut heap, crate::heap::RealmId(0));
+
+        let plain = realm
+            .typed_prototype(crate::heap::Element::Uint8, false)
+            .expect("a realm has Uint8Array"); // the test is which prototype
+        let clamped = realm
+            .typed_prototype(crate::heap::Element::Uint8, true)
+            .expect("a realm has Uint8ClampedArray"); // same
+        let wider = realm
+            .typed_prototype(crate::heap::Element::Int32, false)
+            .expect("a realm has Int32Array"); // same
+        assert_ne!(plain, clamped);
+        assert_ne!(plain, wider);
+
+        // Each is the object its own constructor carries, which is what makes it the intrinsic
+        // rather than an object that merely looks like one.
+        for (element, clamp) in [
+            (crate::heap::Element::Uint8, false),
+            (crate::heap::Element::Uint8, true),
+            (crate::heap::Element::Int32, false),
+        ] {
+            let constructor = realm
+                .typed_constructor(element, clamp)
+                .expect("a realm has it"); // same
+            let held = match property(&heap, constructor, "prototype") {
+                Some(Value::Object(id)) => Some(id),
+                _ => None,
+            };
+            assert_eq!(held, realm.typed_prototype(element, clamp));
+        }
     }
 
     #[test]

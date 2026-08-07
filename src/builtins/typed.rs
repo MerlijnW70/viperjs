@@ -169,16 +169,28 @@ fn construct_concrete(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Co
                 .and_then(crate::heap::Object::buffer)
                 .is_some() =>
         {
-            let prototype = super::prototype_from(vm, heap, call, Realm::typed_array_prototype)?;
+            let prototype = super::prototype_from(vm, heap, call, |realm| {
+                realm
+                    .typed_prototype(element, clamped)
+                    .unwrap_or_else(|| realm.typed_array_prototype())
+            })?;
             from_buffer(vm, heap, call, source, prototype, element, clamped)
         }
         Value::Object(source) => {
-            let prototype = super::prototype_from(vm, heap, call, Realm::typed_array_prototype)?;
+            let prototype = super::prototype_from(vm, heap, call, |realm| {
+                realm
+                    .typed_prototype(element, clamped)
+                    .unwrap_or_else(|| realm.typed_array_prototype())
+            })?;
             from_object(vm, heap, source, prototype, element, clamped)
         }
         length => {
             let count = super::buffer::to_index(vm, heap, length)?;
-            let prototype = super::prototype_from(vm, heap, call, Realm::typed_array_prototype)?;
+            let prototype = super::prototype_from(vm, heap, call, |realm| {
+                realm
+                    .typed_prototype(element, clamped)
+                    .unwrap_or_else(|| realm.typed_array_prototype())
+            })?;
             allocate(vm, heap, prototype, element, clamped, count)
         }
     }
