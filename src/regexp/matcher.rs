@@ -29,10 +29,28 @@
 //! program should not be able to hang its host either, so the steps are counted and the attempt is
 //! abandoned. Abandoning reports *no match*, which the specification does not authorise; it is the
 //! least bad of three bad answers and it is written down here rather than hidden.
+//!
+//! **The budget bounds one attempt and not one search, and this paragraph used to imply otherwise.**
+//! [`Matcher::find`] resets `steps` at every starting position — it has to, or a pattern that
+//! genuinely matches late in a long subject would be abandoned for work done before it — so the
+//! total a search may cost is `positions × budget`, which for a megabyte of input is 10^13 steps.
+//! That is a hang, and it is the thing the budget exists to prevent. Reported by an outside reader
+//! and confirmed 2026-08-07; the wording said "the attempt is abandoned", which is true and reads
+//! as a bound on the search.
+//!
+//! The real answer is not a smaller number, because a global budget makes a legitimate late match
+//! into a `null`. It is for this loop to read the interpreter's interruption flag, so DR-0022's
+//! time budget reaches a matcher that is already running — which it does not today, and which
+//! `a_pattern_that_backtracks_is_not_stopped_by_the_time_budget` pins as a *known* limit rather
+//! than an accident.
 
 use super::syntax::{Assertion, ClassEscape, ClassItem, ClassOperation, GroupKind, Node, Pattern};
 
 /// How much work one match attempt may cost before it is abandoned.
+///
+/// **One attempt, at one starting position** — the whole search may cost this many times the
+/// number of positions, because [`Matcher::find`] resets the count for each. See the module doc:
+/// that is deliberate and it is not a bound on a search.
 ///
 /// Ten million is far past any honest pattern — a linear match over a megabyte costs a few million
 /// — and far short of a wait that reads as a hang. A policy figure rather than a behaviour: what
@@ -198,6 +216,11 @@ impl<'a> Matcher<'a> {
             for slot in &mut self.captures {
                 *slot = None;
             }
+            // The budget is per **attempt**, and resetting here is what makes that true. A count
+            // carried across positions would abandon a pattern that genuinely matches late in a
+            // long subject, reporting `null` for a real match — which is worse than slow. What it
+            // costs is that a whole search is bounded by `positions × budget` rather than by the
+            // budget, and the module doc says so rather than implying the tighter bound.
             self.steps = 0;
             if let Outcome::Matched(end) = self.node(&self.pattern.node, at, &Cont::Done) {
                 return Some(Match {

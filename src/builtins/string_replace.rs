@@ -9,14 +9,19 @@
 //! and it is open to anything else that supplies the method. So all five are, in their own right,
 //! *delegation*, and only `replace` and `replaceAll` do work of their own after it.
 //!
-//! # What is here without `RegExp`
+//! # A plain string search value needs no pattern engine
 //!
-//! `replace` and `replaceAll` are complete: a plain string search value needs no pattern engine,
-//! and neither does `$&`, `` $` ``, `$'`, `$$` or `$<name>` in the replacement template. `match`,
-//! `matchAll` and `search` are complete up to the point where the specification says "make a
-//! RegExp out of the argument" — there is nothing to make one with yet, so they refuse there and
-//! say so. Everything before that point, including the delegation, is real: an object with a
-//! `Symbol.match` method works today.
+//! `replace` and `replaceAll` handle one without touching §22.2 at all, and so do `$&`, `` $` ``,
+//! `$'`, `$$` and `$<name>` in the replacement template. That is worth keeping separate from the
+//! pattern path, because it is the half that has to be right when the argument is `"a"` rather than
+//! `/a/`, and the two reach the same clause by different routes.
+//!
+//! This heading used to read "What is here without `RegExp`", and said `match`, `matchAll` and
+//! `search` "refuse there" at the point the specification says to make a RegExp out of the
+//! argument, "there is nothing to make one with yet". `RegExp` arrived several milestones ago and
+//! nothing refuses: `"abab".match(/b/)` is `"b"` today. The paragraph described an engine that no
+//! longer exists, in the present tense, which is the drift this repository keeps meeting and the
+//! reason a comment that reads like a statement of fact is worth checking before it is trusted.
 
 use super::{key, string};
 use crate::heap::{Heap, NativeCall};
