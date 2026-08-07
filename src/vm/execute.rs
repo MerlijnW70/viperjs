@@ -290,16 +290,7 @@ impl Vm {
                     self.stack.push(Value::Symbol(symbol));
                 }
                 Instruction::CopyRest(count) => {
-                    let mut excluded = Vec::with_capacity(count as usize);
-                    for _ in 0..count {
-                        excluded.push(self.pop()?);
-                    }
-                    let source = self.pop()?;
-                    let copied = self.copy_rest(source, &excluded, heap);
-                    match self.settle(copied, heap, root, current, at)? {
-                        Some(value) => self.stack.push(value),
-                        None => continue,
-                    }
+                    self.copy_rest_instruction(count, heap, root, current, at)?;
                 }
                 Instruction::RequireCoercible => {
                     let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
@@ -930,18 +921,7 @@ impl Vm {
                     }
                 }
                 Instruction::SetSuperProperty => {
-                    let value = self.pop()?;
-                    let key = self.pop()?;
-                    let base = self.pop()?;
-                    let receiver = self.pop()?;
-                    match self.set_super(base, receiver, key, value, heap) {
-                        // An assignment is an expression, so its value stays behind.
-                        Ok(_) => self.stack.push(value),
-                        Err(error) => {
-                            self.raise(error, heap, root, current, at)?;
-                            continue;
-                        }
-                    }
+                    self.set_super_property(heap, root, current, at)?;
                 }
                 Instruction::ThrowSuperDelete => {
                     // The base and the key are dropped with the rest of the expression as the throw
@@ -1219,31 +1199,7 @@ impl Vm {
                     }
                 }
                 Instruction::SetProperty => {
-                    // Read before the borrow of `running` has to end: `raise` wants the code pointer
-                    // mutably, and the chunk this instruction came from is a borrow of it.
-                    let strict = running.is_strict();
-                    let value = self.pop()?;
-                    let key = self.pop()?;
-                    let base = self.pop()?;
-                    let done = self.set_property(base, key, value, heap);
-                    match self.settle(done, heap, root, current, at)? {
-                        // §13.15.2 — the value of an assignment is the value assigned, whether or not
-                        // the object took it. §6.2.5.6 step 6.d decides whether "did not take it" is
-                        // the end of the matter: **a silent refusal is what sloppy mode is**, and
-                        // strict code throws instead.
-                        Some(Value::Boolean(false)) if strict => {
-                            self.raise(
-                                Abrupt::type_error("this property will not take a value"),
-                                heap,
-                                root,
-                                current,
-                                at,
-                            )?;
-                            continue;
-                        }
-                        Some(_) => self.stack.push(value),
-                        None => continue,
-                    }
+                    self.set_property_instruction(heap, root, current, at)?;
                 }
                 Instruction::DeleteProperty => {
                     let strict = running.is_strict();
@@ -1487,6 +1443,93 @@ impl Vm {
             let global = Value::Object(self.realm.global());
             let stored = self.set_property_key(global, key, value, heap);
             self.settle(stored, heap, root, current, at)?;
+        }
+        Ok(())
+    }
+
+    /// [`Instruction::SetProperty`] — an ordinary property assignment, §13.15.2 and §6.2.5.6.
+    ///
+    /// Out of line for [`Vm::store_through`]'s reason.
+    #[inline(never)]
+    fn set_property_instruction(
+        &mut self,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        // Read before the borrow of `running` has to end: `raise` wants the code pointer mutably,
+        // and the chunk this instruction came from is a borrow of it.
+        let strict = current.as_deref().unwrap_or(root).is_strict();
+        let value = self.pop()?;
+        let key = self.pop()?;
+        let base = self.pop()?;
+        let done = self.set_property(base, key, value, heap);
+        match self.settle(done, heap, root, current, at)? {
+            // §13.15.2 — the value of an assignment is the value assigned, whether or not the
+            // object took it. §6.2.5.6 step 6.d decides whether "did not take it" is the end of
+            // the matter: **a silent refusal is what sloppy mode is**, and strict code throws.
+            Some(Value::Boolean(false)) if strict => {
+                self.raise(
+                    Abrupt::type_error("this property will not take a value"),
+                    heap,
+                    root,
+                    current,
+                    at,
+                )?;
+            }
+            Some(_) => self.stack.push(value),
+            None => {}
+        }
+        Ok(())
+    }
+
+    /// [`Instruction::CopyRest`] — §14.3.3.1's rest of an object pattern, minus what was named.
+    ///
+    /// Out of line for [`Vm::store_through`]'s reason, and this one keeps a `Vec` besides.
+    #[inline(never)]
+    fn copy_rest_instruction(
+        &mut self,
+        count: u32,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let mut excluded = Vec::with_capacity(count as usize);
+        for _ in 0..count {
+            excluded.push(self.pop()?);
+        }
+        let source = self.pop()?;
+        let copied = self.copy_rest(source, &excluded, heap);
+        if let Some(value) = self.settle(copied, heap, root, current, at)? {
+            self.stack.push(value);
+        }
+        Ok(())
+    }
+
+    /// [`Instruction::SetSuperProperty`] — a write through `super.x`, which has a receiver of its
+    /// own.
+    ///
+    /// Out of line for [`Vm::store_through`]'s reason.
+    #[inline(never)]
+    fn set_super_property(
+        &mut self,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let value = self.pop()?;
+        let key = self.pop()?;
+        let base = self.pop()?;
+        let receiver = self.pop()?;
+        match self.set_super(base, receiver, key, value, heap) {
+            // An assignment is an expression, so its value stays behind.
+            Ok(_) => self.stack.push(value),
+            Err(error) => {
+                self.raise(error, heap, root, current, at)?;
+            }
         }
         Ok(())
     }
