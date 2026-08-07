@@ -2369,9 +2369,6 @@ built-ins/Proxy/getOwnPropertyDescriptor/trap-is-undefined.js :: it threw an obj
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-undefined.js (strict) :: it threw an object with no name: attr should be an own property
 built-ins/Proxy/getPrototypeOf/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/getPrototypeOf/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/has/return-false-target-not-extensible-using-with.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Proxy/has/return-false-target-not-extensible.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Proxy/has/return-false-target-not-extensible.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Proxy/has/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
 built-ins/Proxy/has/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/isExtensible/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function

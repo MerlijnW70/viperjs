@@ -1247,3 +1247,45 @@ fn a_proxy_with_no_set_trap_answers_with_what_the_target_said() {
         "TypeError"
     );
 }
+
+#[test]
+fn a_has_trap_may_not_deny_a_property_the_target_cannot_lose() {
+    // §10.5.7 step 11.c — **two** ways to be unlosable, and only the first was implemented.
+    // 11.c.i is a non-configurable own property; 11.c.iv is a target that is not extensible, where
+    // even a *configurable* property cannot be removed and put back, so denying it is the same lie.
+    assert_eq!(
+        run(
+            "(function () { var t = {}; Object.defineProperty(t, 'a', { configurable: false, value: 1 });              var p = new Proxy(t, { has: function () { return false; } });              try { return String('a' in p) } catch (e) { return e.constructor.name } })()"
+        ),
+        "TypeError"
+    );
+    assert_eq!(
+        run(
+            "(function () { var t = {}; Object.defineProperty(t, 'a', { configurable: true, value: 1 });              Object.preventExtensions(t);              var p = new Proxy(t, { has: function () { return 0; } });              try { return String('a' in p) } catch (e) { return e.constructor.name } })()"
+        ),
+        "TypeError"
+    );
+    // The two rows above have to be separate, because `Object.freeze` reaches **both** conditions
+    // at once — a frozen target's properties are non-configurable *and* the object is not
+    // extensible — so a test written with `freeze` passes against either half alone.
+    assert_eq!(
+        run(
+            "(function () { var t = Object.freeze({ a: 1 });              var p = new Proxy(t, { has: function () { return false; } });              try { return String('a' in p) } catch (e) { return e.constructor.name } })()"
+        ),
+        "TypeError"
+    );
+    // And the two ways to be *losable*, which keep the invariant from refusing every denial: an
+    // ordinary configurable property on an extensible target, and a property that is not there.
+    assert_eq!(
+        run(
+            "(function () { var p = new Proxy({ a: 1 }, { has: function () { return false; } });              return String('a' in p); })()"
+        ),
+        "false"
+    );
+    assert_eq!(
+        run(
+            "(function () { var t = Object.preventExtensions({});              var p = new Proxy(t, { has: function () { return false; } });              return String('x' in p); })()"
+        ),
+        "false"
+    );
+}

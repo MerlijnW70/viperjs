@@ -276,11 +276,26 @@ impl Vm {
         if answer.to_boolean(heap) {
             return Ok(Some(true));
         }
-        // Step 9 — denying a property the target has and cannot lose is a lie a program could
-        // catch, so the specification catches it first.
-        if self.fixed_own(target, key, heap)?.is_some() {
+        // Step 11.c — denying a property the target has and cannot lose is a lie a program could
+        // catch, so the specification catches it first. **Two ways to be unlosable**, and only the
+        // first was here: step 11.c.i is a non-configurable own property, and step 11.c.iv is a
+        // target that is not extensible at all — where even a *configurable* property cannot be
+        // removed and put back, so denying it is the same lie.
+        //
+        // Asked in that order because 11.c.i needs no second call, and because `Object.freeze`
+        // reaches both: a frozen target's properties are non-configurable *and* the object is not
+        // extensible, so a check for one of the two looks complete against the obvious test.
+        let Some(found) = self.own_property_through(target, key, heap)? else {
+            return Ok(Some(false));
+        };
+        if !found.configurable {
             return Err(Abrupt::type_error(
                 "a proxy has trap denied a property the target cannot remove",
+            ));
+        }
+        if !self.extensible_through(target, heap)? {
+            return Err(Abrupt::type_error(
+                "a proxy has trap denied a property of a target that is not extensible",
             ));
         }
         Ok(Some(false))
