@@ -655,3 +655,35 @@ fn an_arrow_is_transparent_to_new_target_inside_a_direct_eval() {
         "SyntaxError"
     );
 }
+
+#[test]
+fn a_direct_eval_in_a_static_field_initialiser_may_not_read_arguments() {
+    // §15.7.1 — `arguments` is forbidden in a class field's initialiser, and the parser refuses
+    // every spelling it can see where the class is written. A **direct `eval`** is the one it
+    // cannot: the text is parsed when the field runs, so the compiled body has to carry the
+    // position to it.
+    //
+    // A **SyntaxError**, and therefore before the text runs at all — which is what distinguishes
+    // this from a ReferenceError raised while evaluating: the assignment ahead of the read must not
+    // happen. `evaluated` is what says so.
+    assert_eq!(
+        run("var evaluated = false;\
+             try { class C { static x = eval('evaluated = true; arguments;'); } }\
+             catch (e) { e.name + ':' + evaluated }"),
+        "SyntaxError:false"
+    );
+    // `Contains` stops at a function boundary and not at an arrow, so the two nest differently.
+    assert_eq!(
+        run("try { class C { static x = eval('() => arguments'); } } catch (e) { e.name }"),
+        "SyntaxError"
+    );
+    assert_eq!(
+        run("class C { static x = eval('(function () { return arguments })'); } typeof C.x"),
+        "function"
+    );
+    // …and the same text outside a field is an ordinary read of the enclosing `arguments`.
+    assert_eq!(
+        run("function f() { return eval('arguments').length } f(1, 2)"),
+        "2"
+    );
+}

@@ -67,12 +67,32 @@ pub fn parse_eval(
     context: super::body::EvalContext,
     private: &std::collections::HashSet<Box<str>>,
 ) -> Result<Script, ParseError> {
-    let script = parse_script_seeded(
+    let (script, arguments) = parse_script_seeded_recording_arguments(
         source,
         strict_caller,
         super::body::BodyContext::eval(context),
         private,
     )?;
+    // §15.7.1's `ContainsArguments`, for the one position the class-element parser cannot reach: a
+    // **direct `eval`** written in a class field's initialiser, whose text is not read until the
+    // field runs. The record is the same one that refuses `class C { a = arguments; }` where the
+    // source is visible — it stops at a function boundary and not at an arrow, so
+    // `eval("() => arguments")` here is refused and `eval("function () { arguments }")` is not.
+    //
+    // A Syntax Error and therefore **before the text runs at all**, which is what the tests measure:
+    // `eval('executed = true; arguments;')` must leave `executed` false.
+    //
+    // Asked here rather than carried on `BodyContext`: the four other contexts are for bodies
+    // *inside* a parse that has already begun, so a field on them would be read at none of them —
+    // dead data with three spellings, which mutation coverage duly called out.
+    if context.in_field_initializer
+        && let Some(span) = arguments
+    {
+        return Err(ParseError {
+            kind: ParseErrorKind::ArgumentsInClassInitializer,
+            span,
+        });
+    }
     super::scope::check_labels(&script.body)?;
     Ok(script)
 }
@@ -96,6 +116,22 @@ fn parse_script_seeded(
     body_context: super::body::BodyContext,
     private: &std::collections::HashSet<Box<str>>,
 ) -> Result<Script, ParseError> {
+    parse_script_seeded_recording_arguments(source, strict, body_context, private)
+        .map(|(script, _)| script)
+}
+
+/// The same, and it also answers where the name `arguments` was read at this body's top level.
+///
+/// §15.7.9's `ContainsArguments` is a question only [`parse_eval`] asks, and only for a call written
+/// in a class field's initialiser. Everything else discards the second half — which is why it is a
+/// return value and not a field on the context: three of the four contexts would carry a flag that
+/// nothing ever read.
+fn parse_script_seeded_recording_arguments(
+    source: &str,
+    strict: bool,
+    body_context: super::body::BodyContext,
+    private: &std::collections::HashSet<Box<str>>,
+) -> Result<(Script, Option<Span>), ParseError> {
     let mut parser = Parser::new(source)?;
     parser.strict = strict;
     parser.body_context = body_context;
@@ -122,13 +158,43 @@ fn parse_script_seeded(
     }
     // §16.1.1 states the same two rules about a Script that §14.2.1 states about a Block.
     super::scope::check_declared_names(&body, super::scope::Level::Top)?;
-    Ok(Script {
-        // A Script is strict only if it says so. A Module always is, which is M7's to record — and
-        // an eval is strict if its caller is, which is what `strict` was seeded with.
-        is_strict: declares_strict || strict,
-        body,
-        span: Span::new(0, source.len() as u32),
-    })
+    Ok((
+        Script {
+            // A Script is strict only if it says so. A Module always is, which is M7's to record —
+            // and an eval is strict if its caller is, which is what `strict` was seeded with.
+            is_strict: declares_strict || strict,
+            body,
+            span: Span::new(0, source.len() as u32),
+        },
+        parser.arguments_reference,
+    ))
+}
+
+#[cfg(test)]
+mod dead_zone_probe {
+    #[test]
+    fn a_direct_eval_in_a_field_initialiser_may_not_read_arguments() {
+        // §15.7.1 reaches text the class-element parser never sees. The flag is the only thing
+        // carrying the position to it, so this asserts the parser half on its own — the compiler
+        // half is what puts the flag on the body.
+        let context = crate::parser::EvalContext {
+            in_function: true,
+            in_method: true,
+            in_derived_constructor: false,
+            in_field_initializer: true,
+        };
+        let empty = std::collections::HashSet::new();
+        assert!(super::parse_eval("arguments;", true, context, &empty).is_err());
+        assert!(super::parse_eval("() => arguments;", true, context, &empty).is_err());
+        // `Contains` stops at a function boundary, so this one is an ordinary read.
+        assert!(super::parse_eval("(function () { arguments });", true, context, &empty).is_ok());
+        // …and without the flag none of the three is refused.
+        let outside = crate::parser::EvalContext {
+            in_field_initializer: false,
+            ..context
+        };
+        assert!(super::parse_eval("arguments;", true, outside, &empty).is_ok());
+    }
 }
 
 /// A `Script` that may break §16.1.1's label rules, for the tests of the walk that finds them.

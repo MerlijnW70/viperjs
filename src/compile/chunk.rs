@@ -132,6 +132,14 @@ pub struct Chunk {
     /// can only ask the code it is running inside. Nothing else consults it: an ordinary body was
     /// judged by the parser when it was written.
     pub(super) lexical_new_target: bool,
+    /// Whether this body is a class field's initialiser, or an arrow written inside one — §15.7.1.
+    ///
+    /// The clause forbids `arguments` there outright, and the parser applies it to source it can
+    /// see. What it cannot see is a **direct `eval`** in the initialiser, whose text is parsed when
+    /// the field runs — so the fact has to travel on the compiled body, which is the only thing
+    /// still around by then. `Contains` stops at a function boundary and not at an arrow, which is
+    /// why an arrow inherits this exactly as it inherits `lexical_new_target` above.
+    pub(super) field_initializer: bool,
     /// The template objects' contents, one entry per tagged-template *site* in this chunk.
     ///
     /// Held here rather than built at compile time because the object is a frozen Array and belongs to
@@ -250,6 +258,12 @@ impl Chunk {
     #[must_use]
     pub fn lexical_new_target(&self) -> bool {
         self.lexical_new_target
+    }
+
+    /// Whether this body is a class field's initialiser — §15.7.1's `ContainsArguments` subject.
+    #[must_use]
+    pub fn field_initializer(&self) -> bool {
+        self.field_initializer
     }
 
     /// Every heap value this chunk names, and every one the chunks inside it name.

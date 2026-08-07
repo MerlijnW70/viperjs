@@ -146,4 +146,11 @@ pub struct EvalContext {
     pub in_method: bool,
     /// Step 3.b.iv — whether it is a derived constructor. Grants `super(…)`.
     pub in_derived_constructor: bool,
+    /// Whether the call was written in a class field's initialiser — §15.7.1.
+    ///
+    /// The one question here that is not about what the text may *say*: it forbids `arguments`
+    /// outright, wherever in the evaluated text it appears. `arguments` in an initialiser would be
+    /// the initialiser's own method's, which is nobody's idea of what it means, so the clause
+    /// refuses the word rather than answering it.
+    pub in_field_initializer: bool,
 }

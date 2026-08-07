@@ -337,7 +337,7 @@ impl Compiler<'_> {
                 // The naming goes to the *expression* inside, not to this wrapper: the wrapper is
                 // ViperJS's own and no program can see it, while §8.6.3 names whatever the initialiser
                 // evaluates to. So the wrapper stays anonymous and `named_evaluation` runs inside it.
-                let body = self.compile_nested(
+                let mut body = self.compile_nested(
                     &parameters,
                     Body::Expression(expression),
                     Naming::default(),
@@ -346,6 +346,19 @@ impl Compiler<'_> {
                     Asynchrony::No,
                     span,
                 )?;
+                // §15.7.1 forbids `arguments` in an initialiser, and the parser has already refused
+                // every spelling it can see. What it cannot see is a **direct `eval`** here, whose
+                // text is parsed when the field runs — so the body carries the fact to it.
+                //
+                // **This covers a `static` field and a static block and not an instance field**, and
+                // the reason is a design decision rather than an oversight: §15.7.10 makes every
+                // initialiser a function of its own, and ViperJS compiles an *instance* field's
+                // inline into the constructor (see [`Compiler::instance_fields`]). So there is no
+                // body to carry the fact on, and the running frame is the constructor's — which may
+                // legitimately read `arguments`. Closing the other half means giving each instance
+                // initialiser its own body; the twenty runs it is worth do not pay for that on their
+                // own, and it wants measuring against what else that shape would fix.
+                body.field_initializer = true;
                 self.emit_function(body, span)?;
                 // A static field's initialiser is a method of the constructor too, for the same
                 // reason and with the constructor in the same place.

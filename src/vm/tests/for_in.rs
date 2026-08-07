@@ -190,3 +190,38 @@ fn break_and_continue_and_nesting_work_as_they_do_in_any_loop() {
         "a"
     );
 }
+
+#[test]
+fn a_lexical_for_head_puts_its_own_names_in_a_dead_zone_and_a_var_head_does_not() {
+    // §14.7.5.6 `ForIn/OfHeadEvaluation` step 2 — a `let` or `const` head binds its names *around
+    // the expression it iterates*, uninitialised. So the inner name shadows the outer one before
+    // the object is built, and reading it there is the temporal dead zone like any other.
+    assert_eq!(
+        run("let x = 'outer'; try { for (let x in { [x]: 1 }) {} } catch (e) { e.name }"),
+        "ReferenceError"
+    );
+    assert_eq!(
+        run("let x = 'outer'; try { for (const x of [x]) {} } catch (e) { e.name }"),
+        "ReferenceError"
+    );
+
+    // Step 2's condition is `TDZnames is not an empty List`, and a `var` head binds none of them —
+    // its name belongs to the enclosing variable scope and was created long before. So the head
+    // expression reads the *outer* binding, and there is nothing uninitialised to trip over.
+    assert_eq!(
+        run("var x = 'outer'; var seen = ''; for (var x in { [x]: 1 }) { seen = x; } seen"),
+        "outer"
+    );
+    // …and neither does a head that declares nothing at all.
+    assert_eq!(
+        run("var x = 'outer'; var seen = ''; for (x in { [x]: 1 }) { seen = x; } seen"),
+        "outer"
+    );
+
+    // The environment is gone before the loop starts: §14.7.5.7's per-pass binding is made from the
+    // scope *outside* it, so the body still sees its own name and a closure still keeps its pass.
+    assert_eq!(
+        run("let f = []; for (let x of [1, 2]) { f.push(() => x); } f[0]() + ',' + f[1]()"),
+        "1,2"
+    );
+}

@@ -168,6 +168,21 @@ impl Vm {
                         crate::heap::Callable::Bytecode { code: body, .. } if body.derived_this().is_some()
                     )
                 }),
+            // §15.7.1 — `arguments` is forbidden in a class field's initialiser, and the parser has
+            // already refused every spelling it could see. A **direct `eval`** there is the one it
+            // could not: the text is parsed now, and the only thing that still knows where the call
+            // was written is the running body. An arrow inherits the fact, because §15.7.9's
+            // `Contains` stops at a function boundary and not at an arrow.
+            in_field_initializer: frame
+                .and_then(|frame| frame.function)
+                .and_then(|function| heap.object(function))
+                .and_then(crate::heap::Object::call)
+                .is_some_and(|callable| {
+                    matches!(
+                        callable,
+                        crate::heap::Callable::Bytecode { code: body, .. } if body.field_initializer()
+                    )
+                }),
         }
     }
 

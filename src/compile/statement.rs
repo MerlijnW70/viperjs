@@ -439,6 +439,62 @@ impl Compiler<'_> {
         compiled
     }
 
+    /// §14.7.5.6 `ForIn/OfHeadEvaluation` step 2 — the dead zone the head's own names sit in.
+    ///
+    /// A lexical `for` head binds its names *around the expression it iterates*, uninitialised. So
+    /// `let x = 1; for (let x in { x })` is a **ReferenceError** and not a walk of `{ x: 1 }`: the
+    /// inner `x` shadows the outer one before the object literal is built, and reading it there is
+    /// the temporal dead zone like any other.
+    ///
+    /// It is a separate environment from the per-pass ones below and it is gone before the loop
+    /// starts — step 5 restores the old one, and §14.7.5.7's environment per pass is made from
+    /// *that* rather than from this. Two levels rather than one because the two have different
+    /// lifetimes: this one exists for the length of one expression.
+    ///
+    /// `None` when the head declares nothing lexical, which is `for (x in …)` and `for (var x in
+    /// …)` — neither binds anything here, so an environment would hold no names and §14.7.5.6 step
+    /// 2's condition is exactly that.
+    pub(super) fn head_dead_zone(
+        &mut self,
+        target: &ForInOfTarget,
+    ) -> Result<Option<(Environment, usize)>, CompileError> {
+        let ForInOfTarget::Declaration(declaration) = target else {
+            return Ok(None);
+        };
+        if !declaration.kind.is_lexical() {
+            return Ok(None);
+        }
+        let opened = self.enter_environment();
+        let mark = self.enter_scope();
+        for declarator in &declaration.declarators {
+            // §8.2.1 `BoundNames`, the static-semantics walk rather than a second copy — a pattern
+            // head puts every name inside it in the dead zone, not only the first.
+            //
+            // Every one is **mutable**, and a `const` head is no exception: nothing may be assigned
+            // to a binding in its dead zone whatever its mutability — §6.2.5.6 refuses the write for
+            // being uninitialised, several steps before it would ask whether it is writable. So
+            // carrying the `const` here would be a distinction no program could observe, which is
+            // what mutation coverage said by surviving its removal.
+            for name in crate::static_semantics::bound_names(&declarator.binding) {
+                let slot = self.declare_lexical(name.name, crate::heap::Mutability::Mutable);
+                self.chunk.emit(Instruction::Uninitialise(slot));
+            }
+        }
+        Ok(Some((opened, mark)))
+    }
+
+    /// Close what [`Compiler::head_dead_zone`] opened, once the head expression has been evaluated.
+    pub(super) fn leave_head_dead_zone(
+        &mut self,
+        opened: Option<(Environment, usize)>,
+    ) -> Result<(), CompileError> {
+        let Some((environment, mark)) = opened else {
+            return Ok(());
+        };
+        self.leave_scope(mark);
+        self.leave_environment(environment)
+    }
+
     /// The rest of `for`-`in`, once its scope has been opened.
     fn for_in_parts(
         &mut self,
@@ -451,8 +507,11 @@ impl Compiler<'_> {
         let current = self.declare_hidden("current");
 
         // §14.7.5.6 `ForIn/OfHeadEvaluation` — the object is evaluated once, and kept, because
-        // every step has to ask it whether the name it is about to visit is still there.
+        // every step has to ask it whether the name it is about to visit is still there. Step 2's
+        // dead zone is around *this* evaluation and nothing else.
+        let dead_zone = self.head_dead_zone(&statement.left)?;
         self.expression(&statement.right)?;
+        self.leave_head_dead_zone(dead_zone)?;
         self.chunk.emit(Instruction::Duplicate);
         self.chunk.emit(Instruction::EnumerateProperties);
         self.chunk.emit(Instruction::StoreVariable(0, keys));
@@ -542,7 +601,12 @@ impl Compiler<'_> {
         // lands past it and `return` unwinds the frame that holds it.
         // Reading it once is observable: a `next` replaced on the iterator part-way through the
         // loop is not the one the rest of the loop calls.
+        //
+        // §14.7.5.6 step 2's dead zone wraps the *expression* and comes off before `GetIterator`
+        // runs, which is what `for (let x of [x])` turns on.
+        let dead_zone = self.head_dead_zone(&statement.left)?;
         self.expression(&statement.right)?;
+        self.leave_head_dead_zone(dead_zone)?;
         self.chunk.emit(Instruction::Duplicate);
         self.chunk
             .emit(Instruction::LoadWellKnown(well_known("iterator")));

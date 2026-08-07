@@ -230,6 +230,7 @@ impl Compiler<'_> {
                 inside_with: self.inside_with(),
                 inside_eval: self.inside_eval,
                 lexical_new_target: self.chunk.lexical_new_target,
+                field_initializer: self.chunk.field_initializer,
             },
             span,
         )
@@ -534,6 +535,9 @@ pub(super) struct Nesting<'a> {
     /// Only an arrow asks: a function answers for itself. Carried so that an arrow written inside a
     /// function inherits it and one written at a script's top level does not.
     lexical_new_target: bool,
+    /// Whether what encloses this body is a class field's initialiser — see
+    /// [`Chunk::field_initializer`]. Inherited by an arrow and by nothing else.
+    field_initializer: bool,
     /// Whether this body is written inside a `with` — §14.11.
     ///
     /// Inherited rather than recomputed, and it has to be: the body's *own* scopes contain no
@@ -749,6 +753,12 @@ fn compile_body_once(
     compiler.chunk.lexical_new_target = match lexical {
         Lexical::No => true,
         Lexical::Yes => nesting.lexical_new_target,
+    };
+    // §15.7.9's `Contains` stops at a function boundary and not at an arrow, so
+    // `x = () => eval('arguments')` is refused where `x = function () { eval('arguments') }` is not.
+    compiler.chunk.field_initializer = match lexical {
+        Lexical::No => false,
+        Lexical::Yes => nesting.field_initializer,
     };
     compiler.chunk.simple_parameters = parameters.is_simple();
 

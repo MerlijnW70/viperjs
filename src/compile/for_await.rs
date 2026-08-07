@@ -55,7 +55,11 @@ impl Compiler<'_> {
         // §7.4.3 with the async hint, which is one instruction because every step of it can throw
         // and the order the getters are read in is observable. It leaves the iterator and its
         // `next`, in that order.
+        // §14.7.5.6 step 2 — the same dead zone a synchronous head gets, around the same
+        // expression: `for await (let x of [x])` is a ReferenceError for the same reason.
+        let dead_zone = self.head_dead_zone(&statement.left)?;
         self.expression(&statement.right)?;
+        self.leave_head_dead_zone(dead_zone)?;
         self.chunk.emit(Instruction::GetAsyncIterator);
         self.chunk.emit(Instruction::StoreVariable(0, next));
         self.chunk.emit(Instruction::Pop);
