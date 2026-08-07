@@ -105,7 +105,10 @@ a commit, and none may cost a single conformance test.
 4. **Mutation testing** — zero survivors on the lines you touched. A survivor is a precise
    statement that a branch you wrote is untested, and it comes with the input that
    distinguishes it. Fix the test, not the branch.
-5. **The gate** — green (fmt, clippy `-D warnings`, `missing_docs`, no-unsafe, the boundary).
+5. **The gate** — green (no-unsafe, the boundary, the decision records, the architectural
+   constraints, fail-closed). **Then `cargo fmt --all --check`, `cargo clippy --workspace
+   --all-targets -- -D warnings` and `RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --workspace`,
+   each by name** — the gate runs none of the three, whatever an older version of this file said.
 6. **Run the conformance suite.** The number goes up, or the change explains why — and see
    `conformance/README.md` on why a gain needs three runs to be believed and a regression does not.
 7. **Commit.** The message says what changed *behaviourally*, not which files moved.
@@ -1231,8 +1234,11 @@ that is the first thing to distinguish two meanings of one field, splitting it i
 special case at the call site that happens to know which meaning it wants.
 
 The local loop is `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`
-**and** `RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --workspace`, each by name. The gate does not
-cover the third: a public item's doc linking to a private one is an error in CI and nowhere else.
+**and** `RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --workspace`, each by name. **The gate covers
+none of the three** — this said it covered the first two and not the third, and that was measured
+false on 2026-08-07: it checks no-unsafe, the boundary, the decision records, the architectural
+constraints and the fail-open lint, and runs `cargo` for none of them. A public item's doc linking
+to a private one is an error in CI and nowhere else, and so, it turns out, is an unformatted line.
 
 **`--workspace` on the clippy line is load-bearing, and this file said otherwise until it cost a red
 build.** Without it clippy checks the engine alone, so nothing in `lab/` or `conformance/` is linted
