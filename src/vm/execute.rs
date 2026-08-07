@@ -360,30 +360,7 @@ impl Vm {
                     }
                 }
                 Instruction::EnumerateProperties => {
-                    let value = self.pop()?;
-                    let prototype = self.realm.array_prototype();
-                    // §14.7.5.6 step 2 — `undefined` and `null` are not an error here, they are
-                    // simply nothing to enumerate, and the loop body never runs. Any other
-                    // primitive would be wrapped by `ToObject`; a wrapper has no enumerable own
-                    // properties and §17 makes every prototype's non-enumerable, so an empty list
-                    // is the same answer for all of them but a String — whose wrapper has an own
-                    // enumerable property per index (§10.4.3), and which waits for wrappers.
-                    let keys = match value {
-                        Value::Object(object) => {
-                            // §14.7.5.10's walk can now throw, because a proxy anywhere in the
-                            // chain answers it with traps — so this goes through the handler
-                            // search like any other operation that may raise.
-                            let walked = self
-                                .enumerable_keys_through(object, heap)
-                                .map(|names| heap.enumeration_of(prototype, &names));
-                            match self.settle(walked.map(Value::Object), heap, root, current, at)? {
-                                Some(list) => list,
-                                None => continue,
-                            }
-                        }
-                        _ => Value::Object(heap.new_array(prototype, 0)),
-                    };
-                    self.stack.push(keys);
+                    self.enumerate_properties(heap, root, current, at)?;
                 }
                 Instruction::EnumerateNext(keys, index) => {
                     let object = self.pop()?;
@@ -472,18 +449,7 @@ impl Vm {
                     self.settle(stored, heap, root, current, at)?;
                 }
                 Instruction::TypeofGlobal(index) => {
-                    let key = self.global_name(running, index, heap)?;
-                    // §13.5.1.1 step 2 — no such global is `"undefined"`, not a throw.
-                    let read = match self.global_binding(key, heap) {
-                        Some(read) => read,
-                        None => Ok(Value::Undefined),
-                    };
-                    let answer = match self.settle(read, heap, root, current, at)? {
-                        Some(value) => value.type_of(heap),
-                        None => continue,
-                    };
-                    let id = heap.new_string(answer.encode_utf16().collect());
-                    self.stack.push(Value::String(id));
+                    self.typeof_global(index, heap, root, current, at)?;
                 }
                 Instruction::DeclareGlobal { name, deletable } => {
                     let key = self.global_name(running, name, heap)?;
@@ -688,49 +654,11 @@ impl Vm {
                         heap.new_with_environment(Some(self.environment), slots, names, object);
                 }
                 Instruction::LoadName(index) | Instruction::LoadNameForCall(index) => {
-                    let key = self.global_name(running, index, heap)?;
-                    let name = self.name_text(running, index, heap)?;
-                    // Read before `settle_resolution`, which borrows the `current` that `running`
-                    // came from — the same hoist the two store sites already make.
-                    let strict = running.is_strict();
-                    let found = match self.settle_resolution(&name, key, heap, root, current, at)? {
-                        Some(found) => found,
-                        None => continue,
-                    };
-                    // §9.1.1.2.10 `WithBaseObject`, pushed *first* so the stack reads as a method
-                    // call's — receiver, callee, arguments — and only for the call form.
-                    if matches!(instruction, Instruction::LoadNameForCall(_)) {
-                        self.stack.push(Vm::with_base(found));
-                    }
-                    match self.read_resolved(found, key, strict, heap) {
-                        Ok(Some(value)) => self.stack.push(value),
-                        // §6.2.5.5 — nothing anywhere is the ReferenceError an ordinary
-                        // unresolvable name gets, said in the same words by the same code.
-                        Ok(None) => {
-                            let message = self.missing_global(key, heap);
-                            let thrown = self.realm.error(heap, NativeError::Reference, &message);
-                            self.unwind(thrown, root, current, at)?;
-                            continue;
-                        }
-                        Err(error) => {
-                            let thrown = self.thrown_value(error, heap);
-                            self.unwind(thrown, root, current, at)?;
-                            continue;
-                        }
-                    }
+                    let for_call = matches!(instruction, Instruction::LoadNameForCall(_));
+                    self.load_name(index, for_call, heap, root, current, at)?;
                 }
                 Instruction::ResolveName(index) => {
-                    // §9.4.2 `ResolveBinding`, once. Everything after this reads and writes through
-                    // what it found, which is the whole of what §13.15.2 means by "the same
-                    // reference": a getter that deletes the property between the read and the write
-                    // must not send the write to whatever the name would resolve to now.
-                    let key = self.global_name(running, index, heap)?;
-                    let name = self.name_text(running, index, heap)?;
-                    let found = match self.settle_resolution(&name, key, heap, root, current, at)? {
-                        Some(found) => found,
-                        None => continue,
-                    };
-                    self.references.push(found);
+                    self.resolve_name(index, heap, root, current, at)?;
                 }
                 Instruction::LoadThrough(index) => {
                     let key = self.global_name(running, index, heap)?;
@@ -753,50 +681,10 @@ impl Vm {
                     }
                 }
                 Instruction::StoreThrough(index) => {
-                    // Peeked, not popped: an assignment is an expression and its value is the
-                    // caller's. The *reference* is popped, because it has now been used.
-                    let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
-                    let key = self.global_name(running, index, heap)?;
-                    let strict = running.is_strict();
-                    let found = self.references.pop().ok_or(Fault::MissingReference)?;
-                    let stored = self.store_dynamic(found, key, value, strict, heap);
-                    match self.settle(stored.map(Value::Boolean), heap, root, current, at)? {
-                        // §6.2.5.6 — nothing in the chain answered, so the global object takes it.
-                        // The same tail `StoreName` has, and the reason both need it: `Resolved` has
-                        // a `Global` case that means "ask the global object", and asking it can
-                        // still come back `false` for a name it does not have either.
-                        Some(Value::Boolean(false)) => {
-                            let global = Value::Object(self.realm.global());
-                            let stored = self.set_property_key(global, key, value, heap);
-                            self.settle(stored, heap, root, current, at)?;
-                        }
-                        Some(_) => {}
-                        None => continue,
-                    }
+                    self.store_through(index, heap, root, current, at)?;
                 }
                 Instruction::StoreName(index) => {
-                    // Peeked, not popped, for the reason every other store peeks: an assignment is
-                    // an expression and its value is the caller's.
-                    let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
-                    let key = self.global_name(running, index, heap)?;
-                    let name = self.name_text(running, index, heap)?;
-                    let strict = running.is_strict();
-                    let found = match self.settle_resolution(&name, key, heap, root, current, at)? {
-                        Some(found) => found,
-                        None => continue,
-                    };
-                    let stored = self.store_dynamic(found, key, value, strict, heap);
-                    match self.settle(stored.map(Value::Boolean), heap, root, current, at)? {
-                        // Nowhere in the chain: §6.2.5.6 puts it on the global object, which is
-                        // what `StoreGlobal` does and is reached here by the same call.
-                        Some(Value::Boolean(false)) => {
-                            let global = Value::Object(self.realm.global());
-                            let stored = self.set_property_key(global, key, value, heap);
-                            self.settle(stored, heap, root, current, at)?;
-                        }
-                        Some(_) => {}
-                        None => continue,
-                    }
+                    self.store_name(index, heap, root, current, at)?;
                 }
                 // §13.3.10 `ImportCall` — answers a promise and does everything else in a job.
                 Instruction::DynamicImport => {
@@ -821,28 +709,7 @@ impl Vm {
                     self.delete_name(index, heap, root, current, at)?;
                 }
                 Instruction::TypeofName(index) => {
-                    let key = self.global_name(running, index, heap)?;
-                    let name = self.name_text(running, index, heap)?;
-                    let strict = running.is_strict();
-                    let found = match self.settle_resolution(&name, key, heap, root, current, at)? {
-                        Some(found) => found,
-                        None => continue,
-                    };
-                    let read = self.read_resolved(found, key, strict, heap);
-                    // §13.5.1.1 step 2 — a name that is nowhere is `"undefined"` and not a throw,
-                    // which is the one place `typeof` differs from a read.
-                    let answer = match self.settle(
-                        read.map(|found| found.unwrap_or(Value::Undefined)),
-                        heap,
-                        root,
-                        current,
-                        at,
-                    )? {
-                        Some(value) => value.type_of(heap),
-                        None => continue,
-                    };
-                    let id = heap.new_string(answer.encode_utf16().collect());
-                    self.stack.push(Value::String(id));
+                    self.typeof_name(index, heap, root, current, at)?;
                 }
                 Instruction::PopScope => {
                     // A block always has something outside it — the function's own environment at
@@ -973,23 +840,7 @@ impl Vm {
                     self.stack.push(Value::Object(meta));
                 }
                 Instruction::RegExpLiteral => {
-                    // §13.2.7.3 `InstantiateRegExpLiteral` — a new object each time, so a pattern
-                    // written inside a loop does not carry `lastIndex` between turns.
-                    let flags = self.pop()?;
-                    let source = self.pop()?;
-                    let (Value::String(source), Value::String(flags)) = (source, flags) else {
-                        // The compiler pushes two string constants and nothing else can reach here,
-                        // so this is a chunk that does not make sense as instructions.
-                        return Err(Fault::MissingFunction);
-                    };
-                    let source = String::from_utf16_lossy(heap.string(source).unwrap_or(&[]));
-                    let flags = String::from_utf16_lossy(heap.string(flags).unwrap_or(&[]));
-                    let made = crate::builtins::regexp::from_literal(self, heap, &source, &flags)
-                        .map(Value::Object);
-                    match self.settle(made, heap, root, current, at)? {
-                        Some(value) => self.stack.push(value),
-                        None => continue,
-                    }
+                    self.regexp_literal(heap, root, current, at)?;
                 }
                 Instruction::TemplateObject(index) => {
                     let site = TemplateSite {
@@ -1595,6 +1446,287 @@ impl Vm {
     /// What the class body puts *on* those two objects is a run of further instructions and not
     /// this — a method is compiled and defined one at a time, so that a computed key runs where it
     /// was written.
+    /// [`Instruction::StoreThrough`] — a store through the reference a `with` head resolved.
+    ///
+    /// # Why this is out of line, and why `#[inline(never)]` is load-bearing
+    ///
+    /// [`Vm::execute`] is one function and its frame is the sum of every arm's locals — 18,568
+    /// bytes in a debug build, measured from its own prologue, which uses `__chkstk` because it is
+    /// past a page. A **re-entry pays that frame again per level**, so an arm that keeps a `String`
+    /// and three `Value`s alive across four calls is charged to every nested execution in the
+    /// program rather than to the one instruction that runs it. That is what
+    /// `MAX_REENTRY_DEPTH` is spending, and moving an arm here is the only lever that moves it.
+    ///
+    /// Re-derived rather than passed: `running` borrows what `current` owns, and the calls below
+    /// want `current` mutably. Reading it inside this frame ends the borrow here.
+    #[inline(never)]
+    fn store_through(
+        &mut self,
+        index: u32,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let running: &Chunk = current.as_deref().unwrap_or(root);
+        // Peeked, not popped: an assignment is an expression and its value is the caller's. The
+        // *reference* is popped, because it has now been used.
+        let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
+        let key = self.global_name(running, index, heap)?;
+        let strict = running.is_strict();
+        let found = self.references.pop().ok_or(Fault::MissingReference)?;
+        let stored = self.store_dynamic(found, key, value, strict, heap);
+        // A `None` is the throw already raised and the handler already taken, which in the loop
+        // was a `continue`. Nothing followed the arm, so returning is the same thing.
+        if let Some(Value::Boolean(false)) =
+            self.settle(stored.map(Value::Boolean), heap, root, current, at)?
+        {
+            // §6.2.5.6 — nothing in the chain answered, so the global object takes it. The same
+            // tail [`Vm::store_name`] has, and the reason both need it: `Resolved` has a `Global`
+            // case meaning "ask the global object", and asking it can still come back `false`.
+            let global = Value::Object(self.realm.global());
+            let stored = self.set_property_key(global, key, value, heap);
+            self.settle(stored, heap, root, current, at)?;
+        }
+        Ok(())
+    }
+
+    /// [`Instruction::EnumerateProperties`] — §14.7.5.6's list for a `for`-`in` head.
+    ///
+    /// Out of line for [`Vm::store_through`]'s reason.
+    #[inline(never)]
+    fn enumerate_properties(
+        &mut self,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let value = self.pop()?;
+        let prototype = self.realm.array_prototype();
+        // Step 2 — `undefined` and `null` are not an error here, they are simply nothing to
+        // enumerate and the loop body never runs. Any other primitive is wrapped by `ToObject`,
+        // and a wrapper has no enumerable own properties except a String's, which has one per
+        // index (§10.4.3).
+        let keys = match value {
+            Value::Object(object) => {
+                // §14.7.5.10's walk can throw, because a proxy anywhere in the chain answers it
+                // with traps — so this goes through the handler search like any other operation
+                // that may raise.
+                let walked = self
+                    .enumerable_keys_through(object, heap)
+                    .map(|names| heap.enumeration_of(prototype, &names));
+                match self.settle(walked.map(Value::Object), heap, root, current, at)? {
+                    Some(list) => list,
+                    None => return Ok(()),
+                }
+            }
+            _ => Value::Object(heap.new_array(prototype, 0)),
+        };
+        self.stack.push(keys);
+        Ok(())
+    }
+
+    /// [`Instruction::TypeofGlobal`] — §13.5.1.1 step 2, where no such global is `"undefined"`.
+    ///
+    /// Out of line for [`Vm::store_through`]'s reason.
+    #[inline(never)]
+    fn typeof_global(
+        &mut self,
+        index: u32,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let running: &Chunk = current.as_deref().unwrap_or(root);
+        let key = self.global_name(running, index, heap)?;
+        let read = match self.global_binding(key, heap) {
+            Some(read) => read,
+            None => Ok(Value::Undefined),
+        };
+        let Some(value) = self.settle(read, heap, root, current, at)? else {
+            return Ok(());
+        };
+        let answer = value.type_of(heap);
+        let id = heap.new_string(answer.encode_utf16().collect());
+        self.stack.push(Value::String(id));
+        Ok(())
+    }
+
+    /// [`Instruction::RegExpLiteral`] — §13.2.7.3 `InstantiateRegExpLiteral`.
+    ///
+    /// A new object each time, so a pattern written inside a loop does not carry `lastIndex`
+    /// between turns. Out of line for [`Vm::store_through`]'s reason.
+    #[inline(never)]
+    fn regexp_literal(
+        &mut self,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let flags = self.pop()?;
+        let source = self.pop()?;
+        let (Value::String(source), Value::String(flags)) = (source, flags) else {
+            // The compiler pushes two string constants and nothing else can reach here, so this is
+            // a chunk that does not make sense as instructions.
+            return Err(Fault::MissingFunction);
+        };
+        let source = String::from_utf16_lossy(heap.string(source).unwrap_or(&[]));
+        let flags = String::from_utf16_lossy(heap.string(flags).unwrap_or(&[]));
+        let made =
+            crate::builtins::regexp::from_literal(self, heap, &source, &flags).map(Value::Object);
+        if let Some(value) = self.settle(made, heap, root, current, at)? {
+            self.stack.push(value);
+        }
+        Ok(())
+    }
+
+    /// [`Instruction::TypeofName`] — §13.5.1.1, the one read that answers for a name that is
+    /// nowhere.
+    ///
+    /// Step 2 makes an unresolvable name `"undefined"` rather than the ReferenceError every other
+    /// read gives, which is the whole of what distinguishes this from [`Vm::load_name`]. Out of
+    /// line for [`Vm::store_through`]'s reason.
+    #[inline(never)]
+    fn typeof_name(
+        &mut self,
+        index: u32,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let running: &Chunk = current.as_deref().unwrap_or(root);
+        let key = self.global_name(running, index, heap)?;
+        let name = self.name_text(running, index, heap)?;
+        let strict = running.is_strict();
+        let Some(found) = self.settle_resolution(&name, key, heap, root, current, at)? else {
+            return Ok(());
+        };
+        let read = self.read_resolved(found, key, strict, heap);
+        let settled = self.settle(
+            read.map(|found| found.unwrap_or(Value::Undefined)),
+            heap,
+            root,
+            current,
+            at,
+        )?;
+        let Some(value) = settled else {
+            return Ok(());
+        };
+        let answer = value.type_of(heap);
+        let id = heap.new_string(answer.encode_utf16().collect());
+        self.stack.push(Value::String(id));
+        Ok(())
+    }
+
+    /// [`Instruction::ResolveName`] — §9.4.2 `ResolveBinding`, once.
+    ///
+    /// Everything after this reads and writes through what it found, which is the whole of what
+    /// §13.15.2 means by "the same reference": a getter that deletes the property between the read
+    /// and the write must not send the write to whatever the name would resolve to now.
+    ///
+    /// Out of line for [`Vm::store_through`]'s reason.
+    #[inline(never)]
+    fn resolve_name(
+        &mut self,
+        index: u32,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let running: &Chunk = current.as_deref().unwrap_or(root);
+        let key = self.global_name(running, index, heap)?;
+        let name = self.name_text(running, index, heap)?;
+        if let Some(found) = self.settle_resolution(&name, key, heap, root, current, at)? {
+            self.references.push(found);
+        }
+        Ok(())
+    }
+
+    /// [`Instruction::LoadName`] and [`Instruction::LoadNameForCall`] — read a name through the
+    /// scope chain, and for the call form push §9.1.1.2.10's `WithBaseObject` under it.
+    ///
+    /// Out of line for [`Vm::store_through`]'s reason. `for_call` rather than the instruction,
+    /// because the two spellings differ in exactly that and passing the enum would make this frame
+    /// hold a copy of it.
+    #[inline(never)]
+    fn load_name(
+        &mut self,
+        index: u32,
+        for_call: bool,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let running: &Chunk = current.as_deref().unwrap_or(root);
+        let key = self.global_name(running, index, heap)?;
+        let name = self.name_text(running, index, heap)?;
+        // Read before `settle_resolution`, which borrows the `current` that `running` came from —
+        // the same hoist the two store sites make.
+        let strict = running.is_strict();
+        let Some(found) = self.settle_resolution(&name, key, heap, root, current, at)? else {
+            return Ok(());
+        };
+        // Pushed *first* so the stack reads as a method call's — receiver, callee, arguments — and
+        // only for the call form.
+        if for_call {
+            self.stack.push(Vm::with_base(found));
+        }
+        match self.read_resolved(found, key, strict, heap) {
+            Ok(Some(value)) => self.stack.push(value),
+            // §6.2.5.5 — nothing anywhere is the ReferenceError an ordinary unresolvable name
+            // gets, said in the same words by the same code.
+            Ok(None) => {
+                let message = self.missing_global(key, heap);
+                let thrown = self.realm.error(heap, NativeError::Reference, &message);
+                self.unwind(thrown, root, current, at)?;
+            }
+            Err(error) => {
+                let thrown = self.thrown_value(error, heap);
+                self.unwind(thrown, root, current, at)?;
+            }
+        }
+        Ok(())
+    }
+
+    /// [`Instruction::StoreName`] — a store to a name resolved through the scope chain.
+    ///
+    /// Out of line for [`Vm::store_through`]'s reason, which is written out there.
+    #[inline(never)]
+    fn store_name(
+        &mut self,
+        index: u32,
+        heap: &mut Heap,
+        root: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+    ) -> Result<(), Fault> {
+        let running: &Chunk = current.as_deref().unwrap_or(root);
+        let value = *self.stack.last().ok_or(Fault::StackUnderflow)?;
+        let key = self.global_name(running, index, heap)?;
+        let name = self.name_text(running, index, heap)?;
+        let strict = running.is_strict();
+        let Some(found) = self.settle_resolution(&name, key, heap, root, current, at)? else {
+            return Ok(());
+        };
+        let stored = self.store_dynamic(found, key, value, strict, heap);
+        if let Some(Value::Boolean(false)) =
+            self.settle(stored.map(Value::Boolean), heap, root, current, at)?
+        {
+            // Nowhere in the chain: §6.2.5.6 puts it on the global object, which is what
+            // `StoreGlobal` does and is reached here by the same call.
+            let global = Value::Object(self.realm.global());
+            let stored = self.set_property_key(global, key, value, heap);
+            self.settle(stored, heap, root, current, at)?;
+        }
+        Ok(())
+    }
+
     fn make_class(
         &mut self,
         body: &Rc<Chunk>,

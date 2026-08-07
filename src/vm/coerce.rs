@@ -78,25 +78,35 @@ use std::rc::Rc;
 ///
 /// **And the margin is not what the paragraph above says.** Measured 2026-08-06 by
 /// `lab`'s `reentry-cost`, which bisects the cliff with one child process per depth on a mebibyte
-/// in a debug build:
+/// in a debug build, and again on 2026-08-07 after eight arms were moved out of the loop:
 ///
-/// | shape | deepest that survives | bytes per level |
-/// | --- | --- | --- |
-/// | `valueOf` | 43 | 24.4 KiB |
-/// | `map` | 38 | 27.6 KiB |
-/// | `sort` | **35** | 30.0 KiB |
+/// | shape | deepest, before | after | bytes per level, after |
+/// | --- | --- | --- | --- |
+/// | `valueOf` | 43 | 52 | 20.2 KiB |
+/// | `map` | 38 | 45 | 23.3 KiB |
+/// | `sort` | **35** | **41** | 25.6 KiB |
 ///
-/// So the margin at 32 is **1.09×** and not "better than 2×". The number was never wrong for the
-/// shape it was measured against — a `toString` chain, the cheapest of the three — and the cap has
-/// to hold for the dearest. A native's own frame rides on top of the interpreter's, and `sort`
-/// carries a `Vec` of elements across the comparator call.
+/// The margin at 32 was **1.09×** where this comment claimed "better than 2×", and is **1.28×**
+/// now. The old number was never wrong for the shape it was measured against — a `toString` chain,
+/// the cheapest of the three — and a cap has to hold for the dearest. A native's own frame rides
+/// on top of the interpreter's, and `sort` carries a `Vec` of elements across the comparator call.
 ///
-/// **So this number cannot go up yet, which is the opposite of what its cost above argues for.**
-/// The lever is still the frame: the loop is one function and its frame is the sum of every arm's
-/// locals, so a level costs 24 KiB before any native adds to it. `MakeClass` and `MakeFunction`
-/// were suspected and are not it — both hold an `Rc<Chunk>`, which is a pointer. Finding what does
-/// dominate wants the frame profiled per arm rather than guessed at, and until somebody does that,
-/// raising this trades a `RangeError` a program can catch for the abort DR-0002 forbids.
+/// **So this number still cannot go up.** 1.28× is better than 1.3× was when it was recorded as
+/// thin and macOS aborted on the next push anyway; the platform whose frames are largest cannot be
+/// measured from here, and raising this trades a `RangeError` a program can catch for the abort
+/// DR-0002 forbids. What would justify a move is the cliff at 64 for `sort`, which wants about
+/// 16 KiB a level.
+///
+/// The lever is measured now rather than guessed at. [`crate::vm::Vm::execute`] is one function
+/// whose frame is the sum of every arm's locals — **18,568 bytes**, read from its own prologue,
+/// which calls `__chkstk` because it is past a page. Moving the six name-resolution arms and three
+/// others out of line took it to **14,816**, and the cliff moved with it. `MakeClass` and
+/// `MakeFunction` were the documented suspects and are *not* it: both hold an `Rc<Chunk>`, which
+/// is a pointer.
+///
+/// Re-measure with `cargo rustc -p viperjs --lib -- --emit asm` and read `.seh_stackalloc` under
+/// `Vm::execute` — seconds, against minutes for a bisection, so an arm can be moved and judged one
+/// at a time. `lab`'s `reentry-cost` is what turns a frame figure back into a depth.
 const MAX_REENTRY_DEPTH: usize = 32;
 
 impl Vm {
