@@ -2013,7 +2013,7 @@ impl Vm {
         self.environment = frame.environment;
         self.this_value = frame.this_value;
         self.new_target = frame.new_target;
-        self.realm = frame.realm;
+        self.realm = self.realm_by_id(frame.realm);
         *current = frame.code;
         *at = frame.at;
         Ok(())
@@ -2044,7 +2044,10 @@ impl Vm {
         current: &mut Option<Rc<Chunk>>,
         at: &mut usize,
     ) -> Result<(), Fault> {
-        let caller = self.frames.last().map_or(self.realm, |frame| frame.realm);
+        let caller = self
+            .frames
+            .last()
+            .map_or(self.realm, |frame| self.realm_by_id(frame.realm));
         let inside = std::mem::replace(&mut self.realm, caller);
         let outcome = self.raise(error, heap, root, current, at);
         self.realm = inside;
@@ -2294,7 +2297,7 @@ impl Vm {
         self.environment = frame.environment;
         self.this_value = frame.this_value;
         self.new_target = frame.new_target;
-        self.realm = frame.realm;
+        self.realm = self.realm_by_id(frame.realm);
         *current = frame.code;
         *at = frame.at;
         Ok(())

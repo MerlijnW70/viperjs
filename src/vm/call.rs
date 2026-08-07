@@ -374,7 +374,7 @@ impl Vm {
             at: *at,
             this_value: self.this_value,
             new_target: self.new_target,
-            realm: self.realm,
+            realm: self.realm.id(),
             environment: self.environment,
             stack_base: receiver_at,
             handlers_base: self.handlers.len(),
@@ -697,7 +697,12 @@ pub(super) struct Frame {
     /// step 3 together — a function runs with **its own** realm as the running one, so a function
     /// taken out of another realm and called here resolves its intrinsics against the realm it was
     /// written in. DR-0025.
-    pub(super) realm: crate::realm::Realm,
+    ///
+    /// A [`RealmId`] and **not** a `Realm`, for the reason the record gives about a function object
+    /// and for a sharper one here: a `Realm` is 616 bytes, a frame is pushed per call, and DR-0019
+    /// measured a call's retained cost at 74. Holding the realm itself took a frame from 120 bytes
+    /// to 736 and made every deep recursion six times as expensive — measured, not guessed.
+    pub(super) realm: crate::heap::RealmId,
     /// The environment to go back to.
     ///
     /// Not the callee's — that one may outlive the call, if the callee made a closure over it.
@@ -751,4 +756,29 @@ pub(super) enum Entry {
     /// object is made. It is the only way in the language to build an X whose prototype came from a
     /// Y, and there is nowhere else the third value could come from — a plain `new` has two.
     Named,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Frame;
+
+    #[test]
+    fn a_frame_stays_small_because_one_is_pushed_per_call() {
+        // A structural test, and the only kind that can hold this: nothing a program does tells a
+        // 128-byte frame from a 736-byte one, so no behavioural test can fail when it grows.
+        //
+        // DR-0019 measured a call's retained cost at 74 bytes and DR-0023's collection schedule was
+        // chosen against that number. DR-0025 then gave the frame a realm, and holding the `Realm`
+        // itself — 616 bytes, `Copy`, and tempting because every other realm value here is one —
+        // took the frame to **736**. A thousand-deep recursion went from 120 KiB to 720 KiB of
+        // arena for a fact that fits in four bytes.
+        //
+        // The number is a ceiling with room in it rather than the size itself: a field worth adding
+        // should not have to move a test, and a field that doubles the frame should.
+        assert!(
+            std::mem::size_of::<Frame>() <= 192,
+            "a frame is {} bytes — see this test for why that matters",
+            std::mem::size_of::<Frame>()
+        );
+    }
 }

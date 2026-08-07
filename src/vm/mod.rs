@@ -590,7 +590,7 @@ impl Vm {
             new_target: outer_target,
             // §16.2.1.6.2 gives a module a realm of its own; ViperJS has one graph in one realm, so
             // a module body runs in the realm that asked for it and goes back to the same.
-            realm: self.realm,
+            realm: self.realm.id(),
             environment: outer_environment,
             stack_base: base,
             handlers_base,
@@ -1000,7 +1000,7 @@ impl Vm {
             self.environment = frame.environment;
             self.this_value = frame.this_value;
             self.new_target = frame.new_target;
-            self.realm = frame.realm;
+            self.realm = self.realm_by_id(frame.realm);
             *current = frame.code;
             *at = frame.at;
         }

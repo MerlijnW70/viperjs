@@ -47,6 +47,30 @@
 //! What the budget does **not** reach is a §22.2 match already running and a host function that
 //! blocks: `/(a+)+b/` against 22 `a`s takes about 700 ms against a 10 ms budget, which is a test
 //! rather than a sentence.
+//!
+//! # What a host still cannot bind, measured against two real packages
+//!
+//! Running npm packages through the command line found exactly two things missing, and neither is
+//! the engine — both are the *host's* to provide, and this surface cannot yet express either.
+//! Written down here rather than left as a bug report, because each is a decision and not an
+//! omission.
+//!
+//! **A constructor.** [`Engine::bind`] and [`Engine::bind_namespace`] make functions, and
+//! `Heap::new_native_function` gives them no `[[Construct]]` — so a host cannot offer
+//! `new TextEncoder()`. Nor can it build the `Uint8Array` such a thing would answer with: the view
+//! constructors are crate-private, and an embedder holding [`Engine::heap_mut`] can make a buffer
+//! and not a view over it. `pako` wants both. Neither is hard; both are public API, which is the
+//! kind of thing that wants saying out loud before it is added rather than after.
+//!
+//! **Cryptographic randomness cannot be offered by *this* crate at all**, and that is the more
+//! interesting of the two. `crypto.getRandomValues` needs the operating system's entropy, and the
+//! two ways to reach it are a dependency (DR-0001 forbids it) and an `unsafe` FFI call (DR-0002
+//! forbids that). `/dev/urandom` is a third and exists on one of the two platforms this is built
+//! for. What is left is seeding a generator from the clock, and a predictable stream under the name
+//! `crypto` is worse than an absent one: a library that finds the function missing says so, and one
+//! that finds a fake generates keys with it. So it stays absent here **and belongs to the
+//! embedder**, who links whatever they like and can bind it in three lines. `crypto-js` is the
+//! package that wants it.
 
 use crate::compile::{Chunk, compile_script};
 use crate::heap::{Heap, Native, ObjectId, PropertyDescriptor, PropertyKey};
