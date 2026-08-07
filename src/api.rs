@@ -448,6 +448,24 @@ impl Engine {
         Ok(())
     }
 
+    /// Say how much memory this engine may hand out before it refuses — DR-0013's number.
+    ///
+    /// [`crate::heap::MAX_HEAP_BYTES`] is the default and is 64 MiB, which is a policy rather than
+    /// a fact about the machine: a runaway `while (true) { ({}); }` has to be stopped by something,
+    /// and an abort is the one failure DR-0002 cannot answer. Which number is right is the
+    /// **host's** question — a command line running one trusted script and a server running
+    /// untrusted snippets want opposite answers.
+    ///
+    /// It is not a theoretical knob. A 1.9 MB bundle of `mathjs`, built the way an application
+    /// would build one, needs more than 256 MiB here and runs at 512; the default refuses it, and
+    /// before this there was no way for the host to say otherwise.
+    ///
+    /// Checked against what has already been taken, so lowering it below the current footprint
+    /// refuses the next allocation rather than freeing anything.
+    pub fn set_heap_budget(&mut self, bytes: usize) {
+        self.heap.set_budget(bytes);
+    }
+
     /// The global object, for a host that wants to define properties on it directly.
     #[must_use]
     pub fn global(&self) -> ObjectId {
@@ -588,6 +606,38 @@ mod tests {
     use super::*;
     use crate::heap::NativeCall;
     use crate::value::Completion;
+
+    #[test]
+    fn the_heap_budget_is_the_hosts_to_choose_and_defaults_to_something_useful() {
+        // DR-0013's number is a policy rather than a fact about the machine, and which policy is
+        // right belongs to the embedder. A default of zero would refuse every allocation, which is
+        // the mistake `heap::Budget` exists to make unwritable — this row is what would notice.
+        let mut engine = Engine::new();
+        let answer = engine
+            .eval("var a = []; for (var i = 0; i < 5000; i++) a.push({x: i}); a.length")
+            .expect("the default budget allows an ordinary program");
+        assert_eq!(engine.text(answer).as_deref(), Ok("5000"));
+
+        // Lowered below what a program needs, the program is refused rather than the process dying
+        // — which is the whole of what DR-0013 is for.
+        let mut small = Engine::new();
+        small.set_heap_budget(1 << 16);
+        let refused = small.eval("var a = []; for (var i = 0; i < 200000; i++) a.push({x: i}); 1");
+        assert!(
+            matches!(&refused, Err(Error::Thrown(said)) if said.contains("heap has grown past")),
+            "{refused:?}"
+        );
+
+        // …and raising it is what lets a program that legitimately wants the memory have it. The
+        // pair matters more than either: a budget that only ever refuses is indistinguishable from
+        // a broken engine, and one that never refuses is not a budget.
+        let mut large = Engine::new();
+        large.set_heap_budget(1 << 28);
+        let answer = large
+            .eval("var a = []; for (var i = 0; i < 200000; i++) a.push({x: i}); a.length")
+            .expect("a raised budget allows it");
+        assert_eq!(large.text(answer).as_deref(), Ok("200000"));
+    }
 
     #[test]
     fn a_namespace_of_host_functions_is_an_ordinary_object_with_named_methods() {

@@ -266,3 +266,45 @@ fn console_is_an_ordinary_object_the_program_may_take_apart() {
     let (out, _, _) = viper(&[], "print(typeof print);\n");
     assert_eq!(out.trim(), "function");
 }
+
+#[test]
+fn the_heap_budget_can_be_raised_and_lowered_from_the_command_line() {
+    // DR-0013's default is 64 MiB, which is a policy and not a fact about the machine. A real
+    // bundle can want hundreds of megabytes — a 1.9 MB build of `mathjs` needs more than 256 —
+    // and before the flag there was no way for the person running it to say so.
+    let program = "var a = []; for (var i = 0; i < 200000; i++) a.push({x: i}); print(a.length);\n";
+
+    let (out, _, status) = viper(&["--heap-budget", "256"], program);
+    assert_eq!(out.trim(), "200000");
+    assert_eq!(status, Some(0));
+
+    // Lowered, the same program is refused — as a throw the script could have caught, not as a
+    // process that stopped existing.
+    let (_, err, status) = viper(&["--heap-budget", "1"], program);
+    assert!(err.contains("heap has grown past"), "{err}");
+    assert_eq!(status, Some(1));
+
+    // Mebibytes, not bytes: `1` above is a real limit rather than one byte. If this were bytes the
+    // first row would refuse too, and the two would be indistinguishable.
+    let (out, _, status) = viper(&["--heap-budget", "64", "-e", "1 + 1"], "");
+    assert_eq!(out.trim(), "2");
+    assert_eq!(status, Some(0));
+}
+
+#[test]
+fn a_heap_budget_that_makes_no_sense_is_refused_before_anything_runs() {
+    // Zero is refused rather than read as "no limit": a heap that may hand out nothing refuses the
+    // first allocation, and the engine would look broken rather than configured.
+    for argument in ["0", "abc", "-1"] {
+        let (_, err, status) = viper(&["--heap-budget", argument, "-e", "1"], "");
+        assert!(
+            err.contains("--heap-budget wants"),
+            "for `{argument}`: {err}"
+        );
+        assert_eq!(status, Some(2), "for `{argument}`");
+    }
+    // …and with nothing after it at all.
+    let (_, err, status) = viper(&["--heap-budget"], "");
+    assert!(err.contains("--heap-budget wants"), "{err}");
+    assert_eq!(status, Some(2));
+}

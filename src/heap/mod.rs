@@ -209,9 +209,18 @@ const fn string_fits(left: usize, right: usize) -> bool {
 /// forever, and forever means until the process dies unless something stops it. An abort is the one
 /// failure DR-0002 has no answer for, so the engine stops first and says so.
 ///
-/// [`Heap::collect`] exists and [`crate::vm::Vm::collect`] calls it, but **nothing schedules one**:
-/// that is the embedder's, and for want of a policy rather than for want of a collector. What was
-/// measured, and what has changed under it since, is on `Vm::collect`.
+/// **The default**, not the limit — [`Heap::set_budget`] is what a host uses to say otherwise, and
+/// [`crate::api::Engine::set_heap_budget`] is that from outside the crate. This paragraph read
+/// "when there is an embedding API this becomes something the host sets; a constant is what it can
+/// be while there is nobody to ask", and there is somebody to ask now.
+///
+/// Two more sentences here were stale and are worth naming rather than deleting. It said
+/// "**nothing schedules one**: that is the embedder's" — DR-0023 schedules a collection every
+/// mebibyte of growth, and the interpreter does it for itself. And it called the number "generous
+/// for what ViperJS can currently run", on the grounds that "an engine with no collection policy
+/// cannot execute a long program under any budget". There is a policy, and the number is not
+/// generous: a 1.9 MB bundle of `mathjs` measured on 2026-08-07 needs **more than 256 MiB** and
+/// runs at 512, which is the measurement that prompted making this settable at all.
 ///
 /// 64 MiB, and the number is chosen from a measurement rather than from taste. [`Heap::footprint`]
 /// is an *estimate* that leaves out the storage an object's own properties take, and the gap is
@@ -219,10 +228,6 @@ const fn string_fits(left: usize, right: usize) -> bool {
 /// reported footprint. So the budget carries that factor as headroom, and what a runaway actually
 /// costs before it is stopped is a few hundred megabytes rather than a few hundred gigabytes.
 ///
-/// Generous for what ViperJS can currently run — an engine with no collection policy cannot execute
-/// a long program under any budget — and the number to raise first when there is one. When there
-/// is an embedding API this becomes something the host sets; a constant is what it can be while
-/// there is nobody to ask.
 pub const MAX_HEAP_BYTES: usize = 1 << 26;
 
 /// A String on the heap — a sequence of UTF-16 code units (DR-0004).
@@ -245,6 +250,23 @@ pub struct StringId(pub(super) usize);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct BigIntId(pub(super) usize);
 
+/// How much a heap may hand out, as a type whose `Default` is [`MAX_HEAP_BYTES`].
+///
+/// A newtype for one number, and the reason is the shape of the mistake it prevents. `Heap` derives
+/// `Default`, so a plain `usize` field starts at **zero** — which refuses every allocation, and does
+/// it invisibly for any program short enough not to reach the thousand-instruction check.
+/// `viper -e "print(1 + 1)"` still answered `2` while a loop of five thousand objects raised, which
+/// is exactly the kind of green a short probe reports and a real program does not see. Putting the
+/// number in the type means the wrong default cannot be written.
+#[derive(Debug, Clone, Copy)]
+struct Budget(usize);
+
+impl Default for Budget {
+    fn default() -> Self {
+        Self(MAX_HEAP_BYTES)
+    }
+}
+
 /// The arena every heap-allocated value lives in.
 ///
 /// One `Heap` is one realm on one thread (GOAL.md §3), so there is no locking here and no plan
@@ -252,6 +274,17 @@ pub struct BigIntId(pub(super) usize);
 /// is small.
 #[derive(Debug, Default)]
 pub struct Heap {
+    /// How much this heap may hand out before it refuses — [`MAX_HEAP_BYTES`] unless a host says
+    /// otherwise through [`Heap::set_budget`].
+    ///
+    /// A field rather than the constant, because the right number is the *embedder's*: a command
+    /// line running one script and a server running untrusted snippets want opposite answers, and
+    /// neither is a property of the engine.
+    ///
+    /// It is why [`Heap`] has a hand-written `Default` — a derived one starts this at **zero**,
+    /// which refuses every allocation and does it *silently* for any program short enough not to
+    /// reach the thousand-instruction check. A three-line probe still printed the right answer.
+    budget: Budget,
     /// Every String ever allocated, in the order they were allocated.
     ///
     /// A `Box<[u16]>` and not a `Vec<u16>`: a String is immutable once made — §6.1.4 gives no way
@@ -377,6 +410,18 @@ impl Heap {
         Self::default()
     }
 
+    /// A heap that may hand out `bytes` before it refuses — DR-0013's number, chosen by the host.
+    ///
+    /// The same as [`Heap::new`] followed by [`Heap::set_budget`], and here because a host that
+    /// knows the number up front should not have to build the heap twice to say so.
+    #[must_use]
+    pub fn with_budget(bytes: usize) -> Self {
+        Self {
+            budget: Budget(bytes),
+            ..Self::default()
+        }
+    }
+
     /// Put `units` on the heap and answer where it went.
     ///
     /// Takes the code units by value because the heap is going to keep them, and because every
@@ -465,12 +510,33 @@ impl Heap {
     /// program chose, so `new ArrayBuffer(2 ** 40)` has to be refused *before* the memory is taken
     /// rather than reported once it has been.
     pub fn allowance(&self) -> usize {
-        MAX_HEAP_BYTES.saturating_sub(self.footprint())
+        self.budget.0.saturating_sub(self.footprint())
     }
 
     /// Whether this heap has taken more than DR-0013 allows.
     pub fn is_exhausted(&self) -> bool {
-        self.footprint() > MAX_HEAP_BYTES
+        self.footprint() > self.budget.0
+    }
+
+    /// How much this heap may hand out before it refuses.
+    #[must_use]
+    pub fn budget(&self) -> usize {
+        self.budget.0
+    }
+
+    /// Say how much this heap may hand out — DR-0013's number, from the host.
+    ///
+    /// Raising it is how a program that legitimately needs the memory is allowed to have it: a
+    /// bundled library can want hundreds of megabytes and [`MAX_HEAP_BYTES`] is a default rather
+    /// than a judgement about that program. Lowering it is how a host running untrusted snippets
+    /// spends less than the default on each.
+    ///
+    /// It is checked **against what has already been taken**, so setting it below the current
+    /// footprint refuses the next allocation rather than freeing anything — there is nothing here
+    /// that could give memory back on demand, and pretending otherwise would be worse than the
+    /// refusal.
+    pub fn set_budget(&mut self, bytes: usize) {
+        self.budget = Budget(bytes);
     }
 
     /// A new String from `units`, or `None` if there are more of them than a String may hold.

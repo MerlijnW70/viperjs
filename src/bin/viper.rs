@@ -79,6 +79,8 @@ struct Asked {
     command: Command,
     /// DR-0022's budget, if `--time-budget` named one.
     budget: Option<Duration>,
+    /// DR-0013's budget in bytes, if `--heap-budget` named one.
+    heap: Option<usize>,
 }
 
 /// Read the arguments — everything after the program's own name.
@@ -92,6 +94,7 @@ struct Asked {
 fn read_arguments(arguments: &[String], interactive: bool) -> Asked {
     let mut command = None;
     let mut budget = None;
+    let mut heap = None;
     let mut at = 0;
     while at < arguments.len() {
         let argument = arguments[at].as_str();
@@ -117,6 +120,21 @@ fn read_arguments(arguments: &[String], interactive: bool) -> Asked {
                     ));
                 }
             },
+            // DR-0013's, in mebibytes rather than bytes: the number a person types is a size and
+            // nobody thinks about it in bytes. A `0` is refused rather than taken as "no limit",
+            // because a heap that may hand out nothing refuses the first allocation and would look
+            // like the engine being broken.
+            "--heap-budget" => match arguments.get(at).map(|text| text.parse::<usize>()) {
+                Some(Ok(mib)) if mib > 0 => {
+                    at += 1;
+                    heap = Some(mib << 20);
+                }
+                _ => {
+                    return Asked::of(Command::Bad(
+                        "--heap-budget wants a whole number of mebibytes, above zero".into(),
+                    ));
+                }
+            },
             // A lone `-` is the conventional spelling of "standard input", and is what lets a
             // caller be explicit about it when a terminal would otherwise mean the prompt.
             "-" => command = Some(Command::Stdin),
@@ -134,6 +152,7 @@ fn read_arguments(arguments: &[String], interactive: bool) -> Asked {
             false => Command::Stdin,
         }),
         budget,
+        heap,
     }
 }
 
@@ -143,6 +162,7 @@ impl Asked {
         Self {
             command,
             budget: None,
+            heap: None,
         }
     }
 }
@@ -160,6 +180,7 @@ usage:
 options:
   -e, --eval <source>        source to run
       --time-budget <ms>     stop a run that takes longer, uncatchably (DR-0022)
+      --heap-budget <MiB>    how much memory a run may take before it refuses (default 64)
   -h, --help                 this text
   -V, --version              the version
 
@@ -247,6 +268,9 @@ fn main() -> ExitCode {
         ],
     );
     engine.set_time_budget(asked.budget);
+    if let Some(bytes) = asked.heap {
+        engine.set_heap_budget(bytes);
+    }
 
     match asked.command {
         Command::Help => {
