@@ -324,13 +324,17 @@ fn eval_script(
 /// missing: a host could bind a function and not a namespace, and a native could not evaluate
 /// source at all. Both are `api.rs` operations now, and this is their first real caller.
 ///
-/// What is absent stays absent — `createRealm`, `agent`, `gc` and `IsHTMLDDA` — so a test that
-/// needs one fails saying so rather than passing against a stub.
-fn install_host(vm: &mut Vm, heap: &mut Heap) {
-    let prototype = vm.realm().object_prototype();
+/// What is absent stays absent — `agent`, `gc` and `IsHTMLDDA` — so a test that needs one fails
+/// saying so rather than passing against a stub.
+///
+/// Takes the realm rather than reading `vm.realm()`, because `createRealm` calls this for a realm
+/// the machine is **not** running in: INTERPRETING.md says the new realm's global gets the same API,
+/// and a `$262` built against the running realm would put realm A's `global` on realm B's object.
+fn install_host(heap: &mut Heap, realm: &viperjs::realm::Realm) -> viperjs::heap::ObjectId {
+    let prototype = realm.object_prototype();
     let object = heap.new_object(Some(prototype));
-    let global = viperjs::value::Value::Object(vm.realm().global());
-    let function_prototype = vm.realm().function_prototype();
+    let global = viperjs::value::Value::Object(realm.global());
+    let function_prototype = realm.function_prototype();
     let define = |heap: &mut Heap, name: &str, value: viperjs::value::Value| {
         let units: Vec<u16> = name.encode_utf16().collect();
         let key = PropertyKey::from_units(heap, &units);
@@ -346,6 +350,7 @@ fn install_host(vm: &mut Vm, heap: &mut Heap) {
             detach_array_buffer as viperjs::heap::Native,
         ),
         ("evalScript", eval_script),
+        ("createRealm", create_realm),
     ] {
         let function = heap.new_native_function(function_prototype, native);
         define(heap, name, viperjs::value::Value::Object(function));
@@ -354,10 +359,31 @@ fn install_host(vm: &mut Vm, heap: &mut Heap) {
     let key = PropertyKey::from_units(heap, &units);
     let host = viperjs::value::Value::Object(object);
     let _ = heap.define_own_property(
-        vm.realm().global(),
+        realm.global(),
         key,
         &viperjs::heap::PropertyDescriptor::data(host),
     );
+    object
+}
+
+/// `$262.createRealm` — a second realm, with this same API on its global, answered as its `$262`.
+///
+/// INTERPRETING.md is exact about the three parts and the third is the one worth naming: it answers
+/// the **`$262` of the new realm**, not the realm and not its global, so a test reaches the new
+/// global as `$262.createRealm().global`.
+///
+/// What is not here yet is running code *in* the new realm: DR-0025's frame field is unbuilt, so
+/// the machine's realm never changes and `createRealm().global.eval` evaluates against the realm
+/// that called it. A test that turns on that distinction fails; one that only takes an object or a
+/// constructor across — which is most of them — does not.
+fn create_realm(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    _call: &viperjs::heap::NativeCall<'_>,
+) -> viperjs::value::Completion<viperjs::value::Value> {
+    let realm = vm.create_realm(heap);
+    let host = install_host(heap, &realm);
+    Ok(viperjs::value::Value::Object(host))
 }
 
 /// The host's `$DONE`, in the terms §INTERPRETING.md gives it.
@@ -582,7 +608,8 @@ fn evaluate(
     // in one would change the answer it came to check. This used to be guarded where the prologue
     // was assembled; the object is built here now, so the guard is here.
     if !block.has("raw") {
-        install_host(&mut vm, &mut heap);
+        let realm = vm.realm();
+        install_host(&mut heap, &realm);
     }
     // The collection schedule, so the suite can be run with it on and the cost read off the
     // difference. An environment variable rather than a flag because it is a *measurement* knob:
@@ -1350,12 +1377,29 @@ var r = /(?i:a)/;",
         );
         assert!(matches!(&script[0].verdict, Verdict::Passed), "{script:?}");
 
-        // …and the four it cannot are *absent* rather than stubbed, so a test that needs one fails
-        // saying so rather than reporting a failure about the wrong thing entirely.
+        // `createRealm` answers the new realm's **`$262`** — not the realm and not its global, which
+        // is what makes `$262.createRealm().global` the way a test reaches the other side. The API
+        // on it has to be the same one, and its `global` has to be the *new* global rather than the
+        // one this `$262` was built against: a `$262` assembled from the running realm would answer
+        // the caller's own global and every cross-realm test would compare a thing with itself.
+        let realm = run(
+            &root,
+            "/*---\ndescription: createRealm\n---*/\n\
+             var other = $262.createRealm();\n\
+             if (typeof other.createRealm !== 'function') { throw new Error('no API on it'); }\n\
+             if (other.global === this) { throw new Error('answered our own global'); }\n\
+             if (other.global.Array === Array) { throw new Error('shares our intrinsics'); }\n\
+             if (other.global.Symbol.iterator !== Symbol.iterator) {\n\
+                 throw new Error('made its own well-known Symbols');\n\
+             }",
+        );
+        assert!(matches!(&realm[0].verdict, Verdict::Passed), "{realm:?}");
+
+        // …and the three it still cannot do are *absent* rather than stubbed, so a test that needs
+        // one fails saying so rather than reporting a failure about the wrong thing entirely.
         let absent = run(
             &root,
             "/*---\ndescription: absent\n---*/\n\
-             if (typeof $262.createRealm !== 'undefined') { throw new Error('pretending'); }\n\
              if (typeof $262.agent !== 'undefined') { throw new Error('pretending'); }\n\
              if (typeof $262.gc !== 'undefined') { throw new Error('pretending'); }\n\
              if (typeof $262.IsHTMLDDA !== 'undefined') { throw new Error('pretending'); }",

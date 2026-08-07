@@ -27,56 +27,56 @@ annexB/built-ins/RegExp/RegExp-trailing-escape-BMP.js :: it threw an object with
 annexB/built-ins/RegExp/RegExp-trailing-escape-BMP.js (strict) :: it threw an object with no name: Code unit: d800 Expected SameValue(«"a\\�"», «"a\\\ud800"») to be true
 annexB/built-ins/RegExp/legacy-accessors/index/prop-desc.js :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/index/prop-desc.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-annexB/built-ins/RegExp/legacy-accessors/index/this-cross-realm-constructor.js :: it threw TypeError: what was called is not a function
-annexB/built-ins/RegExp/legacy-accessors/index/this-cross-realm-constructor.js (strict) :: it threw TypeError: what was called is not a function
+annexB/built-ins/RegExp/legacy-accessors/index/this-cross-realm-constructor.js :: it threw an object with no name: RegExp.$1 getter throws for cross-realm receiver Expected a TypeError to be thrown but no exception was thrown at all
+annexB/built-ins/RegExp/legacy-accessors/index/this-cross-realm-constructor.js (strict) :: it threw an object with no name: RegExp.$1 getter throws for cross-realm receiver Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/legacy-accessors/index/this-not-regexp-constructor.js :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/index/this-not-regexp-constructor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/index/this-subclass-constructor.js :: it threw an object with no name: RegExp.$1 getter throws for subclass receiver Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/legacy-accessors/index/this-subclass-constructor.js (strict) :: it threw an object with no name: RegExp.$1 getter throws for subclass receiver Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/legacy-accessors/input/prop-desc.js :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/input/prop-desc.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-annexB/built-ins/RegExp/legacy-accessors/input/this-cross-realm-constructor.js :: it threw TypeError: what was called is not a function
-annexB/built-ins/RegExp/legacy-accessors/input/this-cross-realm-constructor.js (strict) :: it threw TypeError: what was called is not a function
+annexB/built-ins/RegExp/legacy-accessors/input/this-cross-realm-constructor.js :: it threw an object with no name: RegExp.input getter throws for cross-realm receiver Expected a TypeError to be thrown but no exception was thrown at all
+annexB/built-ins/RegExp/legacy-accessors/input/this-cross-realm-constructor.js (strict) :: it threw an object with no name: RegExp.input getter throws for cross-realm receiver Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/legacy-accessors/input/this-not-regexp-constructor.js :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/input/this-not-regexp-constructor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/input/this-subclass-constructor.js :: it threw an object with no name: RegExp.input getter throws for subclass receiver Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/legacy-accessors/input/this-subclass-constructor.js (strict) :: it threw an object with no name: RegExp.input getter throws for subclass receiver Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/legacy-accessors/lastMatch/prop-desc.js :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/lastMatch/prop-desc.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-annexB/built-ins/RegExp/legacy-accessors/lastMatch/this-cross-realm-constructor.js :: it threw TypeError: what was called is not a function
-annexB/built-ins/RegExp/legacy-accessors/lastMatch/this-cross-realm-constructor.js (strict) :: it threw TypeError: what was called is not a function
+annexB/built-ins/RegExp/legacy-accessors/lastMatch/this-cross-realm-constructor.js :: it threw an object with no name: RegExp.lastMatch getter throws for cross-realm receiver Expected a TypeError to be thrown but no exception was thrown at all
+annexB/built-ins/RegExp/legacy-accessors/lastMatch/this-cross-realm-constructor.js (strict) :: it threw an object with no name: RegExp.lastMatch getter throws for cross-realm receiver Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/legacy-accessors/lastMatch/this-not-regexp-constructor.js :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/lastMatch/this-not-regexp-constructor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/lastMatch/this-subclass-constructor.js :: it threw an object with no name: RegExp.lastMatch getter throws for subclass receiver Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/legacy-accessors/lastMatch/this-subclass-constructor.js (strict) :: it threw an object with no name: RegExp.lastMatch getter throws for subclass receiver Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/legacy-accessors/lastParen/prop-desc.js :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/lastParen/prop-desc.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-annexB/built-ins/RegExp/legacy-accessors/lastParen/this-cross-realm-constructor.js :: it threw TypeError: what was called is not a function
-annexB/built-ins/RegExp/legacy-accessors/lastParen/this-cross-realm-constructor.js (strict) :: it threw TypeError: what was called is not a function
+annexB/built-ins/RegExp/legacy-accessors/lastParen/this-cross-realm-constructor.js :: it threw an object with no name: RegExp.lastParen getter throws for cross-realm receiver Expected a TypeError to be thrown but no exception was thrown at all
+annexB/built-ins/RegExp/legacy-accessors/lastParen/this-cross-realm-constructor.js (strict) :: it threw an object with no name: RegExp.lastParen getter throws for cross-realm receiver Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/legacy-accessors/lastParen/this-not-regexp-constructor.js :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/lastParen/this-not-regexp-constructor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/lastParen/this-subclass-constructor.js :: it threw an object with no name: RegExp.lastParen getter throws for subclass receiver Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/legacy-accessors/lastParen/this-subclass-constructor.js (strict) :: it threw an object with no name: RegExp.lastParen getter throws for subclass receiver Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/legacy-accessors/leftContext/prop-desc.js :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/leftContext/prop-desc.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-annexB/built-ins/RegExp/legacy-accessors/leftContext/this-cross-realm-constructor.js :: it threw TypeError: what was called is not a function
-annexB/built-ins/RegExp/legacy-accessors/leftContext/this-cross-realm-constructor.js (strict) :: it threw TypeError: what was called is not a function
+annexB/built-ins/RegExp/legacy-accessors/leftContext/this-cross-realm-constructor.js :: it threw an object with no name: RegExp.leftContext getter throws for cross-realm receiver Expected a TypeError to be thrown but no exception was thrown at all
+annexB/built-ins/RegExp/legacy-accessors/leftContext/this-cross-realm-constructor.js (strict) :: it threw an object with no name: RegExp.leftContext getter throws for cross-realm receiver Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/legacy-accessors/leftContext/this-not-regexp-constructor.js :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/leftContext/this-not-regexp-constructor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/leftContext/this-subclass-constructor.js :: it threw an object with no name: RegExp.leftContext getter throws for subclass receiver Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/legacy-accessors/leftContext/this-subclass-constructor.js (strict) :: it threw an object with no name: RegExp.leftContext getter throws for subclass receiver Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/legacy-accessors/rightContext/prop-desc.js :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/rightContext/prop-desc.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-annexB/built-ins/RegExp/legacy-accessors/rightContext/this-cross-realm-constructor.js :: it threw TypeError: what was called is not a function
-annexB/built-ins/RegExp/legacy-accessors/rightContext/this-cross-realm-constructor.js (strict) :: it threw TypeError: what was called is not a function
+annexB/built-ins/RegExp/legacy-accessors/rightContext/this-cross-realm-constructor.js :: it threw an object with no name: RegExp.rightContext getter throws for cross-realm receiver Expected a TypeError to be thrown but no exception was thrown at all
+annexB/built-ins/RegExp/legacy-accessors/rightContext/this-cross-realm-constructor.js (strict) :: it threw an object with no name: RegExp.rightContext getter throws for cross-realm receiver Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/legacy-accessors/rightContext/this-not-regexp-constructor.js :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/rightContext/this-not-regexp-constructor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/rightContext/this-subclass-constructor.js :: it threw an object with no name: RegExp.rightContext getter throws for subclass receiver Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/legacy-accessors/rightContext/this-subclass-constructor.js (strict) :: it threw an object with no name: RegExp.rightContext getter throws for subclass receiver Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/prototype/compile/pattern-regexp-immutable-lastindex.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/prototype/compile/pattern-regexp-immutable-lastindex.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-annexB/built-ins/RegExp/prototype/compile/this-cross-realm-instance.js :: it threw TypeError: what was called is not a function
-annexB/built-ins/RegExp/prototype/compile/this-cross-realm-instance.js (strict) :: it threw TypeError: what was called is not a function
+annexB/built-ins/RegExp/prototype/compile/this-cross-realm-instance.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+annexB/built-ins/RegExp/prototype/compile/this-cross-realm-instance.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/prototype/compile/this-subclass-instance.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/RegExp/prototype/compile/this-subclass-instance.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 annexB/built-ins/String/prototype/match/custom-matcher-emulates-undefined.js :: it threw TypeError: Object.defineProperty requires an object
@@ -217,8 +217,8 @@ built-ins/AggregateError/newtarget-proto-custom.js :: it threw an object with no
 built-ins/AggregateError/newtarget-proto-custom.js (strict) :: it threw an object with no name: Expected SameValue(«AggregateError», «[object Object]») to be true
 built-ins/AggregateError/order-of-args-evaluation.js :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/AggregateError/order-of-args-evaluation.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/AggregateError/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/AggregateError/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/AggregateError/proto-from-ctor-realm.js :: it threw an object with no name: newTarget.prototype is undefined Expected SameValue(«AggregateError», «AggregateError») to be true
+built-ins/AggregateError/proto-from-ctor-realm.js (strict) :: it threw an object with no name: newTarget.prototype is undefined Expected SameValue(«AggregateError», «AggregateError») to be true
 built-ins/Array/from/Array.from_forwards-length-for-array-likes.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Array/from/Array.from_forwards-length-for-array-likes.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Array/from/elements-deleted-after.js :: it threw an object with no name: The value of value is expected to equal the value of array[this.arrayIndex] Expected SameValue(«4», «undefined») to be true
@@ -235,8 +235,8 @@ built-ins/Array/from/iter-set-elem-prop-err.js :: it threw an object with no nam
 built-ins/Array/from/iter-set-elem-prop-err.js (strict) :: it threw an object with no name: Array.from.call(constructorSetsIndex0ConfigurableFalse, items) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Array/from/iter-set-length-err.js :: it threw an object with no name: Array.from.call(poisonedPrototypeLength, items) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/from/iter-set-length-err.js (strict) :: it threw an object with no name: Array.from.call(poisonedPrototypeLength, items) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/from/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Array/from/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Array/from/proto-from-ctor-realm.js :: it threw an object with no name: Object.getPrototypeOf(Array.from.call(C, [])) returns other.Object.prototype Expected SameValue(«», «[object Object]») to be true
+built-ins/Array/from/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Object.getPrototypeOf(Array.from.call(C, [])) returns other.Object.prototype Expected SameValue(«», «[object Object]») to be true
 built-ins/Array/from/source-object-constructor.js :: it threw an object with no name: The value of Array.from.call(Object, []).constructor is expected to equal the value of Object Expected SameValue(«function Array() { [native code] }», «function Object() { [native code] }») to be true
 built-ins/Array/from/source-object-constructor.js (strict) :: it threw an object with no name: The value of Array.from.call(Object, []).constructor is expected to equal the value of Object Expected SameValue(«function Array() { [native code] }», «function Object() { [native code] }») to be true
 built-ins/Array/from/source-object-length-set-elem-prop-err.js :: it threw an object with no name: Array.from.call(A1, items) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
@@ -427,12 +427,10 @@ built-ins/Array/fromAsync/thisarg-omitted-sloppy.js :: the test called $DONE wit
 built-ins/Array/fromAsync/thisarg-omitted-strict.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Array/fromAsync/thisarg-primitive-sloppy.js :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Array/fromAsync/thisarg-primitive-strict.js (strict) :: the test called $DONE with TypeError: what was called is not a function
-built-ins/Array/length/define-own-prop-length-overflow-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Array/length/define-own-prop-length-overflow-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Array/of/construct-this-with-the-number-of-arguments.js :: it threw an object with no name: The value of len is expected to be 0 Expected SameValue(«undefined», «0») to be true
 built-ins/Array/of/construct-this-with-the-number-of-arguments.js (strict) :: it threw an object with no name: The value of len is expected to be 0 Expected SameValue(«undefined», «0») to be true
-built-ins/Array/of/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Array/of/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Array/of/proto-from-ctor-realm.js :: it threw an object with no name: Object.getPrototypeOf(Array.of.call(C, 1, 2, 3)) returns other.Object.prototype Expected SameValue(«», «[object Object]») to be true
+built-ins/Array/of/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Object.getPrototypeOf(Array.of.call(C, 1, 2, 3)) returns other.Object.prototype Expected SameValue(«», «[object Object]») to be true
 built-ins/Array/of/return-a-custom-instance.js :: it threw an object with no name: The result of evaluating (coop instanceof Coop) is expected to be true
 built-ins/Array/of/return-a-custom-instance.js (strict) :: it threw an object with no name: The result of evaluating (coop instanceof Coop) is expected to be true
 built-ins/Array/of/return-abrupt-from-contructor.js :: it threw an object with no name: Array.of.call(T) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
@@ -445,16 +443,14 @@ built-ins/Array/of/return-abrupt-from-setting-length.js :: it threw an object wi
 built-ins/Array/of/return-abrupt-from-setting-length.js (strict) :: it threw an object with no name: Array.of.call(T) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Array/of/sets-length.js :: it threw an object with no name: The value of hits is expected to be 1 Expected SameValue(«0», «1») to be true
 built-ins/Array/of/sets-length.js (strict) :: it threw an object with no name: The value of hits is expected to be 1 Expected SameValue(«0», «1») to be true
-built-ins/Array/proto-from-ctor-realm-one.js :: it threw TypeError: what was called is not a function
-built-ins/Array/proto-from-ctor-realm-one.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/proto-from-ctor-realm-two.js :: it threw TypeError: what was called is not a function
-built-ins/Array/proto-from-ctor-realm-two.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/proto-from-ctor-realm-zero.js :: it threw TypeError: what was called is not a function
-built-ins/Array/proto-from-ctor-realm-zero.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/concat/create-proto-from-ctor-realm-array.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/concat/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/concat/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/concat/create-proto-from-ctor-realm-non-array.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Array/proto-from-ctor-realm-one.js :: it threw an object with no name: Object.getPrototypeOf(Reflect.construct(Array, [1], newTarget)) returns other.Array.prototype Expected SameValue(«», «») to be true
+built-ins/Array/proto-from-ctor-realm-one.js (strict) :: it threw an object with no name: Object.getPrototypeOf(Reflect.construct(Array, [1], newTarget)) returns other.Array.prototype Expected SameValue(«», «») to be true
+built-ins/Array/proto-from-ctor-realm-two.js :: it threw an object with no name: Object.getPrototypeOf(Reflect.construct(Array, ["a", "b"], newTarget)) returns other.Array.prototype Expected SameValue(«», «») to be true
+built-ins/Array/proto-from-ctor-realm-two.js (strict) :: it threw an object with no name: Object.getPrototypeOf(Reflect.construct(Array, ["a", "b"], newTarget)) returns other.Array.prototype Expected SameValue(«», «») to be true
+built-ins/Array/proto-from-ctor-realm-zero.js :: it threw an object with no name: Object.getPrototypeOf(Reflect.construct(Array, [], newTarget)) returns other.Array.prototype Expected SameValue(«», «») to be true
+built-ins/Array/proto-from-ctor-realm-zero.js (strict) :: it threw an object with no name: Object.getPrototypeOf(Reflect.construct(Array, [], newTarget)) returns other.Array.prototype Expected SameValue(«», «») to be true
+built-ins/Array/prototype/concat/create-proto-from-ctor-realm-array.js :: it threw an object with no name: The value of callCount is expected to be 0 Expected SameValue(«1», «0») to be true
+built-ins/Array/prototype/concat/create-proto-from-ctor-realm-array.js (strict) :: it threw an object with no name: The value of callCount is expected to be 0 Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/every/15.4.4.16-1-10.js :: it threw an object with no name: Array.prototype.every.call(Math, callbackfn) Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/every/15.4.4.16-1-10.js (strict) :: it threw an object with no name: Array.prototype.every.call(Math, callbackfn) Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/fill/coerced-indexes.js :: it threw an object with no name: Actual [0, 0] and expected [1, 1] should have the same contents. [0, 0].fill(1, 0, undefined) must return [1, 1]
@@ -465,10 +461,8 @@ built-ins/Array/prototype/fill/typed-array-resize.js :: it threw an object with 
 built-ins/Array/prototype/fill/typed-array-resize.js (strict) :: it threw an object with no name: Actual [0, 3] and expected [0, 0] should have the same contents.
 built-ins/Array/prototype/filter/15.4.4.20-1-10.js :: it threw an object with no name: newArr[0] Expected SameValue(«undefined», «1») to be true
 built-ins/Array/prototype/filter/15.4.4.20-1-10.js (strict) :: it threw an object with no name: newArr[0] Expected SameValue(«undefined», «1») to be true
-built-ins/Array/prototype/filter/create-proto-from-ctor-realm-array.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/filter/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/filter/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/filter/create-proto-from-ctor-realm-non-array.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Array/prototype/filter/create-proto-from-ctor-realm-array.js :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
+built-ins/Array/prototype/filter/create-proto-from-ctor-realm-array.js (strict) :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.js :: it threw an object with no name: it does not define an own length property Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.js (strict) :: it threw an object with no name: it does not define an own length property Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/forEach/15.4.4.18-1-10.js :: it threw an object with no name: result !== true
@@ -481,10 +475,8 @@ built-ins/Array/prototype/lastIndexOf/length-zero-returns-minus-one.js :: it thr
 built-ins/Array/prototype/lastIndexOf/length-zero-returns-minus-one.js (strict) :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
 built-ins/Array/prototype/map/15.4.4.19-1-10.js :: it threw an object with no name: testResult[0] Expected SameValue(«false», «true») to be true
 built-ins/Array/prototype/map/15.4.4.19-1-10.js (strict) :: it threw an object with no name: testResult[0] Expected SameValue(«false», «true») to be true
-built-ins/Array/prototype/map/create-proto-from-ctor-realm-array.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/map/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/map/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/map/create-proto-from-ctor-realm-non-array.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Array/prototype/map/create-proto-from-ctor-realm-array.js :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
+built-ins/Array/prototype/map/create-proto-from-ctor-realm-array.js (strict) :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/reduce/15.4.4.21-1-10.js :: it threw an object with no name: Array.prototype.reduce.call(Math, callbackfn, 1) !== true
 built-ins/Array/prototype/reduce/15.4.4.21-1-10.js (strict) :: it threw an object with no name: Array.prototype.reduce.call(Math, callbackfn, 1) !== true
 built-ins/Array/prototype/reduceRight/15.4.4.22-1-10.js :: it threw an object with no name: Array.prototype.reduceRight.call(Math, callbackfn, 1) !== true
@@ -493,18 +485,14 @@ built-ins/Array/prototype/reverse/get_if_present_with_delete.js :: it threw an o
 built-ins/Array/prototype/reverse/get_if_present_with_delete.js (strict) :: it threw an object with no name: Indexed property '0' not present Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js :: it threw an object with no name: Actual [Get:length, Has:0, Has:9007199254740990, Get:0, Get:9007199254740990, Set:0, GetOwnPropertyDescriptor:0, DefineProperty:0, Set:9007199254740990, GetOwnPropertyDescriptor:9007199254740990, DefineProperty:9007199254740990, Has:1, Has:9007199254740989, Get:1, Get:9007199254740989, Delete:1, Delete:9007199254740989, Has:2, Has:9007199254740988, Get:2, Get:9007199254740988, Delete:2, Set:9007199254740988, GetOwnPropertyDescriptor:9007199254740988, DefineProperty:9007199254740988, Has:3, Has:9007199254740987, Get:3, Get:9007199254740987, Set:3, GetOwnPropertyDescriptor:3, DefineProperty:3, Delete:9007199254740987, Has:4, Has:9007199254740986, Get:4] and expected [Get:length, Has:0, Get:0, Has:9007199254740990, Get:9007199254740990, Set:0, GetOwnPropertyDescriptor:0, DefineProperty:0, Set:9007199254740990, GetOwnPropertyDescriptor:9007199254740990, DefineProperty:9007199254740990, Has:1, Has:9007199254740989, Has:2, Get:2, Has:9007199254740988, Delete:2, Set:9007199254740988, GetOwnPropertyDescriptor:9007199254740988, DefineProperty:9007199254740988, Has:3, Has:9007199254740987, Get:9007199254740987, Set:3, GetOwnPropertyDescriptor:3, DefineProperty:3, Delete:9007199254740987, Has:4, Get:4] should have the same contents. The value of traps is expected to be [   // Initial get length operation.   "Get:length",    // Lower and upper index are both present.   "Has:0",   "Get:0",   "Has:9007199254740990",   "Get:9007199254740990",   "Set:0",   "GetOwnPropertyDescriptor:0",   "DefineProperty:0",   "Set:9007199254740990",   "GetOwnPropertyDescriptor:9007199254740990",   "DefineProperty:9007199254740990",    // Lower and upper index are both absent.   "Has:1",   "Has:9007199254740989",    // Lower index is present, upper index is absent.   "Has:2",   "Get:2",   "Has:9007199254740988",   "Delete:2",   "Set:9007199254740988",   "GetOwnPropertyDescriptor:9007199254740988",   "DefineProperty:9007199254740988",    // Lower index is absent, upper index is present.   "Has:3",   "Has:9007199254740987",   "Get:9007199254740987",   "Set:3",   "GetOwnPropertyDescriptor:3",   "DefineProperty:3",   "Delete:9007199254740987",    // Stop exception.   "Has:4",   "Get:4", ]
 built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js (strict) :: it threw an object with no name: Actual [Get:length, Has:0, Has:9007199254740990, Get:0, Get:9007199254740990, Set:0, GetOwnPropertyDescriptor:0, DefineProperty:0, Set:9007199254740990, GetOwnPropertyDescriptor:9007199254740990, DefineProperty:9007199254740990, Has:1, Has:9007199254740989, Get:1, Get:9007199254740989, Delete:1, Delete:9007199254740989, Has:2, Has:9007199254740988, Get:2, Get:9007199254740988, Delete:2, Set:9007199254740988, GetOwnPropertyDescriptor:9007199254740988, DefineProperty:9007199254740988, Has:3, Has:9007199254740987, Get:3, Get:9007199254740987, Set:3, GetOwnPropertyDescriptor:3, DefineProperty:3, Delete:9007199254740987, Has:4, Has:9007199254740986, Get:4] and expected [Get:length, Has:0, Get:0, Has:9007199254740990, Get:9007199254740990, Set:0, GetOwnPropertyDescriptor:0, DefineProperty:0, Set:9007199254740990, GetOwnPropertyDescriptor:9007199254740990, DefineProperty:9007199254740990, Has:1, Has:9007199254740989, Has:2, Get:2, Has:9007199254740988, Delete:2, Set:9007199254740988, GetOwnPropertyDescriptor:9007199254740988, DefineProperty:9007199254740988, Has:3, Has:9007199254740987, Get:9007199254740987, Set:3, GetOwnPropertyDescriptor:3, DefineProperty:3, Delete:9007199254740987, Has:4, Get:4] should have the same contents. The value of traps is expected to be [   // Initial get length operation.   "Get:length",    // Lower and upper index are both present.   "Has:0",   "Get:0",   "Has:9007199254740990",   "Get:9007199254740990",   "Set:0",   "GetOwnPropertyDescriptor:0",   "DefineProperty:0",   "Set:9007199254740990",   "GetOwnPropertyDescriptor:9007199254740990",   "DefineProperty:9007199254740990",    // Lower and upper index are both absent.   "Has:1",   "Has:9007199254740989",    // Lower index is present, upper index is absent.   "Has:2",   "Get:2",   "Has:9007199254740988",   "Delete:2",   "Set:9007199254740988",   "GetOwnPropertyDescriptor:9007199254740988",   "DefineProperty:9007199254740988",    // Lower index is absent, upper index is present.   "Has:3",   "Has:9007199254740987",   "Get:9007199254740987",   "Set:3",   "GetOwnPropertyDescriptor:3",   "DefineProperty:3",   "Delete:9007199254740987",    // Stop exception.   "Has:4",   "Get:4", ]
-built-ins/Array/prototype/slice/create-proto-from-ctor-realm-array.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/slice/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/slice/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/slice/create-proto-from-ctor-realm-non-array.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Array/prototype/slice/create-proto-from-ctor-realm-array.js :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
+built-ins/Array/prototype/slice/create-proto-from-ctor-realm-array.js (strict) :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/slice/create-species.js :: it threw an object with no name: Expected SameValue(«0», «3») to be true
 built-ins/Array/prototype/slice/create-species.js (strict) :: it threw an object with no name: Expected SameValue(«0», «3») to be true
 built-ins/Array/prototype/some/15.4.4.17-1-10.js :: it threw an object with no name: Array.prototype.some.call(Math, callbackfn) !== true
 built-ins/Array/prototype/some/15.4.4.17-1-10.js (strict) :: it threw an object with no name: Array.prototype.some.call(Math, callbackfn) !== true
-built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/splice/create-proto-from-ctor-realm-non-array.js :: it threw TypeError: what was called is not a function
-built-ins/Array/prototype/splice/create-proto-from-ctor-realm-non-array.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
+built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js (strict) :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js :: it threw an object with no name: // deleteCount argument exceeding 2^53-1. Array.prototype.splice.call(source, 0, 2 ** 53 + 4) throws a StopSplice exception Expected a StopSplice but got a RangeError
 built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js (strict) :: it threw an object with no name: // deleteCount argument exceeding 2^53-1. Array.prototype.splice.call(source, 0, 2 ** 53 + 4) throws a StopSplice exception Expected a StopSplice but got a RangeError
 built-ins/Array/prototype/splice/property-traps-order-with-species.js :: it threw an object with no name: Actual [defineProperty, defineProperty, set, getOwnPropertyDescriptor, defineProperty] and expected [set, getOwnPropertyDescriptor, defineProperty] should have the same contents.
@@ -515,8 +503,8 @@ built-ins/ArrayBuffer/options-maxbytelength-allocation-limit.js :: it threw an o
 built-ins/ArrayBuffer/options-maxbytelength-allocation-limit.js (strict) :: it threw an object with no name: `maxByteLength` option is 7 PiB Expected a RangeError to be thrown but no exception was thrown at all
 built-ins/ArrayBuffer/options-maxbytelength-data-allocation-after-object-creation.js :: it threw an object with no name: Expected a DummyError to be thrown but no exception was thrown at all
 built-ins/ArrayBuffer/options-maxbytelength-data-allocation-after-object-creation.js (strict) :: it threw an object with no name: Expected a DummyError to be thrown but no exception was thrown at all
-built-ins/ArrayBuffer/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/ArrayBuffer/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/ArrayBuffer/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object ArrayBuffer]», «[object ArrayBuffer]») to be true
+built-ins/ArrayBuffer/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object ArrayBuffer]», «[object ArrayBuffer]») to be true
 built-ins/ArrayBuffer/prototype-from-newtarget.js :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object ArrayBuffer]», «») to be true
 built-ins/ArrayBuffer/prototype-from-newtarget.js (strict) :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object ArrayBuffer]», «») to be true
 built-ins/ArrayBuffer/prototype/immutable/prop-desc.js :: it threw an object with no name: ArrayBuffer.prototype.immutable getter should be a function Expected SameValue(«"undefined"», «"function"») to be true
@@ -587,8 +575,8 @@ built-ins/AsyncDisposableStack/newtarget-prototype-is-not-object.js :: it threw 
 built-ins/AsyncDisposableStack/newtarget-prototype-is-not-object.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prop-desc.js :: it threw an object with no name: AsyncDisposableStack should be an own property
 built-ins/AsyncDisposableStack/prop-desc.js (strict) :: it threw an object with no name: AsyncDisposableStack should be an own property
-built-ins/AsyncDisposableStack/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/AsyncDisposableStack/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/AsyncDisposableStack/proto-from-ctor-realm.js :: it threw ReferenceError: AsyncDisposableStack is not defined
+built-ins/AsyncDisposableStack/proto-from-ctor-realm.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/proto.js :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/proto.js (strict) :: it threw ReferenceError: AsyncDisposableStack is not defined
 built-ins/AsyncDisposableStack/prototype-from-newtarget-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
@@ -791,14 +779,10 @@ built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-poisoned-return.j
 built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-poisoned-return.js (strict) :: the test called $DONE with Test262Error: Promise should be rejected Expected a CatchError to be thrown asynchronously but got a TypeError
 built-ins/AsyncFunction/AsyncFunction-construct.js :: it threw an object with no name: length with 2 arguments in one, call Expected SameValue(«1», «2») to be true
 built-ins/AsyncFunction/AsyncFunction-construct.js (strict) :: it threw an object with no name: length with 2 arguments in one, call Expected SameValue(«1», «2») to be true
-built-ins/AsyncFunction/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/AsyncFunction/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/AsyncGeneratorFunction/instance-length.js :: it threw an object with no name: test 5 Expected SameValue(«1», «2») to be true
 built-ins/AsyncGeneratorFunction/instance-length.js (strict) :: it threw an object with no name: test 5 Expected SameValue(«1», «2») to be true
-built-ins/AsyncGeneratorFunction/proto-from-ctor-realm-prototype.js :: it threw TypeError: what was called is not a function
-built-ins/AsyncGeneratorFunction/proto-from-ctor-realm-prototype.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/AsyncGeneratorFunction/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/AsyncGeneratorFunction/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/AsyncGeneratorFunction/proto-from-ctor-realm-prototype.js :: it threw an object with no name: Expected true but got false
+built-ins/AsyncGeneratorFunction/proto-from-ctor-realm-prototype.js (strict) :: it threw an object with no name: Expected true but got false
 built-ins/AsyncGeneratorPrototype/return/return-state-completed-broken-promise.js :: the test called $DONE with Test262Error: Expected rejection
 built-ins/AsyncGeneratorPrototype/return/return-state-completed-broken-promise.js (strict) :: the test called $DONE with Test262Error: Expected rejection
 built-ins/AsyncGeneratorPrototype/return/return-suspendedStart-broken-promise.js :: the test called $DONE with Test262Error: Expected rejection
@@ -1087,12 +1071,10 @@ built-ins/Atomics/xor/immutable-buffer.js :: it threw an object with no name: no
 built-ins/Atomics/xor/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/BigInt/is-a-constructor.js :: it threw an object with no name: isConstructor(BigInt) must return true Expected SameValue(«false», «true») to be true
 built-ins/BigInt/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(BigInt) must return true Expected SameValue(«false», «true») to be true
-built-ins/BigInt/prototype/valueOf/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/BigInt/prototype/valueOf/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/BigInt/wrapper-object-ordinary-toprimitive.js :: it threw an object with no name: hint: default
 built-ins/BigInt/wrapper-object-ordinary-toprimitive.js (strict) :: it threw an object with no name: hint: default
-built-ins/Boolean/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Boolean/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Boolean/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«false», «false») to be true
+built-ins/Boolean/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«false», «false») to be true
 built-ins/DataView/custom-proto-access-detaches-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/DataView/custom-proto-access-detaches-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/DataView/custom-proto-access-resizes-buffer-invalid-by-length.js :: it threw an object with no name: Expected SameValue(«null», «undefined») to be true
@@ -1105,10 +1087,10 @@ built-ins/DataView/custom-proto-access-throws-sab.js :: it threw an object with 
 built-ins/DataView/custom-proto-access-throws-sab.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/DataView/custom-proto-access-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/DataView/custom-proto-access-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/DataView/proto-from-ctor-realm-sab.js :: it threw TypeError: what was called is not a function
-built-ins/DataView/proto-from-ctor-realm-sab.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/DataView/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/DataView/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/DataView/proto-from-ctor-realm-sab.js :: it threw an object with no name: Expected SameValue(«[object DataView]», «[object DataView]») to be true
+built-ins/DataView/proto-from-ctor-realm-sab.js (strict) :: it threw an object with no name: Expected SameValue(«[object DataView]», «[object DataView]») to be true
+built-ins/DataView/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object DataView]», «[object DataView]») to be true
+built-ins/DataView/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object DataView]», «[object DataView]») to be true
 built-ins/DataView/prototype/getFloat16/detached-buffer-after-toindex-byteoffset.js :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/DataView/prototype/getFloat16/detached-buffer-after-toindex-byteoffset.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
 built-ins/DataView/prototype/getFloat16/index-is-out-of-range.js :: it threw an object with no name: getIndex == Infinity Expected a RangeError but got a TypeError
@@ -1197,12 +1179,12 @@ built-ins/DataView/prototype/setUint32/immutable-buffer.js :: it threw TypeError
 built-ins/DataView/prototype/setUint32/immutable-buffer.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setUint8/immutable-buffer.js :: it threw TypeError: what was called is not a function
 built-ins/DataView/prototype/setUint8/immutable-buffer.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Date/proto-from-ctor-realm-one.js :: it threw TypeError: what was called is not a function
-built-ins/Date/proto-from-ctor-realm-one.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Date/proto-from-ctor-realm-two.js :: it threw TypeError: what was called is not a function
-built-ins/Date/proto-from-ctor-realm-two.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Date/proto-from-ctor-realm-zero.js :: it threw TypeError: what was called is not a function
-built-ins/Date/proto-from-ctor-realm-zero.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Date/proto-from-ctor-realm-one.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
+built-ins/Date/proto-from-ctor-realm-one.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
+built-ins/Date/proto-from-ctor-realm-two.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
+built-ins/Date/proto-from-ctor-realm-two.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
+built-ins/Date/proto-from-ctor-realm-zero.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
+built-ins/Date/proto-from-ctor-realm-zero.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Date/prototype/setHours/arg-hour-to-number.js :: it threw an object with no name: undefined Expected SameValue(«1467338400000», «NaN») to be true
 built-ins/Date/prototype/setHours/arg-hour-to-number.js (strict) :: it threw an object with no name: undefined Expected SameValue(«1467338400000», «NaN») to be true
 built-ins/Date/prototype/setHours/arg-min-to-number.js :: it threw an object with no name: undefined Expected SameValue(«1467331320000», «NaN») to be true
@@ -1251,8 +1233,8 @@ built-ins/DisposableStack/newtarget-prototype-is-not-object.js :: it threw Refer
 built-ins/DisposableStack/newtarget-prototype-is-not-object.js (strict) :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/prop-desc.js :: it threw an object with no name: DisposableStack should be an own property
 built-ins/DisposableStack/prop-desc.js (strict) :: it threw an object with no name: DisposableStack should be an own property
-built-ins/DisposableStack/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/DisposableStack/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/DisposableStack/proto-from-ctor-realm.js :: it threw ReferenceError: DisposableStack is not defined
+built-ins/DisposableStack/proto-from-ctor-realm.js (strict) :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/proto.js :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/proto.js (strict) :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/prototype-from-newtarget-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a ReferenceError
@@ -1429,12 +1411,8 @@ built-ins/Error/cause_property.js :: it threw an object with no name: cause shou
 built-ins/Error/cause_property.js (strict) :: it threw an object with no name: cause should be an own property
 built-ins/Error/constructor.js :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Error/constructor.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Error/isError/errors-other-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Error/isError/errors-other-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Error/isError/non-error-objects-other-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Error/isError/non-error-objects-other-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Error/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Error/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Error/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«Error», «Error») to be true
+built-ins/Error/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«Error», «Error») to be true
 built-ins/Error/prototype/stack/getter-cross-realm.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Error/prototype/stack/getter-cross-realm.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Error/prototype/stack/getter-data-property-shadows.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -1505,8 +1483,8 @@ built-ins/Error/prototype/stack/setter-via-assignment.js :: it threw TypeError: 
 built-ins/Error/prototype/stack/setter-via-assignment.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Error/prototype/toString/tostring-get-throws.js :: it threw an object with no name: name field getter should throw to cover abrupt completion return case in step 3 Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Error/prototype/toString/tostring-get-throws.js (strict) :: it threw an object with no name: name field getter should throw to cover abrupt completion return case in step 3 Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/FinalizationRegistry/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/FinalizationRegistry/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/FinalizationRegistry/proto-from-ctor-realm.js :: it threw an object with no name: newTarget.prototype is undefined Expected SameValue(«[object FinalizationRegistry]», «[object FinalizationRegistry]») to be true
+built-ins/FinalizationRegistry/proto-from-ctor-realm.js (strict) :: it threw an object with no name: newTarget.prototype is undefined Expected SameValue(«[object FinalizationRegistry]», «[object FinalizationRegistry]») to be true
 built-ins/FinalizationRegistry/prototype-from-newtarget-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/FinalizationRegistry/prototype-from-newtarget-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/FinalizationRegistry/prototype-from-newtarget-custom.js :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object FinalizationRegistry]», «») to be true
@@ -1532,20 +1510,16 @@ built-ins/Function/15.3.5.4_2-90gs.js :: it threw TypeError: this property may n
 built-ins/Function/15.3.5.4_2-91gs.js :: it threw TypeError: this property may not be read or written
 built-ins/Function/15.3.5.4_2-92gs.js :: it threw TypeError: this property may not be read or written
 built-ins/Function/15.3.5.4_2-93gs.js :: it threw TypeError: this property may not be read or written
-built-ins/Function/call-bind-this-realm-undef.js :: it threw TypeError: what was called is not a function
-built-ins/Function/call-bind-this-realm-undef.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/call-bind-this-realm-value.js :: it threw TypeError: what was called is not a function
-built-ins/Function/call-bind-this-realm-value.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/internals/Call/class-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Function/internals/Call/class-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/internals/Construct/base-ctor-revoked-proxy-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Function/internals/Construct/base-ctor-revoked-proxy-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Function/call-bind-this-realm-undef.js :: it threw an object with no name: implicit undefined Expected SameValue(«[object Object]», «[object Object]») to be true
+built-ins/Function/call-bind-this-realm-undef.js (strict) :: it threw an object with no name: implicit undefined Expected SameValue(«[object Object]», «[object Object]») to be true
+built-ins/Function/call-bind-this-realm-value.js :: it threw an object with no name: boolean constructor Expected SameValue(«function Boolean() { [native code] }», «function Boolean() { [native code] }») to be true
+built-ins/Function/call-bind-this-realm-value.js (strict) :: it threw an object with no name: boolean constructor Expected SameValue(«function Boolean() { [native code] }», «function Boolean() { [native code] }») to be true
+built-ins/Function/internals/Call/class-ctor-realm.js :: it threw an object with no name: Expected a TypeError but got a different error constructor with the same name
+built-ins/Function/internals/Call/class-ctor-realm.js (strict) :: it threw an object with no name: Expected a TypeError but got a different error constructor with the same name
+built-ins/Function/internals/Construct/base-ctor-revoked-proxy-realm.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/Function/internals/Construct/base-ctor-revoked-proxy-realm.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Function/internals/Construct/base-ctor-revoked-proxy.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Function/internals/Construct/base-ctor-revoked-proxy.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/internals/Construct/derived-return-val-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Function/internals/Construct/derived-return-val-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Function/length/S15.3.5.1_A1_T1.js :: it threw an object with no name: The value of f.length is expected to be 3 Expected SameValue(«1», «3») to be true
 built-ins/Function/length/S15.3.5.1_A1_T1.js (strict) :: it threw an object with no name: The value of f.length is expected to be 3 Expected SameValue(«1», «3») to be true
 built-ins/Function/length/S15.3.5.1_A1_T2.js :: it threw an object with no name: The value of f.length is expected to be 5 Expected SameValue(«2», «5») to be true
@@ -1558,18 +1532,18 @@ built-ins/Function/length/S15.3.5.1_A3_T2.js :: it threw an object with no name:
 built-ins/Function/length/S15.3.5.1_A3_T2.js (strict) :: it threw an object with no name: #4: the length property has the attributes { ReadOnly }
 built-ins/Function/length/S15.3.5.1_A3_T3.js :: it threw an object with no name: #4: the length property has the attributes { ReadOnly }
 built-ins/Function/length/S15.3.5.1_A3_T3.js (strict) :: it threw an object with no name: #4: the length property has the attributes { ReadOnly }
-built-ins/Function/proto-from-ctor-realm-prototype.js :: it threw TypeError: what was called is not a function
-built-ins/Function/proto-from-ctor-realm-prototype.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Function/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/apply/argarray-not-object-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/apply/argarray-not-object-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/apply/this-not-callable-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/apply/this-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/bind/get-fn-realm-recursive.js :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/bind/get-fn-realm-recursive.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/bind/get-fn-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/bind/get-fn-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Function/proto-from-ctor-realm-prototype.js :: it threw an object with no name: Expected SameValue(«function () { [native code] }», «function () { [native code] }») to be true
+built-ins/Function/proto-from-ctor-realm-prototype.js (strict) :: it threw an object with no name: Expected SameValue(«function () { [native code] }», «function () { [native code] }») to be true
+built-ins/Function/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«function () { [native code] }», «function () { [native code] }») to be true
+built-ins/Function/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«function () { [native code] }», «function () { [native code] }») to be true
+built-ins/Function/prototype/apply/argarray-not-object-realm.js :: it threw an object with no name: Expected a TypeError but got a different error constructor with the same name
+built-ins/Function/prototype/apply/argarray-not-object-realm.js (strict) :: it threw an object with no name: Expected a TypeError but got a different error constructor with the same name
+built-ins/Function/prototype/apply/this-not-callable-realm.js :: it threw an object with no name: Expected a TypeError but got a different error constructor with the same name
+built-ins/Function/prototype/apply/this-not-callable-realm.js (strict) :: it threw an object with no name: Expected a TypeError but got a different error constructor with the same name
+built-ins/Function/prototype/bind/get-fn-realm-recursive.js :: it threw an object with no name: Expected true but got false
+built-ins/Function/prototype/bind/get-fn-realm-recursive.js (strict) :: it threw an object with no name: Expected true but got false
+built-ins/Function/prototype/bind/get-fn-realm.js :: it threw an object with no name: Expected true but got false
+built-ins/Function/prototype/bind/get-fn-realm.js (strict) :: it threw an object with no name: Expected true but got false
 built-ins/Function/prototype/bind/instance-construct-newtarget-boundtarget-bound.js :: it threw an object with no name: Expected SameValue(«function bound A() { [native code] }», «function A() { [native code] }») to be true
 built-ins/Function/prototype/bind/instance-construct-newtarget-boundtarget-bound.js (strict) :: it threw an object with no name: Expected SameValue(«function bound A() { [native code] }», «function A() { [native code] }») to be true
 built-ins/Function/prototype/bind/instance-construct-newtarget-self-reflect.js :: it threw an object with no name: Expected SameValue(«function bound bound A() { [native code] }», «function A() { [native code] }») to be true
@@ -1578,8 +1552,8 @@ built-ins/Function/prototype/bind/instance-length-tointeger.js :: it threw an ob
 built-ins/Function/prototype/bind/instance-length-tointeger.js (strict) :: it threw an object with no name: Expected SameValue(«3.66», «3») to be true
 built-ins/Function/prototype/bind/instance-name-error.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Function/prototype/bind/instance-name-error.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Function/prototype/bind/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Function/prototype/bind/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Function/prototype/bind/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
+built-ins/Function/prototype/bind/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Function/prototype/toString/built-in-function-object.js :: it threw an object with no name: Conforms to NativeFunction Syntax: "function get Iterator.prototype.constructor() { [native code] }" (%Iterator%.prototype.constructor)
 built-ins/Function/prototype/toString/built-in-function-object.js (strict) :: it threw an object with no name: Conforms to NativeFunction Syntax: "function get Iterator.prototype.constructor() { [native code] }" (%Iterator%.prototype.constructor)
 built-ins/Function/prototype/toString/line-terminator-normalisation-CR.js :: it threw ReferenceError: assertToStringOrNativeFunction is not defined
@@ -1596,10 +1570,8 @@ built-ins/Function/prototype/toString/private-static-method-class-statement.js :
 built-ins/Function/prototype/toString/private-static-method-class-statement.js (strict) :: it threw an object with no name: Conforms to NativeFunction Syntax: "function #f() { [native code] }" (#f /* a */ ( /* b */ ) /* c */ { /* d */ })
 built-ins/GeneratorFunction/instance-length.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 built-ins/GeneratorFunction/instance-length.js (strict) :: it threw an object with no name: Expected SameValue(«1», «2») to be true
-built-ins/GeneratorFunction/proto-from-ctor-realm-prototype.js :: it threw TypeError: what was called is not a function
-built-ins/GeneratorFunction/proto-from-ctor-realm-prototype.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/GeneratorFunction/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/GeneratorFunction/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/GeneratorFunction/proto-from-ctor-realm-prototype.js :: it threw an object with no name: Expected true but got false
+built-ins/GeneratorFunction/proto-from-ctor-realm-prototype.js (strict) :: it threw an object with no name: Expected true but got false
 built-ins/Iterator/concat/arguments-checked-in-order.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Iterator/concat/arguments-checked-in-order.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Iterator/concat/fresh-iterator-result.js :: it threw TypeError: what was called is not a function
@@ -1660,8 +1632,8 @@ built-ins/Iterator/concat/zero-arguments.js :: it threw TypeError: what was call
 built-ins/Iterator/concat/zero-arguments.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/from/return-method-calls-base-return-method.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Iterator/from/return-method-calls-base-return-method.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
-built-ins/Iterator/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Iterator/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Iterator/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Iterator]», «[object Iterator]») to be true
+built-ins/Iterator/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Iterator]», «[object Iterator]») to be true
 built-ins/Iterator/prototype/Symbol.dispose/invokes-return.js :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/Symbol.dispose/invokes-return.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/Symbol.dispose/is-function.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
@@ -1946,10 +1918,8 @@ built-ins/JSON/rawJSON/prop-desc.js :: it threw an object with no name: rawJSON 
 built-ins/JSON/rawJSON/prop-desc.js (strict) :: it threw an object with no name: rawJSON should be an own property
 built-ins/JSON/rawJSON/returns-expected-object.js :: it threw TypeError: what was called is not a function
 built-ins/JSON/rawJSON/returns-expected-object.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/JSON/stringify/replacer-array-proxy-revoked-realm.js :: it threw TypeError: what was called is not a function
-built-ins/JSON/stringify/replacer-array-proxy-revoked-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/JSON/stringify/value-bigint-cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/JSON/stringify/value-bigint-cross-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/JSON/stringify/value-bigint-cross-realm.js :: it threw an object with no name: cross-realm BigInt object without toJSON method Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/JSON/stringify/value-bigint-cross-realm.js (strict) :: it threw an object with no name: cross-realm BigInt object without toJSON method Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/JSON/stringify/value-bigint-order.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
 built-ins/JSON/stringify/value-bigint-order.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
 built-ins/JSON/stringify/value-bigint-tojson-receiver.js :: it threw TypeError: a BigInt cannot be serialised to JSON
@@ -1968,8 +1938,8 @@ built-ins/Map/iterator-item-second-entry-returns-abrupt.js :: it threw an object
 built-ins/Map/iterator-item-second-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/Map/iterator-items-are-not-object-close-iterator.js :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Map/iterator-items-are-not-object-close-iterator.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
-built-ins/Map/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Map/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Map/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Map]», «[object Map]») to be true
+built-ins/Map/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Map]», «[object Map]») to be true
 built-ins/Map/prototype/getOrInsert/append-new-values-normalizes-zero-key.js :: it threw TypeError: what was called is not a function
 built-ins/Map/prototype/getOrInsert/append-new-values-normalizes-zero-key.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Map/prototype/getOrInsert/append-new-values.js :: it threw TypeError: what was called is not a function
@@ -2061,34 +2031,34 @@ built-ins/Math/sumPrecise/takes-iterable.js :: it threw TypeError: what was call
 built-ins/Math/sumPrecise/takes-iterable.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Math/sumPrecise/throws-on-non-number.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Math/sumPrecise/throws-on-non-number.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/NativeErrors/EvalError/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/NativeErrors/EvalError/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/NativeErrors/EvalError/proto-from-ctor-realm.js :: it threw an object with no name: newTarget.prototype is undefined Expected SameValue(«Error», «EvalError») to be true
+built-ins/NativeErrors/EvalError/proto-from-ctor-realm.js (strict) :: it threw an object with no name: newTarget.prototype is undefined Expected SameValue(«Error», «EvalError») to be true
 built-ins/NativeErrors/EvalError/prototype/message.js :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/EvalError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/RangeError/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/NativeErrors/RangeError/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/NativeErrors/RangeError/proto-from-ctor-realm.js :: it threw an object with no name: newTarget.prototype is undefined Expected SameValue(«Error», «RangeError») to be true
+built-ins/NativeErrors/RangeError/proto-from-ctor-realm.js (strict) :: it threw an object with no name: newTarget.prototype is undefined Expected SameValue(«Error», «RangeError») to be true
 built-ins/NativeErrors/RangeError/prototype/message.js :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/RangeError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/ReferenceError/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/NativeErrors/ReferenceError/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/NativeErrors/ReferenceError/proto-from-ctor-realm.js :: it threw an object with no name: newTarget.prototype is undefined Expected SameValue(«Error», «ReferenceError») to be true
+built-ins/NativeErrors/ReferenceError/proto-from-ctor-realm.js (strict) :: it threw an object with no name: newTarget.prototype is undefined Expected SameValue(«Error», «ReferenceError») to be true
 built-ins/NativeErrors/ReferenceError/prototype/message.js :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/ReferenceError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/SyntaxError/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/NativeErrors/SyntaxError/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/NativeErrors/SyntaxError/proto-from-ctor-realm.js :: it threw an object with no name: newTarget.prototype is undefined Expected SameValue(«Error», «SyntaxError») to be true
+built-ins/NativeErrors/SyntaxError/proto-from-ctor-realm.js (strict) :: it threw an object with no name: newTarget.prototype is undefined Expected SameValue(«Error», «SyntaxError») to be true
 built-ins/NativeErrors/SyntaxError/prototype/message.js :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/SyntaxError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/TypeError/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/NativeErrors/TypeError/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/NativeErrors/TypeError/proto-from-ctor-realm.js :: it threw an object with no name: newTarget.prototype is undefined Expected SameValue(«Error», «TypeError») to be true
+built-ins/NativeErrors/TypeError/proto-from-ctor-realm.js (strict) :: it threw an object with no name: newTarget.prototype is undefined Expected SameValue(«Error», «TypeError») to be true
 built-ins/NativeErrors/TypeError/prototype/message.js :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/TypeError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/URIError/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/NativeErrors/URIError/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/NativeErrors/URIError/proto-from-ctor-realm.js :: it threw an object with no name: newTarget.prototype is undefined Expected SameValue(«Error», «URIError») to be true
+built-ins/NativeErrors/URIError/proto-from-ctor-realm.js (strict) :: it threw an object with no name: newTarget.prototype is undefined Expected SameValue(«Error», «URIError») to be true
 built-ins/NativeErrors/URIError/prototype/message.js :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/URIError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/cause_property_native_error.js :: it threw an object with no name: cause should be an own property
 built-ins/NativeErrors/cause_property_native_error.js (strict) :: it threw an object with no name: cause should be an own property
-built-ins/Number/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Number/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Number/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«0», «0») to be true
+built-ins/Number/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«0», «0») to be true
 built-ins/Number/prototype/toString/numeric-literal-tostring-radix-poisoned.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Number/prototype/toString/numeric-literal-tostring-radix-poisoned.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Object/create/properties-arg-to-object-bigint.js :: it threw TypeError: a property-descriptor list must be an object
@@ -2105,8 +2075,8 @@ built-ins/Object/freeze/typedarray-backed-by-resizable-buffer.js :: it threw an 
 built-ins/Object/freeze/typedarray-backed-by-resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/keys/proxy-keys.js :: it threw an object with no name: Expected SameValue(«12», «10») to be true
 built-ins/Object/keys/proxy-keys.js (strict) :: it threw an object with no name: Expected SameValue(«12», «10») to be true
-built-ins/Object/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Object/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Object/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
+built-ins/Object/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Object/prototype/isPrototypeOf/null-this-and-primitive-arg-returns-false.js :: it threw TypeError: Object.prototype.isPrototypeOf requires an object
 built-ins/Object/prototype/isPrototypeOf/null-this-and-primitive-arg-returns-false.js (strict) :: it threw TypeError: Object.prototype.isPrototypeOf requires an object
 built-ins/Object/prototype/isPrototypeOf/undefined-this-and-primitive-arg-returns-false.js :: it threw TypeError: Object.prototype.isPrototypeOf requires an object
@@ -2295,99 +2265,31 @@ built-ins/Promise/allSettledKeyed/symbol-keys.js :: the test called $DONE with T
 built-ins/Promise/allSettledKeyed/symbol-keys.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/get-prototype-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Promise/get-prototype-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Promise/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Promise/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Promise/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Promise]», «[object Promise]») to be true
+built-ins/Promise/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Promise]», «[object Promise]») to be true
 built-ins/Promise/prototype/finally/rejected-observable-then-calls-argument.js :: the test called $DONE with Test262Error: The value of resolve.length is expected to equal the value of expected[calls].length Expected SameValue(«1», «0») to be true
 built-ins/Promise/prototype/finally/rejected-observable-then-calls-argument.js (strict) :: the test called $DONE with Test262Error: The value of resolve.length is expected to equal the value of expected[calls].length Expected SameValue(«1», «0») to be true
 built-ins/Promise/prototype/finally/resolved-observable-then-calls-argument.js :: the test called $DONE with Test262Error: The value of resolve.length is expected to equal the value of expected[calls].length Expected SameValue(«1», «0») to be true
 built-ins/Promise/prototype/finally/resolved-observable-then-calls-argument.js (strict) :: the test called $DONE with Test262Error: The value of resolve.length is expected to equal the value of expected[calls].length Expected SameValue(«1», «0») to be true
-built-ins/Proxy/apply/arguments-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/arguments-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/null-handler-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/null-handler-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/apply/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/arguments-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/arguments-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/null-handler-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/null-handler-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/return-not-object-throws-null-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/return-not-object-throws-null-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/return-not-object-throws-number-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/return-not-object-throws-number-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/return-not-object-throws-string-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/return-not-object-throws-string-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/return-not-object-throws-symbol-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/return-not-object-throws-symbol-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/return-not-object-throws-undefined-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/return-not-object-throws-undefined-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/trap-is-undefined-proto-from-cross-realm-newtarget.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/trap-is-undefined-proto-from-cross-realm-newtarget.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/desc-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/desc-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/null-handler-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/null-handler-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/targetdesc-configurable-desc-not-configurable-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/targetdesc-configurable-desc-not-configurable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-not-configurable-target-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-not-configurable-target-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/targetdesc-undefined-not-configurable-descriptor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/targetdesc-undefined-not-configurable-descriptor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/targetdesc-undefined-target-is-not-extensible-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/targetdesc-undefined-target-is-not-extensible-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/defineProperty/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
+built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Proxy/deleteProperty/targetdesc-is-configurable-target-is-not-extensible.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Proxy/deleteProperty/targetdesc-is-configurable-target-is-not-extensible.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Proxy/deleteProperty/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/deleteProperty/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/get-fn-realm-recursive.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/get-fn-realm-recursive.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/get-fn-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/get-fn-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/get/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/get/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/getOwnPropertyDescriptor/result-type-is-not-object-nor-undefined-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/getOwnPropertyDescriptor/result-type-is-not-object-nor-undefined-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Proxy/get-fn-realm-recursive.js :: it threw an object with no name: Expected true but got false
+built-ins/Proxy/get-fn-realm-recursive.js (strict) :: it threw an object with no name: Expected true but got false
+built-ins/Proxy/get-fn-realm.js :: it threw an object with no name: Expected true but got false
+built-ins/Proxy/get-fn-realm.js (strict) :: it threw an object with no name: Expected true but got false
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-missing-target-is-proxy.js :: it threw an object with no name: 0 should be an own property
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-missing-target-is-proxy.js (strict) :: it threw an object with no name: 0 should be an own property
-built-ins/Proxy/getOwnPropertyDescriptor/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/getOwnPropertyDescriptor/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-null-target-is-proxy.js :: it threw an object with no name: foo should be an own property
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-null-target-is-proxy.js (strict) :: it threw an object with no name: foo should be an own property
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-undefined-target-is-proxy.js :: it threw an object with no name: 0 should be an own property
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-undefined-target-is-proxy.js (strict) :: it threw an object with no name: 0 should be an own property
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-undefined.js :: it threw an object with no name: attr should be an own property
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-undefined.js (strict) :: it threw an object with no name: attr should be an own property
-built-ins/Proxy/getPrototypeOf/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/getPrototypeOf/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/has/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/has/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/isExtensible/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/isExtensible/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/ownKeys/return-not-list-object-throws-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/ownKeys/return-not-list-object-throws-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/ownKeys/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/ownKeys/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/preventExtensions/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/preventExtensions/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/revocable/tco-fn-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/set/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/set/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Proxy/revocable/tco-fn-realm.js (strict) :: it threw an object with no name: Expected a TypeError but got a different error constructor with the same name
 built-ins/Reflect/set/receiver-is-not-object.js :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
 built-ins/Reflect/set/receiver-is-not-object.js (strict) :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
-built-ins/RegExp/escape/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/escape/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/RegExp/lookBehind/back-references-to-captures.js :: it threw an object with no name: Actual [c, b] and expected [c, ab] should have the same contents. #3
 built-ins/RegExp/lookBehind/back-references-to-captures.js (strict) :: it threw an object with no name: Actual [c, b] and expected [c, ab] should have the same contents. #3
 built-ins/RegExp/lookBehind/captures.js :: it threw an object with no name: Actual [def, c] and expected [def, a] should have the same contents. #4
@@ -2418,8 +2320,8 @@ built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Unknown.js :: it
 built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Unknown.js (strict) :: it did not parse: this is not a Unicode property
 built-ins/RegExp/property-escapes/special-property-value-Script_Extensions-Unknown.js :: it did not parse: this is not a Unicode property
 built-ins/RegExp/property-escapes/special-property-value-Script_Extensions-Unknown.js (strict) :: it did not parse: this is not a Unicode property
-built-ins/RegExp/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/RegExp/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«/(?:)/», «[object Object]») to be true
+built-ins/RegExp/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«/(?:)/», «[object Object]») to be true
 built-ins/RegExp/prototype/Symbol.match/builtin-infer-unicode.js :: it threw an object with no name: Expected SameValue(«�», «null») to be true
 built-ins/RegExp/prototype/Symbol.match/builtin-infer-unicode.js (strict) :: it threw an object with no name: Expected SameValue(«�», «null») to be true
 built-ins/RegExp/prototype/Symbol.match/u-advance-after-empty.js :: it threw an object with no name: Expected SameValue(«2», «1») to be true
@@ -2444,10 +2346,10 @@ built-ins/RegExp/prototype/Symbol.search/match-err.js :: it threw an object with
 built-ins/RegExp/prototype/Symbol.search/match-err.js (strict) :: it threw an object with no name: `lastIndex` property is not restored Expected SameValue(«86», «0») to be true
 built-ins/RegExp/prototype/Symbol.search/u-lastindex-advance.js :: it threw an object with no name: Expected SameValue(«1», «-1») to be true
 built-ins/RegExp/prototype/Symbol.search/u-lastindex-advance.js (strict) :: it threw an object with no name: Expected SameValue(«1», «-1») to be true
-built-ins/RegExp/prototype/Symbol.split/splitter-proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/Symbol.split/splitter-proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/dotAll/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/dotAll/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/RegExp/prototype/Symbol.split/splitter-proto-from-ctor-realm.js :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/RegExp/prototype/Symbol.split/splitter-proto-from-ctor-realm.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
+built-ins/RegExp/prototype/dotAll/cross-realm.js :: it threw an object with no name: cross-realm RegExp.prototype getter method against primary realm RegExp.prototype Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/RegExp/prototype/dotAll/cross-realm.js (strict) :: it threw an object with no name: cross-realm RegExp.prototype getter method against primary realm RegExp.prototype Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/RegExp/prototype/exec/failure-lastindex-access.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/RegExp/prototype/exec/failure-lastindex-access.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/RegExp/prototype/exec/regexp-builtin-exec-v-u-flag.js :: it threw an object with no name: Actual argument [null] shouldn't be primitive. Basic exec without v flag
@@ -2456,26 +2358,26 @@ built-ins/RegExp/prototype/exec/success-lastindex-access.js :: it threw an objec
 built-ins/RegExp/prototype/exec/success-lastindex-access.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/RegExp/prototype/exec/u-lastindex-adv.js :: it threw an object with no name: Expected SameValue(«�», «null») to be true
 built-ins/RegExp/prototype/exec/u-lastindex-adv.js (strict) :: it threw an object with no name: Expected SameValue(«�», «null») to be true
-built-ins/RegExp/prototype/global/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/global/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/hasIndices/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/hasIndices/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/ignoreCase/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/ignoreCase/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/multiline/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/multiline/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/source/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/source/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/sticky/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/sticky/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/unicode/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/unicode/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/unicodeSets/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/RegExp/prototype/unicodeSets/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/RegExp/prototype/global/cross-realm.js :: it threw an object with no name: cross-realm RegExp.prototype getter method against primary realm RegExp.prototype Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/RegExp/prototype/global/cross-realm.js (strict) :: it threw an object with no name: cross-realm RegExp.prototype getter method against primary realm RegExp.prototype Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/RegExp/prototype/hasIndices/cross-realm.js :: it threw an object with no name: cross-realm RegExp.prototype getter method against primary realm RegExp.prototype Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/RegExp/prototype/hasIndices/cross-realm.js (strict) :: it threw an object with no name: cross-realm RegExp.prototype getter method against primary realm RegExp.prototype Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/RegExp/prototype/ignoreCase/cross-realm.js :: it threw an object with no name: cross-realm RegExp.prototype getter method against primary realm RegExp.prototype Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/RegExp/prototype/ignoreCase/cross-realm.js (strict) :: it threw an object with no name: cross-realm RegExp.prototype getter method against primary realm RegExp.prototype Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/RegExp/prototype/multiline/cross-realm.js :: it threw an object with no name: cross-realm RegExp.prototype getter method against primary realm RegExp.prototype Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/RegExp/prototype/multiline/cross-realm.js (strict) :: it threw an object with no name: cross-realm RegExp.prototype getter method against primary realm RegExp.prototype Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/RegExp/prototype/source/cross-realm.js :: it threw an object with no name: cross-realm RegExp.prototype getter method against primary realm RegExp.prototype Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/RegExp/prototype/source/cross-realm.js (strict) :: it threw an object with no name: cross-realm RegExp.prototype getter method against primary realm RegExp.prototype Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/RegExp/prototype/sticky/cross-realm.js :: it threw an object with no name: cross-realm RegExp.prototype getter method against primary realm RegExp.prototype Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/RegExp/prototype/sticky/cross-realm.js (strict) :: it threw an object with no name: cross-realm RegExp.prototype getter method against primary realm RegExp.prototype Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/RegExp/prototype/unicode/cross-realm.js :: it threw an object with no name: cross-realm RegExp.prototype getter method against primary realm RegExp.prototype Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/RegExp/prototype/unicode/cross-realm.js (strict) :: it threw an object with no name: cross-realm RegExp.prototype getter method against primary realm RegExp.prototype Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/RegExp/prototype/unicodeSets/cross-realm.js :: it threw an object with no name: cross-realm RegExp.prototype getter method against primary realm RegExp.prototype Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/RegExp/prototype/unicodeSets/cross-realm.js (strict) :: it threw an object with no name: cross-realm RegExp.prototype getter method against primary realm RegExp.prototype Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/RegExp/unicode_full_case_folding.js :: it threw an object with no name: \u0390 does not match \u1fd3
 built-ins/RegExp/unicode_full_case_folding.js (strict) :: it threw an object with no name: \u0390 does not match \u1fd3
-built-ins/Set/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Set/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/Set/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Set]», «[object Set]») to be true
+built-ins/Set/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Set]», «[object Set]») to be true
 built-ins/Set/prototype/isDisjointFrom/set-like-class-mutation.js :: it threw an object with no name: Set.prototype.isDisjointFrom should not call its argument's has method with values from this which have been deleted before visiting
 built-ins/Set/prototype/isDisjointFrom/set-like-class-mutation.js (strict) :: it threw an object with no name: Set.prototype.isDisjointFrom should not call its argument's has method with values from this which have been deleted before visiting
 built-ins/Set/prototype/isSubsetOf/set-like-class-mutation.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true
@@ -2612,12 +2514,12 @@ built-ins/SharedArrayBuffer/options-maxbytelength-allocation-limit.js :: it thre
 built-ins/SharedArrayBuffer/options-maxbytelength-allocation-limit.js (strict) :: it threw an object with no name: `maxByteLength` option is 7 PiB Expected a RangeError to be thrown but no exception was thrown at all
 built-ins/SharedArrayBuffer/options-maxbytelength-data-allocation-after-object-creation.js :: it threw an object with no name: Expected a DummyError to be thrown but no exception was thrown at all
 built-ins/SharedArrayBuffer/options-maxbytelength-data-allocation-after-object-creation.js (strict) :: it threw an object with no name: Expected a DummyError to be thrown but no exception was thrown at all
-built-ins/SharedArrayBuffer/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/SharedArrayBuffer/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/SharedArrayBuffer/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object SharedArrayBuffer]», «[object SharedArrayBuffer]») to be true
+built-ins/SharedArrayBuffer/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object SharedArrayBuffer]», «[object SharedArrayBuffer]») to be true
 built-ins/SharedArrayBuffer/prototype-from-newtarget.js :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object SharedArrayBuffer]», «») to be true
 built-ins/SharedArrayBuffer/prototype-from-newtarget.js (strict) :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object SharedArrayBuffer]», «») to be true
-built-ins/String/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/String/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/String/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«», «») to be true
+built-ins/String/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«», «») to be true
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js :: it threw an object with no name: String.prototype.localeCompare considers ö (\u006f\u0308) ≠ ö (\u00f6).
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js (strict) :: it threw an object with no name: String.prototype.localeCompare considers ö (\u006f\u0308) ≠ ö (\u00f6).
 built-ins/String/prototype/match/regexp-prototype-match-v-u-flag.js :: it threw an object with no name: Actual argument [null] shouldn't be primitive. Basic match with g flag
@@ -2662,10 +2564,10 @@ built-ins/String/prototype/toLowerCase/Final_Sigma_U180E.js :: it threw an objec
 built-ins/String/prototype/toLowerCase/Final_Sigma_U180E.js (strict) :: it threw an object with no name: Sigma preceded by LATIN CAPITAL LETTER A, MONGOLIAN VOWEL SEPARATOR Expected SameValue(«"a᠎σ"», «"a᠎ς"») to be true
 built-ins/String/prototype/toLowerCase/special_casing_conditional.js :: it threw an object with no name: Sigma preceded by LATIN CAPITAL LETTER A Expected SameValue(«"aσ"», «"aς"») to be true
 built-ins/String/prototype/toLowerCase/special_casing_conditional.js (strict) :: it threw an object with no name: Sigma preceded by LATIN CAPITAL LETTER A Expected SameValue(«"aσ"», «"aς"») to be true
-built-ins/String/prototype/toString/non-generic-realm.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/toString/non-generic-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/valueOf/non-generic-realm.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/valueOf/non-generic-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/String/prototype/toString/non-generic-realm.js :: it threw an object with no name: Expected a TypeError but got a different error constructor with the same name
+built-ins/String/prototype/toString/non-generic-realm.js (strict) :: it threw an object with no name: Expected a TypeError but got a different error constructor with the same name
+built-ins/String/prototype/valueOf/non-generic-realm.js :: it threw an object with no name: Expected a TypeError but got a different error constructor with the same name
+built-ins/String/prototype/valueOf/non-generic-realm.js (strict) :: it threw an object with no name: Expected a TypeError but got a different error constructor with the same name
 built-ins/SuppressedError/is-a-constructor.js :: it threw ReferenceError: SuppressedError is not defined
 built-ins/SuppressedError/is-a-constructor.js (strict) :: it threw ReferenceError: SuppressedError is not defined
 built-ins/SuppressedError/length.js :: it threw ReferenceError: SuppressedError is not defined
@@ -2694,8 +2596,8 @@ built-ins/SuppressedError/order-of-args-evaluation.js :: it threw ReferenceError
 built-ins/SuppressedError/order-of-args-evaluation.js (strict) :: it threw ReferenceError: SuppressedError is not defined
 built-ins/SuppressedError/prop-desc.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/SuppressedError/prop-desc.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/SuppressedError/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/SuppressedError/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/SuppressedError/proto-from-ctor-realm.js :: it threw ReferenceError: SuppressedError is not defined
+built-ins/SuppressedError/proto-from-ctor-realm.js (strict) :: it threw ReferenceError: SuppressedError is not defined
 built-ins/SuppressedError/proto.js :: it threw ReferenceError: SuppressedError is not defined
 built-ins/SuppressedError/proto.js (strict) :: it threw ReferenceError: SuppressedError is not defined
 built-ins/SuppressedError/prototype/constructor.js :: it threw ReferenceError: SuppressedError is not defined
@@ -2710,52 +2612,18 @@ built-ins/SuppressedError/prototype/prop-desc.js :: it threw ReferenceError: Sup
 built-ins/SuppressedError/prototype/prop-desc.js (strict) :: it threw ReferenceError: SuppressedError is not defined
 built-ins/SuppressedError/prototype/proto.js :: it threw ReferenceError: SuppressedError is not defined
 built-ins/SuppressedError/prototype/proto.js (strict) :: it threw ReferenceError: SuppressedError is not defined
-built-ins/Symbol/asyncDispose/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Symbol/asyncDispose/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Symbol/asyncDispose/no-key.js :: it threw TypeError: Symbol.keyFor requires a Symbol
 built-ins/Symbol/asyncDispose/no-key.js (strict) :: it threw TypeError: Symbol.keyFor requires a Symbol
 built-ins/Symbol/asyncDispose/prop-desc.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"symbol"») to be true
 built-ins/Symbol/asyncDispose/prop-desc.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"symbol"») to be true
-built-ins/Symbol/asyncIterator/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Symbol/asyncIterator/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Symbol/dispose/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Symbol/dispose/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Symbol/dispose/no-key.js :: it threw TypeError: Symbol.keyFor requires a Symbol
 built-ins/Symbol/dispose/no-key.js (strict) :: it threw TypeError: Symbol.keyFor requires a Symbol
 built-ins/Symbol/dispose/prop-desc.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"symbol"») to be true
 built-ins/Symbol/dispose/prop-desc.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"symbol"») to be true
-built-ins/Symbol/for/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Symbol/for/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Symbol/hasInstance/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Symbol/hasInstance/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Symbol/is-constructor.js :: it threw an object with no name: Expected true but got false
 built-ins/Symbol/is-constructor.js (strict) :: it threw an object with no name: Expected true but got false
-built-ins/Symbol/isConcatSpreadable/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Symbol/isConcatSpreadable/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Symbol/iterator/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Symbol/iterator/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Symbol/keyFor/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Symbol/keyFor/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Symbol/match/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Symbol/match/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Symbol/matchAll/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Symbol/matchAll/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Symbol/prototype/description/is-not-own-property.js :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
 built-ins/Symbol/prototype/description/is-not-own-property.js (strict) :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
-built-ins/Symbol/replace/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Symbol/replace/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Symbol/search/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Symbol/search/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Symbol/species/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Symbol/species/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Symbol/split/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Symbol/split/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Symbol/toPrimitive/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Symbol/toPrimitive/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Symbol/toStringTag/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Symbol/toStringTag/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Symbol/unscopables/cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/Symbol/unscopables/cross-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Temporal/Duration/basic.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/basic.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/builtin.js :: it threw ReferenceError: Temporal is not defined
@@ -11962,8 +11830,8 @@ built-ins/Temporal/toStringTag/prop-desc.js :: it threw ReferenceError: Temporal
 built-ins/Temporal/toStringTag/prop-desc.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/toStringTag/string.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/toStringTag/string.js (strict) :: it threw ReferenceError: Temporal is not defined
-built-ins/ThrowTypeError/distinct-cross-realm.js :: it threw TypeError: what was called is not a function
-built-ins/ThrowTypeError/distinct-cross-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/ThrowTypeError/distinct-cross-realm.js :: it threw an object with no name: Expected a TypeError but got a different error constructor with the same name
+built-ins/ThrowTypeError/distinct-cross-realm.js (strict) :: it threw an object with no name: Expected a TypeError but got a different error constructor with the same name
 built-ins/TypedArray/from/iter-access-error.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/TypedArray/from/iter-access-error.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/TypedArray/from/iter-invoke-error.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
@@ -12110,24 +11978,24 @@ built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/custom-proto-access-thr
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/custom-proto-access-throws-sab.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/custom-proto-access-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/custom-proto-access-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/proto-from-ctor-realm-sab.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/proto-from-ctor-realm-sab.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/proto-from-ctor-realm-sab.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with BigInt64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/proto-from-ctor-realm-sab.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with BigInt64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with BigInt64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/use-default-proto-if-custom-proto-is-not-object-sab.js :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function BigInt64Array() { [native code] }») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/use-default-proto-if-custom-proto-is-not-object-sab.js (strict) :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function BigInt64Array() { [native code] }») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/use-default-proto-if-custom-proto-is-not-object.js :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function BigInt64Array() { [native code] }») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/buffer-arg/use-default-proto-if-custom-proto-is-not-object.js (strict) :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function BigInt64Array() { [native code] }») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/length-arg/custom-proto-access-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/length-arg/custom-proto-access-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors-bigint/length-arg/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/ctors-bigint/length-arg/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/TypedArrayConstructors/ctors-bigint/length-arg/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with BigInt64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/ctors-bigint/length-arg/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/length-arg/use-default-proto-if-custom-proto-is-not-object.js :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function BigInt64Array() { [native code] }») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/length-arg/use-default-proto-if-custom-proto-is-not-object.js (strict) :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function BigInt64Array() { [native code] }») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/no-args/custom-proto-access-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/no-args/custom-proto-access-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors-bigint/no-args/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/ctors-bigint/no-args/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/TypedArrayConstructors/ctors-bigint/no-args/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with BigInt64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/ctors-bigint/no-args/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/no-args/use-default-proto-if-custom-proto-is-not-object.js :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function BigInt64Array() { [native code] }») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/no-args/use-default-proto-if-custom-proto-is-not-object.js (strict) :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function BigInt64Array() { [native code] }») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/object-arg/custom-proto-access-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with BigInt64Array and makePassthrough.)
@@ -12138,36 +12006,36 @@ built-ins/TypedArrayConstructors/ctors-bigint/object-arg/iterator-not-callable-t
 built-ins/TypedArrayConstructors/ctors-bigint/object-arg/iterator-not-callable-throws.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/object-arg/iterator-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/object-arg/iterator-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors-bigint/object-arg/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/ctors-bigint/object-arg/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/TypedArrayConstructors/ctors-bigint/object-arg/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with BigInt64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/ctors-bigint/object-arg/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/object-arg/use-default-proto-if-custom-proto-is-not-object.js :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function BigInt64Array() { [native code] }») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/object-arg/use-default-proto-if-custom-proto-is-not-object.js (strict) :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function BigInt64Array() { [native code] }») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/typedarray-arg/custom-proto-access-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors-bigint/typedarray-arg/custom-proto-access-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors-bigint/typedarray-arg/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/ctors-bigint/typedarray-arg/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/TypedArrayConstructors/ctors-bigint/typedarray-arg/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with BigInt64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/ctors-bigint/typedarray-arg/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/buffer-arg/custom-proto-access-throws-sab.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/buffer-arg/custom-proto-access-throws-sab.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/buffer-arg/custom-proto-access-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/buffer-arg/custom-proto-access-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/buffer-arg/proto-from-ctor-realm-sab.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/ctors/buffer-arg/proto-from-ctor-realm-sab.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/ctors/buffer-arg/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/ctors/buffer-arg/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/TypedArrayConstructors/ctors/buffer-arg/proto-from-ctor-realm-sab.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with Float64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/ctors/buffer-arg/proto-from-ctor-realm-sab.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with Float64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/ctors/buffer-arg/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with Float64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/ctors/buffer-arg/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/buffer-arg/use-default-proto-if-custom-proto-is-not-object-sab.js :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function Float64Array() { [native code] }») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/buffer-arg/use-default-proto-if-custom-proto-is-not-object-sab.js (strict) :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function Float64Array() { [native code] }») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/buffer-arg/use-default-proto-if-custom-proto-is-not-object.js :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function Float64Array() { [native code] }») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/buffer-arg/use-default-proto-if-custom-proto-is-not-object.js (strict) :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function Float64Array() { [native code] }») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/length-arg/custom-proto-access-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/length-arg/custom-proto-access-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/length-arg/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/ctors/length-arg/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/TypedArrayConstructors/ctors/length-arg/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with Float64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/ctors/length-arg/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/length-arg/use-default-proto-if-custom-proto-is-not-object.js :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function Float64Array() { [native code] }») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/length-arg/use-default-proto-if-custom-proto-is-not-object.js (strict) :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function Float64Array() { [native code] }») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/no-args/custom-proto-access-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/no-args/custom-proto-access-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/no-args/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/ctors/no-args/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/TypedArrayConstructors/ctors/no-args/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with Float64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/ctors/no-args/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/no-args/use-default-proto-if-custom-proto-is-not-object.js :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function Float64Array() { [native code] }») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/no-args/use-default-proto-if-custom-proto-is-not-object.js (strict) :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function Float64Array() { [native code] }») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/object-arg/custom-proto-access-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
@@ -12178,14 +12046,14 @@ built-ins/TypedArrayConstructors/ctors/object-arg/iterator-not-callable-throws.j
 built-ins/TypedArrayConstructors/ctors/object-arg/iterator-not-callable-throws.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/object-arg/iterator-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/object-arg/iterator-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/object-arg/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/ctors/object-arg/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/TypedArrayConstructors/ctors/object-arg/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with Float64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/ctors/object-arg/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/object-arg/use-default-proto-if-custom-proto-is-not-object.js :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function Float64Array() { [native code] }») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/object-arg/use-default-proto-if-custom-proto-is-not-object.js (strict) :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function Float64Array() { [native code] }») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/typedarray-arg/custom-proto-access-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/typedarray-arg/custom-proto-access-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/ctors/typedarray-arg/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/ctors/typedarray-arg/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/TypedArrayConstructors/ctors/typedarray-arg/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with Float64Array and makePassthrough.)
+built-ins/TypedArrayConstructors/ctors/typedarray-arg/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/ctors/typedarray-arg/src-typedarray-resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArrayConstructors/ctors/typedarray-arg/src-typedarray-resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/TypedArrayConstructors/ctors/typedarray-arg/use-default-proto-if-custom-proto-is-not-object.js :: it threw an object with no name: Expected SameValue(«function TypedArray() { [native code] }», «function Float64Array() { [native code] }») to be true (Testing with Float64Array and makePassthrough.)
@@ -12212,32 +12080,8 @@ built-ins/TypedArrayConstructors/from/iter-next-value-error.js :: it threw an ob
 built-ins/TypedArrayConstructors/from/iter-next-value-error.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/from/mapfn-this-with-thisarg.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/from/mapfn-this-with-thisarg.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «[object Object]») to be true (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/detached-buffer-throws-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/detached-buffer-throws-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/DefineOwnProperty/detached-buffer-throws-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/DefineOwnProperty/detached-buffer-throws-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/Delete/BigInt/detached-buffer-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/Delete/BigInt/detached-buffer-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/Delete/detached-buffer-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/Delete/detached-buffer-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/Get/BigInt/detached-buffer-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/Get/BigInt/detached-buffer-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/Get/detached-buffer-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/Get/detached-buffer-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/GetOwnProperty/BigInt/detached-buffer-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/GetOwnProperty/BigInt/detached-buffer-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/GetOwnProperty/detached-buffer-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/GetOwnProperty/detached-buffer-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/HasProperty/BigInt/detached-buffer-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/HasProperty/BigInt/detached-buffer-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/HasProperty/detached-buffer-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/HasProperty/detached-buffer-realm.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/Set/BigInt/detached-buffer-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/Set/BigInt/detached-buffer-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArrayConstructors/internals/Set/BigInt/key-is-canonical-invalid-index-prototype-chain-set.js :: it threw an object with no name: receiver[1] should not be created (receiver: empty object) (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/internals/Set/BigInt/key-is-canonical-invalid-index-prototype-chain-set.js (strict) :: it threw an object with no name: receiver[1] should not be created (receiver: empty object) (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArrayConstructors/internals/Set/detached-buffer-realm.js :: it threw TypeError: what was called is not a function
-built-ins/TypedArrayConstructors/internals/Set/detached-buffer-realm.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/TypedArrayConstructors/internals/Set/key-is-canonical-invalid-index-prototype-chain-set.js :: it threw an object with no name: receiver[1] should not be created (receiver: empty object) (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/internals/Set/key-is-canonical-invalid-index-prototype-chain-set.js (strict) :: it threw an object with no name: receiver[1] should not be created (receiver: empty object) (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArrayConstructors/internals/Set/key-is-out-of-bounds-receiver-is-proto.js :: it threw an object with no name: [[Set]] succeeeds
@@ -12378,8 +12222,8 @@ built-ins/WeakMap/iterator-item-second-entry-returns-abrupt.js :: it threw an ob
 built-ins/WeakMap/iterator-item-second-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/WeakMap/iterator-items-are-not-object-close-iterator.js :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/WeakMap/iterator-items-are-not-object-close-iterator.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
-built-ins/WeakMap/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/WeakMap/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/WeakMap/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object WeakMap]», «[object WeakMap]») to be true
+built-ins/WeakMap/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object WeakMap]», «[object WeakMap]») to be true
 built-ins/WeakMap/prototype/getOrInsert/adds-object-element.js :: it threw TypeError: what was called is not a function
 built-ins/WeakMap/prototype/getOrInsert/adds-object-element.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/WeakMap/prototype/getOrInsert/adds-symbol-element.js :: it threw TypeError: what was called is not a function
@@ -12427,26 +12271,22 @@ built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-
 built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-object-key.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-symbol-key.js :: it threw TypeError: what was called is not a function
 built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-symbol-key.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/WeakRef/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/WeakRef/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/WeakRef/proto-from-ctor-realm.js :: it threw an object with no name: newTarget.prototype is undefined Expected SameValue(«[object WeakRef]», «[object WeakRef]») to be true
+built-ins/WeakRef/proto-from-ctor-realm.js (strict) :: it threw an object with no name: newTarget.prototype is undefined Expected SameValue(«[object WeakRef]», «[object WeakRef]») to be true
 built-ins/WeakRef/prototype-from-newtarget-abrupt.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/WeakRef/prototype-from-newtarget-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/WeakRef/prototype-from-newtarget-custom.js :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object WeakRef]», «») to be true
 built-ins/WeakRef/prototype-from-newtarget-custom.js (strict) :: it threw an object with no name: NewTarget is BoundFunction with accessor Expected SameValue(«[object WeakRef]», «») to be true
 built-ins/WeakSet/iterator-close-after-add-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/WeakSet/iterator-close-after-add-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/WeakSet/proto-from-ctor-realm.js :: it threw TypeError: what was called is not a function
-built-ins/WeakSet/proto-from-ctor-realm.js (strict) :: it threw TypeError: what was called is not a function
+built-ins/WeakSet/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object WeakSet]», «[object WeakSet]») to be true
+built-ins/WeakSet/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object WeakSet]», «[object WeakSet]») to be true
 built-ins/decodeURI/S15.1.3.1_A2.5_T1.js :: it did not finish within 10 seconds
 built-ins/decodeURI/S15.1.3.1_A2.5_T1.js (strict) :: an earlier run of the same file did not finish within 10 seconds
 built-ins/decodeURIComponent/S15.1.3.2_A2.5_T1.js :: it did not finish within 10 seconds
 built-ins/decodeURIComponent/S15.1.3.2_A2.5_T1.js (strict) :: an earlier run of the same file did not finish within 10 seconds
 built-ins/global/10.2.1.1.3-4-16-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/global/10.2.1.1.3-4-18-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-harness/assert-throws-same-realm.js :: it threw TypeError: what was called is not a function
-harness/assert-throws-same-realm.js (strict) :: it threw TypeError: what was called is not a function
-harness/asyncHelpers-throwsAsync-same-realm.js :: the test called $DONE with TypeError: what was called is not a function
-harness/asyncHelpers-throwsAsync-same-realm.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 language/arguments-object/10.6-13-a-2.js :: it threw TypeError: this property may not be read or written
 language/arguments-object/10.6-13-a-3.js :: it threw TypeError: this property may not be read or written
 language/arguments-object/mapped/mapped-arguments-nonconfigurable-delete-2.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
@@ -12481,8 +12321,8 @@ language/eval-code/direct/var-env-var-non-strict.js :: it threw SyntaxError: a s
 language/eval-code/indirect/global-env-rec-eval.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/eval-code/indirect/lex-env-heritage.js :: it threw ReferenceError: x is not defined
 language/eval-code/indirect/lex-env-heritage.js (strict) :: it threw ReferenceError: x is not defined
-language/eval-code/indirect/realm.js :: it threw TypeError: what was called is not a function
-language/eval-code/indirect/realm.js (strict) :: it threw TypeError: what was called is not a function
+language/eval-code/indirect/realm.js :: it threw an object with no name: Expected SameValue(«"number"», «"undefined"») to be true
+language/eval-code/indirect/realm.js (strict) :: it threw an object with no name: Expected SameValue(«"number"», «"undefined"») to be true
 language/eval-code/indirect/this-value-func.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «[object Object]») to be true
 language/eval-code/indirect/var-env-func-init-global-update-configurable.js :: it threw an object with no name: f descriptor should be enumerable; f descriptor should be writable
 language/eval-code/indirect/var-env-func-init-global-update-configurable.js (strict) :: it threw an object with no name: f descriptor should be enumerable; f descriptor should be writable
@@ -12517,15 +12357,13 @@ language/expressions/async-arrow-function/await-as-param-rest-nested-arrow-param
 language/expressions/async-arrow-function/await-as-param-rest-nested-arrow-parameter-position.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/async-arrow-function/early-errors-arrow-await-in-formals-default.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/async-arrow-function/early-errors-arrow-await-in-formals-default.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/async-generator/eval-body-proto-realm.js :: it threw TypeError: what was called is not a function
-language/expressions/async-generator/eval-body-proto-realm.js (strict) :: it threw TypeError: what was called is not a function
 language/expressions/bitwise-and/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/bitwise-and/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/bitwise-or/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/bitwise-or/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/bitwise-xor/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/bitwise-xor/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/call/eval-realm-indirect.js :: it threw TypeError: what was called is not a function
+language/expressions/call/eval-realm-indirect.js :: it threw an object with no name: Expected SameValue(«"inside"», «"outside"») to be true
 language/expressions/call/eval-spread-empty-leading.js :: it threw an object with no name: Expected SameValue(«"local"», «0») to be true
 language/expressions/call/eval-spread-empty-leading.js (strict) :: it threw an object with no name: Expected SameValue(«"local"», «0») to be true
 language/expressions/call/eval-spread-empty-trailing.js :: it threw an object with no name: Expected SameValue(«"local"», «0») to be true
@@ -12577,19 +12415,19 @@ language/expressions/class/elements/static-field-anonymous-function-name.js :: i
 language/expressions/class/elements/static-field-anonymous-function-name.js (strict) :: it threw an object with no name: Expected SameValue(«""», «"#field"») to be true
 language/expressions/class/elements/syntax/valid/grammar-field-accessor.js :: it did not parse: expected `;`, found an identifier
 language/expressions/class/elements/syntax/valid/grammar-field-accessor.js (strict) :: it did not parse: expected `;`, found an identifier
-language/expressions/class/private-getter-brand-check-multiple-evaluations-of-class-realm-function-ctor.js :: it threw TypeError: what was called is not a function
-language/expressions/class/private-getter-brand-check-multiple-evaluations-of-class-realm-function-ctor.js (strict) :: it threw TypeError: what was called is not a function
-language/expressions/class/private-getter-brand-check-multiple-evaluations-of-class-realm.js :: it threw TypeError: what was called is not a function
-language/expressions/class/private-method-brand-check-multiple-evaluations-of-class-realm-function-ctor.js :: it threw TypeError: what was called is not a function
-language/expressions/class/private-method-brand-check-multiple-evaluations-of-class-realm-function-ctor.js (strict) :: it threw TypeError: what was called is not a function
-language/expressions/class/private-method-brand-check-multiple-evaluations-of-class-realm.js :: it threw TypeError: what was called is not a function
-language/expressions/class/private-setter-brand-check-multiple-evaluations-of-class-realm-function-ctor.js :: it threw TypeError: what was called is not a function
-language/expressions/class/private-setter-brand-check-multiple-evaluations-of-class-realm-function-ctor.js (strict) :: it threw TypeError: what was called is not a function
-language/expressions/class/private-setter-brand-check-multiple-evaluations-of-class-realm.js :: it threw TypeError: what was called is not a function
-language/expressions/class/private-static-field-multiple-evaluations-of-class-realm.js :: it threw TypeError: what was called is not a function
-language/expressions/class/private-static-getter-multiple-evaluations-of-class-realm.js :: it threw TypeError: what was called is not a function
-language/expressions/class/private-static-method-brand-check-multiple-evaluations-of-class-realm.js :: it threw TypeError: what was called is not a function
-language/expressions/class/private-static-setter-multiple-evaluations-of-class-realm.js :: it threw TypeError: what was called is not a function
+language/expressions/class/private-getter-brand-check-multiple-evaluations-of-class-realm-function-ctor.js :: it threw an object with no name: invalid access of c1 private method Expected a TypeError but got a different error constructor with the same name
+language/expressions/class/private-getter-brand-check-multiple-evaluations-of-class-realm-function-ctor.js (strict) :: it threw an object with no name: invalid access of c1 private method Expected a TypeError but got a different error constructor with the same name
+language/expressions/class/private-getter-brand-check-multiple-evaluations-of-class-realm.js :: it threw an object with no name: invalid access of c1 private method Expected a TypeError but got a different error constructor with the same name
+language/expressions/class/private-method-brand-check-multiple-evaluations-of-class-realm-function-ctor.js :: it threw an object with no name: invalid access of c1 private method Expected a TypeError but got a different error constructor with the same name
+language/expressions/class/private-method-brand-check-multiple-evaluations-of-class-realm-function-ctor.js (strict) :: it threw an object with no name: invalid access of c1 private method Expected a TypeError but got a different error constructor with the same name
+language/expressions/class/private-method-brand-check-multiple-evaluations-of-class-realm.js :: it threw an object with no name: invalid access of c1 private method Expected a TypeError but got a different error constructor with the same name
+language/expressions/class/private-setter-brand-check-multiple-evaluations-of-class-realm-function-ctor.js :: it threw an object with no name: invalid access of c1 private method Expected a TypeError but got a different error constructor with the same name
+language/expressions/class/private-setter-brand-check-multiple-evaluations-of-class-realm-function-ctor.js (strict) :: it threw an object with no name: invalid access of c1 private method Expected a TypeError but got a different error constructor with the same name
+language/expressions/class/private-setter-brand-check-multiple-evaluations-of-class-realm.js :: it threw an object with no name: invalid access of c1 private method Expected a TypeError but got a different error constructor with the same name
+language/expressions/class/private-static-field-multiple-evaluations-of-class-realm.js :: it threw an object with no name: invalid access of c1 private static field Expected a TypeError but got a different error constructor with the same name
+language/expressions/class/private-static-getter-multiple-evaluations-of-class-realm.js :: it threw an object with no name: invalid access of C1 private static getter Expected a TypeError but got a different error constructor with the same name
+language/expressions/class/private-static-method-brand-check-multiple-evaluations-of-class-realm.js :: it threw an object with no name: invalid access of c1 private static method Expected a TypeError but got a different error constructor with the same name
+language/expressions/class/private-static-setter-multiple-evaluations-of-class-realm.js :: it threw an object with no name: invalid access of C1 private static setter Expected a TypeError but got a different error constructor with the same name
 language/expressions/coalesce/tco-pos-null.js (strict) :: it threw RangeError: too much recursion
 language/expressions/coalesce/tco-pos-undefined.js (strict) :: it threw RangeError: too much recursion
 language/expressions/comma/tco-final.js (strict) :: it threw RangeError: too much recursion
@@ -12933,8 +12771,6 @@ language/expressions/function/scope-param-elem-var-close.js :: it threw SyntaxEr
 language/expressions/function/scope-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/function/scope-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/function/scope-param-rest-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/expressions/generators/eval-body-proto-realm.js :: it threw TypeError: what was called is not a function
-language/expressions/generators/eval-body-proto-realm.js (strict) :: it threw TypeError: what was called is not a function
 language/expressions/generators/scope-param-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/generators/scope-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/generators/scope-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
@@ -12957,8 +12793,6 @@ language/expressions/modulus/order-of-evaluation.js :: it threw an object with n
 language/expressions/modulus/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/multiplication/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/multiplication/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/new/non-ctor-err-realm.js :: it threw TypeError: what was called is not a function
-language/expressions/new/non-ctor-err-realm.js (strict) :: it threw TypeError: what was called is not a function
 language/expressions/object/scope-gen-meth-param-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/object/scope-gen-meth-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/object/scope-gen-meth-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
@@ -12981,10 +12815,8 @@ language/expressions/super/prop-dot-obj-ref-strict.js (strict) :: it threw an ob
 language/expressions/super/prop-expr-cls-ref-strict.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
 language/expressions/super/prop-expr-cls-ref-strict.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
 language/expressions/super/prop-expr-obj-ref-strict.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
-language/expressions/super/realm.js :: it threw TypeError: what was called is not a function
-language/expressions/super/realm.js (strict) :: it threw TypeError: what was called is not a function
-language/expressions/tagged-template/cache-realm.js :: it threw TypeError: what was called is not a function
-language/expressions/tagged-template/cache-realm.js (strict) :: it threw TypeError: what was called is not a function
+language/expressions/super/realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
+language/expressions/super/realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 language/expressions/tagged-template/tco-call.js (strict) :: it threw RangeError: too much recursion
 language/expressions/tagged-template/tco-member.js (strict) :: it threw RangeError: too much recursion
 language/expressions/tco-pos.js (strict) :: it threw RangeError: too much recursion
@@ -13537,10 +13369,10 @@ language/statements/variable/12.2.1-11.js :: it threw SyntaxError: a sloppy `var
 language/statements/variable/binding-resolution.js :: it threw an object with no name: Expected SameValue(«undefined», «true») to be true
 language/statements/while/tco-body.js (strict) :: it threw RangeError: too much recursion
 language/statements/with/set-mutable-binding-binding-deleted-with-typed-array-in-proto-chain-strict-mode.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
-language/types/reference/get-value-prop-base-primitive-realm.js :: it threw TypeError: what was called is not a function
-language/types/reference/get-value-prop-base-primitive-realm.js (strict) :: it threw TypeError: what was called is not a function
-language/types/reference/put-value-prop-base-primitive-realm.js :: it threw TypeError: what was called is not a function
-language/types/reference/put-value-prop-base-primitive-realm.js (strict) :: it threw TypeError: what was called is not a function
+language/types/reference/get-value-prop-base-primitive-realm.js :: it threw ReferenceError: value is not defined
+language/types/reference/get-value-prop-base-primitive-realm.js (strict) :: it threw ReferenceError: value is not defined
+language/types/reference/put-value-prop-base-primitive-realm.js :: it threw an object with no name: number Expected SameValue(«0», «1») to be true
+language/types/reference/put-value-prop-base-primitive-realm.js (strict) :: it threw an object with no name: number Expected SameValue(«0», «1») to be true
 language/types/string/S8.4_A7.1.js :: it threw an object with no name: Expected a ReferenceError but got a SyntaxError
 language/types/string/S8.4_A7.2.js :: it threw an object with no name: Expected a ReferenceError but got a SyntaxError
 language/types/string/S8.4_A7.3.js :: it threw an object with no name: Expected a ReferenceError but got a SyntaxError
