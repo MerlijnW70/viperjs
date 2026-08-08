@@ -29,6 +29,74 @@ reproducible.
 
 ---
 
+## dispatch-cost — what does one bytecode instruction actually cost?
+
+**Date:** 2026-08-08
+**Question:** `property-lookup` measured both of the property path's levers away and left one term
+neither experiment touched — a read is 176 ns where an empty loop is ~122. `interpreter-speed` put
+the engine at **"~20 ns per bytecode instruction"** against a good non-JIT interpreter's 2–5, and
+concluded there was "roughly 10–20× of headroom inside the current architecture". **That figure came
+from dividing one loop's time by an instruction count somebody estimated.** So: measure it.
+
+**Setup:** `cargo run -p viperjs-lab --release -- dispatch-cost`. Six families, each a statement
+repeated *k* = 0, 1, 2, 4, 8 times inside a loop of a million passes, best of five. Nothing is
+estimated: the lab compiles, so each row's instruction count is read off `Chunk::code().len()`, and
+every figure is a **slope** — Δtime over Δinstructions over passes. Adding a statement adds its
+instructions to the chunk *and* to every pass, so the two differences are the same difference. The
+`k = 0` row is the loop with an empty body, which makes the intercept the per-pass bookkeeping.
+
+**Result.** `size_of::<Value>() = 16`, `size_of::<Instruction>() = 12`. Loop intercept 78–82 ns a
+pass for the nine-or-so instructions a `for` header executes.
+
+| family | what the statement is | ns per instruction |
+| --- | --- | --- |
+| `constant` | `t = 1` | **3–4** |
+| `branch` | `if (s) { t = 1 }` | **3–4** |
+| `copy-local` | `t = s` | **4–5** |
+| `add-local` | `s = s + 1` | **7–8** |
+| `compare` | `t = s < 2` | **7–8** |
+| `member` | `t = o.x` | **13** |
+
+**Verdict: the headline was wrong by three to six times, and the dispatch is not the lever.**
+
+- **ViperJS runs an ordinary instruction in 3–8 ns**, which is the band `interpreter-speed` named as
+  the target and said the engine was 4–10× away from. It is already there. The "10–20× of headroom
+  inside the current architecture" claim rested entirely on the 20 ns figure and does not survive it.
+- **Where the 20 came from:** that entry divided "71 ns for an increment" by "three or four
+  instructions". An `i++` in a `for` header is not three or four instructions — the *header* is nine,
+  and the 71 ns was the whole pass. Dividing a loop's time by a guess at its body is how an
+  interpreter that is already fast gets ranked as slow.
+- **The one outlier is the property read**, at 13 ns averaged over the five instructions
+  `t = o.x` emits — so the `GetProperty` instruction alone is several times an add. That agrees with
+  `property-lookup` from the other side, where the lookup was ~50 ns of a 176 ns read. **Two
+  experiments built for different questions now say the same thing about the same instruction**,
+  which is the strongest signal either of them has produced.
+
+**And three suspects for that outlier are already eliminated**, each by short-circuiting it and
+re-running rather than by reasoning:
+
+| suspect | probe | result |
+| --- | --- | --- |
+| the linear scan | properties at position 1…64 | flat to 8, one step at 16, flat to 64 |
+| the prototype walk | `is_namespace` forced false; a direct table fast path | no change |
+| re-interning the key | `Value::String(id)` taken as a key without interning | 13 → 12 ns |
+
+So the remaining ~50 ns is the *fixed* cost of the read — the pops, the `Completion`, `settle`, the
+`Vm`→`Heap` hop through DR-0020's mediated internal methods — and none of it is a data structure.
+**Whatever it is, it is not what any of the three names on the performance list said it was.**
+
+**What this means for the ranking.** Nothing in the current architecture is 10× away from where it
+should be. The gap to node is that node **stops dispatching** — it compiles hot code to machine code
+— and GOAL.md §3 refuses that. What is left that is measurable and honest is one instruction's fixed
+overhead, worth perhaps 25 ns on a read, which is 14%. That is a real slice and it is not a
+milestone.
+
+**Cost:** about an hour, and it would have been three without the self-calibration: reading the
+instruction count off the compiled chunk is what turned "the slope looks about right" into a number,
+and the whole point of the entry is that the previous figure was a division by a guess.
+
+---
+
 ## property-lookup — is the 8-shape cost polymorphism, or is it the scan?
 
 **Date:** 2026-08-08
@@ -781,6 +849,13 @@ Reading the ladder downwards; each delta is the cost of one added thing.
 **~20 ns per bytecode instruction** is the headline number, from `i++` amortised over four per loop
 pass: 71 ns for an increment of three or four instructions. A good non-JIT interpreter is 2–5 ns.
 
+> **Wrong by three to six times, measured 2026-08-08 — see `dispatch-cost`.** An `i++` in a `for`
+> header is not three or four instructions; the header is nine, and the 71 ns was the whole pass.
+> Measured by slope against instruction counts read off the compiled chunk, an ordinary instruction
+> is **3–8 ns** — already inside the band this sentence names as the target. **This is what dividing
+> a loop's time by a guess at its body produces**, and it ranked a fast interpreter as slow for two
+> days of planning.
+
 ### The verdict
 
 **"Faster than node" is not reachable without a JIT, and GOAL.md §3 refuses one.** V8 compiles hot
@@ -788,6 +863,11 @@ code to machine code through three tiers; a bytecode interpreter cannot meet tha
 tuning changes the kind of thing it is. What *is* reachable is the range good non-JIT engines
 occupy — QuickJS sits around 30–50× V8 on this sort of loop, where ViperJS is at 200–800×. **So
 there is roughly 10–20× of headroom inside the current architecture**, and it is worth having.
+
+> **The headroom claim does not survive `dispatch-cost` either**, because it rested entirely on
+> the 20 ns figure above. An ordinary instruction is 3–8 ns and the remaining honest target is
+> one instruction's fixed overhead — a property read, worth perhaps 14% of a read. The gap to
+> node is that node stops dispatching, which GOAL.md §3 refuses.
 
 Ranked by what the measurements support, not by what sounds promising:
 
