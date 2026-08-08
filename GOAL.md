@@ -40,8 +40,12 @@ Naming these keeps them from arriving by accident, one reasonable-sounding PR at
 - **No Node.js compatibility.** No `require`, no `fs`, no event loop beyond the ECMAScript job
   queue. The host provides I/O; we provide the language.
 - **No Intl / full Unicode collation.** Stubs that throw honestly, not approximations that lie.
-- **No threads inside the engine.** One realm, one thread. Embedders get isolation by running
-  more engines, which is cheap when the engine is small.
+- **No threads inside the engine.** One thread, and no parallelism inside it. Embedders get
+  isolation by running more engines, which is cheap when the engine is small. (This read "one
+  realm, one thread" until 2026-08-08. The realm half was never what this bullet refuses — §9.3's
+  realms are ECMA-262's own, §4 makes the suite the arbiter, and a second one adds no thread and
+  grants no isolation. DR-0025 records what moved, and that it was built before this line was
+  read.)
 - **No `eval` of native code, no FFI.** The host binds functions in; nothing escapes outward.
 
 ## §4 The oracle

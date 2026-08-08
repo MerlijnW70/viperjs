@@ -119,6 +119,31 @@ per tenant wants precisely this and DR-0021 left it out.
 - **An intrinsic reached through a `Value` that outlived its realm.** Realms are never destroyed
   here, so the question does not arise yet. It would if `Engine` ever grew a `drop_realm`.
 
+## The charter said "one realm", and it was read after the fact
+
+**GOAL.md §3 read "No threads inside the engine. One realm, one thread" when this was built, and
+nobody checked it first.** That is the process error, and it is worth recording plainly: GOAL.md is
+binding and outranks every other document here, so it is the *first* thing a slice of this size
+should be measured against rather than the last.
+
+The line moved on 2026-08-08, and the reasoning is the charter's own rather than this record's
+convenience:
+
+- **The bullet refuses threads.** Its bold lead says so and its rationale — "embedders get isolation
+  by running more engines" — is about isolation. A second realm shares one heap on one thread: it
+  adds no parallelism and grants no isolation, so nothing the bullet exists to prevent is happening.
+- **A realm is not ours to refuse.** Everything else §3 names — JIT, Node compatibility, Intl,
+  threads, FFI — is *outside* ECMA-262 or a bet about complexity. §9.3 is inside it, and §4 makes
+  test262 the arbiter: 381 runs require `$262.createRealm`. A charter cannot appoint an arbiter and
+  forbid what it asks for.
+- **The five non-negotiables are untouched.** No dependency, no `unsafe`, no panic, no threads, and
+  the suite still decides.
+
+**What was rejected: reverting this record.** It would have removed 383 runs of conformant behaviour
+to satisfy a phrase whose own bullet is about something else, and left the engine less of a
+JavaScript engine than it is — the inverse of the test this repository applies to `Temporal`.
+Reverting also would not have fixed the actual mistake, which was the reading order.
+
 ## The invariant
 
 **No operation reaches for "the" intrinsics.** Every clause that wants one names whose it is, and

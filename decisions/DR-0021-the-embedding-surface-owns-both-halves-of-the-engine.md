@@ -94,21 +94,45 @@ to call, so the window is theirs to choose.
 
 ## What this deliberately does not decide
 
-**Interrupting a script that will not stop.** There is no deadline, no fuel, no interrupt — a
-`while (true) {}` can be ended only by ending the process, and GOAL.md §2.3's promise that "an
-embedder runs untrusted code inside their process" is only half kept: the no-panic invariant stops a
-crash and nothing stops a hang. The heap has DR-0013's budget; time has no equivalent. That is a
-change to the interpreter loop rather than to its surface — a check per backward jump, and a
-decision about what the check costs — so it is its own record and its own measurement, and this one
-does not prejudge it. `Engine` is where it will hang when it arrives.
+**Interrupting a script that will not stop.** *(Decided by DR-0022 on 2026-08-05 — see the
+amendment below. What follows is what this record said, and it named where the answer would hang.)*
+There is no deadline, no fuel, no interrupt — a `while (true) {}` can be ended only by ending the
+process, and GOAL.md §2.3's promise that "an embedder runs untrusted code inside their process" is
+only half kept: the no-panic invariant stops a crash and nothing stops a hang. The heap has
+DR-0013's budget; time has no equivalent. That is a change to the interpreter loop rather than to
+its surface — a check per backward jump, and a decision about what the check costs — so it is its
+own record and its own measurement, and this one does not prejudge it. `Engine` is where it will
+hang when it arrives.
 
 **Turning Rust values into JavaScript ones beyond the primitives.** No serialisation, no derive, no
 struct mapping. The host builds what it needs from the operations here.
 
-**A second realm, or more than one `Engine` sharing anything.** GOAL.md §3 says one realm, one
-thread, and isolation comes from running more engines. Two `Engine`s share nothing, which falls out
-of each owning its own heap and is worth saying because it is the property that makes that advice
-true.
+**A second realm, or more than one `Engine` sharing anything.** *(Half decided by DR-0025 on
+2026-08-07 — see the amendment below.)* GOAL.md §3 says one realm, one thread, and isolation comes
+from running more engines. Two `Engine`s share nothing, which falls out of each owning its own heap
+and is worth saying because it is the property that makes that advice true.
+
+## Amended twice, and both were things this record said it was not deciding
+
+Recorded here rather than left to be inferred from a later file, because a "deliberately not
+decided" that has since been decided reads as a live gap and sends the next reader looking for
+work that is done.
+
+**`Engine::set_time_budget` exists — DR-0022, 2026-08-05.** A run has a wall-clock budget and
+exceeding it is **not a throw**, because a budget a script can `catch` is not a budget. So the
+paragraph above is history: `while (true) {}` can be ended without ending the process, and §2.3's
+promise is kept on both halves. What is still outside it, and measured rather than asserted, is a
+§22.2 match already running and a host function that blocks.
+
+**A second realm exists — DR-0025, 2026-08-07.** `Vm::create_realm` builds a whole second set of
+§9.3 intrinsics on **one** `Engine`, sharing its heap. That is *half* of what the paragraph above
+refuses and not the other half: two `Engine`s still share nothing, and that is still the property
+that makes "run more engines" the isolation advice. A realm is not isolation — it shares a heap and
+passes objects freely — which is why the two coexist rather than one replacing the other.
+
+**And GOAL.md §3 moved with it.** The line the paragraph above cites read "One realm, one thread"
+and now reads "One thread, and no parallelism inside it"; DR-0025 records why, and that the charter
+was read after the work rather than before it.
 
 ## The invariant, stated as narrowly as it is true
 
