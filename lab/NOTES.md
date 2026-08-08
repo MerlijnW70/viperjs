@@ -29,6 +29,107 @@ reproducible.
 
 ---
 
+## property-lookup — is the 8-shape cost polymorphism, or is it the scan?
+
+**Date:** 2026-08-08
+**Status:** OPEN — question written before the code, per this file's own first line.
+
+**Question.** `lab/NOTES.md`'s interpreter-speed entry ranks *shapes and inline caches* as the top
+performance lever, on one number: a property read costs 174 ns with one shape and 275 ns with eight.
+That number is being read as "polymorphism is expensive, so it wants an inline cache". **ViperJS has
+no inline cache, so there is nothing for eight shapes to miss** — which means the row cannot be
+measuring what it is being quoted for. Two other things vary in it:
+
+- The benchmark builds its eight objects as `o["f" + j] = j` for `j` in `0..=k`, then `o.x = k`. So
+  `x` sits at position 1 in the first object and position 8 in the last, and an own-property table
+  is a `Vec<(PropertyKey, Property)>` walked in order. The average scan is 4.5 entries, not 1.
+- It reads `os[i & 7]`, an array element, before the property. DR-0026 made that 4.4× cheaper two
+  days ago and the 275 already includes the improvement.
+
+**So: how much of the gap is the linear scan, how much is polymorphism proper, and how much is the
+prototype chain?** The answer decides whether the next slice is a lookup structure (small, local,
+no semantics at risk) or hidden classes with inline caches (large, and §10.1.11's key order is at
+risk). Ranking them the wrong way round costs a milestone.
+
+**Setup.** `cargo run -p viperjs-lab --release -- property-lookup`. Four axes, each a set of rows
+differing in exactly one thing, so every interesting quantity is a subtraction between two rows:
+
+- **A — scan length.** One shape, `x` at position 1, 2, 4, 8, 16, 32, 64. If the table is walked,
+  this is linear in the position; if it is not the cost is flat.
+- **B — polymorphism.** `k` distinct shapes at one site with `x` at the **same** position in every
+  one, `k` = 1, 2, 4, 8. Prediction from reading the code: flat, because there is no cache to miss.
+  A rise here is the thing an inline cache would buy.
+- **C — prototype depth.** `x` found 0, 1, 2 and 4 levels up a chain. A miss on the own table is a
+  scan *and* a walk, and a chain is the other linear thing in a lookup.
+- **D — a miss.** `o.absent` against `o.x` on the same table, which is the whole scan plus the whole
+  chain and is what `in` and a defaulting read pay.
+
+Measured through the interpreter rather than by calling the heap directly, because that is what a
+program pays; every row carries the same ~122 ns of dispatch, so the differences are clean.
+
+**Result.** `cargo run -p viperjs-lab --release -- property-lookup`, best of five per row, on the
+machine every other number in this file came from.
+
+| axis | row | ns/read | over base |
+| --- | --- | --- | --- |
+| A scan | `x` found first | 176 | — |
+| | one entry walked past | 176 | +0 |
+| | seven walked past | 177 | +1 |
+| | fifteen walked past | 190 | **+14** |
+| | thirty-one walked past | 190 | +14 |
+| | sixty-three walked past | 190 | +14 |
+| B shapes | one shape (carries an array read) | 255 | — |
+| | two shapes | 259 | +4 |
+| | eight shapes, `x` first in each | 269 | **+14** |
+| | **eight objects, one shape** | 268 | **+13** |
+| | eight shapes with `x` moving — the original row | 276 | +21 |
+| C proto | found on the object | 175 | — |
+| | one level up | 181 | +6 |
+| | two levels up | 190 | +14 |
+| | four levels up | 208 | **+33** |
+| D miss | a hit at the end of eight | 269 | — |
+| | absent, walking to `Object.prototype` | 290 | **+21** |
+| | absent, `Object.create(null)` | 269 | +0 |
+
+**Verdict: DEAD for inline caches, and the premise that ranked them was two things at once.**
+
+- **There is no polymorphism cost to cache.** Eight *distinct* shapes and eight objects of *one*
+  shape cost the same to within a nanosecond — 269 against 268. So the +14 is the price of touching
+  eight objects rather than one, which is cache lines and not hidden classes, and an inline cache
+  removes none of it. A monomorphic site and an octomorphic site are already the same speed here.
+- **The 101 ns that put shapes top of the list is mostly the benchmark's own array read.** The old
+  row compared `os[i & 7].x` against `o.x` and attributed the whole difference to shapes. The array
+  indexing alone is +79 (255 against 176); `x` moving through the table is +7; the eight objects are
+  +14. Nothing is left for polymorphism. **Two rows that differ in two things cannot attribute
+  either, and this one was quoted for a year of work.**
+- **"Every lookup is a linear scan" stopped being true before it was written down.** `Object` keeps
+  a `HashMap` index above `INDEXED_ABOVE = 8` properties, and axis A is that constant exactly: flat
+  from 1 to 8, one step of +14 at 16, and flat again to 64. The step is the *hash* costing more than
+  a scan of eight interned keys — which is what `INDEXED_ABOVE`'s own doc claims and nothing had
+  measured. So the third item on the performance list is already built, and it is built the right
+  way round.
+
+**What the table does say is worth having**, and none of it is where anyone was looking:
+
+- **A prototype level costs ~8 ns** and is linear in the depth. That is the largest per-unit cost
+  found, and it is what every method call on a class instance pays — `o.m()` on a two-deep hierarchy
+  is +14 before the call starts. A per-object cache of "where this name was last found in my chain"
+  is a much smaller change than shapes and addresses the one measurement that scales.
+- **A miss costs +21 ns and all of it is the walk**: the same miss on an `Object.create(null)` costs
+  nothing at all. So a defaulting read is priced by the chain and not by the miss.
+- **The baseline is the lever, and it is not a lookup at all.** A read is 176 ns where an empty loop
+  is ~122, so the lookup is ~50 ns and the *dispatch* is the rest. `interpreter-speed` already put
+  the engine at ~20 ns an instruction against a good non-JIT interpreter's 2–5, and this experiment
+  is one more measurement saying the property path is not where the money is.
+
+**Cost:** about two hours, of which most was two measurement faults worth recording because both
+inflate a result rather than break it: measuring at **script top level**, where `o`, `s` and `i` are
+properties of the global object and the yardstick reads 645 ns instead of 176; and a yardstick that
+did not carry the `===` and the `?:` its own comparison row carried, which made a miss look like
++114 ns rather than +21.
+
+---
+
 ## reentry-cost — how much higher can `MAX_REENTRY_DEPTH` go?
 
 **Date:** 2026-08-06
@@ -655,9 +756,10 @@ Ranked by what the measurements support, not by what sounds promising:
    and measured at −200 ns — see the result section below.** `a[i]` used to turn the Number into
    decimal text, encode that to UTF-16 and intern it; DR-0026 removed all three from every indexed
    access, and took a TypedArray read down by 741 ns as well.
-3. **Shapes and inline caches.** A fixed-key read is +48 ns over baseline and eight shapes take it
-   to +347. This is the standard fix and the numbers say it is worth real money — but it is a large
-   design change and belongs behind the two above.
+3. ~~**Shapes and inline caches.**~~ **DEAD — see `property-lookup` above, which took this row
+   apart.** The eight-shape figure quoted here compares `os[i & 7].x` against `o.x` and charges the
+   whole difference to shapes; the array indexing is most of it, and eight objects of *one* shape
+   cost the same as eight of eight. There is no polymorphism cost here to cache.
 4. **String concatenation is quadratic.** 11 µs per append at 100k appends is a copy of the whole
    String each time. A rope or cons-string representation is the usual answer.
 5. **`push`/`pop` at 2.4 µs** wants its own look before anyone guesses at it.
@@ -702,6 +804,12 @@ measurement. DR-0026 is that.
 `Vec<(PropertyKey, Property)>`, so every lookup is a **linear scan**. That is adjacent to the key
 work and separate from it, and it is part of why eight shapes cost 469 ns against a single shape's
 170.
+
+> **Both halves of that paragraph are wrong, measured 2026-08-08 — see `property-lookup`.** The scan
+> stops at `INDEXED_ABOVE = 8` and a `HashMap` takes over, so it was never linear for the objects
+> that would suffer; and the eight-shape figure is the benchmark's own array read rather than
+> anything about shapes. Left in place because the correction is the more useful record: **a cost
+> "turned up while reading" is a hypothesis, and this file printed it as a finding.**
 
 ### Result, two days later: DR-0026 is built, and it beat its own estimate on the row nobody costed
 

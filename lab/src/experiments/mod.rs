@@ -4,5 +4,6 @@
 pub mod gc_pressure;
 pub mod hot_shapes;
 pub mod nesting_cost;
+pub mod property_lookup;
 pub mod reentry_cost;
 pub mod run_module;

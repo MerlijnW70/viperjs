@@ -21,6 +21,9 @@ fn main() -> std::process::ExitCode {
                 std::env::args().nth(3).as_deref(),
             );
         }
+        Some("property-lookup") => {
+            return experiments::property_lookup::run(std::env::args().nth(2).as_deref());
+        }
         Some("nesting-cost") => {
             return experiments::nesting_cost::run(std::env::args().nth(2).as_deref());
         }
@@ -39,6 +42,7 @@ fn main() -> std::process::ExitCode {
             println!("  gc-pressure    what the property-escapes bucket costs in time and memory");
             println!("  hot-shapes     where the interpreter's time and allocations go, per shape");
             println!("  run-module     run a real module graph off the disk");
+            println!("  property-lookup  where a property read's time goes: scan, shapes, chain");
             println!("  nesting-cost   how much stack a nesting level costs, per shape");
             println!("  reentry-cost   how much stack a native's re-entry costs, per shape");
             println!();
