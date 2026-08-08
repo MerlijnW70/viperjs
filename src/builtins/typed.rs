@@ -386,8 +386,24 @@ fn from_object(
                 .collect()
         }
         None => {
-            let taken = super::promise_group::iterable_to_list(vm, heap, Value::Object(source))
-                .or_else(|_| array_like(vm, heap, source))?;
+            // §23.2.5.1 step 6.b — `GetMethod(object, @@iterator)`, and the branch is on whether
+            // there **is** one. Not on whether walking it succeeded: this was written
+            // `iterable_to_list(…).or_else(|_| array_like(…))`, which caught every error the walk
+            // could raise and answered with a different construction instead.
+            //
+            // So `new Float64Array(obj)` where `obj`'s `@@iterator` is a getter that throws built
+            // an empty array — a function has a `length` of 0, so the fallback found an array-like
+            // and the program's own error was discarded. Every step of 6.b and 6.c is a `?`, and a
+            // fallback that fires on failure rather than on absence cannot be one.
+            let taken = match super::array::iterator_method_of(vm, heap, Value::Object(source))? {
+                Some(method) => super::promise_group::iterable_to_list_with(
+                    vm,
+                    heap,
+                    Value::Object(source),
+                    method,
+                )?,
+                None => array_like(vm, heap, source)?,
+            };
             let mut numbers = Vec::with_capacity(taken.len());
             for value in taken {
                 numbers.push(vm.to_numeric(element.holds_big(), value, heap)?);

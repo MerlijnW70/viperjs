@@ -295,7 +295,11 @@ pub(super) fn iterator_of(vm: &mut Vm, heap: &mut Heap, items: Value) -> Complet
 /// the iterator: §7.4.4 `GetIteratorFromMethod` reads `next` off what the call answered and keeps
 /// the pair as a record, and a walk that can be closed needs both halves. Calling the method here
 /// and reading `next` again there would be the pair-of-lookups mistake §27.1.4.1 already records.
-fn iterator_method_of(vm: &mut Vm, heap: &mut Heap, items: Value) -> Completion<Option<Value>> {
+pub(super) fn iterator_method_of(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    items: Value,
+) -> Completion<Option<Value>> {
     let Some(symbol) = heap.well_known(super::well_known_at("iterator")) else {
         return Ok(None);
     };

@@ -278,6 +278,43 @@ caller's and the trap's arguments array is made in it. ViperJS gives a proxy its
 step 7.a's `%Object.prototype%`, `bind`'s prototype, `Symbol.split`'s splitter and a dozen others,
 each two to ten runs and each its own clause. `ShadowRealm`'s 118 are a different proposal.
 
+### A fallback on *failure* where the clause has one on *absence* — §23.2, +36
+
+Three call sites, one line each, and the line was `iterable_to_list(…).or_else(|_| array_like(…))`.
+§23.2.5.1 step 6.b, §23.2.2.1 step 4 and §23.2.3.26 all decide between an iterable reading and an
+array-like one by asking `GetMethod(object, @@iterator)` and branching on whether there **is** one.
+ViperJS tried the iterable reading and fell back when it *failed* — so every error the walk could
+raise was caught and answered with a different construction.
+
+**What that costs is the program's own error, and the shape of the loss is the point.** A function
+has a `length` of 0, so `new Float64Array(obj)` where `obj`'s `@@iterator` is a getter that throws
+built an **empty array** and discarded the throw. Not a wrong error — no error, and a plausible
+answer in its place.
+
+- **The bucket named it and the reason string did not.** All 30 runs said
+  `Expected a TypeError to be thrown but no exception was thrown at all`, which is the
+  missing-refusal bucket this file already says outyields the feature buckets. What identified it
+  was the parenthesis test262 appends: every one ended `(Testing with Float64Array and
+  **makePassthrough**.)`, one variant of one harness helper. `makePassthrough` returns its argument
+  unchanged, where the other factories convert it first and throw inside the harness. **A bucket
+  whose rows all name one harness helper is one bug, and the helper's name is the diagnosis.**
+- **`set` was the third site and is not the same clause.** §23.2.3.26.2 `SetTypedArrayFromArrayLike`
+  is `ToObject`, `LengthOfArrayLike` and a loop of `Get` — there is no `GetMethod` anywhere in it.
+  So `ta.set(src)` where `src` had both a `length` and an `@@iterator` wrote what the *iterator*
+  answered: `[90, 91]` where the clause says `[11, 22]`. **A wrong value, which no error could have
+  warned about**, and it was found only because the same line was being read for the other two.
+- **An Array satisfies both readings and they agree**, which is why every ordinary use of all three
+  looked right and why nothing smaller than test262 was ever going to find this.
+- **Two hypotheses died on the way, both by probing rather than by reading.** That the branch was
+  taken on `length` rather than on the iterator — falsified: an object with both takes the iterator,
+  correctly. And that the getter was skipped by a direct heap read going round DR-0020's mediation —
+  falsified: a real iterable works, so the method *is* fetched through a `Get`.
+
+**The method is read once.** §23.2.5.1 names `usingIterator` in step 6.b and uses it again in 6.c;
+a caller that branched on its own read and then called `iterable_to_list` would read it twice, which
+a getter can count. `iterable_to_list_with` takes the method for that reason, and a test counts the
+reads — the pair-of-lookups mistake §27.1.4.1 already records, avoided in advance for once.
+
 ### §15.10's tail calls, and a whole feature that was on no work list at all
 
 +21 runs, DR-0027. `function f(n) { "use strict"; return n === 0 ? "done" : f(n - 1) }` threw a

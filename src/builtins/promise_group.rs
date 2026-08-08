@@ -413,8 +413,27 @@ pub(super) fn iterable_to_list(
     heap: &mut Heap,
     iterable: Value,
 ) -> Completion<Vec<Value>> {
-    let Some(iterator) = super::array::iterator_of(vm, heap, iterable)? else {
+    let Some(method) = super::array::iterator_method_of(vm, heap, iterable)? else {
         return Err(Abrupt::type_error("this is not iterable"));
+    };
+    iterable_to_list_with(vm, heap, iterable, method)
+}
+
+/// The same walk, given the `@@iterator` method the caller has **already** read.
+///
+/// §23.2.5.1 step 6.b reads it to decide which of two constructions to perform, and step 6.c.i then
+/// walks with it — one read, and the clause says so by naming `usingIterator` in both. A caller
+/// that branched on its own read and then called [`iterable_to_list`] would read it twice, which a
+/// getter can see; this is the shape §27.1.4.1 already records as the pair-of-lookups mistake.
+pub(super) fn iterable_to_list_with(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    iterable: Value,
+    method: Value,
+) -> Completion<Vec<Value>> {
+    let iterator = vm.call_value(method, iterable, &[], heap)?;
+    let Value::Object(_) = iterator else {
+        return Err(Abrupt::type_error("an iterator must be an object"));
     };
     let next = key(heap, "next");
     let next = vm.get_property_key(iterator, next, heap)?;

@@ -467,11 +467,17 @@ fn set(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value>
             numerics(heap, other)
         }
         _ => {
-            // §23.2.3.24.2 step 7 — an array-like or an iterable is read as values and each is
-            // converted by *this* array's content type, so `bigOnes.set([1])` throws where
-            // `bigOnes.set([1n])` writes.
-            let taken = super::promise_group::iterable_to_list(vm, heap, source)
-                .or_else(|_| array_like(vm, heap, source))?;
+            // §23.2.3.26.2 `SetTypedArrayFromArrayLike` — an **array-like**, and nothing else. This
+            // read the iterable protocol first and fell back, which is not a clause `set` has at
+            // all: steps 3 to 5 are `ToObject`, `LengthOfArrayLike` and a loop of `Get`, and there
+            // is no `GetMethod(@@iterator)` anywhere in it. So `ta.set(src)` where `src` had both a
+            // `length` and an `@@iterator` wrote what the *iterator* answered — a wrong value, and
+            // one no error could have warned about.
+            //
+            // Each value is converted by *this* array's content type, so `bigOnes.set([1])` throws
+            // where `bigOnes.set([1n])` writes. An Array has both readings and they agree, which is
+            // why every ordinary use of this looked right.
+            let taken = array_like(vm, heap, source)?;
             let holds_big = holds_big(heap, object);
             let mut numbers = Vec::with_capacity(taken.len());
             for value in taken {
@@ -1070,8 +1076,14 @@ fn from(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
         return Err(Abrupt::type_error("the mapper is not a function"));
     }
     let source = call.argument(0);
-    let taken = super::promise_group::iterable_to_list(vm, heap, source)
-        .or_else(|_| array_like(vm, heap, source))?;
+    // §23.2.2.1 steps 4 and 5 — `GetMethod(source, @@iterator)`, and the branch is on whether there
+    // **is** one. The same clause the constructor has, and this had the same fallback-on-failure:
+    // every error the walk raised was caught and answered with an array-like reading instead, so a
+    // `@@iterator` getter that threw built an array out of `length` and discarded the throw.
+    let taken = match super::array::iterator_method_of(vm, heap, source)? {
+        Some(method) => super::promise_group::iterable_to_list_with(vm, heap, source, method)?,
+        None => array_like(vm, heap, source)?,
+    };
     let made = vm.construct_value(
         Value::Object(constructor),
         &[Value::Number(taken.len() as f64)],

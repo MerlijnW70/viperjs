@@ -32,6 +32,18 @@ public API is not stable and may change in any release.
 
 ### Fixed
 
+- **A TypedArray built from an object no longer swallows the object's own error.** §23.2.5.1 step
+  6.b, §23.2.2.1 step 4 and §23.2.3.26 decide between an iterable reading and an array-like one by
+  asking `GetMethod(object, @@iterator)` and branching on whether there **is** one; all three tried
+  the iterable reading and fell back when it *failed*, catching every error the walk could raise. A
+  function has a `length` of 0, so `new Float64Array(obj)` where `obj`'s `@@iterator` is a getter
+  that throws built an empty array and discarded the throw. The `@@iterator` method is now read once
+  and the branch is on its absence.
+- **`%TypedArray%.prototype.set` reads an array-like and never an iterator.** §23.2.3.26.2 is
+  `ToObject`, `LengthOfArrayLike` and a loop of `Get` — there is no `GetMethod` in it — so a source
+  carrying both a `length` and an `@@iterator` was written from the iterator, which is a wrong value
+  rather than a missing error.
+
 - **§10.1.13 `GetPrototypeFromConstructor` now performs a real `Get`.** Every built-in constructor
   read `new.target`'s `prototype` as an own data property, so a throwing accessor there did not
   propagate and a `Proxy`'s `get` trap was never consulted — and the value a non-throwing accessor

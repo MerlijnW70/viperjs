@@ -2100,3 +2100,131 @@ fn set_reads_its_buffer_again_after_converting_the_offset() {
         "0,7,8"
     );
 }
+
+#[test]
+fn a_typed_array_constructor_branches_on_having_an_iterator_and_not_on_finding_one_that_works() {
+    // §23.2.5.1 step 6.b — `GetMethod(object, @@iterator)`, and step 6.c runs only when there *is*
+    // one. This was written as "try the iterable reading, and fall back to the array-like one if it
+    // fails", which is a fallback on **failure** where the clause has one on **absence** — so every
+    // error the walk could raise was caught and answered with a different construction.
+    //
+    // The message and not the constructor, in every row that throws. A silent fallback also ends in
+    // a TypeError often enough that `assert.throws(TypeError, …)` passes against the bug, which is
+    // the weakest assertion there is and the one this file keeps meeting.
+    assert_eq!(
+        run(
+            "var o = function () {}; Object.defineProperty(o, Symbol.iterator, { get: function () { throw new Error('the getter ran') } }); try { new Float64Array(o); 'no error' } catch (e) { e.message }"
+        ),
+        "the getter ran"
+    );
+    // …and that row is not artificial: a **function** has a `length` of 0, so the discarded error
+    // was replaced by an empty array rather than by anything that looked wrong.
+    assert_eq!(
+        run(
+            "var o = function () {}; Object.defineProperty(o, Symbol.iterator, { get: function () { return undefined } }); new Float64Array(o).length"
+        ),
+        "0"
+    );
+    // §7.3.10 step 4 — present, not callable, and not `undefined` or `null`, is a TypeError. The
+    // old reading swallowed it and built from `length` instead.
+    assert_eq!(
+        run(
+            "var o = { length: 2, 0: 7, 1: 8 }; o[Symbol.iterator] = 5; try { new Float64Array(o).length + '' } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    // A throw from inside the walk is the program's, and reaches it.
+    assert_eq!(
+        run(
+            "var o = {}; o[Symbol.iterator] = function () { throw new Error('called it') }; try { new Float64Array(o); 'no error' } catch (e) { e.message }"
+        ),
+        "called it"
+    );
+    assert_eq!(
+        run(
+            "var o = {}; o[Symbol.iterator] = function () { return { next: function () { throw new Error('stepped') } } }; try { new Float64Array(o); 'no error' } catch (e) { e.message }"
+        ),
+        "stepped"
+    );
+    // The *absence* branch, which is the one the fallback was standing in for. §7.3.10 reads
+    // `undefined` and `null` as "there is none", so both take the array-like reading rather than
+    // throwing — and an object with neither an iterator nor a `length` is an empty array, not an
+    // error.
+    assert_eq!(
+        run(
+            "var o = { length: 2, 0: 7, 1: 8 }; o[Symbol.iterator] = undefined; Array.prototype.join.call(new Float64Array(o), ',')"
+        ),
+        "7,8"
+    );
+    assert_eq!(
+        run(
+            "var o = { length: 2, 0: 7, 1: 8 }; o[Symbol.iterator] = null; Array.prototype.join.call(new Float64Array(o), ',')"
+        ),
+        "7,8"
+    );
+    assert_eq!(run("new Float64Array({}).length"), "0");
+    // And where both are there the iterator wins, which is the branch order rather than a
+    // preference: step 6.c is reached whenever there is a method at all.
+    assert_eq!(
+        run(
+            "var o = { length: 2, 0: 'no', 1: 'no' }; o[Symbol.iterator] = function () { var n = 0; return { next: function () { return n < 3 ? { value: 90 + n++, done: false } : { done: true } } } }; Array.prototype.join.call(new Float64Array(o), ',')"
+        ),
+        "90,91,92"
+    );
+}
+
+#[test]
+fn the_iterator_method_a_typed_array_constructor_uses_is_read_exactly_once() {
+    // §23.2.5.1 names `usingIterator` in step 6.b and uses it again in step 6.c, which is one read.
+    // Reading it to decide the branch and again to walk with is invisible to every test above —
+    // both reads answer the same method and the array comes out right — and a getter counts them.
+    // That is why `iterable_to_list_with` takes the method rather than the iterable.
+    assert_eq!(
+        run(
+            "var reads = 0; var o = {}; Object.defineProperty(o, Symbol.iterator, { get: function () { reads = reads + 1; return function () { var n = 0; return { next: function () { return n < 2 ? { value: n++, done: false } : { done: true } } } } } }); new Float64Array(o); reads"
+        ),
+        "1"
+    );
+}
+
+#[test]
+fn from_branches_the_same_way_the_constructor_does_and_set_does_not_branch_at_all() {
+    // §23.2.2.1 steps 4 and 5 are the constructor's clause again, so `from` had the same fallback
+    // on failure and the same consequence: the program's own error discarded and an array built
+    // out of `length` instead.
+    assert_eq!(
+        run(
+            "var o = function () {}; Object.defineProperty(o, Symbol.iterator, { get: function () { throw new Error('from asked') } }); try { Float64Array.from(o); 'no error' } catch (e) { e.message }"
+        ),
+        "from asked"
+    );
+    assert_eq!(
+        run(
+            "var o = { length: 2, 0: 7, 1: 8 }; Array.prototype.join.call(Float64Array.from(o), ',')"
+        ),
+        "7,8"
+    );
+    // §23.2.3.26.2 `SetTypedArrayFromArrayLike` is the one that is **not** the same clause: steps 3
+    // to 5 are `ToObject`, `LengthOfArrayLike` and a loop of `Get`, and there is no `@@iterator`
+    // anywhere in it. `set` read the iterator first and fell back, so an object carrying both wrote
+    // what the iterator said — a wrong value, which no error could have warned about.
+    assert_eq!(
+        run(
+            "var ta = new Float64Array(3); var asked = false; var src = { length: 2, 0: 11, 1: 22 }; src[Symbol.iterator] = function () { asked = true; var v = [90, 91], n = 0; return { next: function () { return n < 2 ? { value: v[n++], done: false } : { done: true } } } }; ta.set(src); Array.prototype.join.call(ta, ',') + '|' + asked"
+        ),
+        "11,22,0|false"
+    );
+    // …and an iterable with no `length` therefore writes nothing, which is what
+    // `LengthOfArrayLike` of `undefined` comes to. An Array has both readings and they agree, which
+    // is why every ordinary use of this looked right.
+    assert_eq!(
+        run(
+            "var ta = new Float64Array(2); var src = {}; src[Symbol.iterator] = function () { var n = 0; return { next: function () { return n < 2 ? { value: 5, done: false } : { done: true } } } }; ta.set(src); Array.prototype.join.call(ta, ',')"
+        ),
+        "0,0"
+    );
+    assert_eq!(
+        run("var ta = new Float64Array(3); ta.set([4, 5]); Array.prototype.join.call(ta, ',')"),
+        "4,5,0"
+    );
+}
