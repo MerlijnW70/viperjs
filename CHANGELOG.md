@@ -78,6 +78,19 @@ public API is not stable and may change in any release.
 
 ### Changed
 
+- **The conformance suite runs in CI, and the badge is measured rather than typed.** A new
+  `conformance` workflow checks out the **exact** test262 revision the expectations file names — a
+  conformance number without a suite revision is not a number — runs the suite, and judges the
+  ratchet, so a regression from anyone reds the build. `cargo run -p conformance -- --summary <path>`
+  writes the headline figure as shields.io endpoint JSON; `conformance/summary.json` is committed and
+  the README badge reads it, and the workflow refuses a build whose committed figure has drifted from
+  the one it just measured.
+- **The default per-test budget is thirty seconds, up from ten.** Four scenarios sat exactly on ten
+  and crossed it in both directions between consecutive runs of one unchanged commit; they were the
+  only timing-bound entries left in the expectations file and all four pass at thirty. The file now
+  contains no entry that names a time, which is what a ratchet has to be before a machine can
+  enforce it.
+
 - **An array index is now a kind of property key.** `PropertyKey` gained an `Index(u32)` variant,
   and it is **canonical** — a key is `Index` exactly when §6.1.7 says its spelling is an array
   index, so `a[0]` and `a["0"]` are one key by construction while `a["01"]` stays a named property.

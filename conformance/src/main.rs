@@ -19,7 +19,21 @@ use std::time::Duration;
 /// line in both directions between runs of one unchanged commit, so the report's "newly passing"
 /// swung between 264 and 844 in a single afternoon and every real gain had to be found by hand
 /// underneath it.
-const BUDGET: Duration = Duration::from_secs(10);
+///
+/// **Thirty seconds and not ten, since 2026-08-08, and the reason is that this is now a gate.** At
+/// ten, four scenarios in the whole suite sat exactly on the line — `decodeURI` and
+/// `decodeURIComponent`'s `A2.5_T1`, in both modes — and crossed it in both directions between
+/// consecutive runs of one unchanged commit, at every worker count tried. They were the *only*
+/// timing-bound entries left in the expectations file, the several hundred that used to keep them
+/// company having gone when the worker count was halved. So the choice was a ratchet that goes red
+/// at random or a budget those four clear: measured, the whole `decodeURI` directory finishes in
+/// 15 s of wall clock at two workers, and every one of its 222 scenarios passes at thirty.
+///
+/// What it costs is that a genuinely hung test takes thirty seconds to say so instead of ten, and
+/// nothing else — no test that passes at ten fails at thirty, and the file now contains **no entry
+/// that names a time at all**. A ratchet that a machine is going to enforce has to be able to
+/// answer the same way twice.
+const BUDGET: Duration = Duration::from_secs(30);
 
 /// How many tests run at once, unless `--workers` says otherwise.
 ///
@@ -50,6 +64,8 @@ fn main() -> ExitCode {
     let mut root = std::env::var("TEST262").map(PathBuf::from).ok();
     let mut expectations_path = PathBuf::from("conformance/expectations.txt");
     let mut bless = false;
+    // Where to leave the machine-readable summary, if a caller asked for one.
+    let mut summary_path: Option<PathBuf> = None;
     let mut filter = None;
     let mut worker = false;
     let mut workers = default_workers();
@@ -58,6 +74,7 @@ fn main() -> ExitCode {
     while let Some(argument) = arguments.next() {
         match argument.as_str() {
             "--bless" => bless = true,
+            "--summary" => summary_path = arguments.next().map(PathBuf::from),
             // How the run talks to its own child processes — see `drive::work`. Deliberately
             // absent from the usage text, because nobody should be typing it.
             WORKER_FLAG => worker = true,
@@ -114,6 +131,14 @@ fn main() -> ExitCode {
     );
     let report = run_all(&root, &files, workers, budget);
     announce(&report);
+    // Written before the ratchet is judged, so a run that goes **red** still leaves the number it
+    // measured. A build that fails and says nothing about where it got to is one somebody has to
+    // reproduce by hand to find out.
+    if let Some(path) = &summary_path
+        && let Err(error) = write_summary(path, &report)
+    {
+        return complain(&format!("{}: {error}", path.display()));
+    }
 
     if filter.is_some() {
         // A filtered run cannot judge the ratchet: every test it did not run would read as one
@@ -160,6 +185,41 @@ fn main() -> ExitCode {
         true => ExitCode::SUCCESS,
         false => ExitCode::FAILURE,
     }
+}
+
+/// The headline number again, in the one shape a machine can read it in.
+///
+/// Shields.io's endpoint schema exactly, and nothing else in the file. A badge is the only intended
+/// consumer, and extra keys would invite a second one that then depends on a shape this was never
+/// promising — the record of *which* tests fail and why is the expectations file, which is in the
+/// repository and is a great deal more use than any JSON of counts.
+///
+/// **The share of the whole suite, not of what ran.** [`announce`] prints both and says why: the
+/// share of what ran flatters an engine that declines most of the suite, and it *falls* every time
+/// the engine learns to compile something new. A badge that could go down on good news is worse
+/// than no badge.
+fn write_summary(path: &std::path::Path, report: &Report) -> std::io::Result<()> {
+    let (passed, failed, skipped) = report.tally();
+    let total = passed + failed + skipped;
+    let whole = match total {
+        0 => 0.0,
+        _ => passed as f64 * 100.0 / total as f64,
+    };
+    // Hand-written rather than serialised, because the alternative is a dependency and DR-0001 says
+    // no. Every field is a number this harness produced or a literal, so there is nothing here that
+    // could need escaping.
+    let json = format!(
+        "{{\n  \"schemaVersion\": 1,\n  \"label\": \"test262\",\n  \"message\": \"{whole:.2}% ({passed} of {total})\",\n  \"color\": \"{}\"\n}}\n",
+        // Round numbers that mean nothing in themselves. They exist so a reader can see a
+        // catastrophic drop without reading the digits, and nothing turns on which band it is in.
+        match whole {
+            share if share >= 90.0 => "brightgreen",
+            share if share >= 75.0 => "green",
+            share if share >= 50.0 => "yellow",
+            _ => "orange",
+        }
+    );
+    std::fs::write(path, json)
 }
 
 /// The numbers, which are the reason the harness exists.
@@ -232,8 +292,9 @@ usage: cargo run -p conformance -- [options]
   --expectations <path>  the ratchet file (default conformance/expectations.txt)
   --only <substring>     run just the matching files, and do not judge the ratchet
   --workers <count>      how many tests run at once (default: one per hardware thread)
-  --budget <seconds>     how long one test may take (default 10). Both of these decide what a
+  --budget <seconds>     how long one test may take (default 30). Both of these decide what a
                          timing failure means, so a number is only comparable with one measured
                          under the same pair
   --bless                rewrite the expectations file from this run
+  --summary <path>       also write the headline number as shields.io endpoint JSON
   --help                 this";

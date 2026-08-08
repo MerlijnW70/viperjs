@@ -5,6 +5,7 @@
 **An embeddable JavaScript engine in safe Rust, with zero runtime dependencies.**
 
 [![CI](https://github.com/MerlijnW70/viperjs/actions/workflows/ci.yml/badge.svg)](https://github.com/MerlijnW70/viperjs/actions/workflows/ci.yml)
+[![test262](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FMerlijnW70%2Fviperjs%2Fmaster%2Fconformance%2Fsummary.json)](https://github.com/MerlijnW70/viperjs/actions/workflows/conformance.yml)
 [![Licence: MIT OR Apache-2.0](https://img.shields.io/badge/licence-MIT%20OR%20Apache--2.0-blue.svg)](#licence)
 [![Rust 1.88+](https://img.shields.io/badge/rust-1.88%2B-orange.svg)](https://www.rust-lang.org)
 [![Dependencies: 0](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](Cargo.toml)
@@ -130,6 +131,14 @@ Don't take the figure above on trust — not having to is the point.
 git clone --depth 1 https://github.com/tc39/test262 ../test262
 cargo run --release -p conformance -- --test262 ../test262
 ```
+
+The badge above is that same command, run by
+[the conformance workflow](.github/workflows/conformance.yml) on every push to `master`. It checks
+out the **exact** test262 revision the expectations file names — a conformance number without a
+suite revision is not a number — and it judges the ratchet: a listed failure that starts passing and
+an unlisted test that starts failing both make the build red. `conformance/summary.json` is what the
+badge reads, and the workflow refuses a build whose committed figure has drifted from the one it
+just measured.
 
 ```
 79802 passed, 13043 failed, 316 not run

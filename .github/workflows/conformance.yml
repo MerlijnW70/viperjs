@@ -1,0 +1,125 @@
+name: conformance
+
+# Not part of `ci.yml`, and the split is deliberate. That workflow is a few minutes and gates every
+# pull request; this one clones a 42,000-file suite and runs 93,000 scenarios, which is ten minutes
+# on a quiet machine and longer on a shared runner. Putting it in front of every push would make the
+# cheap checks wait for the expensive one, and the expensive one answers a question that changes
+# once a slice rather than once a commit.
+on:
+  push:
+    branches: [master, main]
+  # A pull request may run it by asking. Not automatic: a fork's PR would spend twenty minutes of
+  # somebody else's runner to tell its author something the maintainer's push will say anyway.
+  workflow_dispatch:
+  # The suite is pinned (see below), so nothing rots — but a weekly run catches a compiler change
+  # or a runner change that moves a timing-bound test, which is the failure mode that otherwise
+  # arrives in the middle of an unrelated slice.
+  schedule:
+    - cron: "30 6 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test262:
+    name: test262 ratchet
+    runs-on: ubuntu-latest
+    # Measured rather than guessed: 576 s at two workers on the development machine, with zero
+    # regressions. A hosted runner is slower per core, so this is roughly three times the measured
+    # figure and is a backstop against a hang rather than a target.
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      # **The pinned revision, read out of the expectations file itself.** The suite moves, and a
+      # conformance number without a suite revision is not a number — so the ratchet records which
+      # checkout it was written against, and this checks out that one. Reading the pin from the file
+      # rather than writing it here twice is what stops the two drifting: a slice that blesses
+      # against a newer suite updates the header, and this follows it without anyone remembering to.
+      - name: read the pinned suite revision
+        id: pin
+        run: |
+          revision=$(sed -n 's/^# test262 \([0-9a-f]\{7,\}\)$/\1/p' conformance/expectations.txt | head -1)
+          test -n "$revision" || { echo "conformance/expectations.txt names no test262 revision"; exit 1; }
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
+          echo "pinned to test262 $revision"
+
+      # Full history, because a pinned commit is usually not the tip and a shallow clone cannot
+      # reach it. The suite is large; the cache is what makes that bearable on a weekly cadence.
+      - name: check out test262 at the pinned revision
+        run: |
+          git clone --filter=blob:none --no-checkout https://github.com/tc39/test262 "$RUNNER_TEMP/test262"
+          git -C "$RUNNER_TEMP/test262" checkout --quiet ${{ steps.pin.outputs.revision }}
+
+      - run: cargo build --release -p conformance
+
+      # **Two workers, and the number is not arbitrary.** A conformance figure is only comparable
+      # with one measured under the same `(workers, budget)` pair, because both decide what a timing
+      # failure means. One worker per hardware thread was measured to produce unrepeatable
+      # regressions — every test is slower when every core is running one — and two was measured to
+      # produce none. The budget is left at its default of thirty seconds, which was raised from
+      # ten *for this workflow*: at ten, four scenarios sat exactly on the line and crossed it in
+      # both directions between consecutive runs of one unchanged commit. They were the only
+      # timing-bound entries in the expectations file and they now pass, so the file names no
+      # time at all and this job can answer the same way twice.
+      - name: run the suite and judge the ratchet
+        run: |
+          ./target/release/conformance \
+            --test262 "$RUNNER_TEMP/test262" \
+            --workers 2 \
+            --summary "$RUNNER_TEMP/summary.json" \
+            | tee "$RUNNER_TEMP/conformance.log"
+
+      # The number, on the run's own page, whether it passed or failed. A red build that does not
+      # say what it measured is one somebody has to reproduce locally to learn anything from.
+      - name: put the number in the job summary
+        if: always()
+        run: |
+          {
+            echo "## test262"
+            echo
+            echo '```'
+            grep -E "passed,|of what ran" "$RUNNER_TEMP/conformance.log" || echo "the run produced no tally"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # **The badge is committed, and this is what stops it going stale.** `conformance/summary.json`
+      # is written by the same run that blesses the expectations file, so it travels with the slice
+      # that moved the number and needs no write access from here. What it cannot do on its own is
+      # notice when somebody forgets, which is this: the committed figure has to agree with the one
+      # just measured.
+      #
+      # A tolerance rather than an equality, and deliberately a loose one. The expectations file
+      # names no time any more, so a run should be exact — but this check exists to catch a badge
+      # somebody forgot to update, not to be a second ratchet, and the ratchet above already fails
+      # on a single test moving either way. Fifty runs is far below anything a slice produces and
+      # far above anything a slower runner could drift by without the step above going red first.
+      - name: the committed badge agrees with this run
+        if: always()
+        run: |
+          measured=$(sed -n 's/.*"message": "[0-9.]*% (\([0-9]*\) of.*/\1/p' "$RUNNER_TEMP/summary.json")
+          committed=$(sed -n 's/.*"message": "[0-9.]*% (\([0-9]*\) of.*/\1/p' conformance/summary.json)
+          test -n "$measured" || { echo "this run wrote no summary"; exit 1; }
+          test -n "$committed" || { echo "conformance/summary.json is missing or unreadable"; exit 1; }
+          drift=$(( measured > committed ? measured - committed : committed - measured ))
+          echo "committed $committed, measured $measured, drift $drift"
+          test "$drift" -le 50 || {
+            echo "the committed badge is stale — re-run with --summary and commit the result"
+            exit 1
+          }
+
+      - name: keep the log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: conformance-log
+          path: ${{ runner.temp }}/conformance.log
