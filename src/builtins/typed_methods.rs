@@ -425,12 +425,27 @@ fn subarray(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
 
 /// §23.2.3.24 — `set`, which copies a source over this array starting at an offset.
 fn set(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let (object, view) = validate(heap, call.this_value)?;
+    // Steps 1 to 5 — the brand check, which is what makes this a method of a TypedArray rather
+    // than of anything with indices. Its `View` is deliberately discarded: it describes the buffer
+    // as it stands *now*, and step 6 is about to run a program.
+    let (object, _) = validate(heap, call.this_value)?;
+    // Step 6 — `ToIntegerOrInfinity`, and it can call a `valueOf`. That method may detach the
+    // buffer, resize it, or both, which is why every fact taken before this line is stale after it.
     let offset = super::string::to_integer_or_infinity(vm.to_number(call.argument(1), heap)?);
+    // Step 7, before the buffer is looked at again: a negative offset is a RangeError whatever
+    // happened to the buffer meanwhile.
     if offset < 0.0 {
         return Err(Abrupt::range_error("the offset of set may not be negative"));
     }
-    let offset = offset as usize;
+    // Steps 8 and 9 — the buffer is read **again** and a detached one is a TypeError. Saturating
+    // rather than casting: `ToIntegerOrInfinity` may answer infinity, and an offset that becomes
+    // `usize::MAX` must fail the length check below rather than wrap around it.
+    let offset = if offset.is_finite() {
+        offset as usize
+    } else {
+        usize::MAX
+    };
+    let (_, view) = validate(heap, call.this_value)?;
     let source = call.argument(0);
     // Every element is read *before* any is written, which matters when the two overlap: a source
     // that is a view onto the same buffer would otherwise be read through what had just been
@@ -446,7 +461,9 @@ fn set(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value>
                     "a BigInt TypedArray and a Number one cannot be copied into each other",
                 ));
             }
-            let other = heap.typed_view(id).unwrap_or(view);
+            // §23.2.3.26.1 step 4 — the *source* is asked the same question, and for the same
+            // reason: the `valueOf` above could as easily have detached its buffer as the target's.
+            let (_, other) = validate(heap, source)?;
             numerics(heap, other)
         }
         _ => {
@@ -463,7 +480,7 @@ fn set(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value>
             numbers
         }
     };
-    if offset + values.len() > view.count() {
+    if offset.saturating_add(values.len()) > view.count() {
         return Err(Abrupt::range_error(
             "this source is too long for this TypedArray",
         ));

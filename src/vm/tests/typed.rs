@@ -2051,3 +2051,52 @@ fn an_ordinary_array_is_still_walked_by_its_length_property_each_step() {
         "a"
     );
 }
+
+#[test]
+fn set_reads_its_buffer_again_after_converting_the_offset() {
+    // §23.2.3.26 steps 6 to 9, and the order is the whole of it: `ToIntegerOrInfinity(offset)` runs
+    // a program, and steps 8 and 9 read the buffer **after** it. Everything the brand check learned
+    // at step 5 describes a buffer that may no longer exist by then.
+    //
+    // The conversion must still have happened — a `set` that refused before running `valueOf` would
+    // pass an assertion about the TypeError and fail this one about the count.
+    assert_eq!(
+        run(
+            "var target = new Int8Array(2), source = new Int8Array(1), ran = 0;\
+             var offset = { valueOf: function () { ran++; target.buffer.transfer(); return 0 } };\
+             var name = ''; try { target.set(source, offset) } catch (e) { name = e.name }\
+             name + ':' + ran"
+        ),
+        "TypeError:1"
+    );
+    // …and the *source* is asked the same question at §23.2.3.26.1 step 4, because the same
+    // `valueOf` could as easily have detached its buffer instead.
+    assert_eq!(
+        run("var target = new Int8Array(2), source = new Int8Array(1);\
+             var offset = { valueOf: function () { source.buffer.transfer(); return 0 } };\
+             try { target.set(source, offset) } catch (e) { e.name }"),
+        "TypeError"
+    );
+    // Step 7 comes first and does not care what happened to the buffer: a negative offset is a
+    // RangeError even when the conversion detached everything on its way past.
+    assert_eq!(
+        run("var target = new Int8Array(2), source = new Int8Array(1);\
+             var offset = { valueOf: function () { target.buffer.transfer(); return -1 } };\
+             try { target.set(source, offset) } catch (e) { e.name }"),
+        "RangeError"
+    );
+    // An offset of infinity saturates rather than wrapping, so the length check refuses it.
+    assert_eq!(
+        run("var target = new Int8Array(2);\
+             try { target.set(new Int8Array(1), Infinity) } catch (e) { e.name }"),
+        "RangeError"
+    );
+    // And the ordinary copy still works, which is what makes the four rows above about ordering
+    // rather than about `set` having stopped functioning.
+    assert_eq!(
+        run(
+            "var target = new Int8Array(3); target.set(new Int8Array([7, 8]), 1); target.join(',')"
+        ),
+        "0,7,8"
+    );
+}
