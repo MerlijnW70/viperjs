@@ -579,3 +579,94 @@ processes and a debug parse of a very large file.
 The first one will most likely be the value representation — see `AGENTS.md` M3, where the
 choice between a plain `enum Value` and NaN-boxing has to be made with a number rather than an
 opinion.
+
+---
+
+## interpreter-speed — how far is ViperJS from node, and what would close it?
+
+**Date:** 2026-08-08
+**Question:** The ask was "as fast as or faster than node.js". What is the real gap, where does the
+time go, and which of it is reachable without a JIT?
+**Setup:** `lab/scratch/bench-vs-node.js` — twenty cases, each returning a checksum so an engine
+that optimises the work away is caught rather than credited. Run on ViperJS with `viper`, and on
+node with a three-line `print` shim. **Node was re-run at fifty times the iteration count** because
+its first numbers were 1–3 ms, which is timer resolution rather than a measurement; the ratios below
+rest on the 50M run. `lab/scratch/bench-access-ladder.js` is the second instrument: each row differs
+from the one above by exactly one thing, so a difference between two rows is the cost of that thing.
+
+### The gap, measured
+
+| case | node ns/op | ViperJS ns/op | ratio |
+| --- | --- | --- | --- |
+| empty loop (`var`) | 0.4 | 82 | 205× |
+| empty loop (`let`) | 0.4 | 172 | 430× |
+| arithmetic | 2.3 | 207 | 90× |
+| property read, fixed key | 0.4 | 170 | 425× |
+| property read, 8 shapes | 2.3 | 469 | 204× |
+| array read `a[i & 7]` | 0.5 | 407 | 814× |
+| array write `a[i & 7] = i` | 0.6 | 886 | 1,477× |
+| `push` + `pop` | 1.0 | 2,819 | 2,819× |
+| call, two arguments | 0.4 | 301 | 753× |
+| method call | 0.6 | 482 | 803× |
+| closure creation | 1.0 | 1,540 | 1,540× |
+| string `+=` | 50 | 11,000 | 220× |
+| `fib(24)` | ~1,000,000 | 26,000,000 | 26× |
+
+**And yet 1.2 MB of prettier, preact, valibot and d3-array runs in 447 ms against node's 200 — 2.2×.**
+That contrast is the most useful thing here and it is not a contradiction: **module initialisation
+is one-shot work, where V8's JIT never warms up.** A bundle is mostly closure creation, object
+literals and a single pass of each function, and ViperJS is within a small factor there. Hot loops
+are where a JIT wins by three orders of magnitude, and that is what these micro-benchmarks measure.
+
+### Where the time goes
+
+Reading the ladder downwards; each delta is the cost of one added thing.
+
+| step | ns/op | delta | what the delta buys |
+| --- | --- | --- | --- |
+| `s += i` — the loop alone | 122 | — | dispatch, stack, `Value` |
+| local variable read | 122 | 0 | free |
+| `o.x` — literal key | 170 | +48 | one property lookup |
+| `o[k]` — variable String key | 170 | 0 | **nothing**: the key is already interned |
+| `a[0]` — literal index | 214 | +44 | the array's element path |
+| `a[i & 7]` — varying index | 412 | **+196** | turning a varying Number into a key |
+| `a[i & 7] = i` | 895 | **+483** | the write path on top of the read |
+| `Int32Array` read | 958 | — | §10.4.5's checks, *slower* than a plain Array |
+| `push` + `pop` | 2,406 | — | |
+| `s += "x"` | 11,000 | — | a copy of the whole String per append |
+
+**~20 ns per bytecode instruction** is the headline number, from `i++` amortised over four per loop
+pass: 71 ns for an increment of three or four instructions. A good non-JIT interpreter is 2–5 ns.
+
+### The verdict
+
+**"Faster than node" is not reachable without a JIT, and GOAL.md §3 refuses one.** V8 compiles hot
+code to machine code through three tiers; a bytecode interpreter cannot meet that, and no amount of
+tuning changes the kind of thing it is. What *is* reachable is the range good non-JIT engines
+occupy — QuickJS sits around 30–50× V8 on this sort of loop, where ViperJS is at 200–800×. **So
+there is roughly 10–20× of headroom inside the current architecture**, and it is worth having.
+
+Ranked by what the measurements support, not by what sounds promising:
+
+1. **The interpreter loop's stack frame — 13,728 bytes.** Everything above rides on the 122 ns
+   baseline, and a frame that large means the hot loop keeps nothing in registers: every
+   instruction round-trips through memory. This is the *same* fact that blocks
+   `MAX_REENTRY_DEPTH` (see the engine's `coerce.rs`), so one piece of work pays two debts.
+   Splitting the loop's cold half into its own function is the structural change; arm-by-arm
+   outlining is already exhausted.
+2. **An integer variant for `PropertyKey` — a measured +196 ns per varying index.** Today
+   `a[i]` turns the Number into decimal text, encodes that to UTF-16, and interns it. A
+   `PropertyKey::Index(u32)` removes all three from every indexed access.
+3. **Shapes and inline caches.** A fixed-key read is +48 ns over baseline and eight shapes take it
+   to +347. This is the standard fix and the numbers say it is worth real money — but it is a large
+   design change and belongs behind the two above.
+4. **String concatenation is quadratic.** 11 µs per append at 100k appends is a copy of the whole
+   String each time. A rope or cons-string representation is the usual answer.
+5. **`push`/`pop` at 2.4 µs** wants its own look before anyone guesses at it.
+
+**Ruled out by the charter, so nobody should re-cost them:** a JIT (GOAL.md §3), NaN-boxing (needs
+`unsafe`, DR-0002 — and the lab already measured it at 1.4× and parked it), and any dependency
+(DR-0001).
+
+**Cost:** about an hour, most of it in the two benchmark runs and one re-run of node at a size where
+its numbers mean something.
