@@ -45,7 +45,8 @@ heap.rs      objects, properties, prototypes, GC
 compile.rs   AST -> bytecode
 vm.rs        the interpreter loop
 builtins/    Object, Function, Array, String, Number, Math, JSON, Error, ...
-api.rs       the embedding surface           [DONE — DR-0021, and `examples/embed.rs` is the tour]
+api.rs       the embedding surface           [DONE — DR-0021; `examples/embed.rs` is the tour and
+                                              `examples/agent_loop.rs` the sandbox it is for]
 ```
 
 ## Milestones

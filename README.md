@@ -115,6 +115,13 @@ match engine.eval("undefined.x") {
 `examples/embed.rs` adds the rest: calling back into the script with a receiver you choose, and what
 happens to a `Value` you hold across a garbage collection.
 
+`examples/agent_loop.rs` is the same surface put to work as a **sandbox for code nobody has read** —
+a process writes a script, runs it, and repairs it from what came back. It is worth reading for one
+reason beyond the loop: the four `Error` cases are four different repairs, and a host that collapses
+them into "it failed" hands back the wrong instruction. It also shows the two bounds that make the
+sandbox a sandbox — a time budget the script cannot catch, and a heap budget — and the case no
+engine can report, which is a program that runs perfectly and computes the wrong thing.
+
 ## Measure the conformance number yourself
 
 Don't take the figure above on trust — not having to is the point.

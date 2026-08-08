@@ -20,6 +20,11 @@ public API is not stable and may change in any release.
   tables with `atob` while it loads.
 - The well-known Symbols moved to the heap, so every realm shares one `Symbol.iterator` as
   §6.1.5.1 requires.
+- **`examples/agent_loop.rs`** — the embedding surface used as a sandbox for code nobody has read: a
+  process writes a script, runs it, and repairs it from what came back. Shows why `Error` is an enum
+  (each case is a different repair), the time and heap budgets that bound an untrusted run, a fresh
+  realm per attempt so an interrupted script cannot poison the next, and the failure no engine can
+  report — a program that runs perfectly and answers the wrong question.
 
 ### Fixed
 
