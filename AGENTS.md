@@ -155,6 +155,14 @@ refused wholesale until DR-0008's second amendment. A pattern carrying neither `
 `/}/` as a brace, `/\1/` with no group as a legacy octal escape, `/\8/` as an `8`, `/\c1/` as three
 characters and `/[\d-x]/` as a union. See the section below for the shape of it.
 
+**A run's number is stable and a *contended* one is not, and the difference cost a bad bless.**
+Three consecutive runs alone give the same figure to the test; a fourth taken while the machine was
+busy came back **204 lower**, all of it `RegExp/CharacterClassEscapes` and `property-escapes` — the
+budget-bound tail this file already names, which halving the worker count removed the *self*-
+contention from and not contention in general. Blessing that run added new paths to the expectations
+file, which is the ratchet being laundered; it was caught by reading the count rather than the
+verdict, and reverted. **Count the identical runs before blessing, and give the suite the machine.**
+
 **And a second §9.3 realm exists**, which is DR-0025 and was worth **+383 runs** across five slices
 — the largest single area since the generator work. `$262.createRealm` builds one; a function
 carries the `[[Realm]]` it was made in; §10.1.14 `GetFunctionRealm` answers for a bound function and
@@ -163,7 +171,7 @@ frame beside the `this` and the `new.target` it already saved. §10.1.13 is a re
 takes its default from the constructor's realm, which fixed every built-in constructor at once. See
 the section below for the three ordering faults that fell out of it.
 
-Conformance as of this commit is **85.64% of test262** — 79,780 of 93,161 runs on the run this
+Conformance as of this commit is **85.66% of test262** — 79,802 of 93,161 runs on the run this
 sentence was written from, and a few hundred either way on the next. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 316 runs are now *stopped* before anything executes. **One of them was misfiled here for a

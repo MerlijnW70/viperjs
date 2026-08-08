@@ -689,12 +689,52 @@ impl Vm {
                 self.to_primitive(left, Hint::Default, heap)?,
                 self.to_primitive(right, Hint::Default, heap)?,
             ),
+            // §13.15.3 steps 3 and 4 — `ToNumeric(lval)` **whole**, and only then `ToNumeric(rval)`.
+            // Each is §7.1.1 with a number hint *followed by* the numeric conversion, so a left
+            // operand whose `valueOf` answers a Symbol is refused before the right operand is
+            // touched at all. Converting both to primitives first and refusing afterwards is the
+            // shape of step 1, which belongs to `+` alone — and it ran the right's `valueOf` for
+            // eleven operators that must not.
+            //
+            // Named one by one rather than left to a catch-all, because the arm below it is the
+            // *relational* operators and they must not come here: §7.2.13 compares two Strings
+            // lexicographically, so `"a" < "b"` is a comparison and not two NaNs.
+            Op::Exponent
+            | Op::Multiply
+            | Op::Divide
+            | Op::Remainder
+            | Op::Subtract
+            | Op::ShiftLeft
+            | Op::ShiftRight
+            | Op::ShiftRightUnsigned
+            | Op::BitwiseAnd
+            | Op::BitwiseOr
+            | Op::BitwiseXor => (
+                self.to_numeric_operand(left, heap)?,
+                self.to_numeric_operand(right, heap)?,
+            ),
             _ => (
                 self.to_primitive(left, Hint::Number, heap)?,
                 self.to_primitive(right, Hint::Number, heap)?,
             ),
         };
         crate::value::apply_binary(operator, left, right, heap)
+    }
+
+    /// §7.1.3 `ToNumeric` of one operand, answered as a `Value`.
+    ///
+    /// The conversion §13.15.3 steps 3 and 4 name, done to one operand so that the *order* of the
+    /// two is the clause's. A BigInt passes through unchanged — it is already a numeric value, and
+    /// making a new one would allocate a copy per arithmetic operation; everything else becomes a
+    /// Number by the same `to_number` the pair below would have used, which is what refuses a
+    /// Symbol. So this adds no rule: it moves an existing one to where the clause puts it.
+    #[allow(clippy::wrong_self_convention)] // a conversion runs code, so it needs the machine
+    fn to_numeric_operand(&mut self, value: Value, heap: &mut Heap) -> Completion<Value> {
+        let primitive = self.to_primitive(value, Hint::Number, heap)?;
+        match primitive {
+            Value::BigInt(_) => Ok(primitive),
+            other => Ok(Value::Number(other.to_number(heap)?)),
+        }
     }
 
     /// §13.5 — a unary operator, with its operand made primitive when the operator reads one.

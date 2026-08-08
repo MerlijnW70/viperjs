@@ -12090,12 +12090,6 @@ language/expressions/async-arrow-function/await-as-param-rest-nested-arrow-param
 language/expressions/async-arrow-function/await-as-param-rest-nested-arrow-parameter-position.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/async-arrow-function/early-errors-arrow-await-in-formals-default.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/async-arrow-function/early-errors-arrow-await-in-formals-default.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/bitwise-and/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/bitwise-and/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/bitwise-or/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/bitwise-or/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/bitwise-xor/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/bitwise-xor/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/call/eval-spread-empty-leading.js :: it threw an object with no name: Expected SameValue(«"local"», «0») to be true
 language/expressions/call/eval-spread-empty-leading.js (strict) :: it threw an object with no name: Expected SameValue(«"local"», «0») to be true
 language/expressions/call/eval-spread-empty-trailing.js :: it threw an object with no name: Expected SameValue(«"local"», «0») to be true
@@ -12165,8 +12159,6 @@ language/expressions/conditional/tco-cond.js (strict) :: it threw RangeError: to
 language/expressions/conditional/tco-pos.js (strict) :: it threw RangeError: too much recursion
 language/expressions/delete/non-reference-return-true.js :: it threw TypeError: cannot delete a property of something that is not an object
 language/expressions/delete/non-reference-return-true.js (strict) :: it threw TypeError: cannot delete a property of something that is not an object
-language/expressions/division/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/division/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/does-not-equals/bigint-and-object.js :: it threw an object with no name: The result of (0n != Object(0n)) is false Expected SameValue(«true», «false») to be true
 language/expressions/does-not-equals/bigint-and-object.js (strict) :: it threw an object with no name: The result of (0n != Object(0n)) is false Expected SameValue(«true», «false») to be true
 language/expressions/dynamic-import/catch/nested-arrow-import-catch-import-defer-specifier-tostring-abrupt-rejects.js :: it did not parse: expected `meta`, found an identifier
@@ -12484,8 +12476,6 @@ language/expressions/dynamic-import/syntax/valid/top-level-import-source-script-
 language/expressions/dynamic-import/syntax/valid/top-level-import-source-script-code-valid.js (strict) :: it did not parse: expected `meta`, found an identifier
 language/expressions/equals/bigint-and-object.js :: it threw an object with no name: The result of (0n == Object(0n)) is true Expected SameValue(«false», «true») to be true
 language/expressions/equals/bigint-and-object.js (strict) :: it threw an object with no name: The result of (0n == Object(0n)) is true Expected SameValue(«false», «true») to be true
-language/expressions/exponentiation/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/exponentiation/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/function/scope-param-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/function/scope-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/function/scope-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
@@ -12498,8 +12488,6 @@ language/expressions/greater-than/bigint-and-boolean.js :: it threw an object wi
 language/expressions/greater-than/bigint-and-boolean.js (strict) :: it threw an object with no name: The result of (true > 0n) is true Expected SameValue(«false», «true») to be true
 language/expressions/greater-than/bigint-and-symbol.js :: it threw an object with no name: 3n > Symbol("2") throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/greater-than/bigint-and-symbol.js (strict) :: it threw an object with no name: 3n > Symbol("2") throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/left-shift/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/left-shift/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/less-than/bigint-and-boolean.js :: it threw an object with no name: The result of (0n < true) is true Expected SameValue(«false», «true») to be true
 language/expressions/less-than/bigint-and-boolean.js (strict) :: it threw an object with no name: The result of (0n < true) is true Expected SameValue(«false», «true») to be true
 language/expressions/less-than/bigint-and-symbol.js :: it threw an object with no name: 3n < Symbol("2") throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
@@ -12508,10 +12496,6 @@ language/expressions/logical-and/tco-right.js (strict) :: it threw RangeError: t
 language/expressions/logical-or/tco-right.js (strict) :: it threw RangeError: too much recursion
 language/expressions/member-expression/computed-reference-null-or-undefined.js :: it threw an object with no name: Expected a TypeError but got a Test262Error
 language/expressions/member-expression/computed-reference-null-or-undefined.js (strict) :: it threw an object with no name: Expected a TypeError but got a Test262Error
-language/expressions/modulus/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/modulus/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/multiplication/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/multiplication/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/object/scope-gen-meth-param-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/object/scope-gen-meth-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/object/scope-gen-meth-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
@@ -12524,10 +12508,6 @@ language/expressions/optional-chaining/eval-optional-call.js :: it threw an obje
 language/expressions/optional-chaining/eval-optional-call.js (strict) :: it threw an object with no name: fn() returns "global" value from indirect eval Expected SameValue(«"local"», «"global"») to be true
 language/expressions/optional-chaining/optional-call-preserves-this.js :: it threw TypeError: cannot read a property of something that is not an object
 language/expressions/optional-chaining/optional-call-preserves-this.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-language/expressions/right-shift/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/right-shift/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/subtraction/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/subtraction/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/expressions/super/prop-dot-cls-ref-strict.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
 language/expressions/super/prop-dot-cls-ref-strict.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
 language/expressions/super/prop-dot-obj-ref-strict.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
@@ -12539,8 +12519,6 @@ language/expressions/super/realm.js (strict) :: it threw an object with no name:
 language/expressions/tagged-template/tco-call.js (strict) :: it threw RangeError: too much recursion
 language/expressions/tagged-template/tco-member.js (strict) :: it threw RangeError: too much recursion
 language/expressions/tco-pos.js (strict) :: it threw RangeError: too much recursion
-language/expressions/unsigned-right-shift/order-of-evaluation.js :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
-language/expressions/unsigned-right-shift/order-of-evaluation.js (strict) :: it threw an object with no name: ?ToNumeric(lhs) throws. Expected a TypeError but got a Test262Error
 language/function-code/10.4.3-1-19-s.js (strict) :: it threw an object with no name: my_eval("this") Expected SameValue(«undefined», «[object Object]») to be true
 language/function-code/S10.2.1_A2.js :: it threw an object with no name: #1: f1(1, 2) === 2
 language/function-code/S10.2.1_A3.js :: it threw an object with no name: #1: f1(1, 2) === undefined

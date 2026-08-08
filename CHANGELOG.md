@@ -32,6 +32,11 @@ public API is not stable and may change in any release.
   and §23.1.2.1 step 5), refuse per element with `CreateDataPropertyOrThrow`, and set `length` with
   a throwing write. `Array.from` also closes the iterator when its own mapper or write throws, which
   is only possible because the write happens inside the walk.
+- **The eleven arithmetic and bitwise operators convert their left operand whole before touching
+  the right** (§13.15.3 steps 3 and 4). `ToNumeric` is `ToPrimitive` *followed by* the numeric
+  conversion, so a left operand whose `valueOf` answers a Symbol is refused before the right
+  operand's `valueOf` runs at all. `+` keeps step 1's shape, which asks both for a primitive first,
+  and the relational operators keep theirs — §7.2.13 compares two Strings lexicographically.
 - **An Iterator Helper that stops early reports what closing the source found.** §27.1.4's `every`,
   `find`, `some` and `take` close with a `NormalCompletion`, so §7.4.9 step 4 has nothing to keep
   and a `return` that throws — or a `return` getter that throws — reaches the program. A helper

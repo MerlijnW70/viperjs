@@ -475,3 +475,50 @@ fn a_symbol_wrapper_answers_with_the_symbol_it_wraps() {
         "Symbol(q)"
     );
 }
+
+#[test]
+fn an_arithmetic_operator_converts_its_left_operand_whole_before_it_touches_the_right() {
+    // §13.15.3 steps 3 and 4 — `ToNumeric(lval)` and only then `ToNumeric(rval)`. Each is §7.1.1
+    // with a number hint *followed by* the numeric conversion, so a left operand whose `valueOf`
+    // answers a Symbol is refused before the right operand is asked for anything.
+    //
+    // Converting both to primitives first and refusing afterwards is step 1's shape, and step 1
+    // belongs to `+` alone. The two are indistinguishable until a `valueOf` has a side effect,
+    // which is what the trace is for: an assertion on the TypeError alone passes either way.
+    let probe = "var trace = '';\
+        var left = { valueOf: function () { trace += 'L'; return Symbol('s') } };\
+        var right = { valueOf: function () { trace += 'R'; return 1 } };";
+    for operator in ["-", "*", "/", "%", "**", "&", "|", "^", "<<", ">>", ">>>"] {
+        assert_eq!(
+            run(&format!(
+                "{probe} var name = ''; try {{ left {operator} right }} catch (e) {{ name = e.name }}\
+                 name + ':' + trace"
+            )),
+            "TypeError:L",
+            "for `{operator}`"
+        );
+    }
+
+    // `+` is the exception and keeps step 1: it asks both for a primitive *before* deciding
+    // between concatenation and addition, so the right operand's `valueOf` runs and the refusal
+    // comes after.
+    assert_eq!(
+        run(&format!(
+            "{probe} var name = ''; try {{ left + right }} catch (e) {{ name = e.name }}\
+             name + ':' + trace"
+        )),
+        "TypeError:LR"
+    );
+
+    // And the **relational** operators must not come this way at all: §7.2.13 compares two Strings
+    // lexicographically, so converting them to numbers would answer `false` for both of these.
+    assert_eq!(run("'a' < 'b'"), "true");
+    assert_eq!(run("'10' < '9'"), "true");
+    assert_eq!(run("10 < 9"), "false");
+
+    // Nothing about the ordinary arithmetic moved: a BigInt passes through as itself rather than
+    // being made a Number, so the pair still refuses a mixture and still adds two BigInts.
+    assert_eq!(run("(3n * 4n).toString()"), "12");
+    assert_eq!(run("'3' * '4'"), "12");
+    assert_eq!(run("try { 1n - 1 } catch (e) { e.name }"), "TypeError");
+}
