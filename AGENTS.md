@@ -163,7 +163,7 @@ frame beside the `this` and the `new.target` it already saved. §10.1.13 is a re
 takes its default from the constructor's realm, which fixed every built-in constructor at once. See
 the section below for the three ordering faults that fell out of it.
 
-Conformance as of this commit is **85.56% of test262** — 79,710 of 93,161 runs on the run this
+Conformance as of this commit is **85.62% of test262** — 79,760 of 93,161 runs on the run this
 sentence was written from, and a few hundred either way on the next. Treat that number as
 perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
 Only 316 runs are now *stopped* before anything executes. **One of them was misfiled here for a
@@ -180,7 +180,7 @@ and mostly are not, which is worth doing once and writing down rather than re-de
 | Runs | Reason | What it really is |
 | --- | --- | --- |
 | 8,316 | `Temporal is not defined` | a proposal — see below |
-| 407 | `what was called is not a function` | proposals now, and only now: `Array.fromAsync`, `Iterator.zip`/`zipKeyed`/`concat`, `Promise.allKeyed`/`allSettledKeyed`, `Map`/`WeakMap`'s `getOrInsert`, `Uint8Array` base64, `DataView`'s `getFloat16`. **It was 939, then 821, and this file called it "mostly proposals" at both figures — twice wrongly.** Seven *shipped* functions were hiding in it the first time and **369 runs of `$262.createRealm`** the second, which is nearly half. It is 407 because both were built. **Ask the engine what it has** before believing this row; it has misled two readers already |
+| 405 | `what was called is not a function` | proposals now, and only now: `Array.fromAsync`, `Iterator.zip`/`zipKeyed`/`concat`, `Promise.allKeyed`/`allSettledKeyed`, `Map`/`WeakMap`'s `getOrInsert`, `Uint8Array` base64, `DataView`'s `getFloat16`. **It was 939, then 821, and this file called it "mostly proposals" at both figures — twice wrongly.** Seven *shipped* functions were hiding in it the first time and **369 runs of `$262.createRealm`** the second, which is nearly half. It is 407 because both were built. **Ask the engine what it has** before believing this row; it has misled two readers already |
 | 352 | `cannot read a property…` | **Atomics 224, and every one of them is `$262.agent`** — the row is `$262.agent.start` reading a property of `undefined`. Done as a target, see below. Beside it `Error.prototype.stack` 64, a proposal, and `legacy-accessors` 24, which is another |
 | 208 | `$DONE with what was called is not a function` | the asynchronous half of the row above, and the same proposals |
 | 293 | `expected 'meta', found an identifier` | `import.defer` and `import.source` — two proposals, not `import.meta` |

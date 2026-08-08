@@ -28,6 +28,13 @@ public API is not stable and may change in any release.
 - **A lexical `for` head binds its names around the expression it iterates**, uninitialised — so
   `let x = 1; for (let x in { x })` is the ReferenceError §14.7.5.6 step 2 asks for.
 - `arguments` is refused in a direct `eval` written in a static class field's initialiser (§15.7.1).
+- **`Array.of` and `Array.from` build into their `this` when it is a constructor** (§23.1.2.3 step 4
+  and §23.1.2.1 step 5), refuse per element with `CreateDataPropertyOrThrow`, and set `length` with
+  a throwing write. `Array.from` also closes the iterator when its own mapper or write throws, which
+  is only possible because the write happens inside the walk.
+- **`%TypedArray%.prototype.set` reads its buffer again after converting the offset** (§23.2.3.26
+  steps 8 and 9). A `valueOf` in the offset may detach or resize the buffer, and everything learned
+  before the conversion described a buffer that may no longer exist.
 - Three ordering faults that only a real `Get` could expose: `AllocateArrayBuffer`'s length check,
   §23.2.5.1's two branches, and §10.2.2's steps 14 and 15 belonging to the caller.
 
