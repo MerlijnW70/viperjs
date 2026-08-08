@@ -125,7 +125,7 @@ impl From<bool> for DefineOutcome {
         }
     }
 }
-pub use self::buffer::{Buffer, Element, Numeric, View, clamp_if};
+pub use self::buffer::{Block, Buffer, Element, Numeric, View, Wait, clamp_if};
 pub use self::collect::{Collected, Roots};
 pub use self::collection::{Collection, CollectionKind};
 pub use self::environment::{Binding, Environment, EnvironmentId, Mutability};

@@ -12,6 +12,32 @@ works, and the elapsing does not, because there is no timer for it to elapse on.
 This records what that costs, why it is bounded to one shape, and what would have to exist to close
 it — so that the gap is a decision with a boundary rather than a bug someone finds later.
 
+## Amended: the blocking half now has a clock, and this record is about the other one
+
+When this was written the engine had one agent, so §25.4.3.14's blocking `Atomics.wait` was refused
+outright and `waitAsync` was the only waiting there was. A host can start agents now — each its own
+thread with its own heap, sharing a `heap::Block` — and for an agent whose `[[CanBlock]]` is true a
+blocking wait **does** time out, because a parked thread is a thread a condition variable can wake at
+a deadline. That is where `std::time::Instant` earns its third confined path in the constraints.
+
+None of the reasoning below changes, because none of it was ever about the blocking form. What a
+blocking waiter holds is a thread, and a thread can be woken at a moment. What an asynchronous waiter
+holds is a **promise**, and settling one means running a job — so it still needs something to happen
+at a time when no JavaScript is running, and that is still the thing this engine does not have. The
+three fakes are still the same three fakes.
+
+Two consequences worth naming, both of them seams rather than gaps:
+
+- **There are two waiter lists now**, split by who is able to end a wait. A blocking waiter lives in
+  the block, where any agent can reach it; an asynchronous one lives on the `Vm` that parked it,
+  because only that machine can settle its promise. `Atomics.notify` empties both and adds the
+  counts, and takes the blocking ones first — a count spent on a promise this agent will settle at
+  its leisure, while a thread in another agent stayed parked, is a right number and a hung program.
+- **One agent cannot settle another's `waitAsync`.** A notify from agent A leaves a promise parked in
+  agent B untouched and uncounted. Closing that needs the same "run me again" hook as the timeout
+  does, plus somewhere for agent A to leave the message — so it is the same piece of work and not a
+  second one.
+
 ## A waiter list is meaningful with one agent, which is the surprising part
 
 DR-0022's neighbourhood already establishes that this engine has a single agent, and §25.4.3.14's
@@ -61,7 +87,7 @@ resolves.
 ## The boundary, stated exactly
 
 Diverges only for: `waitAsync` with a matching value **and** a finite, non-zero timeout, **and** no
-notify for that position before the run ends.
+notify *from the parking agent* for that position before the run ends.
 
 Everything else is conformant. A zero or negative timeout answers `"timed-out"` without a promise
 at all, because `max(q, 0)` is 0 and the clause settles before returning. A mismatched value answers

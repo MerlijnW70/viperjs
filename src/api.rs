@@ -155,6 +155,21 @@ impl<'a> Host<'a> {
             .unwrap_or_default())
     }
 
+    /// `Number(value)` — §7.1.4, so an object's `valueOf` runs and may throw.
+    ///
+    /// The other half of [`Host::text`], and it was missing until a host function wanted to take a
+    /// duration: a native could be handed `$262.agent.sleep(100)` and had no way to find the 100
+    /// except by converting to a String and parsing it back, which is a second implementation of
+    /// §7.1.4 that agrees with the first only by luck.
+    ///
+    /// # Errors
+    ///
+    /// Whatever the conversion threw. A Symbol and a BigInt always refuse — §7.1.4 has no reading
+    /// for either — and an object may, through its own `valueOf` or `toString`.
+    pub fn number(&mut self, value: Value) -> Completion<f64> {
+        self.vm.to_number(value, self.heap)
+    }
+
     /// A JavaScript String from Rust text.
     ///
     /// Interned, so two natives answering the same word share one String rather than filling the
@@ -521,6 +536,70 @@ impl Engine {
     /// function that blocks. DR-0022 says why each is a separate piece of work.
     pub fn set_time_budget(&mut self, budget: Option<std::time::Duration>) {
         self.vm.set_time_budget(budget);
+    }
+
+    /// Say whether this agent may be **suspended** — §9.7's `[[CanBlock]]`.
+    ///
+    /// `false` is the default and is a claim about the shape of the embedding rather than caution:
+    /// an engine running on its own has no second agent, so an `Atomics.wait` that parked here could
+    /// never be woken and §25.4.3.14 step 12 is right to throw. A browser's main thread answers the
+    /// same way.
+    ///
+    /// A host that runs several engines — one per thread, sharing memory through
+    /// [`Engine::new_shared_buffer`] — turns it on. Whether to turn it on for the engine that
+    /// *starts* the others is the decision worth thinking about, and it is a trade rather than a
+    /// rule: leaving it off means that agent can never park itself with nobody left running to
+    /// notify it, and it also means every `Atomics.wait` it makes throws — which some programs use
+    /// as a *probe* rather than as a wait, and are then told the wrong thing. `conformance` turns it
+    /// on everywhere and its `agent` module says what that cost.
+    ///
+    /// **`Atomics.wait` is the only thing that reads it**, and it blocks the calling thread. A host
+    /// that sets this must be able to afford that thread stopping for as long as the script asked
+    /// for — [`Engine::set_time_budget`] does not cover it, because the machine is not executing
+    /// instructions while it waits. That is the whole of what turning this on costs: an engine every
+    /// deadline could stop acquires one operation that no deadline can.
+    pub fn set_can_block(&mut self, can: bool) {
+        self.vm.set_can_block(can);
+    }
+
+    /// The bytes a `SharedArrayBuffer` holds, as something another engine can be given.
+    ///
+    /// `None` for every other value, an ordinary `ArrayBuffer` included: §25.1's bytes belong to one
+    /// heap and there is no block underneath them to hand over.
+    ///
+    /// This is the whole of what one agent passes to another. A [`Value`] is a handle into *this*
+    /// engine's heap and means nothing in another one, but a [`Block`](crate::heap::Block) is the
+    /// memory itself — clone it, move the clone to the other thread, and
+    /// [`Engine::new_shared_buffer`] grows an object over it there.
+    #[must_use]
+    pub fn shared_block(&self, value: Value) -> Option<crate::heap::Block> {
+        let Value::Object(id) = value else {
+            return None;
+        };
+        self.heap
+            .object(id)
+            .and_then(crate::heap::Object::buffer)
+            .and_then(crate::heap::Buffer::block)
+            .cloned()
+    }
+
+    /// A `SharedArrayBuffer` in **this** engine over bytes another engine already has.
+    ///
+    /// The receiving half of [`Engine::shared_block`]. The object is this realm's — its prototype,
+    /// its brand, its identity — and the bytes are the ones the block names, so a write through one
+    /// agent's view is a read through the other's.
+    ///
+    /// The bytes are **not** charged to this engine's heap budget, because they were charged where
+    /// they were allocated: a second name for one allocation is not a second allocation, and
+    /// charging both would refuse the sharing at half the memory it appears to be using.
+    pub fn new_shared_buffer(&mut self, block: &crate::heap::Block) -> Value {
+        let object = self
+            .heap
+            .new_object(Some(self.vm.realm().shared_buffer_prototype()));
+        if let Some(found) = self.heap.object_mut(object) {
+            found.set_buffer(crate::heap::Buffer::over(block));
+        }
+        Value::Object(object)
     }
 
     /// Free everything the program can no longer reach, and answer how much that was.
@@ -1213,6 +1292,295 @@ mod tests {
         assert!(matches!(second.eval("shared"), Err(Error::Thrown(_))));
         let answer = first.eval("shared").expect("it runs");
         assert_eq!(first.text(answer).as_deref(), Ok("1"));
+    }
+
+    #[test]
+    fn two_agents_read_and_write_one_block() {
+        // §25.2 exists so that more than one agent can reach the same bytes, and until a host could
+        // start a second one that was a claim nothing could test: a `SharedArrayBuffer` whose bytes
+        // sat inside a single heap was shared in name only. The two engines here share *this* and
+        // nothing else — two heaps, two realms, two of every intrinsic, one allocation.
+        let mut main = Engine::new();
+        main.eval("var sab = new SharedArrayBuffer(8); var i32 = new Int32Array(sab)")
+            .expect("it runs");
+        let sab = main.eval("sab").expect("it runs");
+        let block = main.shared_block(sab).expect("a shared buffer has one");
+        let agent = std::thread::spawn(move || {
+            let mut engine = Engine::new();
+            let sab = engine.new_shared_buffer(&block);
+            engine.set_global("sab", sab).expect("it is live");
+            engine
+                .eval("new Int32Array(sab)[1] = 7")
+                .expect("it runs in the other agent");
+        });
+        agent.join().expect("the agent finished");
+        let answer = main.eval("i32[1]").expect("it runs");
+        assert_eq!(main.text(answer).as_deref(), Ok("7"));
+    }
+
+    #[test]
+    fn an_ordinary_array_buffer_has_no_block_to_share() {
+        // §25.1's bytes belong to the heap that made them. Answering a block for one would let a
+        // host hand another agent memory the first agent may `transfer` away underneath it.
+        let mut engine = Engine::new();
+        let unshared = engine.eval("new ArrayBuffer(8)").expect("it runs");
+        assert!(engine.shared_block(unshared).is_none());
+        let number = engine.eval("42").expect("it runs");
+        assert!(engine.shared_block(number).is_none());
+        let shared = engine.eval("new SharedArrayBuffer(8)").expect("it runs");
+        assert!(engine.shared_block(shared).is_some());
+    }
+
+    #[test]
+    fn an_engine_no_host_has_spoken_for_refuses_to_block() {
+        // §25.4.3.14 step 12 with `[[CanBlock]]` false, which is the default and is the right
+        // answer for an engine running on its own: nothing else could ever notify it.
+        let mut engine = Engine::new();
+        let answer = engine
+            .eval(
+                "try { Atomics.wait(new Int32Array(new SharedArrayBuffer(8)), 0, 0, 0) } \
+                 catch (e) { e.message }",
+            )
+            .expect("it runs");
+        assert_eq!(
+            engine.text(answer).as_deref(),
+            Ok("this agent cannot be suspended")
+        );
+    }
+
+    /// Run `source` and answer what it evaluated to, as text — what every row about waiting wants.
+    fn answered(engine: &mut Engine, source: &str) -> String {
+        let value = engine.eval(source).expect("it runs");
+        engine.text(value).expect("a string")
+    }
+
+    /// A second agent: an engine of its own on a thread of its own, sharing `block` and nothing
+    /// else, which evaluates `source` and answers what it came to as text.
+    ///
+    /// `sab` is the received `SharedArrayBuffer` — the only thing that crosses between the two.
+    fn agent(block: crate::heap::Block, source: &'static str) -> std::thread::JoinHandle<String> {
+        std::thread::spawn(move || {
+            let mut engine = Engine::new();
+            // §9.7 — an agent something else started may be suspended, because that something else
+            // is still running and can notify it.
+            engine.set_can_block(true);
+            let sab = engine.new_shared_buffer(&block);
+            engine.set_global("sab", sab).expect("it is live");
+            let value = engine.eval(source).expect("it runs in the other agent");
+            engine.text(value).expect("a string")
+        })
+    }
+
+    /// Ask `source` of `engine` until it answers `wanted`, and fail rather than hang if it will not.
+    ///
+    /// What a test that has started another agent uses instead of sleeping: there is no moment at
+    /// which this thread can be *told* the other has reached its wait, so an answer that only the
+    /// other agent could have produced is the evidence, and asking again is how it is waited for.
+    fn until(engine: &mut Engine, source: &str, wanted: &str, why: &str) {
+        for _ in 0..5_000 {
+            if answered(engine, source) == wanted {
+                return;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+        panic!("{why}");
+    }
+
+    #[test]
+    fn a_native_can_convert_what_it_was_given_to_a_number() {
+        // §7.1.4 across the boundary, which is what a host function taking a duration or a count
+        // wants. The object row is the one that matters: `valueOf` runs, so this is the language's
+        // own conversion and not a parse of whatever `String(value)` happened to produce.
+        fn doubled(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+            let mut host = Host::new(vm, heap);
+            let given = host.number(call.argument(0))?;
+            Ok(Value::Number(given * 2.0))
+        }
+        let mut engine = Engine::new();
+        engine.bind("doubled", 1, doubled);
+        assert_eq!(answered(&mut engine, "doubled('21')"), "42");
+        assert_eq!(
+            answered(
+                &mut engine,
+                "doubled({ valueOf: function () { return 4 } })"
+            ),
+            "8"
+        );
+        // Absent is `NaN` and not zero, which is the difference every caller has to decide what to
+        // do about — this one doubles it and gets `NaN` back, which is §6.1.6.1 working.
+        assert_eq!(answered(&mut engine, "doubled()"), "NaN");
+        // A Symbol has no reading at all, and the refusal arrives as the script's to catch.
+        assert_eq!(
+            answered(
+                &mut engine,
+                "try { doubled(Symbol()) } catch (e) { e.constructor.name }"
+            ),
+            "TypeError"
+        );
+    }
+
+    #[test]
+    fn a_wait_ends_at_its_timeout_and_a_stale_expectation_does_not_wait_at_all() {
+        // Both of §25.4.3.14's answers that need no second agent, which is why they are together:
+        // one engine can measure them and a hang is what a wrong answer looks like.
+        let mut engine = Engine::new();
+        engine.set_can_block(true);
+        engine
+            .eval("var i32 = new Int32Array(new SharedArrayBuffer(8))")
+            .expect("it runs");
+        // A finite timeout that nobody notifies. DR-0024's gap was exactly this and it was the
+        // *asynchronous* half that could not be closed — a parked thread has a clock to wake it.
+        let started = std::time::Instant::now();
+        assert_eq!(
+            answered(&mut engine, "Atomics.wait(i32, 0, 0, 30)"),
+            "timed-out"
+        );
+        assert!(started.elapsed() >= std::time::Duration::from_millis(20));
+        // And the comparison, on an **infinite** timeout: the slot no longer holds what the caller
+        // expected, so there is nothing to wait for. This row hangs rather than fails if that
+        // comparison is dropped, which is the shape of the bug it exists to catch.
+        engine.eval("i32[0] = 1").expect("it runs");
+        assert_eq!(
+            answered(&mut engine, "Atomics.wait(i32, 0, 0)"),
+            "not-equal"
+        );
+    }
+
+    #[test]
+    fn a_wait_reads_the_byte_its_index_names_and_the_value_as_the_slot_stores_it() {
+        let mut engine = Engine::new();
+        engine.set_can_block(true);
+        engine
+            .eval("var i32 = new Int32Array(new SharedArrayBuffer(16)); i32[0] = 5")
+            .expect("it runs");
+        // §25.4.1 keys a position by **byte**, so index 1 of an `Int32Array` is byte 4. A wait that
+        // read byte 0 instead would find the 5 that was put there to notice it, and would answer
+        // the other way round on both of these rows.
+        assert_eq!(
+            answered(&mut engine, "Atomics.wait(i32, 1, 5, 0)"),
+            "not-equal"
+        );
+        assert_eq!(
+            answered(&mut engine, "Atomics.wait(i32, 0, 5, 0)"),
+            "timed-out"
+        );
+        // Step 17 compares against the value **as the slot stores it**, and storing into an
+        // `Int32Array` wraps rather than clamps: 2**31 lands there as -2147483648, so a wait
+        // expecting 2**31 of a slot holding that matches and gets as far as its timeout. §7.1.11's
+        // clamping would encode the same expectation as 255 and it would never match anything.
+        engine.eval("i32[2] = -Math.pow(2, 31)").expect("it runs");
+        assert_eq!(
+            answered(&mut engine, "Atomics.wait(i32, 2, Math.pow(2, 31), 0)"),
+            "timed-out"
+        );
+    }
+
+    #[test]
+    fn a_wait_that_timed_out_has_taken_itself_off_the_list() {
+        // Nobody else can take it off — that is what timing out means — so it does so on its way
+        // past, and a notify afterwards has to find nothing. A list that kept it would report
+        // having woken a thread that stopped waiting long ago, and the count is a number a program
+        // reads and asserts on.
+        let mut engine = Engine::new();
+        engine.set_can_block(true);
+        engine
+            .eval("var i32 = new Int32Array(new SharedArrayBuffer(16))")
+            .expect("it runs");
+        assert_eq!(
+            answered(&mut engine, "Atomics.wait(i32, 1, 0, 5)"),
+            "timed-out"
+        );
+        assert_eq!(answered(&mut engine, "Atomics.notify(i32, 1)"), "0");
+    }
+
+    #[test]
+    fn an_agent_that_may_block_waits_until_another_notifies_it() {
+        // The pair that only two agents can show, and the reason the waiter list had to move out of
+        // the machine and into the block: this waiter is a parked *thread*, and the notify that
+        // ends it is made by an engine that has never heard of it.
+        let mut main = Engine::new();
+        main.eval("var sab = new SharedArrayBuffer(8); var i32 = new Int32Array(sab)")
+            .expect("it runs");
+        let sab = main.eval("sab").expect("it runs");
+        let block = main.shared_block(sab).expect("a shared buffer has one");
+        let other = agent(block, "Atomics.wait(new Int32Array(sab), 0, 0)");
+        until(
+            &mut main,
+            "Atomics.notify(i32, 0)",
+            "1",
+            "the other agent never reached its wait",
+        );
+        assert_eq!(other.join().expect("the agent finished"), "ok");
+    }
+
+    #[test]
+    fn a_notify_wakes_only_the_position_it_names_and_only_as_many_as_it_was_asked_for() {
+        let mut main = Engine::new();
+        main.eval("var sab = new SharedArrayBuffer(16); var i32 = new Int32Array(sab)")
+            .expect("it runs");
+        let sab = main.eval("sab").expect("it runs");
+        let block = main.shared_block(sab).expect("a shared buffer has one");
+        let other = agent(block, "Atomics.wait(new Int32Array(sab), 1, 0, 30000)");
+        // Asked over and over for about a tenth of a second, and that is the point rather than
+        // impatience: both of these answer `0` whether or not the other agent has parked yet, so a
+        // single call proves nothing and a call repeated across the moment it parks proves both. A
+        // notify at another position must wake nobody, and a count of zero must wake nobody however
+        // many are there to be woken.
+        for _ in 0..100 {
+            assert_eq!(
+                answered(&mut main, "Atomics.notify(i32, 0)"),
+                "0",
+                "a notify at another position"
+            );
+            assert_eq!(
+                answered(&mut main, "Atomics.notify(i32, 1, 0)"),
+                "0",
+                "a notify of nobody at this one"
+            );
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+        until(
+            &mut main,
+            "Atomics.notify(i32, 1, 1)",
+            "1",
+            "the other agent never reached its wait",
+        );
+        assert_eq!(other.join().expect("the agent finished"), "ok");
+    }
+
+    #[test]
+    fn a_notify_spends_its_count_on_parked_threads_before_its_own_promises() {
+        // The seam DR-0024's amendment names. A blocking waiter is another agent's thread and an
+        // asynchronous one is this agent's promise, and this agent settles its own promises at its
+        // own convenience — so a count spent on the promise while the thread stayed parked is a
+        // right number and a program that never finishes.
+        let mut main = Engine::new();
+        main.eval("var sab = new SharedArrayBuffer(16); var i32 = new Int32Array(sab)")
+            .expect("it runs");
+        let sab = main.eval("sab").expect("it runs");
+        let block = main.shared_block(sab).expect("a shared buffer has one");
+        // Slot 1 says "about to wait", which is `atomicsHelper.js`'s own idiom and carries its
+        // caveat: it is the last statement *before* the wait and not the wait itself, so what reads
+        // it waits a little afterwards rather than trusting it.
+        let other = agent(
+            block,
+            "var a = new Int32Array(sab); Atomics.store(a, 1, 1); Atomics.wait(a, 0, 0, 30000)",
+        );
+        until(
+            &mut main,
+            "Atomics.load(i32, 1)",
+            "1",
+            "the other agent never started",
+        );
+        std::thread::sleep(std::time::Duration::from_millis(50));
+        // Parked *after* the thread is, so that a notify of one waiter has two to choose between.
+        main.eval("var parked = Atomics.waitAsync(i32, 0, 0)")
+            .expect("it runs");
+        assert_eq!(answered(&mut main, "Atomics.notify(i32, 0, 1)"), "1");
+        assert_eq!(other.join().expect("the agent finished"), "ok");
+        // …and the promise is still parked, which is the other half of the same claim: the one wake
+        // went to the thread and none of it went here.
+        assert_eq!(answered(&mut main, "Atomics.notify(i32, 0)"), "1");
     }
 
     #[test]

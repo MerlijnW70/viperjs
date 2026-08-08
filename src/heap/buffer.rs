@@ -18,28 +18,302 @@
 //! `None` is detached and `Some(vec![])` is an empty buffer that is perfectly usable. The two are
 //! different in every way that matters and identical in `byteLength`, which is exactly the sort of
 //! distinction an `Option` is for.
+//!
+//! # Why a shared buffer's bytes are not a `Vec` at all
+//!
+//! Because §25.2 exists so that **more than one agent** can read and write the same memory, and two
+//! agents are two threads with a heap each. A `Vec<u8>` sitting inside one heap's [`Buffer`] is
+//! reachable from that agent and no other, so a `SharedArrayBuffer` built over it would be shared in
+//! name only — which is what it was here until agents existed to share it with.
+//!
+//! So the bytes of a shared buffer live in a [`Block`]: one allocation behind an `Arc`, which any
+//! number of [`Buffer`]s in any number of heaps may hold. Each agent still has its own object, its
+//! own prototype and its own brand; what they have in common is the block underneath.
+//!
+//! **The lock covers the bytes and §25.4.1's waiter list together, and that is not tidiness.** A
+//! blocking `Atomics.wait` compares the slot against a value and *then* joins the list, and if
+//! another agent's store and notify could land between those two steps the waiter would park after
+//! the wake it was waiting for and never be woken. One mutex over both makes the compare and the
+//! enqueue a single critical section, which is exactly what §25.4.1 asks for. An ordinary
+//! `ArrayBuffer` takes no lock at all, because there is nobody to take it against.
+
+use std::sync::{Arc, Condvar, Mutex, MutexGuard, PoisonError};
+use std::time::{Duration, Instant};
+
+/// The bytes of a §25.2 `SharedArrayBuffer`, which more than one agent may hold.
+///
+/// Cloning one is an `Arc` bump: the clone names the *same* memory, which is the whole point. Two
+/// blocks are the same block when [`Block::is`] says so, and no two allocations ever compare equal
+/// however alike their bytes are — a buffer's identity is where it is, not what is in it.
+#[derive(Debug, Clone)]
+pub struct Block(Arc<Shared>);
+
+/// What every holder of a [`Block`] shares.
+#[derive(Debug)]
+struct Shared {
+    /// The bytes, the ceiling they may grow to, and the waiters — under one lock. See the module
+    /// documentation for why those are not three locks.
+    state: Mutex<State>,
+    /// What a blocking wait parks on and [`Block::notify`] signals.
+    ///
+    /// One condition variable for the whole block rather than one per position. A notify wakes
+    /// every parked thread and each re-checks whether *it* was the one taken off the list, which is
+    /// what the loop in [`Block::wait`] is for — a spurious wake and a wake meant for another
+    /// position are the same thing to a waiter, and both are handled by looking rather than by
+    /// trusting that being woken means anything.
+    woken: Condvar,
+}
+
+/// Everything about a block that changes, which is everything the lock protects.
+#[derive(Debug)]
+struct State {
+    /// The bytes themselves. Never `None`: §25.2 gives a shared buffer no way to be detached.
+    bytes: Vec<u8>,
+    /// `[[ArrayBufferMaxByteLength]]`, kept here rather than on the [`Buffer`] because growing is
+    /// something *one* agent does and every other agent must then see. A copy per holder would let
+    /// two agents disagree about how large the same allocation is allowed to get.
+    max_byte_length: Option<usize>,
+    /// §25.4.1's list of agents parked on a position in this block, in the order they arrived.
+    waiters: Vec<Waiter>,
+    /// What the next waiter will be called.
+    ///
+    /// A waiter has to be able to ask "was *I* taken off the list", and its position is no answer:
+    /// the list shifts as other waiters are woken. A number handed out once is.
+    next: u64,
+}
+
+/// One agent parked in §25.4.1's waiter list.
+#[derive(Debug)]
+struct Waiter {
+    /// Which **byte** offset into the block it is waiting on, per §25.4.1.
+    ///
+    /// A byte offset and not an element index, because a `BigInt64Array`'s slot 0 and an
+    /// `Int32Array`'s slot 0 are one position in the block and an index would make them two.
+    offset: usize,
+    /// What this waiter is called, so that it can recognise its own removal.
+    id: u64,
+}
+
+/// How a blocking `Atomics.wait` ended — §25.4.3.14's three answers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Wait {
+    /// The slot did not hold what the caller expected, so nothing was waited for at all.
+    NotEqual,
+    /// A notify took this waiter off the list.
+    Ok,
+    /// The timeout elapsed with nobody notifying.
+    TimedOut,
+}
+
+impl Wait {
+    /// The string §25.4.3.14 answers with, which is the only thing a program sees of this.
+    #[must_use]
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::NotEqual => "not-equal",
+            Self::Ok => "ok",
+            Self::TimedOut => "timed-out",
+        }
+    }
+}
+
+impl Block {
+    /// A block of `length` **zeroed** bytes.
+    #[must_use]
+    pub fn new(length: usize) -> Self {
+        Self(Arc::new(Shared {
+            state: Mutex::new(State {
+                bytes: vec![0; length],
+                max_byte_length: None,
+                waiters: Vec::new(),
+                next: 0,
+            }),
+            woken: Condvar::new(),
+        }))
+    }
+
+    /// Whether these two name the same allocation.
+    ///
+    /// The question `SharedArrayBuffer.prototype.slice` asks about its species and the one a host
+    /// asks before handing a received block back to the agent it came from.
+    #[must_use]
+    pub fn is(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.0, &other.0)
+    }
+
+    /// The lock, taking a poisoned one at its word.
+    ///
+    /// A `Mutex` is poisoned only by a thread panicking while it holds it, and the third ratchet
+    /// says no input panics — so poisoning here would mean an engine bug that has already happened
+    /// elsewhere. There is nothing a caller could do about it and no JavaScript error that would
+    /// describe it, so the bytes are taken as they are rather than turning one bug into a second,
+    /// stranger one. `unwrap()` would be a panic on a path that exists to avoid panicking.
+    fn state(&self) -> MutexGuard<'_, State> {
+        self.0.state.lock().unwrap_or_else(PoisonError::into_inner)
+    }
+
+    /// Read the bytes under the lock.
+    fn with_bytes<R>(&self, read: impl FnOnce(&[u8]) -> R) -> R {
+        read(&self.state().bytes)
+    }
+
+    /// Write them under the same lock.
+    fn with_bytes_mut<R>(&self, write: impl FnOnce(&mut [u8]) -> R) -> R {
+        write(&mut self.state().bytes)
+    }
+
+    /// How many bytes it holds at this moment — another agent may have grown it a moment ago.
+    fn byte_length(&self) -> usize {
+        self.state().bytes.len()
+    }
+
+    /// `[[ArrayBufferMaxByteLength]]`.
+    fn max_byte_length(&self) -> Option<usize> {
+        self.state().max_byte_length
+    }
+
+    /// Note that this block may grow to `max`.
+    fn allow_resizing_to(&self, max: usize) {
+        self.state().max_byte_length = Some(max);
+    }
+
+    /// §25.2.5.4 `grow`, once its caller has done the refusing. See [`Buffer::resize`].
+    fn resize(&self, length: usize) -> bool {
+        let mut state = self.state();
+        if state.max_byte_length.is_none_or(|max| length > max) {
+            return false;
+        }
+        state.bytes.resize(length, 0);
+        true
+    }
+
+    /// §25.4.1's `DoWait` in synchronous mode, for an agent whose `[[CanBlock]]` is **true**.
+    ///
+    /// **The comparison is part of the wait and not a step before it.** `expected` is the value the
+    /// caller wants the slot to still hold, already encoded as the element kind would store it, and
+    /// it is compared here — inside the critical section that the enqueue also happens in. Reading
+    /// the slot first and calling this afterwards would leave a window in which another agent
+    /// stores the new value and notifies, and this agent then parks waiting for a wake that has
+    /// already happened.
+    ///
+    /// `timeout` of `None` is §25.4.3.14's `+∞`: wait until notified, however long that is. A
+    /// timeout that has already elapsed answers [`Wait::TimedOut`] without joining the list, which
+    /// is why a zero timeout never blocks.
+    ///
+    /// An offset with fewer than `expected.len()` bytes after it answers [`Wait::NotEqual`] rather
+    /// than waiting. No caller can present one — every one of them has validated the index against
+    /// the view first — and of the two harmless answers this is the one that cannot park a thread
+    /// on a position that does not exist.
+    pub fn wait(&self, offset: usize, expected: &[u8], timeout: Option<Duration>) -> Wait {
+        let mut state = self.state();
+        if state.bytes.get(offset..offset + expected.len()) != Some(expected) {
+            return Wait::NotEqual;
+        }
+        // A timeout so large that the clock cannot name the moment it ends is one no program will
+        // outlive, so `checked_add` declining makes it the infinite wait rather than an error.
+        let deadline = timeout.and_then(|timeout| Instant::now().checked_add(timeout));
+        let id = state.next;
+        state.next = state.next.wrapping_add(1);
+        state.waiters.push(Waiter { offset, id });
+        loop {
+            // Being woken means nothing on its own — a condition variable may wake a thread for no
+            // reason at all, and a notify wakes every waiter on the block whatever position it
+            // named. Having been *taken off the list* is the fact, and it is asked for rather than
+            // inferred.
+            if !state.waiters.iter().any(|waiting| waiting.id == id) {
+                return Wait::Ok;
+            }
+            let left = match deadline {
+                None => None,
+                Some(deadline) => match deadline.checked_duration_since(Instant::now()) {
+                    Some(left) => Some(left),
+                    None => {
+                        // Still on the list at the deadline, so nobody is going to take it off.
+                        state.waiters.retain(|waiting| waiting.id != id);
+                        return Wait::TimedOut;
+                    }
+                },
+            };
+            // The two spellings answer differently poisoned — one a guard and one a guard beside a
+            // "did it time out" — and neither answer is consulted: whether the deadline has passed
+            // is asked of the clock at the top of the loop, so a timed-out flag would be a second
+            // source for a fact this already has one of.
+            state = match left {
+                None => self
+                    .0
+                    .woken
+                    .wait(state)
+                    .unwrap_or_else(PoisonError::into_inner),
+                Some(left) => {
+                    self.0
+                        .woken
+                        .wait_timeout(state, left)
+                        .unwrap_or_else(PoisonError::into_inner)
+                        .0
+                }
+            };
+        }
+    }
+
+    /// §25.4.3.7's half of `Atomics.notify` that the block owns — take up to `count` waiters off
+    /// the list at `offset` and wake them, answering how many there were.
+    ///
+    /// In list order, which is §25.4.1's: the waiters that have been parked longest go first, so
+    /// `notify(…, 1)` twice wakes two different agents rather than racing over one.
+    ///
+    /// The condition variable is signalled once for the whole batch and **every** parked thread on
+    /// the block wakes to re-check, whatever position it named. One variable per position would
+    /// wake fewer of them and would be a map to keep in step with the list; the waiters that were
+    /// not meant find themselves still on it and park again, which is the same loop that already
+    /// has to handle a spurious wake.
+    ///
+    /// And it is signalled whether or not anything was taken off, which is not an oversight: a wake
+    /// that nobody was waiting for is what a condition variable is *defined* to be allowed to do, so
+    /// a guard around this would be a branch no program could tell from its absence — and mutation
+    /// coverage said exactly that, twice, before it went.
+    pub fn notify(&self, offset: usize, count: usize) -> usize {
+        let mut state = self.state();
+        let mut woken = 0;
+        state.waiters.retain(|waiting| {
+            if waiting.offset == offset && woken < count {
+                woken += 1;
+                return false;
+            }
+            true
+        });
+        self.0.woken.notify_all();
+        woken
+    }
+}
 
 /// §25.1.3.1's data block — the bytes, or nothing if the buffer has been detached.
 #[derive(Debug)]
 pub struct Buffer {
-    /// `[[ArrayBufferData]]`, or `None` once `[[ArrayBufferDetachKey]]` has done its work.
-    bytes: Option<Vec<u8>>,
-    /// Whether this is §25.2's `SharedArrayBuffer` rather than §25.1's `ArrayBuffer`.
-    ///
-    /// One flag rather than two types, because the bytes and every operation over them are the
-    /// same. What differs is the *brand*: `ArrayBuffer.prototype.byteLength` requires an unshared
-    /// buffer and `SharedArrayBuffer.prototype.byteLength` a shared one, so neither answers about
-    /// the other — and `transfer` refuses a shared buffer outright, because §25.2 has no
-    /// `[[ArrayBufferDetachKey]]` at all. A shared buffer can never be detached, which is the
-    /// whole of what "shared" means to an engine with one agent.
-    shared: bool,
-    /// `[[ArrayBufferMaxByteLength]]` — present exactly when the buffer is resizable.
+    /// `[[ArrayBufferData]]`, in whichever of the two ways this buffer holds it.
+    bytes: Bytes,
+    /// `[[ArrayBufferMaxByteLength]]` for an **unshared** buffer — present exactly when it is
+    /// resizable. A shared one keeps it on the block, where every agent sees the same answer.
     ///
     /// §25.1.6.4 and §25.2.5.4 both spell their first step `RequireInternalSlot(O,
     /// [[ArrayBufferMaxByteLength]])`, so "may this be resized" is not a flag beside a number: it
     /// *is* whether the number is there. An `Option` says that, and a `bool` next to a `usize`
     /// would let the two disagree.
     max_byte_length: Option<usize>,
+}
+
+/// Where a buffer's bytes are, which is the whole of the difference between §25.1 and §25.2.
+///
+/// Two variants rather than a `shared` flag beside an `Option<Vec<u8>>`, because the flag could
+/// disagree with the storage and this cannot: a shared buffer has a [`Block`] and therefore no
+/// detached state to represent, and an unshared one has bytes only this agent can reach and
+/// therefore no lock to take. `transfer` refuses a shared buffer outright, because §25.2 has no
+/// `[[ArrayBufferDetachKey]]` at all.
+#[derive(Debug)]
+enum Bytes {
+    /// §25.1 — this agent's own bytes, and `None` once `DetachArrayBuffer` has done its work.
+    Own(Option<Vec<u8>>),
+    /// §25.2 — a block that any number of agents may hold, and that none of them can detach.
+    Shared(Block),
 }
 
 impl Buffer {
@@ -51,8 +325,7 @@ impl Buffer {
     #[must_use]
     pub fn new(length: usize) -> Self {
         Self {
-            shared: false,
-            bytes: Some(vec![0; length]),
+            bytes: Bytes::Own(Some(vec![0; length])),
             max_byte_length: None,
         }
     }
@@ -60,9 +333,22 @@ impl Buffer {
     /// The same, as §25.2.2.1's `SharedArrayBuffer` — bytes that nothing can take away.
     #[must_use]
     pub fn new_shared(length: usize) -> Self {
-        let mut made = Self::new(length);
-        made.shared = true;
-        made
+        Self::over(&Block::new(length))
+    }
+
+    /// A `SharedArrayBuffer` over a block that already exists — what a **second agent** gets.
+    ///
+    /// The other half of §25.2's reason for existing: `$262.agent.broadcast` hands a block from one
+    /// agent to another, and this is how the receiving agent's heap grows an object over it. The
+    /// bytes are not allocated and not charged to the receiving heap's budget, because they were
+    /// already allocated and already charged where they were made — a second name for one
+    /// allocation is not a second allocation.
+    #[must_use]
+    pub fn over(block: &Block) -> Self {
+        Self {
+            bytes: Bytes::Shared(block.clone()),
+            max_byte_length: None,
+        }
     }
 
     /// Note that this buffer may be resized up to `max` — §25.1.3.1's `maxByteLength` option.
@@ -72,13 +358,19 @@ impl Buffer {
     /// `new ArrayBuffer(0, { maxByteLength: 2 ** 30 })` is a line a program may write and reserving
     /// a gibibyte for it would refuse the program for memory it has not asked to use yet.
     pub fn allow_resizing_to(&mut self, max: usize) {
-        self.max_byte_length = Some(max);
+        match &self.bytes {
+            Bytes::Own(_) => self.max_byte_length = Some(max),
+            Bytes::Shared(block) => block.allow_resizing_to(max),
+        }
     }
 
     /// `[[ArrayBufferMaxByteLength]]`, or `None` for a buffer fixed at its length.
     #[must_use]
     pub fn max_byte_length(&self) -> Option<usize> {
-        self.max_byte_length
+        match &self.bytes {
+            Bytes::Own(_) => self.max_byte_length,
+            Bytes::Shared(block) => block.max_byte_length(),
+        }
     }
 
     /// §25.1.6.4 `resize` and §25.2.5.4 `grow`, once their callers have done the refusing.
@@ -96,46 +388,85 @@ impl Buffer {
     /// was in that memory before. Shrinking drops the tail, and re-growing gives zeroes rather than
     /// what used to be there — `Vec::resize` in both directions says exactly that.
     pub fn resize(&mut self, length: usize) -> bool {
-        if self.max_byte_length.is_none_or(|max| length > max) {
-            return false;
+        match &mut self.bytes {
+            Bytes::Shared(block) => block.resize(length),
+            Bytes::Own(bytes) => {
+                if self.max_byte_length.is_none_or(|max| length > max) {
+                    return false;
+                }
+                if let Some(bytes) = bytes.as_mut() {
+                    bytes.resize(length, 0);
+                }
+                true
+            }
         }
-        if let Some(bytes) = self.bytes.as_mut() {
-            bytes.resize(length, 0);
-        }
-        true
     }
 
     /// Whether this is a `SharedArrayBuffer`.
     #[must_use]
     pub fn shared(&self) -> bool {
-        self.shared
+        matches!(self.bytes, Bytes::Shared(_))
     }
 
-    /// The bytes, or `None` once the buffer has been detached.
-    pub fn bytes(&self) -> Option<&[u8]> {
-        self.bytes.as_deref()
+    /// The block these bytes are, if this buffer is a shared one.
+    ///
+    /// What a host needs to hand the same memory to another agent, and what §25.4's waiting and
+    /// notifying are addressed to. `None` for an ordinary `ArrayBuffer`, which has no block because
+    /// there is nobody to share it with.
+    #[must_use]
+    pub fn block(&self) -> Option<&Block> {
+        match &self.bytes {
+            Bytes::Own(_) => None,
+            Bytes::Shared(block) => Some(block),
+        }
+    }
+
+    /// Read the bytes — `None` once the buffer has been detached.
+    ///
+    /// A closure rather than a borrow, because a shared buffer's bytes are behind a lock and a
+    /// `&[u8]` handed out would be one taken for as long as the caller kept it. The closure is the
+    /// critical section, which is also the shape that makes it obvious a caller must not reach for
+    /// the same block inside one.
+    pub fn with_bytes<R>(&self, read: impl FnOnce(Option<&[u8]>) -> R) -> R {
+        match &self.bytes {
+            Bytes::Own(bytes) => read(bytes.as_deref()),
+            Bytes::Shared(block) => block.with_bytes(|bytes| read(Some(bytes))),
+        }
     }
 
     /// The same, to write through.
-    pub fn bytes_mut(&mut self) -> Option<&mut [u8]> {
-        self.bytes.as_deref_mut()
+    pub fn with_bytes_mut<R>(&mut self, write: impl FnOnce(Option<&mut [u8]>) -> R) -> R {
+        match &mut self.bytes {
+            Bytes::Own(bytes) => write(bytes.as_deref_mut()),
+            Bytes::Shared(block) => block.with_bytes_mut(|bytes| write(Some(bytes))),
+        }
     }
 
     /// `[[ArrayBufferByteLength]]` — **0** for a detached buffer, which §25.1.5.1 is explicit about.
     #[must_use]
     pub fn byte_length(&self) -> usize {
-        self.bytes.as_ref().map_or(0, Vec::len)
+        match &self.bytes {
+            Bytes::Own(bytes) => bytes.as_ref().map_or(0, Vec::len),
+            Bytes::Shared(block) => block.byte_length(),
+        }
     }
 
     /// Whether the bytes have gone — §25.1.3.2 `IsDetachedBuffer`.
     #[must_use]
     pub fn detached(&self) -> bool {
-        self.bytes.is_none()
+        matches!(self.bytes, Bytes::Own(None))
     }
 
     /// §25.1.3.3 `DetachArrayBuffer` — throw the bytes away and leave the object.
+    ///
+    /// Does nothing to a shared buffer, and that is §25.2 rather than an oversight: it has no
+    /// `[[ArrayBufferDetachKey]]`, so there is no operation that could ask for this. Every caller
+    /// refuses a shared buffer before it gets here, and taking the bytes away from one agent while
+    /// another was reading them is precisely what a block exists to make impossible.
     pub fn detach(&mut self) {
-        self.bytes = None;
+        if let Bytes::Own(bytes) = &mut self.bytes {
+            *bytes = None;
+        }
     }
 }
 

@@ -240,8 +240,7 @@ fn get_value(
     let Some(bytes) = heap
         .object(view.buffer)
         .and_then(crate::heap::Object::buffer)
-        .and_then(crate::heap::Buffer::bytes)
-        .map(|bytes| bytes[from..from + width].to_vec())
+        .and_then(|buffer| buffer.with_bytes(|bytes| Some(bytes?[from..from + width].to_vec())))
     else {
         return Err(Abrupt::type_error("this ArrayBuffer has been detached"));
     };
@@ -296,12 +295,15 @@ fn set_value(
         bytes.reverse();
     }
     let from = view.offset + at;
-    if let Some(target) = heap
+    if let Some(buffer) = heap
         .object_mut(view.buffer)
         .and_then(crate::heap::Object::buffer_mut)
-        .and_then(crate::heap::Buffer::bytes_mut)
     {
-        target[from..from + width].copy_from_slice(&bytes);
+        buffer.with_bytes_mut(|target| {
+            if let Some(target) = target.and_then(|target| target.get_mut(from..from + width)) {
+                target.copy_from_slice(&bytes);
+            }
+        });
     }
     // §25.3.1.2 step 15 — a write answers `undefined`, not the value written.
     Ok(Value::Undefined)

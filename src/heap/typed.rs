@@ -131,13 +131,17 @@ impl Heap {
         let Some(bytes) = element.write_numeric(value, clamped) else {
             return;
         };
-        if let Some(target) = self
+        if let Some(buffer) = self
             .object_mut(view.buffer)
             .and_then(super::Object::buffer_mut)
-            .and_then(super::Buffer::bytes_mut)
-            .and_then(|found| found.get_mut(from..from + element.width()))
         {
-            target.copy_from_slice(&bytes);
+            buffer.with_bytes_mut(|found| {
+                if let Some(target) =
+                    found.and_then(|found| found.get_mut(from..from + element.width()))
+                {
+                    target.copy_from_slice(&bytes);
+                }
+            });
         }
     }
 
@@ -280,14 +284,9 @@ impl Heap {
             return None;
         }
         let from = view.offset + at * element.width();
-        Some(
-            element.read(
-                self.object(view.buffer)?
-                    .buffer()?
-                    .bytes()?
-                    .get(from..from + element.width())?,
-            ),
-        )
+        self.object(view.buffer)?
+            .buffer()?
+            .with_bytes(|bytes| Some(element.read(bytes?.get(from..from + element.width())?)))
     }
 
     /// Where `key` points in this object, if it is a TypedArray and `key` is a numeric index.

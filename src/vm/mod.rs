@@ -211,18 +211,29 @@ pub(super) struct Handler {
     pub(super) environment: EnvironmentId,
 }
 
-/// §25.4.1.2's Waiter Record, for the one agent this engine has.
+/// §25.4.1.2's Waiter Record for a waiter that did **not** block, which is this agent's alone.
 ///
-/// **A waiter here is not a parked thread**, and that is why the list is worth keeping at all.
-/// `Atomics.waitAsync` does not block: the agent that parks a waiter carries straight on and may
-/// wake its *own* waiter with `Atomics.notify` a statement later. test262's
+/// **A waiter here is not a parked thread**, and that is the whole reason it is here rather than in
+/// the block. `Atomics.waitAsync` does not block: the agent that parks a waiter carries straight on
+/// and may wake its *own* waiter with `Atomics.notify` a statement later. test262's
 /// `undefined-for-timeout.js` does exactly that — four waits on an infinite timeout, then one
-/// notify — where a blocking `Atomics.wait` in a single agent could never be woken by anybody and
-/// is refused outright.
+/// notify. What it holds is a promise, and a promise is settled by running jobs on the machine that
+/// made it, so a waiter of this kind is only ever wakeable by the agent that parked it.
+///
+/// A **blocking** `Atomics.wait` parks in [`Block`](crate::heap::Block)'s list instead, where
+/// another agent can reach it. The two are §25.4.1's one list split by who is able to end the wait,
+/// and the seam shows in exactly one place: a notify counts both and cannot interleave them in
+/// arrival order. Nothing parks the two kinds on one position — an agent that can block uses `wait`
+/// and one that cannot uses `waitAsync` — and the alternative, one list holding promises another
+/// agent would have to settle, is a promise silently lost.
 pub(crate) struct Waiter {
-    /// The buffer holding the position. Two views over one buffer share a list.
-    pub(crate) buffer: crate::heap::ObjectId,
-    /// The **byte** offset in that buffer, so views of different element widths agree about
+    /// The block holding the position.
+    ///
+    /// The block and not the buffer *object*: §25.4.1 keys a list on the block, and an agent handed
+    /// the same memory twice has two objects over it. Keyed by object, a `waitAsync` through one
+    /// and a notify through the other would name the same bytes and miss each other.
+    pub(crate) block: crate::heap::Block,
+    /// The **byte** offset in that block, so views of different element widths agree about
     /// whether they name the same position — §25.4.1 keys a list on a block and a byte index, and
     /// an element index would make an `Int32Array`'s slot 1 miss a `BigInt64Array`'s slot 0.
     pub(crate) byte: usize,
@@ -341,6 +352,17 @@ pub struct Vm {
     /// it for a second meaning. Two counters would be two intervals that could drift apart, and
     /// the one nobody read would be the one that mattered.
     until_check: usize,
+    /// §9.7's `[[CanBlock]]` — whether this agent may be suspended, which is the host's to decide.
+    ///
+    /// **`false` until a host says otherwise**, and that default is a claim rather than caution: an
+    /// engine embedded on its own has no second agent, so an agent that suspended here could never
+    /// be woken and §25.4.3.14 step 12 is right to refuse. A browser's main thread answers exactly
+    /// the same way, which is what test262's `CanBlockIsFalse` flag exists to describe.
+    ///
+    /// A host that *does* start other agents sets this on the ones it starts and leaves it alone on
+    /// the one it started them from — turning it on everywhere would let the agent holding the
+    /// program park itself with nobody left running to notify it.
+    can_block: bool,
     /// How long a single [`Vm::run`] may take, if the host has said — DR-0022.
     ///
     /// A duration and not an instant, because the limit belongs to a *run*: an instant fixed once
@@ -467,6 +489,7 @@ impl Vm {
             floor: Floor::default(),
             references: Vec::new(),
             until_check: 0,
+            can_block: false,
             time_budget: None,
             // DR-0023 — **on**. An engine that cannot run `for (i = 0; i < 1e6; i++) s = f(i)` is
             // not one anybody can embed, and that loop reached DR-0013's budget at about 900,000
@@ -1144,15 +1167,25 @@ impl Vm {
     ///
     /// `root` is the chunk being run, which the machine does not hold: it is lent to `run` and its
     /// constants are the Strings the outermost code is about to use.
+    /// §9.7's `[[CanBlock]]` for this agent — see the field for why it starts `false`.
+    pub(crate) fn can_block(&self) -> bool {
+        self.can_block
+    }
+
+    /// Say whether this agent may be suspended, which only a host that started it knows.
+    pub(crate) fn set_can_block(&mut self, can: bool) {
+        self.can_block = can;
+    }
+
     /// §25.4.1.5 `AddWaiter` — park a `waitAsync`'s promise on a position for a later notify.
     pub(crate) fn park_waiter(
         &mut self,
-        buffer: crate::heap::ObjectId,
+        block: crate::heap::Block,
         byte: usize,
         capability: crate::heap::Capability,
     ) {
         self.waiters.push(Waiter {
-            buffer,
+            block,
             byte,
             capability,
         });
@@ -1170,14 +1203,14 @@ impl Vm {
     /// large number that happens to exceed the list.
     pub(crate) fn take_waiters(
         &mut self,
-        buffer: crate::heap::ObjectId,
+        block: &crate::heap::Block,
         byte: usize,
         count: f64,
     ) -> Vec<crate::heap::Capability> {
         let mut taken = Vec::new();
         let mut left = count;
         self.waiters.retain(|waiter| {
-            if left > 0.0 && waiter.buffer == buffer && waiter.byte == byte {
+            if left > 0.0 && waiter.block.is(block) && waiter.byte == byte {
                 taken.push(waiter.capability);
                 left -= 1.0;
                 return false;

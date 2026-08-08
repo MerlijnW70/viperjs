@@ -387,7 +387,7 @@ fn transfer_kind(
         .object_mut(object)
         .and_then(crate::heap::Object::buffer_mut)
         .and_then(|found| {
-            let bytes = found.bytes()?.to_vec();
+            let bytes = found.with_bytes(|bytes| Some(bytes?.to_vec()))?;
             found.detach();
             Some(bytes)
         });
@@ -409,12 +409,15 @@ fn transfer_kind(
     let max = max.map(|max| max.max(bytes.len()));
     let made = allocate(heap, vm.realm().array_buffer_prototype(), bytes.len(), max)?;
     if let Value::Object(id) = made
-        && let Some(target) = heap
+        && let Some(buffer) = heap
             .object_mut(id)
             .and_then(crate::heap::Object::buffer_mut)
-            .and_then(crate::heap::Buffer::bytes_mut)
     {
-        target.copy_from_slice(&bytes);
+        buffer.with_bytes_mut(|target| {
+            if let Some(target) = target {
+                target.copy_from_slice(&bytes);
+            }
+        });
     }
     Ok(made)
 }
@@ -477,25 +480,29 @@ fn slice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
     let Some(source) = heap
         .object(object)
         .and_then(crate::heap::Object::buffer)
-        .and_then(crate::heap::Buffer::bytes)
         // `from + taken` and not `to`, because §25.1.5.3 step 7's length is `max(final - first, 0)`
         // — the two ends are clamped independently, so `slice(4, 2)` is an *empty* slice and not a
         // backwards one. Written as a range from the two ends it is `bytes[4..2]`, which panics.
-        .map(|bytes| {
-            let start = from.min(bytes.len());
-            bytes[start..(start + taken).min(bytes.len())].to_vec()
+        .and_then(|buffer| {
+            buffer.with_bytes(|bytes| {
+                let bytes = bytes?;
+                let start = from.min(bytes.len());
+                Some(bytes[start..(start + taken).min(bytes.len())].to_vec())
+            })
         })
     else {
         return Err(Abrupt::type_error("this ArrayBuffer has been detached"));
     };
     if let Value::Object(id) = made
-        && let Some(target) = heap
+        && let Some(buffer) = heap
             .object_mut(id)
             .and_then(crate::heap::Object::buffer_mut)
-            .and_then(crate::heap::Buffer::bytes_mut)
-            .and_then(|bytes| bytes.get_mut(..source.len()))
     {
-        target.copy_from_slice(&source);
+        buffer.with_bytes_mut(|bytes| {
+            if let Some(target) = bytes.and_then(|bytes| bytes.get_mut(..source.len())) {
+                target.copy_from_slice(&source);
+            }
+        });
     }
     Ok(made)
 }

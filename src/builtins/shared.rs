@@ -1,17 +1,19 @@
 //! §25.2's `SharedArrayBuffer` and §25.4's `Atomics`.
 //!
-//! # What "shared" means to an engine with one agent
+//! # What "shared" means
 //!
-//! Two things, and neither is about threads. A `SharedArrayBuffer` **cannot be detached** — §25.2
-//! gives it no `[[ArrayBufferDetachKey]]` and no `transfer`, so its bytes are there for as long as
-//! anything can name it. And it is a different **brand**: `ArrayBuffer.prototype.byteLength`
-//! requires an unshared buffer and `SharedArrayBuffer.prototype.byteLength` a shared one, so
-//! neither answers about the other however alike the bytes are.
+//! Three things. A `SharedArrayBuffer` **cannot be detached** — §25.2 gives it no
+//! `[[ArrayBufferDetachKey]]` and no `transfer`, so its bytes are there for as long as anything can
+//! name it. It is a different **brand**: `ArrayBuffer.prototype.byteLength` requires an unshared
+//! buffer and `SharedArrayBuffer.prototype.byteLength` a shared one, so neither answers about the
+//! other however alike the bytes are. And its bytes are a [`Block`](crate::heap::Block): one
+//! allocation that **more than one agent** may hold, which is the part that was missing here until
+//! a host could start a second agent to hold it with.
 //!
-//! ViperJS runs one agent, so the memory model of §25.4.1 has nothing to order: every operation is
-//! already the only one happening. That does **not** make `Atomics` decorative — the operations
-//! have arithmetic and coercion of their own, they refuse the wrong element kinds, and they read
-//! and write in ways `ta[i]` does not.
+//! An engine embedded on its own still runs one agent, and for that one the memory model of
+//! §25.4.1 has nothing to order. That never made `Atomics` decorative — the operations have
+//! arithmetic and coercion of their own, they refuse the wrong element kinds, and they read and
+//! write in ways `ta[i]` does not — but it did make the sharing notional, and it is not any more.
 //!
 //! # Why `Atomics` accepts an ordinary `ArrayBuffer`
 //!
@@ -19,27 +21,34 @@
 //! shared one. §25.4.3's `ValidateIntegerTypedArray` asks about the *element kind* rather than
 //! about sharing, which is the check these actually make.
 //!
-//! # Waiting with one agent, where blocking and not blocking come apart
+//! # Waiting, where blocking and not blocking come apart
 //!
-//! The three waiting operations do not share a fate here, and the line between them is whether
-//! the agent has to stop.
+//! The three waiting operations do not share a fate, and the line between them is whether the agent
+//! has to stop.
 //!
-//! [`wait`] throws a TypeError, always. DoWait step 12 asks `AgentCanSuspend()` and this agent
-//! cannot: with no second agent, one that suspended could never be woken by anybody. A browser's
-//! main thread answers the same way, which is what test262's `CanBlockIsFalse` flag is for.
+//! [`wait`] asks §9.7's `[[CanBlock]]` — DoWait step 12's `AgentCanSuspend()` — and that is the
+//! **host's** answer rather than this module's. An engine embedded on its own says no: with nothing
+//! else running, an agent that suspended could never be woken by anybody, which is why a browser's
+//! main thread refuses too and what test262's `CanBlockIsFalse` flag describes. An agent a host
+//! *started* says yes, and for it this parks the thread in the block's waiter list until a notify
+//! from another agent or the timeout ends it.
 //!
-//! [`wait_async`] **works**, and that is not a contradiction — it never suspends anything. The
-//! agent parks a promise and carries straight on, so it can reach [`notify`] a statement later and
-//! wake its *own* waiter. test262's `undefined-for-timeout.js` is exactly that program. So
-//! `Vm::waiters` is a real §25.4.1 waiter list rather than a formality, and `notify` answers how
-//! many it woke.
+//! [`wait_async`] never suspends anything, whatever the host said. The agent parks a promise and
+//! carries straight on, so it can reach [`notify`] a statement later and wake its *own* waiter.
+//! test262's `undefined-for-timeout.js` is exactly that program.
 //!
-//! **One case is out of reach and it is worth naming precisely** — DR-0024: a waiter with a
-//! *finite, non-zero* timeout that nothing notifies should settle `"timed-out"` when the timeout
-//! elapses, and there is no timer here to elapse it, so it stays parked. A timeout of zero is
-//! answered immediately without a promise, and a notify settles a waiter whatever its timeout was,
-//! so the gap is one shape rather than the feature. The record says what would close it and why
-//! the three obvious fakes are each worse than the gap.
+//! **Which is why there are two waiter lists, and it is worth being precise about the seam.** A
+//! blocking waiter is a parked thread and lives in the block, where any agent can take it off the
+//! list. An asynchronous one is a promise, and a promise can only be settled by running jobs on the
+//! machine that made it — so it lives on that `Vm` and no other agent can reach it. [`notify`]
+//! empties both and adds the counts. What it cannot do is interleave them in arrival order, and
+//! what it cannot do at all is settle *another* agent's parked promise.
+//!
+//! **DR-0024's gap has narrowed to the asynchronous half.** A blocking wait times out now, because
+//! a parked thread has a clock to be woken by. A `waitAsync` with a finite, non-zero timeout that
+//! nothing notifies still stays parked, because settling it needs a job to run at a moment and the
+//! queue has no notion of one. A timeout of zero is answered immediately without a promise, and a
+//! notify settles a waiter whatever its timeout was, so what is left is that one shape.
 //!
 //! Around all three sits the part a test mostly measures: the *waitable* kind check ([`Kinds`]),
 //! which admits `Int32Array` and `BigInt64Array` alone, the index, and the conversions of the
@@ -47,7 +56,9 @@
 //! run in the clause's order.
 
 use super::{define_method, define_value, key};
-use crate::heap::{Element, Heap, Native, NativeCall, Numeric, ObjectId, PropertyDescriptor, View};
+use crate::heap::{
+    Element, Heap, Native, NativeCall, Numeric, ObjectId, PropertyDescriptor, View, Wait,
+};
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
 use crate::vm::Vm;
@@ -235,19 +246,27 @@ fn slice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
     let bytes = heap
         .object(object)
         .and_then(crate::heap::Object::buffer)
-        .and_then(crate::heap::Buffer::bytes)
-        .map(|found| {
-            let from = (start as usize).min(found.len());
-            found[from..(from + taken).min(found.len())].to_vec()
+        .map(|buffer| {
+            buffer.with_bytes(|found| {
+                let Some(found) = found else {
+                    return Vec::new();
+                };
+                let from = (start as usize).min(found.len());
+                found[from..(from + taken).min(found.len())].to_vec()
+            })
         })
         .unwrap_or_default();
-    if let Some(target) = heap
+    // Two blocks and never one — step 14 refused a species that answered the receiver — so the
+    // write below takes a second lock and the read above has already let go of the first.
+    if let Some(buffer) = heap
         .object_mut(id)
         .and_then(crate::heap::Object::buffer_mut)
-        .and_then(crate::heap::Buffer::bytes_mut)
-        .and_then(|found| found.get_mut(..bytes.len()))
     {
-        target.copy_from_slice(&bytes);
+        buffer.with_bytes_mut(|found| {
+            if let Some(target) = found.and_then(|found| found.get_mut(..bytes.len())) {
+                target.copy_from_slice(&bytes);
+            }
+        });
     }
     Ok(made)
 }
@@ -524,20 +543,37 @@ fn notify(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Val
     };
     // Step 7 — a buffer nobody else can reach can have nothing waiting on it. Asked after the
     // count, because the count's conversion is a step the program can see and this is not an error.
-    if !heap
+    let Some(block) = heap
         .object(view.buffer)
         .and_then(crate::heap::Object::buffer)
-        .is_some_and(crate::heap::Buffer::shared)
-    {
+        .and_then(crate::heap::Buffer::block)
+        .cloned()
+    else {
         return Ok(Value::Number(0.0));
-    }
-    let woken = vm.take_waiters(view.buffer, view.offset + at * element.width(), count);
-    let total = woken.len();
+    };
+    let byte = view.offset + at * element.width();
+    // Both halves of §25.4.1's list, and the parked threads go first because they are the ones
+    // another agent is waiting on: a `notify(…, 1)` that spent its one wake on a promise this agent
+    // will settle at its leisure, while a thread in another agent stayed parked, would be a count
+    // that is right and a program that hangs.
+    let parked = block.notify(byte, count_of(count));
+    let woken = vm.take_waiters(&block, byte, count - parked as f64);
+    let total = parked + woken.len();
     let ok = super::text(heap, "ok");
     for capability in woken {
         vm.settle_capability(capability, crate::heap::ReactionKind::Fulfil, ok, heap)?;
     }
     Ok(Value::Number(total as f64))
+}
+
+/// §25.4.3.7's count as a number of waiters, which is a saturation and not a conversion.
+///
+/// The count is an `f64` because step 3 makes a missing one **+∞**, and `usize` has no such value —
+/// so "all of them" becomes "more than any list will hold". `as` saturates rather than wrapping,
+/// which is what makes that true rather than merely likely, and the caller has already clamped the
+/// value to zero or above so there is no negative to consider.
+fn count_of(count: f64) -> usize {
+    count as usize
 }
 
 /// §25.4.3.15 `Atomics.waitAsync(typedArray, index, value, timeout)` — DoWait in `async` mode.
@@ -583,9 +619,17 @@ fn wait_async(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
     let (asynchronous, value) = match settled {
         Some(answer) => (false, super::text(heap, answer)),
         None => {
+            let Some(block) = heap
+                .object(view.buffer)
+                .and_then(crate::heap::Object::buffer)
+                .and_then(crate::heap::Buffer::block)
+                .cloned()
+            else {
+                return Err(Abrupt::type_error("this is not a SharedArrayBuffer"));
+            };
             let capability = vm.intrinsic_capability(heap);
             let promise = capability.promise;
-            vm.park_waiter(view.buffer, view.offset + at * element.width(), capability);
+            vm.park_waiter(block, view.offset + at * element.width(), capability);
             (true, promise)
         }
     };
@@ -594,28 +638,74 @@ fn wait_async(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
     Ok(Value::Object(outcome))
 }
 
-/// §25.4.3.14 `Atomics.wait(typedArray, index, value, timeout)`.
+/// §25.4.3.14 `Atomics.wait(typedArray, index, value, timeout)` — DoWait in synchronous mode.
 ///
-/// Throws a TypeError, always — and this is a conformant answer rather than a gap. DoWait step 12
-/// asks `AgentCanSuspend()`, and ViperJS's agent cannot: there is no second agent to notify it, so
-/// an agent that suspended here would never be woken by anything. A browser's main thread answers
-/// the same way for the same reason, which is what test262's `CanBlockIsFalse` flag exists to say.
+/// **Whether this throws is the host's answer and not the engine's.** DoWait step 12 asks
+/// `AgentCanSuspend()`, which is §9.7's `[[CanBlock]]`, and an engine embedded on its own answers
+/// `false`: with nothing else running, an agent that suspended here could never be woken. A
+/// browser's main thread refuses for the same reason, and that is what test262's `CanBlockIsFalse`
+/// flag describes. A host that starts other agents turns [`Vm::set_can_block`] on for the ones it
+/// starts, and for those this parks the thread until a notify or the timeout ends it.
 ///
-/// **The four arguments are still converted first**, and that is the whole of what a test can see.
+/// **The four arguments are converted first either way**, and that is most of what a test can see.
 /// Steps 1 to 11 validate the array, the index, the value and the timeout in that order, so
 /// `Atomics.wait(new Float64Array(4), 0, 0, 0)` is refused for its *kind* and never reaches the
 /// suspend check, while `Atomics.wait(i32a, 0, 0, {valueOf(){ throw new Error() }})` throws the
 /// program's own error rather than this one.
+///
+/// The comparison against `value` is **not** made here. It belongs inside the block's critical
+/// section — see [`Block::wait`] — because reading the slot and joining the waiter list have to be
+/// one step: between them, another agent could store the new value and notify, and this agent would
+/// then park waiting for a wake that had already happened.
 fn wait(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let (_, element, _) = target(vm, heap, call, Kinds::SharedWaitable)?;
+    let (view, element, at) = target(vm, heap, call, Kinds::SharedWaitable)?;
     // Step 10 — the same `ToBigInt`/`ToNumber` split the arithmetic operations make, for the same
     // reason: the comparison is against a stored bit pattern, so the value has to become one.
-    let _ = vm.to_numeric(element.holds_big(), call.argument(2), heap)?;
+    let expected = vm.to_numeric(element.holds_big(), call.argument(2), heap)?;
     // Step 11 — `ToNumber` and not `ToIndex`: a timeout is a duration and `-1` is not an error, it
     // is `max(q, 0)`. NaN is +∞ rather than 0, which is the reverse of what `ToIndex` would give
     // and is why `Atomics.wait(i32a, 0, 0, undefined)` waits for ever rather than not at all.
-    let _ = vm.to_number(call.argument(3), heap)?;
-    Err(Abrupt::type_error("this agent cannot be suspended"))
+    let timeout = vm.to_number(call.argument(3), heap)?;
+    // Step 12, and it is asked **after** both conversions, so a poisoned `valueOf` on either throws
+    // the program's own error on a host that refuses to block as well as on one that does not.
+    if !vm.can_block() {
+        return Err(Abrupt::type_error("this agent cannot be suspended"));
+    }
+    let Some(block) = heap
+        .object(view.buffer)
+        .and_then(crate::heap::Object::buffer)
+        .and_then(crate::heap::Buffer::block)
+        .cloned()
+    else {
+        return Err(Abrupt::type_error("this is not a SharedArrayBuffer"));
+    };
+    // The same encoding step 17 makes for `waitAsync`: the comparison is against the value as this
+    // element kind *stores* it, so an expectation past the width matches the bits it would land as.
+    // The `Option` cannot be an absence, because the conversion above was chosen by this same kind
+    // — and were it ever one, a value no slot can hold is a value the slot does not hold, which
+    // ends the wait at once rather than parking a thread on a comparison that can never be made.
+    let outcome = match element.write_numeric(&expected, false) {
+        None => Wait::NotEqual,
+        Some(expected) => block.wait(
+            view.offset + at * element.width(),
+            &expected,
+            duration_of(timeout),
+        ),
+    };
+    Ok(super::text(heap, outcome.name()))
+}
+
+/// §25.4.3.14 step 11's timeout as a duration — `None` for the infinite wait.
+///
+/// NaN and infinity are the same answer here — step 11 maps NaN to `+∞` — and a negative timeout is
+/// zero, because `t` is `max(q, 0)`. What is left is a finite non-negative number of milliseconds,
+/// and building a duration from one fails only when it is too large to represent. A wait longer than
+/// the clock can name is the infinite one rather than an error, so that failure is `None` too.
+fn duration_of(timeout: f64) -> Option<std::time::Duration> {
+    match timeout.is_nan() || timeout.is_infinite() {
+        true => None,
+        false => std::time::Duration::try_from_secs_f64(timeout.max(0.0) / 1000.0).ok(),
+    }
 }
 
 /// §25.4.3.8 `Atomics.isLockFree`.
