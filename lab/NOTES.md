@@ -113,8 +113,9 @@ machine every other number in this file came from.
 
 - **A prototype level costs ~8 ns** and is linear in the depth. That is the largest per-unit cost
   found, and it is what every method call on a class instance pays — `o.m()` on a two-deep hierarchy
-  is +14 before the call starts. A per-object cache of "where this name was last found in my chain"
-  is a much smaller change than shapes and addresses the one measurement that scales.
+  is +14 before the call starts. **This was then recommended as the next slice and measured DEAD the
+  same day — see the follow-up below.** The trend is real and the cause is memory rather than work,
+  which no table of this kind can distinguish.
 - **A miss costs +21 ns and all of it is the walk**: the same miss on an `Object.create(null)` costs
   nothing at all. So a defaulting read is priced by the chain and not by the miss.
 - **The baseline is the lever, and it is not a lookup at all.** A read is 176 ns where an empty loop
@@ -127,6 +128,47 @@ inflate a result rather than break it: measuring at **script top level**, where 
 properties of the global object and the yardstick reads 645 ns instead of 176; and a yardstick that
 did not carry the `===` and the `?:` its own comparison row carried, which made a miss look like
 +114 ns rather than +21.
+
+### Follow-up the same day: the prototype walk is DEAD too, and the recommendation was mine
+
+The verdict above named the prototype chain as the one measured cost that scales — ~8 ns a level,
+linear — and recommended it as the next slice. **Measured, it is not a slice.** Two structural
+suspects, both eliminated by short-circuiting them and re-running rather than by reasoning:
+
+| probe | proto-1 | proto-2 | proto-4 |
+| --- | --- | --- | --- |
+| as it is | +6 | +14 | +33 |
+| `is_namespace` forced to `false` | +7 | +18 | +34 |
+| a direct table fast path *before* every exotic check | +6 | +14 | +36 |
+
+- **`is_namespace` is a `HashMap` probe on every chain level of every property read in the language,
+  and it costs nothing.** The table is empty in any program that imports no modules, and an empty
+  `HashMap` answers before it hashes. That looked like the find of the day for about ten minutes:
+  a side-table probe on the hottest path in the engine, with a free fix. **A structure being wrong
+  in principle is not the same as it being slow, and only one of those is worth a commit.**
+- **Skipping every exotic check does not help either.** A fast path that reads the table directly —
+  no namespace, no view, no String object, no arguments map — leaves all three deltas where they
+  were. So the per-level cost is not the *checks* and not the *lookup*.
+
+**What is left is the walk itself: a different object fetched out of the arena at each level.** An
+`Object` is around a hundred bytes, so four levels is four cache lines, and the only way to remove
+that cost is to not walk — a cache. Which is where this ends: a per-object or per-site memory of
+where a name was last found has a **wrong-value** failure mode (a stale entry answers a value rather
+than an error) and an invalidation surface covering `[[Set]]`, `delete`, `Object.setPrototypeOf`,
+`__proto__`, `defineProperty` and any Proxy in the chain — against a ceiling of **+6 ns on the
+one-level chain that real code actually has**, which is 3% of a 176 ns read.
+
+**Verdict: DEAD, and the same shape as the row above it.** Both of the property path's remaining
+"next levers" turn out to be memory locality wearing a name that suggests an algorithm. The
+measurable lever left is the one neither experiment touched: a read is 176 ns where an empty loop is
+~122, so **the dispatch is the term, not the lookup**.
+
+**And the recommendation that opened this section was mine, made from this file's own table.** It
+was drawn from the one axis that showed a clean linear trend, which is exactly the shape that
+invites an algorithmic fix — and the trend was real while the cause was not. A cost that is linear
+in a count can be linear because of the work per item *or* because of the memory per item, and the
+table cannot tell those apart. **Short-circuit the suspect and re-run; it takes two minutes and it
+is the only thing that can.**
 
 ---
 
