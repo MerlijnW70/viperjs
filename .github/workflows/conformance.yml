@@ -31,9 +31,11 @@ jobs:
   test262:
     name: test262 ratchet
     runs-on: ubuntu-latest
-    # Measured rather than guessed: 576 s at two workers on the development machine, with zero
-    # regressions. A hosted runner is slower per core, so this is roughly three times the measured
-    # figure and is a backstop against a hang rather than a target.
+    # Measured on both machines rather than guessed: 576 s at two workers on the development
+    # machine and **943 s here**, so a hosted runner is 1.6× slower per core rather than the three
+    # times this comment first assumed. The limit is a backstop against a hang and not a target —
+    # nearly three times the measured figure, which leaves room for a slower runner generation
+    # without leaving a genuinely stuck job running for an hour.
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
@@ -70,7 +72,10 @@ jobs:
       # ten *for this workflow*: at ten, four scenarios sat exactly on the line and crossed it in
       # both directions between consecutive runs of one unchanged commit. They were the only
       # timing-bound entries in the expectations file and they now pass, so the file names no
-      # time at all and this job can answer the same way twice.
+      # time at all and this job can answer the same way twice. It does: the first run of this
+      # workflow reported 79,829 passed, which is what the development machine reported, to the
+      # test — a ratchet that agrees across two machines with different core counts is one a gate
+      # can be built on.
       - name: run the suite and judge the ratchet
         run: |
           ./target/release/conformance \
@@ -119,7 +124,7 @@ jobs:
 
       - name: keep the log
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: conformance-log
           path: ${{ runner.temp }}/conformance.log
