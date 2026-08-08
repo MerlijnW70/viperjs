@@ -38,14 +38,73 @@ use crate::value::{Value, canonical_numeric_index};
 /// turn: a Symbol key is invisible to `for`-`in`, to `Object.keys` and to
 /// `getOwnPropertyNames`, it sorts after every String in `[[OwnPropertyKeys]]`, and it cannot be
 /// spelled. Every caller that takes a key apart therefore has to say what it does about a Symbol,
-/// which is what the enum is for — [`PropertyKey::as_string`] answers `None` rather than a String
+/// which is what the enum is for — [`PropertyKey::spelling`] answers `None` rather than a String
 /// that is not there.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum PropertyKey {
-    /// An interned String — the ordinary kind, and every key that can be written down.
+    /// §6.1.7's **array index** — a key whose spelling is the canonical decimal of an integer in
+    /// `[+0, 2^32 - 2]`, held as the number rather than as text.
+    ///
+    /// Not a third kind of key: §6.1.7 has two, and an array index is a String that happens to
+    /// spell one. This variant is a *representation* of some of those Strings, and it is
+    /// **canonical** — [`index_of`] decides, and every constructor asks it, so `a[0]` and `a["0"]`
+    /// are one key by construction. Two representations of one key would put two entries in every
+    /// table keyed on this, and the failure would be a duplicate rather than an error. DR-0026.
+    ///
+    /// What it buys is the round trip it removes: `a[i] = v` cost +196 ns over a fixed index,
+    /// spent turning a Number into decimal text, encoding that to UTF-16, interning it, and then
+    /// reading the units back to decode them into the `u32` the element store wanted.
+    Index(u32),
+    /// An interned String — every key that is not an array index and can be written down.
     String(StringId),
     /// A Symbol, which is its own identity and equal to nothing else.
     Symbol(SymbolId),
+}
+
+/// The largest index there is — §6.1.7's array index is strictly below `2^32 - 1`.
+///
+/// Not `2^32`: the last value is reserved so that an Array's `length` always fits in a `u32`. An
+/// object may hold a property named `"4294967295"`; it simply is not an *index*, and writing it
+/// does not move `length`. Lives here since DR-0026, beside the one predicate that applies it.
+pub(crate) const MAX_INDEX: u32 = u32::MAX - 1;
+
+/// The array index `units` spells, if they spell one — §6.1.7, `[+0, 2^32 - 2]`.
+///
+/// **The single definition of "array index" in the engine**, and deliberately so: the general
+/// answer is `crate::value::canonical_numeric_index`, which parses a float and writes it back to
+/// check the spelling round-trips, and putting that on every property access would cost more than
+/// the representation saves. This is the same question asked of at most ten ASCII digits.
+///
+/// One definition rather than two because two drift, and
+/// `the_cheap_index_test_agrees_with_the_general_one` is what holds them together — it walks a
+/// corpus of the shapes that separate them and asserts the two answers match.
+///
+/// `"01"`, `"1.0"`, `" 1"`, `"-0"`, `"1e2"` and `"+1"` are **not** indices. They are ordinary
+/// property names on an array and do not touch its `length`, because §6.1.7 asks for
+/// `ToString(ToUint32(P))` to *be* `P` and none of them writes back as itself. `"4294967295"` is
+/// not one either: it is the largest value `length` may take, so an array that could hold it as an
+/// element could not describe its own length.
+#[must_use]
+pub fn index_of(units: &[u16]) -> Option<u32> {
+    // Ten digits is the widest `2^32 - 2` can be written in, so anything longer is out before a
+    // single digit is read. The empty String is a key and is not an index.
+    if units.is_empty() || units.len() > 10 {
+        return None;
+    }
+    // A leading zero is only canonical when it is the whole of it: `"0"` is an index and `"01"`
+    // and `"0.5"` are names. This is the rule that makes the spelling unique.
+    if units[0] == u16::from(b'0') {
+        return (units.len() == 1).then_some(0);
+    }
+    let mut value = 0_u64;
+    for unit in units {
+        let digit = u64::from(*unit).checked_sub(u64::from(b'0'))?;
+        if digit > 9 {
+            return None;
+        }
+        value = value * 10 + digit;
+    }
+    (value <= u64::from(MAX_INDEX)).then_some(value as u32)
 }
 
 impl PropertyKey {
@@ -55,7 +114,22 @@ impl PropertyKey {
     /// key, the empty one included — §6.1.7 says so in as many words, and `o[""]` is a property
     /// like any other.
     pub fn from_units(heap: &mut Heap, units: &[u16]) -> Self {
-        Self::String(heap.intern(units))
+        // Asked before interning, so an index never reaches the table at all — which is most of
+        // what this representation is for, and is why the check is a digit scan rather than
+        // §7.1.21's float round trip.
+        match index_of(units) {
+            Some(index) => Self::Index(index),
+            None => Self::String(heap.intern(units)),
+        }
+    }
+
+    /// The key an array index names, with no text made at all — DR-0026's fast path.
+    ///
+    /// What `ToPropertyKey` of a non-negative integral Number below `2^32 - 1` answers, and the
+    /// whole of the saving: a cast where the old path spelled the number, encoded it and hashed it.
+    #[must_use]
+    pub fn from_index(index: u32) -> Self {
+        Self::Index(index)
     }
 
     /// The key a Symbol is used as — the other half of `ToPropertyKey` (§7.1.19 step 3).
@@ -73,39 +147,89 @@ impl PropertyKey {
     /// operations that reach user code; this is the step underneath, and it is the only one that
     /// concerns the heap.
     pub fn from_string(heap: &mut Heap, id: StringId) -> Self {
-        Self::String(heap.intern_id(id))
+        // Read before interning for the reason `from_units` gives. `heap.string` cannot fail for a
+        // handle the heap made, and a `None` here would be a key with no units — which is not a
+        // state to invent a case for, so it takes the String path and the handle stands for itself.
+        match heap.string(id).and_then(index_of) {
+            Some(index) => Self::Index(index),
+            None => Self::String(heap.intern_id(id)),
+        }
     }
 
-    /// The Value that names this key — the inverse of §7.1.19, which needs no conversion.
+    /// The Value that names this key — the inverse of §7.1.19.
     ///
-    /// A key is a String or a Symbol and both are Values already, so this loses nothing and
-    /// `ToPropertyKey` of what comes back is the key it came from. That round trip is what lets a
-    /// settled key be left on the operand stack for a later instruction to use.
-    #[must_use]
-    pub fn to_value(self) -> crate::value::Value {
+    /// An index is spelled here rather than where it was made, which is the trade DR-0026 makes:
+    /// an element is accessed per element and a key is spelled per enumeration, so the interning
+    /// moves to the rarer of the two. `ToPropertyKey` of what comes back is the key it came from.
+    pub fn to_value(self, heap: &mut Heap) -> crate::value::Value {
         match self {
+            Self::Index(index) => crate::value::Value::String(spell(heap, index)),
             Self::String(id) => crate::value::Value::String(id),
             Self::Symbol(id) => crate::value::Value::Symbol(id),
         }
     }
 
-    /// The String this key is, if it is one.
+    /// The String this key is spelled as — `None` only for a Symbol.
     ///
-    /// `None` for a Symbol, and every caller has to say what it does about that — which is the
-    /// point. A key that cannot be spelled is not a key `for`-`in` yields, nor one `Object.keys`
-    /// lists, nor one a message can name.
-    pub fn as_string(self) -> Option<StringId> {
+    /// Takes the heap because an index has no text until something asks: `for`-`in` yields `"0"`
+    /// and not `0`, and so do `Object.keys` and every message that names a key.
+    ///
+    /// **Replaces the old `as_string`, which took no heap and could not have answered.** The three
+    /// questions it used to serve are separate now and each has its own name: this one is "spell
+    /// it", [`PropertyKey::is_spellable`] is "could it be spelled", and [`PropertyKey::spells`] is
+    /// "is it spelled *this*" — the last two taking only a `&Heap`, because neither is a reason to
+    /// add a String to it.
+    pub fn spelling(self, heap: &mut Heap) -> Option<StringId> {
         match self {
+            Self::Index(index) => Some(spell(heap, index)),
             Self::String(id) => Some(id),
             Self::Symbol(_) => None,
         }
+    }
+
+    /// Whether this key is spelled exactly `units`.
+    ///
+    /// The comparison a caller with only a `&Heap` can make: spelling an index would intern, and a
+    /// lookup has no business adding a String to the heap. Total, and it answers the same question
+    /// equality would — a key is canonical, so it spells `units` exactly when it *is* the key
+    /// `units` names.
+    #[must_use]
+    pub fn spells(self, heap: &Heap, units: &[u16]) -> bool {
+        match self {
+            Self::Index(index) => index_of(units) == Some(index),
+            Self::String(id) => heap.string(id) == Some(units),
+            Self::Symbol(_) => false,
+        }
+    }
+
+    /// This key as text, for a message — `None` for a Symbol.
+    ///
+    /// Takes only a `&Heap` because a message is not a reason to intern anything, and an index is
+    /// formatted rather than spelled. Lossy for a String holding an unpaired surrogate, which is
+    /// what a message wants: a name that cannot be written is better shown as U+FFFD than withheld.
+    #[must_use]
+    pub fn describe(self, heap: &Heap) -> Option<String> {
+        match self {
+            Self::Index(index) => Some(index.to_string()),
+            Self::String(id) => heap.string(id).map(String::from_utf16_lossy),
+            Self::Symbol(_) => None,
+        }
+    }
+
+    /// Whether this key can be spelled — every key but a Symbol.
+    ///
+    /// The half of the old `as_string` that was a *type* question rather than a request for text,
+    /// and it needs no heap. `for`-`in`, `Object.keys` and `getOwnPropertyNames` all ask it.
+    #[must_use]
+    pub fn is_spellable(self) -> bool {
+        !matches!(self, Self::Symbol(_))
     }
 
     /// The Symbol this key is, if it is one.
     pub fn as_symbol(self) -> Option<SymbolId> {
         match self {
             Self::Symbol(id) => Some(id),
-            Self::String(_) => None,
+            Self::Index(_) | Self::String(_) => None,
         }
     }
 
@@ -118,12 +242,14 @@ impl PropertyKey {
     /// `"-0"` is not an index. It is a canonical numeric String — §7.1.21 gives it a step of its
     /// own — and it is still not an index, because the interval starts at `+0` and `-0` is not in
     /// it. `a["-0"]` is a named property, and that is observable.
-    pub fn as_array_index(self, heap: &Heap) -> Option<u32> {
-        // A Symbol is no index and never will be, and falls out through `as_integer_index`.
-        let index = self.as_integer_index(heap)?;
-        // `2^32 - 2` is the last index; `as` cannot lose anything after the comparison, since the
-        // value is an integer already inside `u32`'s range.
-        (index <= f64::from(u32::MAX - 1)).then_some(index as u32)
+    ///
+    /// **Takes no heap since DR-0026**, and that is the measurement rather than tidiness: this used
+    /// to read the units back out of the heap and decode ten digits, at every element access.
+    pub fn as_array_index(self) -> Option<u32> {
+        match self {
+            Self::Index(index) => Some(index),
+            Self::String(_) | Self::Symbol(_) => None,
+        }
     }
 
     /// The integer index this key is, if it is one — §6.1.7, `[+0, 2^53 - 1]`.
@@ -133,7 +259,14 @@ impl PropertyKey {
     /// exactly representable and the next integer is not, which is the whole reason the bound is
     /// there.
     pub fn as_integer_index(self, heap: &Heap) -> Option<f64> {
-        let units = heap.string(self.as_string()?)?;
+        // Wider than an array index, so an `Index` answers straight away and a String may still be
+        // one: `"4294967295"` and `"9007199254740991"` are integer indices and are not array ones.
+        let id = match self {
+            Self::Index(index) => return Some(f64::from(index)),
+            Self::String(id) => id,
+            Self::Symbol(_) => return None,
+        };
+        let units = heap.string(id)?;
         let index = canonical_numeric_index(units)?;
         // "an integral Number in the inclusive interval from +0 to 2^53 - 1", in three tests.
         //
@@ -144,6 +277,27 @@ impl PropertyKey {
         let integral = index.fract() == 0.0;
         (integral && index.is_sign_positive() && index <= 9_007_199_254_740_991.0).then_some(index)
     }
+}
+
+/// The text an array index is spelled with, interned.
+///
+/// One place, so the spelling an `Index` answers with is the spelling `from_units` would have
+/// turned back into that same `Index` — which is the round trip the canonical rule promises.
+/// `itoa` by hand rather than `format!` because this is on `for`-`in`'s path and a `u32` has at
+/// most ten digits.
+fn spell(heap: &mut Heap, index: u32) -> StringId {
+    let mut digits = [0_u16; 10];
+    let mut at = digits.len();
+    let mut value = index;
+    loop {
+        at -= 1;
+        digits[at] = u16::from(b'0') + u16::try_from(value % 10).unwrap_or(0);
+        value /= 10;
+        if value == 0 {
+            break;
+        }
+    }
+    heap.intern(&digits[at..])
 }
 
 /// What an object stores under a key — §6.1.7.1's four attributes, all present.
@@ -341,12 +495,12 @@ mod tests {
         let written = key(&mut heap, "a");
         let read = key(&mut heap, "a");
         assert_eq!(written, read);
-        assert_eq!(written.as_string(), read.as_string());
+        assert_eq!(written.spelling(&mut heap), read.spelling(&mut heap));
         assert_ne!(written, key(&mut heap, "b"));
         // …and a key made from a String a script computed is the same key again, even though
         // that String is its own allocation.
         let computed = heap.new_string("a".encode_utf16().collect());
-        assert_ne!(Some(computed), written.as_string());
+        assert_ne!(Some(computed), written.spelling(&mut heap));
         assert_eq!(PropertyKey::from_string(&mut heap, computed), written);
     }
 
@@ -358,11 +512,11 @@ mod tests {
         assert_ne!(empty, surrogate);
         assert_eq!(empty, PropertyKey::from_units(&mut heap, &[]));
         assert_eq!(
-            empty.as_string().and_then(|id| heap.string(id)),
+            empty.spelling(&mut heap).and_then(|id| heap.string(id)),
             Some(&[][..])
         );
         // Neither is an index, and neither may be turned into one by accident.
-        assert_eq!(empty.as_array_index(&heap), None);
+        assert_eq!(empty.as_array_index(), None);
         assert_eq!(surrogate.as_integer_index(&heap), None);
     }
 
@@ -401,10 +555,10 @@ mod tests {
         );
         let minus_zero = key(&mut heap, "-0");
         assert_eq!(minus_zero.as_integer_index(&heap), None);
-        assert_eq!(minus_zero.as_array_index(&heap), None);
+        assert_eq!(minus_zero.as_array_index(), None);
         // …while `"0"` is both, and the two keys are not the same key.
         let plus_zero = key(&mut heap, "0");
-        assert_eq!(plus_zero.as_array_index(&heap), Some(0));
+        assert_eq!(plus_zero.as_array_index(), Some(0));
         assert_ne!(minus_zero, plus_zero);
     }
 
@@ -414,10 +568,10 @@ mod tests {
         // 2^32 - 2 is the last index; 2^32 - 1 is a length and not an index, which is the one
         // value where the two intervals part company.
         assert_eq!(
-            key(&mut heap, "4294967294").as_array_index(&heap),
+            key(&mut heap, "4294967294").as_array_index(),
             Some(4_294_967_294)
         );
-        assert_eq!(key(&mut heap, "4294967295").as_array_index(&heap), None);
+        assert_eq!(key(&mut heap, "4294967295").as_array_index(), None);
         // …and it is still an *integer* index, which is the wider interval typed arrays use.
         assert_eq!(
             key(&mut heap, "4294967295").as_integer_index(&heap),
@@ -436,6 +590,113 @@ mod tests {
         // A negative one is neither, and `-1` is the key `at(-1)` exists to avoid needing.
         assert_eq!(key(&mut heap, "-1").as_integer_index(&heap), None);
         assert_eq!(key(&mut heap, "Infinity").as_integer_index(&heap), None);
+    }
+
+    #[test]
+    fn one_key_has_one_representation_however_it_was_made() {
+        // DR-0026's invariant, and the reason `index_of` is asked by every constructor rather than
+        // at each access. The moment two spellings of one key can both exist, every table keyed on
+        // `PropertyKey` holds two entries for one property — `a[0] = 1; a["0"]` would answer
+        // `undefined`, and no amount of care at the call sites could fix it.
+        let mut heap = Heap::new();
+        for index in [0_u32, 1, 9, 10, 99, 1_000, 4_294_967_294] {
+            let spelled = key(&mut heap, &index.to_string());
+            let counted = PropertyKey::from_index(index);
+            assert_eq!(spelled, counted, "{index} spelled and counted are two keys");
+            assert!(
+                matches!(spelled, PropertyKey::Index(_)),
+                "{index} kept text"
+            );
+            // …and the round trip closes: spelling the key back gives the String a lookup by text
+            // would have interned, so a `for`-`in` name and a written one are the same String.
+            let text = counted.spelling(&mut heap).expect("an index is spellable");
+            assert_eq!(
+                heap.string(text).map(<[u16]>::to_vec),
+                Some(index.to_string().encode_utf16().collect::<Vec<_>>())
+            );
+            assert_eq!(PropertyKey::from_string(&mut heap, text), counted);
+        }
+        // The other half of canonical: a spelling that is *not* the canonical one keeps its text,
+        // so `a["01"]` and `a[1]` stay two properties, which is what the specification says.
+        let awkward = key(&mut heap, "01");
+        assert!(matches!(awkward, PropertyKey::String(_)));
+        assert_ne!(awkward, PropertyKey::from_index(1));
+    }
+
+    #[test]
+    fn a_key_spells_its_own_name_and_no_other() {
+        // The comparison every caller holding a `&Heap` makes — a namespace export, a built-in
+        // reading its own property, a message. Asked directly because the callers all reach it
+        // through a `find`, where a wrong answer is an absence rather than a failure.
+        let mut heap = Heap::new();
+        let units = |text: &str| text.encode_utf16().collect::<Vec<u16>>();
+        let one = PropertyKey::from_index(1);
+        assert!(one.spells(&heap, &units("1")));
+        assert!(!one.spells(&heap, &units("2")));
+        assert!(
+            !one.spells(&heap, &units("01")),
+            "a non-canonical spelling is another key"
+        );
+        assert!(!one.spells(&heap, &units("x")));
+        let name = key(&mut heap, "x");
+        assert!(name.spells(&heap, &units("x")));
+        assert!(!name.spells(&heap, &units("y")));
+        assert!(!name.spells(&heap, &units("1")));
+        // A Symbol spells nothing at all, which is the answer §10.4.6.8 step 2 rests on: it is
+        // what sends `ns[Symbol.toStringTag]` to the ordinary object instead of to the exports.
+        let symbol = PropertyKey::from_symbol(heap.new_symbol(None));
+        assert!(!symbol.spells(&heap, &units("x")));
+        assert!(!symbol.spells(&heap, &units("1")));
+        assert!(!symbol.spells(&heap, &units("")));
+    }
+
+    #[test]
+    fn the_cheap_index_test_agrees_with_the_general_one() {
+        // Two definitions of "array index" would drift, and this is what stops them: `index_of`
+        // reads at most ten ASCII digits, `canonical_numeric_index` parses a float and writes it
+        // back, and every shape that could separate them is walked here. §6.1.7 is §7.1.21's
+        // answer restricted to `[+0, 2^32 - 2]`, so the two are related by exactly that.
+        let corpus = [
+            "",
+            "0",
+            "-0",
+            "00",
+            "01",
+            "1",
+            "1.0",
+            "1.5",
+            "1e0",
+            "1e3",
+            " 1",
+            "1 ",
+            "+1",
+            "-1",
+            "0x1",
+            "1_0",
+            "a",
+            "NaN",
+            "Infinity",
+            "-Infinity",
+            "4294967293",
+            "4294967294",
+            "4294967295",
+            "4294967296",
+            "9007199254740991",
+            "99999999999",
+            "0.0",
+            "10",
+            "000",
+        ];
+        for text in corpus {
+            let units: Vec<u16> = text.encode_utf16().collect();
+            let general = canonical_numeric_index(&units).filter(|number| {
+                number.fract() == 0.0
+                    && number.is_sign_positive()
+                    && *number <= f64::from(MAX_INDEX)
+            });
+            let cheap = index_of(&units).map(f64::from);
+            assert_eq!(cheap, general, "{text:?} is judged two different ways");
+        }
     }
 
     #[test]

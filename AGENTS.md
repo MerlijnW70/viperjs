@@ -277,6 +277,69 @@ caller's and the trap's arguments array is made in it. ViperJS gives a proxy its
 step 7.a's `%Object.prototype%`, `bind`'s prototype, `Symbol.split`'s splitter and a dozen others,
 each two to ten runs and each its own clause. `ShadowRealm`'s 118 are a different proposal.
 
+### An array index is a key of its own, and the biggest win was in the file nobody costed
+
+DR-0026, and the first slice here taken for **speed** rather than for a conformance number — which
+moved not at all, deliberately. `PropertyKey` gained an `Index(u32)` variant, canonical: a key is
+`Index` exactly when §6.1.7 says its spelling is an array index, so `a[0]` and `a["0"]` are one key
+by construction while `a["01"]` stays an ordinary named property. `a[i]` used to spell the Number,
+encode it to UTF-16 and intern it, then decode the units back at the access; both halves are gone.
+
+| | before | after |
+| --- | --- | --- |
+| `a[i & 7]` — varying index | 412 ns | **212** |
+| `a[i & 7] = i` — write | 895 ns | **439** |
+| `Int32Array` element read | 958 ns | **217** |
+
+**The TypedArray row is 4.4× and no estimate named it.** §7.1.21 `CanonicalNumericIndexString` was
+implemented by decoding the key's UTF-16 into a Rust `String`, parsing an `f64` and formatting it
+back to check the spelling round-trips — per element access. **A representation change pays wherever
+the representation was being re-derived, and those places are found by grepping for the decode, not
+by reasoning from the hot path.** The estimate was drawn from a benchmark, and a benchmark only
+names the rows somebody thought to write.
+
+Four things around it are the reusable part:
+
+- **A transparent optimisation cannot be killed by mutation coverage, and this is the third one.**
+  Breaking the fast path leaves the slow path answering identically, so no program tells the
+  difference and the survivors sit there. What closes it is a **structural** test — here, that the
+  numeric index test and the one asked of the spelling agree over a corpus.
+- **And that test found a real bug the behavioural tests could not.** `ToString(-0)` is `"0"`, so
+  the *Number* `-0` **is** index zero; `"-0"` the *text* is not an index, and the fast path had been
+  written with a sign check copied from the text rule. Every program was right, because the slow
+  path was right. **A rule about a spelling does not transfer to the value it spells.**
+- **Four branches were equivalent mutants and each was a duplicate to delete, not a test to
+  write.** A key-comparison spelled out by hand where one method already said it, a Symbol guard in
+  front of a walk that already declines Symbols, a proxy's key-to-value with an arm for a shape the
+  type does not have, and a dead `&Heap` parameter on `as_array_index`. Once one question has one
+  answer, the second copy of it is unreachable by construction — which is what the survivors were
+  saying.
+- **The comment-drift test earned its keep again**: removing `as_string` left a doc naming it, and
+  the suite failed on the prose rather than on the code.
+
+**And the conformance suite found a bug the slice was never near, because it took away what had been
+hiding it.** Eight runs regressed, all `Array.prototype.slice`, all timing out. `slice` asked
+`ArraySpeciesCreate` for a **zero**-length array where §23.1.3.25 step 8 asks for `count` — so
+`{length: 2 ** 32}.slice(0, 2 ** 32)` never got §10.4.2.2 step 1's RangeError and walked four
+billion absent elements instead. It had always done that, and the walk had always ended: interning a
+key per index spent DR-0013's heap budget, which throws a RangeError of its own, and
+`assert.throws(RangeError, …)` cannot tell two RangeErrors apart. An `Index` key allocates nothing,
+so the walk stopped ending.
+
+Three things in that, and the third is the one to carry:
+
+- **`assert.throws(RangeError, …)` is the weakest assertion test262 has**, and this is the fifth
+  time in this file that a test passed against the bug it exists to catch. A count that is
+  observable as a *constructor argument* is what distinguishes them, and there is now a test asking
+  for it: `class A extends Array { constructor(n) { seen = n } }`.
+- **`within_budget`'s doc stated the premise in as many words** — "each pass interns a key, so a
+  walk that is going nowhere is also a walk that is spending the budget" — and DR-0026 falsified it.
+  A doc that explains *why* something works is also the thing that tells you what broke it.
+- **The hang is not a hole to plug.** `Array.prototype.indexOf.call({length: 2 ** 53 - 1}, x)` loops
+  because §23.1.3.17 says to, and **node does not return from it either — measured rather than
+  assumed**. The engine's answer to a program that will not stop is DR-0022's time budget, which is
+  the host's to set. What the old accident bought was termination for the wrong reason.
+
 ### §25.4's three waits do not share a fate, and one of them works with a single agent
 
 +170 runs across three commits, and the reason it was worth more than the estimate is that

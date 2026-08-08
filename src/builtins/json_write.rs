@@ -146,7 +146,7 @@ impl Writer {
         name: PropertyKey,
     ) -> Completion<Option<Vec<u16>>> {
         let mut value = vm.get_property_key(Value::Object(holder), name, heap)?;
-        let spelled = Value::String(name.as_string().unwrap_or_else(|| heap.intern(&[])));
+        let spelled = Value::String(name.spelling(heap).unwrap_or_else(|| heap.intern(&[])));
         // Step 2 — `toJSON` is asked *before* the replacer, and is given the key. An object that
         // knows how to describe itself gets the first word.
         if let Value::Object(_) = value {
@@ -269,7 +269,7 @@ impl Writer {
             None => {
                 let mut listed = Vec::new();
                 for found in vm.own_keys_through(object, heap)? {
-                    if found.as_string().is_none() {
+                    if !found.is_spellable() {
                         continue;
                     }
                     if vm
@@ -289,11 +289,8 @@ impl Writer {
             let Some(part) = self.property(vm, heap, object, name)? else {
                 continue;
             };
-            let mut written = quote(
-                name.as_string()
-                    .and_then(|id| heap.string(id))
-                    .unwrap_or(&[]),
-            );
+            let spelled = name.spelling(heap);
+            let mut written = quote(spelled.and_then(|id| heap.string(id)).unwrap_or(&[]));
             written.push(u16::from(b':'));
             if !self.gap.is_empty() {
                 written.push(u16::from(b' '));

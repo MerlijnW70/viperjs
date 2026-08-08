@@ -195,7 +195,7 @@ impl Vm {
                 target,
             } => (trap, handler, target),
         };
-        let named = Self::key_as_value(key);
+        let named = heap.key_value(key);
         let answer = self.call_value(trap, handler, &[Value::Object(target), named], heap)?;
         // Step 6 — the answer's *type* is judged before the target is consulted at all, so a trap
         // that answers a number is refused without `[[GetOwnProperty]]` ever being asked of the
@@ -310,7 +310,7 @@ impl Vm {
                 target,
             } => (trap, handler, target),
         };
-        let named = Self::key_as_value(key);
+        let named = heap.key_value(key);
         // Step 7 — the trap is handed the descriptor as an *object*, so a handler can read the
         // fields the caller actually supplied. That is why this is not `describe`: a partial
         // descriptor must arrive partial, or `defineProperty(p, "x", {value: 1})` would look to
@@ -660,7 +660,7 @@ impl Vm {
             for key in self.own_keys_through(id, heap)? {
                 // §14.7.5.10 — String keys only, which is why `for`-`in` cannot find a Symbol-keyed
                 // property. Filtered before the visited set, so a Symbol does not shadow anything.
-                if key.as_string().is_none() {
+                if !key.is_spellable() {
                     continue;
                 }
                 if !visited.insert(key) {

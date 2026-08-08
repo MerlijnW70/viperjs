@@ -52,6 +52,23 @@ public API is not stable and may change in any release.
 - Three ordering faults that only a real `Get` could expose: `AllocateArrayBuffer`'s length check,
   §23.2.5.1's two branches, and §10.2.2's steps 14 and 15 belonging to the caller.
 
+### Changed
+
+- **An array index is now a kind of property key.** `PropertyKey` gained an `Index(u32)` variant,
+  and it is **canonical** — a key is `Index` exactly when §6.1.7 says its spelling is an array
+  index, so `a[0]` and `a["0"]` are one key by construction while `a["01"]` stays a named property.
+  `a[i]` used to turn the Number into decimal text, encode it to UTF-16 and intern it, then decode
+  the units back at the access; both halves are gone. Measured on the same machine and benchmark as
+  before: a varying indexed read **412 → 212 ns**, a write **895 → 439**, and a TypedArray element
+  read **958 → 217** — the last because §7.1.21 `CanonicalNumericIndexString` was parsing and
+  re-formatting a float per element access. See DR-0026.
+
+  Three signatures on the public heap surface changed with it: `PropertyKey::as_string` is replaced
+  by `spelling`, `spells`, `describe` and `is_spellable` (an index has no text until something asks
+  for it, so spelling one takes a `&mut Heap`); `PropertyKey::to_value` and `Heap::key_value` take
+  the heap for the same reason; and `PropertyKey::as_array_index` and `Object::own_property_keys`
+  no longer take a heap at all, because the key now knows.
+
 ## [0.2.2] — 2026-08-06
 
 ### Security

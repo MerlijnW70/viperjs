@@ -172,7 +172,7 @@ fn revive(
             false => {
                 let mut listed = Vec::new();
                 for found in vm.own_keys_through(object, heap)? {
-                    if found.as_string().is_none() {
+                    if !found.is_spellable() {
                         continue;
                     }
                     if vm
@@ -204,7 +204,7 @@ fn revive(
             super::array_methods::within_budget(heap)?;
         }
     }
-    let name = Value::String(name.as_string().unwrap_or_else(|| heap.intern(&[])));
+    let name = Value::String(name.spelling(heap).unwrap_or_else(|| heap.intern(&[])));
     vm.call_value(reviver, Value::Object(holder), &[name, value], heap)
 }
 

@@ -314,9 +314,11 @@ pub(crate) fn own_value(heap: &Heap, object: ObjectId, name: &str) -> Option<Val
     let units: Vec<u16> = name.encode_utf16().collect();
     let key = heap
         .object(object)?
-        .own_property_keys(heap)
+        .own_property_keys()
         .into_iter()
-        .find(|key| key.as_string().and_then(|id| heap.string(id)) == Some(&units[..]))?;
+        // Compared by spelling rather than by interning `units` into a key: this has only a
+        // `&Heap`, and a lookup has no business adding a String to it. DR-0026.
+        .find(|key| key.spells(heap, &units))?;
     match heap.object(object)?.get_own_property(key)?.kind {
         PropertyKind::Data { value, .. } => Some(value),
         PropertyKind::Accessor { .. } => None,

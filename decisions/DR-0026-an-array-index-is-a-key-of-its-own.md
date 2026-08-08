@@ -57,6 +57,54 @@ element access, including the ones that go through `[[Get]]` rather than the fas
 - **`PropertyKey` is public**, so this is a breaking change to the embedding surface. The crate is
   pre-1.0 and `CHANGELOG.md` says the API is not stable; it is still a change an embedder sees.
 
+## What it measured, once it was built
+
+Same machine, same two benchmark files, three runs each and identical to within 3 ns. **The estimate
+above was +196 ns for a varying index and the measurement is −200**, which is as close as this
+instrument gets. `lab/NOTES.md` has the full table; three rows moved for reasons this record did not
+name, and they are the part worth reading.
+
+- **A TypedArray element read is 4.4× faster — 958 ns to 217 — and nothing here predicted it.**
+  §7.1.21 `CanonicalNumericIndexString` was implemented in `src/heap/typed.rs` by decoding the key's
+  UTF-16 into a Rust `String`, parsing an `f64` out of it and formatting that back to check the
+  spelling round-trips, **per element access**. An `Index` key answers all of it with one comparison
+  against the view's length. The largest single win in the slice was in the file this record does not
+  mention, because the record was written from the benchmark and the benchmark's TypedArray row was
+  not one of the deltas being explained. **A representation change pays wherever the representation
+  was being re-derived, and the way to find those places is to grep for the decode rather than to
+  reason from the hot path.**
+- **A *literal* `a[0]` got 56 ns faster**, although its key is a compile-time constant and the
+  interning was already paid. That is the "other half of the round trip" above, and it is worth
+  naming as a measured thing rather than an aside: the saving is on both sides of the boundary.
+- **`push`/`pop`, string growth, calls and `fib` did not move at all**, which is the control this
+  slice needed and did not have by design. Four rows that should not change and did not is what
+  says the other seven moved for the reason claimed.
+
+**And the invariant test passed first time**, including the cases it was written to catch — `a["01"]`
+staying a named property, `a["-0"]` not moving `length`, and §10.1.11 ordering `2` before `10`
+before `"b"` from the number rather than from a spelling that is no longer stored.
+
+## What it took away, which was not on the list either
+
+**A per-index allocation is a termination argument, and this one was load-bearing.** DR-0013's heap
+budget is checked once per index by every array-like walk, and its doc gave the reason: "each pass
+interns a key — so a walk that is going nowhere is also a walk that is spending the budget." An
+`Index` key allocates nothing. So a walk that reads absent elements out of a huge array-like now
+spends no heap, the check never fires, and the walk does not end.
+
+That surfaced as eight regressions, all `Array.prototype.slice`, and **all of them a bug that had
+been there all along**: `slice` asked `ArraySpeciesCreate` for a zero-length array where §23.1.3.25
+step 8 asks for `count`, so §10.4.2.2 step 1's RangeError never came and the walk ran instead. It
+had always run; it had always been cut short by the heap budget, which throws a RangeError of its
+own that `assert.throws(RangeError, …)` cannot tell apart. Fixed, with a test asking for the count
+as the *constructor argument* a `Symbol.species` sees, which is the assertion that separates them.
+
+**The remaining hang is correct and is deliberately left.** `Array.prototype.indexOf.call({length:
+2 ** 53 - 1}, x)` loops because §23.1.3.17 says to, and node does not return from it either —
+measured. The engine's answer to a program that will not stop is DR-0022's time budget, which is the
+host's to set. What the old accident bought was termination for the wrong reason, at the cost of a
+RangeError no clause asks for.
+
 ## What this deliberately does not decide
 
 - **The linear property scan.** An object's own properties are a `Vec<(PropertyKey, Property)>`, so

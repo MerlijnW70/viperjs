@@ -14,7 +14,6 @@
 //! §10.1.6's validation, which is a table of nine cases about what a descriptor may change into
 //! what.
 
-use super::arguments;
 use super::arguments::Incoming;
 use super::define::{Validation, apply, validate};
 use super::object::{Lexical, MAX_PROTOTYPE_CHAIN, ObjectId, PrivateElement, Suspendable};
@@ -242,7 +241,7 @@ impl Heap {
         }
         let stored = self
             .object(object)
-            .map_or_else(Vec::new, |found| found.own_property_keys(self));
+            .map_or_else(Vec::new, |found| found.own_property_keys());
         // §10.4.5.6 — a TypedArray's indices, which nothing stored, ahead of everything that was.
         // In order and complete: §10.1.11 wants the integer indices first and ascending, and no
         // stored key can sort in among them because a define at an index never stores anything.
@@ -627,7 +626,7 @@ impl Heap {
         // and nothing is ever stored for them, so this comes before the table for the reason a
         // TypedArray's elements do. A Symbol falls through to the object, which is where
         // `@@toStringTag` is.
-        if self.is_namespace(object) && key.as_string().is_some() {
+        if self.is_namespace(object) && key.is_spellable() {
             return self.namespace_property(object, key);
         }
         let element_view = self.any_view(object).filter(|view| view.element.is_some());
@@ -644,7 +643,7 @@ impl Heap {
         let Some(map) = found.arguments_map() else {
             return Some(property);
         };
-        let Some(slot) = arguments::index_of(self, key).and_then(|index| map.slot(index)) else {
+        let Some(slot) = key.as_array_index().and_then(|index| map.slot(index)) else {
             return Some(property);
         };
         // A joined index is never uninitialised: a parameter is given its value when the call
@@ -666,7 +665,7 @@ impl Heap {
     /// Answers whether there was one, so that a caller which has just changed a property can say
     /// what it did without asking twice.
     pub(crate) fn unmap_argument(&mut self, object: ObjectId, key: PropertyKey) {
-        let Some(index) = arguments::index_of(self, key) else {
+        let Some(index) = key.as_array_index() else {
             return;
         };
         if let Some(map) = self
@@ -683,7 +682,7 @@ impl Heap {
     /// told the define was allowed, and a key that is not a joined index simply has no parameter
     /// behind it. A return value nobody reads is one no test could be wrong about.
     fn write_through(&mut self, object: ObjectId, key: PropertyKey, value: Value) {
-        let Some(index) = arguments::index_of(self, key) else {
+        let Some(index) = key.as_array_index() else {
             return;
         };
         let Some(map) = self.object(object).and_then(Object::arguments_map) else {

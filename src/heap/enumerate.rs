@@ -76,9 +76,10 @@ impl Heap {
             // memory — and `u32::MAX` names would have exhausted DR-0013's budget long before.
             let index = u32::try_from(at).unwrap_or(u32::MAX);
             let slot = self.index_key(index);
-            // Every key here is a String: §14.7.5.10 says so, and `enumerable_keys` filtered
-            // the Symbols out before this list was built.
-            let Some(name) = key.as_string() else {
+            // Every key here is spellable: §14.7.5.10 says so, and `enumerable_keys` filtered the
+            // Symbols out before this list was built. An index is spelled *here* rather than where
+            // it was made, which is DR-0026's trade — per enumeration instead of per element.
+            let Some(name) = key.spelling(self) else {
                 continue;
             };
             let value = Value::String(name);
@@ -118,13 +119,7 @@ mod tests {
     fn names(heap: &mut Heap, object: ObjectId) -> Vec<String> {
         heap.enumerable_keys(object)
             .into_iter()
-            .map(|key| {
-                String::from_utf16_lossy(
-                    key.as_string()
-                        .and_then(|id| heap.string(id))
-                        .unwrap_or(&[]),
-                )
-            })
+            .map(|key| key.describe(heap).unwrap_or_default())
             .collect()
     }
 

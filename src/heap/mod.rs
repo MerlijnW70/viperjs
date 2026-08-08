@@ -159,7 +159,8 @@ impl Heap {
             if self.object(id).is_some_and(Object::is_constructor))
     }
 }
-pub use self::property::{Property, PropertyDescriptor, PropertyKey, PropertyKind};
+pub(crate) use self::property::MAX_INDEX;
+pub use self::property::{Property, PropertyDescriptor, PropertyKey, PropertyKind, index_of};
 
 use crate::span::Span;
 use std::collections::HashMap;
@@ -719,15 +720,13 @@ impl Heap {
 
     /// A settled property key, back as the [`crate::value::Value`] it came from.
     ///
-    /// The inverse of `ToPropertyKey` for something that has already been through it: a key is a
-    /// String or a Symbol and both are values, so nothing is made and nothing can fail. Exists so
-    /// that a key settled early can wait on the operand stack, which holds values and not keys.
-    #[must_use]
-    pub fn key_value(&self, key: PropertyKey) -> crate::value::Value {
-        match key {
-            PropertyKey::String(id) => crate::value::Value::String(id),
-            PropertyKey::Symbol(id) => crate::value::Value::Symbol(id),
-        }
+    /// The inverse of `ToPropertyKey` for something that has already been through it. Takes the heap
+    /// by `&mut` since DR-0026, because an index is spelled here rather than where it was made —
+    /// which is the trade: an element is accessed per element and a key is spelled per enumeration.
+    /// Exists so that a key settled early can wait on the operand stack, which holds values and not
+    /// keys.
+    pub fn key_value(&mut self, key: PropertyKey) -> crate::value::Value {
+        key.to_value(self)
     }
 
     /// The Symbol `id` refers to, or `None` if this heap has nothing there.

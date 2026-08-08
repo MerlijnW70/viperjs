@@ -25,38 +25,6 @@
 use super::{DefineOutcome, Heap, ObjectId, PropertyDescriptor, PropertyKey, PropertyKind};
 use crate::value::Value;
 
-/// The largest index an Array may hold — §6.1.7's array index is below `2^32 - 1`.
-///
-/// Not `2^32`: the last value is reserved so that `length` itself always fits in a `u32`. An
-/// object may hold a property named `"4294967295"`; it simply is not an *index*, and writing it
-/// does not move `length`.
-const MAX_INDEX: u32 = u32::MAX - 1;
-
-/// The index a key names, if it names one — §6.1.7's "array index".
-///
-/// A key is an index only when it is the *canonical* spelling of one: `"01"`, `"1.0"` and `" 1"`
-/// are ordinary property names on an array and do not touch its `length`. That is what
-/// [`crate::value::canonical_numeric_index`] answers, and asking it here rather than parsing the
-/// digits is what keeps the two definitions from drifting.
-pub(super) fn array_index(heap: &Heap, key: PropertyKey) -> Option<u32> {
-    // A Symbol is no index and has no digits — `as_string` answering `None` is that.
-    let units = heap.string(key.as_string()?)?;
-    let number = crate::value::canonical_numeric_index(units)?;
-    // `is_sign_negative` rather than `< 0.0`, because **`-0.0 < 0.0` is false**. `"-0"` is a
-    // canonical numeric index string — §7.1.21 says so outright — and it is *not* an array index,
-    // since §6.1.7 asks for `ToString(ToUint32(P)) == P` and `ToUint32("-0")` writes back as
-    // `"0"`. Written as a comparison it slipped straight through and `a["-0"] = 1` made an array
-    // of length 1, which V8 disagreed with over a hundred generated cases.
-    if number.is_sign_negative() || number.fract() != 0.0 {
-        return None;
-    }
-    let index = number as u32;
-    match f64::from(index) == number && index <= MAX_INDEX {
-        true => Some(index),
-        false => None,
-    }
-}
-
 impl Heap {
     /// §10.4.2.1 `[[DefineOwnProperty]]` for an Array.
     ///
@@ -71,7 +39,7 @@ impl Heap {
         if key == length_key {
             return self.set_array_length(object, descriptor);
         }
-        let Some(index) = array_index(self, key) else {
+        let Some(index) = key.as_array_index() else {
             return DefineOutcome::from(self.define_ordinary_property(object, key, descriptor));
         };
         let (length, writable) = self.array_length(object);
@@ -165,7 +133,7 @@ impl Heap {
             .unwrap_or_default();
         let mut indices: Vec<u32> = keys
             .into_iter()
-            .filter_map(|key| array_index(self, key))
+            .filter_map(PropertyKey::as_array_index)
             .filter(|index| *index >= floor)
             .collect();
         indices.sort_unstable();
@@ -231,7 +199,10 @@ impl Heap {
 
     /// The key an index is filed under, which is the decimal spelling and nothing else.
     pub(crate) fn index_key(&mut self, index: u32) -> PropertyKey {
-        PropertyKey::from_units(self, &index.to_string().encode_utf16().collect::<Vec<_>>())
+        // A cast. This used to spell the number, encode it to UTF-16 and intern it — DR-0026. The
+        // `&mut self` stays because every caller has one and changing the signature would be churn
+        // for nothing.
+        PropertyKey::from_index(index)
     }
 
     /// Put a new Array on the heap — §10.4.2.2 `ArrayCreate`.

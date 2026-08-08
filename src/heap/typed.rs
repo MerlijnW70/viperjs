@@ -45,9 +45,18 @@ pub(crate) fn element_attributes_refused(descriptor: &crate::heap::PropertyDescr
 ///   consulting the prototype. `ta[99]` on a short array is not a prototype lookup.
 /// - `Some(Ok(at))` — an element of this view.
 pub(super) fn index_of(heap: &Heap, key: PropertyKey, count: usize) -> Option<Result<usize, ()>> {
-    let PropertyKey::String(id) = key else {
+    let id = match key {
+        // Every array index is a canonical numeric index — §6.1.7's set is a subset of §7.1.21's —
+        // and since DR-0026 the digits are already decoded, so the three answers are settled by one
+        // comparison. The String arm below is what remains: `"4294967295"` and `"1e3"` are numeric
+        // strings that are not array indices, and they are the only ones that still need parsing.
+        PropertyKey::Index(index) => {
+            let at = index as usize;
+            return Some(if at < count { Ok(at) } else { Err(()) });
+        }
+        PropertyKey::String(id) => id,
         // §7.1.21 step 1 — a Symbol is never a numeric index, so it is always an ordinary property.
-        return None;
+        PropertyKey::Symbol(_) => return None,
     };
     let units = heap.string(id)?;
     let text: String = char::decode_utf16(units.iter().copied())

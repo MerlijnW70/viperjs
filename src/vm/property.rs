@@ -145,7 +145,7 @@ impl Vm {
         if key == self.length_key(heap) {
             return Some(Value::Number(f64::from(u32::try_from(units).ok()?))); // DR-0012 caps a String far below `u32`
         }
-        let index = key.as_array_index(heap)?;
+        let index = key.as_array_index()?;
         let character = heap.intern_character(data, index)?;
         Some(Value::String(character))
     }

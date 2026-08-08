@@ -22,7 +22,7 @@
 //! its target without lying to the getter about who is asking.
 
 use super::{define_method, define_value};
-use crate::heap::{Heap, Native, NativeCall, ObjectId, PropertyKey};
+use crate::heap::{Heap, Native, NativeCall, ObjectId};
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
 use crate::vm::Vm;
@@ -264,10 +264,7 @@ fn own_keys(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
     let keys = vm.own_keys_through(object, heap)?;
     let values: Vec<Value> = keys
         .into_iter()
-        .map(|found| match found {
-            PropertyKey::Symbol(symbol) => Value::Symbol(symbol),
-            PropertyKey::String(text) => Value::String(text),
-        })
+        .map(|found| heap.key_value(found))
         .collect();
     super::array::from_values(vm, heap, &values)
 }

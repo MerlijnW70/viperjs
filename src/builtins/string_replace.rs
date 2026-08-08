@@ -328,7 +328,7 @@ pub(super) fn parts_of(
         Value::Object(holder) => {
             let mut listed = Vec::new();
             for found in vm.own_keys_through(holder, heap)? {
-                let Some(text) = found.as_string() else {
+                let Some(text) = found.spelling(heap) else {
                     continue;
                 };
                 let name = heap.string(text).unwrap_or(&[]).to_vec();

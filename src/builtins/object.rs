@@ -457,7 +457,7 @@ fn own_keys(
         // §20.1.2.10 step 3 and §20.1.2.17 step 3 — String keys only. A Symbol key is not
         // *hidden* from the language, but it is not listed here: `getOwnPropertySymbols` is the
         // one that answers those, and keeping them apart is the whole reason for two functions.
-        let Some(name) = key.as_string() else {
+        let Some(name) = key.spelling(heap) else {
             continue;
         };
         names.push(Value::String(name));

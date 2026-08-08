@@ -32,7 +32,7 @@
 //! conditions passed several milestones ago. The *mapping* is what this file is about and the two
 //! kinds differ only in whether it exists — which is why one file still serves both.
 
-use crate::heap::{EnvironmentId, Heap, ObjectId, PropertyKey};
+use crate::heap::{EnvironmentId, ObjectId};
 use crate::value::Value;
 
 /// What a call knows that its arguments object needs — §10.4.4.4 and §10.4.4.6's inputs.
@@ -102,27 +102,4 @@ impl ArgumentsMap {
             *slot = None;
         }
     }
-}
-
-/// The index a key names, if it names one at all.
-///
-/// Not §10.4.2's array index: an arguments object is not an Array, and §10.4.4 joins the keys
-/// `"0"`, `"1"` and so on and nothing else.
-///
-/// Written back and compared rather than merely parsed, because `"01"` parses as 1 and is not the
-/// key `"1"` — a map found by parsing alone would make `arguments["01"]` an alias of the first
-/// parameter, which is a property the object does not even have.
-///
-/// Two allocations per call, and it is called once per property an arguments object is asked for.
-/// Reading the digits out of the UTF-16 units directly would need none, and is the sort of thing
-/// M8 measures before it changes: the callers all check for a parameter map first, so no ordinary
-/// object pays this.
-pub(super) fn index_of(heap: &Heap, key: PropertyKey) -> Option<u32> {
-    // A Symbol is no index and has no digits — `as_string` answering `None` is that.
-    let units = heap.string(key.as_string()?)?;
-    let text: String = char::decode_utf16(units.iter().copied())
-        .map(|character| character.unwrap_or(char::REPLACEMENT_CHARACTER))
-        .collect();
-    let index: u32 = text.parse().ok()?; // a key that is not a number is not an index, and that is the answer
-    (index.to_string() == text).then_some(index)
 }

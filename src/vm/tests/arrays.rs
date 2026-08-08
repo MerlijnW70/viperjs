@@ -414,3 +414,47 @@ fn setting_an_arrays_length_converts_what_it_is_given() {
         "2"
     );
 }
+
+#[test]
+fn a_number_and_its_spelling_are_one_property_however_the_key_arrives() {
+    // DR-0026's invariant seen from the language: a key is held as a number when §6.1.7 says its
+    // spelling is an array index, so the four ways a program can name element zero all name one
+    // property. A representation that let two of these coexist would put two entries in the table
+    // and the read would answer `undefined` — which is why this is the first test of that record.
+    assert_eq!(run("var a = []; a[0] = 1; a['0']"), "1");
+    assert_eq!(run("var a = []; a['0'] = 1; a[0]"), "1");
+    assert_eq!(
+        run("var a = []; a[0] = 1; a['0'] = 2; a.length + ',' + a[0]"),
+        "1,2"
+    );
+    assert_eq!(
+        run("var o = {}; o[1] = 'a'; o['1'] = 'b'; Object.keys(o).length + ',' + o[1]"),
+        "1,b"
+    );
+    // …and a key that merely *reads* as the same number is a different property, because its
+    // spelling is not the canonical one. `"01"` is the trap a parse-the-digits shortcut falls into.
+    assert_eq!(
+        run("var a = [9]; a['01'] = 'x'; a.length + ',' + a[1] + ',' + a['01']"),
+        "1,undefined,x"
+    );
+    assert_eq!(run("var a = []; a['1.0'] = 'x'; a.length"), "0");
+    assert_eq!(run("var a = []; a[-0] = 'x'; a.length + ',' + a[0]"), "1,x");
+    assert_eq!(
+        run("var a = []; a['-0'] = 'x'; a.length + ',' + a[0]"),
+        "0,undefined"
+    );
+    // §10.1.11 orders the indices ascending ahead of every named key, and it must do so from the
+    // number rather than from a spelling that is no longer stored.
+    assert_eq!(
+        run(
+            "var o = {}; o.b = 1; o[10] = 1; o[2] = 1; o.a = 1; o['03'] = 1; Object.keys(o).join()"
+        ),
+        "2,10,b,a,03"
+    );
+    // The last index and the first non-index, which is where §6.1.7's interval ends: one moves
+    // `length` and the other is an ordinary property on the same object.
+    assert_eq!(
+        run("var a = []; a[4294967294] = 1; a[4294967295] = 1; a.length"),
+        "4294967295"
+    );
+}

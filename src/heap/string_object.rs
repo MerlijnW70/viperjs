@@ -38,7 +38,7 @@ use crate::value::Value;
 /// for every key that is not an index inside the string. An index *outside* it is `None` too, which
 /// is how `"ab"[5]` becomes `undefined` by the ordinary route of finding nothing anywhere.
 pub(crate) fn character(heap: &Heap, data: StringId, key: PropertyKey) -> Option<Property> {
-    let index = key.as_array_index(heap)?;
+    let index = key.as_array_index()?;
     let units = heap.string(data)?;
     let unit = *units.get(index as usize)?;
     // Interned when the object was made — see [`Heap::new_string_object`], which is the only way

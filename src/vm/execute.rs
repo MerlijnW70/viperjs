@@ -1181,9 +1181,12 @@ impl Vm {
                     // Step 3.b — and the key is written back, which is what makes the conversion
                     // happen once for a reference that is read and then written.
                     let key = self.pop()?;
+                    // Spelled here rather than where the key was made — DR-0026's trade. This is
+                    // §13.2.5.5's computed key waiting on the operand stack for the define below,
+                    // which is once per property written rather than once per element.
                     let settled = self
                         .to_property_key(key, heap)
-                        .map(crate::heap::PropertyKey::to_value);
+                        .map(|settled| settled.to_value(heap));
                     match self.settle(settled, heap, root, current, at)? {
                         Some(key) => self.stack.push(key),
                         None => continue,
@@ -2450,7 +2453,7 @@ impl Vm {
 /// among its properties and nothing can have refused, so there is no answer to report.
 fn freeze(heap: &mut Heap, object: crate::heap::ObjectId) {
     let keys = match heap.object(object) {
-        Some(found) => found.own_property_keys(heap),
+        Some(found) => found.own_property_keys(),
         None => return,
     };
     for key in keys {

@@ -651,9 +651,10 @@ Ranked by what the measurements support, not by what sounds promising:
 1. ~~**The interpreter loop's stack frame.**~~ **Falsified the same day — see the correction
    below.** The frame costs no speed at all; it remains a `MAX_REENTRY_DEPTH` problem and is not a
    performance one.
-2. **An integer variant for `PropertyKey` — a measured +196 ns per varying index.** Today
-   `a[i]` turns the Number into decimal text, encodes that to UTF-16, and interns it. A
-   `PropertyKey::Index(u32)` removes all three from every indexed access.
+2. ~~**An integer variant for `PropertyKey` — a measured +196 ns per varying index.**~~ **Built,
+   and measured at −200 ns — see the result section below.** `a[i]` used to turn the Number into
+   decimal text, encode that to UTF-16 and intern it; DR-0026 removed all three from every indexed
+   access, and took a TypedArray read down by 741 ns as well.
 3. **Shapes and inline caches.** A fixed-key read is +48 ns over baseline and eight shapes take it
    to +347. This is the standard fix and the numbers say it is worth real money — but it is a large
    design change and belongs behind the two above.
@@ -701,3 +702,51 @@ measurement. DR-0026 is that.
 `Vec<(PropertyKey, Property)>`, so every lookup is a **linear scan**. That is adjacent to the key
 work and separate from it, and it is part of why eight shapes cost 469 ns against a single shape's
 170.
+
+### Result, two days later: DR-0026 is built, and it beat its own estimate on the row nobody costed
+
+`PropertyKey::Index(u32)` is in. Same machine, same two benchmark files, three runs each and
+identical to within 3 ns.
+
+| step | before | after | delta |
+| --- | --- | --- | --- |
+| `s += i` — the loop alone | 122 | 122 | — |
+| `o.x` — literal key | 170 | 174 | — |
+| `a[0]` — literal index | 214 | **158** | −56 |
+| `a[i & 7]` — varying index | 412 | **212** | **−200** |
+| `a[i & 7] = i` — write | 895 | **439** | **−456** |
+| `Int32Array` read | 958 | **217** | **−741** |
+| property read, 8 shapes | 469 | **275** | −194 |
+
+**The estimate was +196 ns for a varying index and the measurement is −200, which is as close as
+this instrument gets.** Three of the seven rows moved for reasons the estimate did not name, and
+each is worth keeping:
+
+- **The TypedArray read is 4.4× faster, and that row was never costed.** §7.1.21 was implemented by
+  decoding the key's UTF-16 into a Rust `String`, parsing an `f64` out of it and formatting it back
+  to check the spelling round-trips — per element access. An `Index` key answers all of that with
+  one comparison against the view's length. **The largest single win in the slice was in the file
+  the record does not mention.**
+- **A literal `a[0]` got 56 ns faster although its key is a *constant*.** The interning was already
+  done at compile time, so the estimate said zero; what it missed is the other half of the round
+  trip — every access still read the units back out of the heap and decoded ten digits to find the
+  element. A representation change pays on both sides of the boundary, not only where it is made.
+- **Eight shapes fell by 194 ns**, which is the array read inside that benchmark's own `os[i & 7]`
+  rather than anything about shapes. **A benchmark row is only as isolated as its body**, and this
+  one is two operations wearing one name — the ladder is the instrument that separates them.
+
+**One thing got cheaper that is not on the list:** an `Index` key holds no String, so the collector
+has nothing to mark for it and a program that fills an array no longer interns one String per
+element.
+
+**And the conformance suite regressed by eight, which was worth more than the measurement.** All
+eight were `Array.prototype.slice` timing out, because `slice` asked `ArraySpeciesCreate` for a
+zero-length array where §23.1.3.25 step 8 asks for `count` — a bug it had always had, whose walk had
+always been stopped by the heap budget the per-index interning spent. Take the allocation away and
+the walk stops ending. **A speed experiment can remove a termination argument nobody wrote down**,
+and the place it was written down here was a doc comment explaining why the budget check worked.
+
+**Ranking after this:** item 3 (shapes and inline caches) is now the top of the list, and the linear
+scan noted just above is the cheaper half of it — a `Vec` lookup is what both a shape and a hash
+would replace, and measuring the scan alone would say which is worth building.
+

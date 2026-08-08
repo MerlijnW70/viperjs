@@ -6,6 +6,7 @@
 
 use super::*;
 use crate::heap::Handle;
+use crate::heap::Heap;
 use crate::heap::{PropertyDescriptor, PropertyKind};
 use crate::value::Value;
 
@@ -25,7 +26,7 @@ fn count(heap: &Heap, object: ObjectId) -> usize {
 
 fn keys(heap: &Heap, object: ObjectId) -> Vec<PropertyKey> {
     heap.object(object)
-        .map_or_else(Vec::new, |found| found.own_property_keys(heap))
+        .map_or_else(Vec::new, |found| found.own_property_keys())
 }
 
 fn prevent(heap: &mut Heap, object: ObjectId) {
@@ -391,9 +392,7 @@ fn own_keys_put_the_array_indices_first_in_numeric_order_and_the_rest_in_creatio
     }
     let names: Vec<String> = keys(&heap, object)
         .into_iter()
-        .map(|k| {
-            String::from_utf16_lossy(k.as_string().and_then(|id| heap.string(id)).unwrap_or(&[]))
-        })
+        .map(|k| k.describe(&heap).unwrap_or_default())
         .collect();
     // Numeric order, not textual — "10" after "2" is the whole point of sorting on the index.
     assert_eq!(names, ["0", "1", "2", "10", "b", "a"]);
@@ -409,9 +408,7 @@ fn a_key_too_large_to_be_an_array_index_is_ordered_as_a_name() {
     }
     let names: Vec<String> = keys(&heap, object)
         .into_iter()
-        .map(|k| {
-            String::from_utf16_lossy(k.as_string().and_then(|id| heap.string(id)).unwrap_or(&[]))
-        })
+        .map(|k| k.describe(&heap).unwrap_or_default())
         .collect();
     // 2^32 - 1 is a length, never an index, so it keeps its place among the names.
     assert_eq!(names, ["5", "4294967294", "4294967295"]);

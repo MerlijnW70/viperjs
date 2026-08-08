@@ -259,7 +259,7 @@ fn listed(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, half: Half) -> Co
         // §7.3.24 step 4 — String keys only, so a Symbol-keyed property is not among the values
         // either. Filtered before the `[[Get]]`, because that would run a getter for something
         // the answer will not hold.
-        if key.as_string().is_none() {
+        if !key.is_spellable() {
             continue;
         }
         if !vm
@@ -272,7 +272,7 @@ fn listed(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, half: Half) -> Co
         listed.push(match half {
             Half::Values => value,
             Half::Entries => {
-                let Some(name) = key.as_string() else {
+                let Some(name) = key.spelling(heap) else {
                     continue;
                 };
                 super::array::from_values(vm, heap, &[Value::String(name), value])?

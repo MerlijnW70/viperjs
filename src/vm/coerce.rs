@@ -320,6 +320,32 @@ impl Vm {
         primitive.to_string(heap)
     }
 
+    /// The array index a Number *is*, if it is one — §6.1.7 asked of a value rather than of text.
+    ///
+    /// Must agree exactly with `heap::index_of`, which asks the same question of the spelling: a
+    /// Number that answers `Some(n)` here has to be one whose `ToString` answers `Some(n)` there,
+    /// or `a[0]` and `a["0"]` would be two keys.
+    ///
+    /// **`-0` is index zero, and the first version of this said otherwise.** `"-0"` is not an array
+    /// index — §6.1.7 asks `ToString(ToUint32(P))` to be `P` and it is not — but the *Number* `-0`
+    /// never arrives as that text: §7.1.19 spells it first, and `ToString(-0)` is `"0"`. So the two
+    /// zeroes are one key here and two keys there, and a sign test written from the text rule sent
+    /// `a[-0]` down the slow path to be told the same thing. Caught by
+    /// `the_numeric_index_test_agrees_with_the_one_asked_of_the_spelling` — no program could see
+    /// it, because the slow path was right.
+    fn array_index_of(number: f64) -> Option<u32> {
+        // `fract` settles integrality, both infinities and NaN at once: theirs is NaN, which is
+        // equal to nothing including zero. `< 0.0` and not `!(>= 0.0)`, because NaN is already
+        // gone by here and the remaining question really is "is it negative" — of which `-0` is
+        // not one.
+        if number.fract() != 0.0 || number < 0.0 {
+            return None;
+        }
+        // `2^32 - 2` is the last index, so the cast cannot lose anything after the comparison —
+        // and `-0.0 as u32` is `0`, which is the answer the spelling gives.
+        (number <= f64::from(crate::heap::MAX_INDEX)).then_some(number as u32)
+    }
+
     /// §7.1.19 `ToPropertyKey` of anything, including an object.
     #[allow(clippy::wrong_self_convention)] // same
     pub(crate) fn to_property_key(
@@ -331,6 +357,16 @@ impl Vm {
         // which is what lets an object with a `Symbol.toPrimitive` answer a Symbol and have it
         // used as the key rather than converted — and it has to be before `ToString`, which
         // throws for a Symbol.
+        // DR-0026's fast path, and the whole of the saving: a non-negative integral Number below
+        // 2^32 - 1 *is* an array index, so the key is a cast. Asked before `ToPrimitive` because a
+        // Number is already primitive — the call would answer it unchanged — and asked on the way
+        // in because `a[i]` is where this is paid, once per element of every loop that walks an
+        // array. What it skips is spelling the number, encoding it to UTF-16 and interning that.
+        if let Value::Number(number) = value
+            && let Some(index) = Self::array_index_of(number)
+        {
+            return Ok(PropertyKey::from_index(index));
+        }
         let primitive = self.to_primitive(value, crate::value::Hint::String, heap)?;
         if let Value::Symbol(symbol) = primitive {
             return Ok(PropertyKey::from_symbol(symbol));
@@ -756,5 +792,52 @@ impl Vm {
             _ => operand,
         };
         super::apply_unary(operator, operand, heap)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_numeric_index_test_agrees_with_the_one_asked_of_the_spelling() {
+        // DR-0026's fast path is **transparent**: with it removed, `ToPropertyKey` spells the
+        // Number, hands the text to `heap::index_of` and reaches the same key by the slow route.
+        // So no program can tell the two apart and no behavioural test can pin this — which is
+        // exactly the shape `lab/NOTES.md` records as needing a structural one instead.
+        //
+        // What it pins is the agreement the whole representation rests on: a Number this answers
+        // `Some(n)` for must be one whose `ToString` the text version also answers `Some(n)` for,
+        // or `a[i]` and `a[String(i)]` would be two keys for one property.
+        let corpus = [
+            0.0,
+            -0.0,
+            1.0,
+            2.0,
+            9.0,
+            10.0,
+            1.5,
+            -1.0,
+            -1.5,
+            0.5,
+            4_294_967_293.0,
+            4_294_967_294.0,
+            4_294_967_295.0,
+            4_294_967_296.0,
+            1e21,
+            9_007_199_254_740_991.0,
+            f64::NAN,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+        ];
+        for number in corpus {
+            let spelled = crate::value::number_to_string(number);
+            let units: Vec<u16> = spelled.encode_utf16().collect();
+            assert_eq!(
+                Vm::array_index_of(number),
+                crate::heap::index_of(&units),
+                "{number} is judged one way as a Number and another as {spelled:?}"
+            );
+        }
     }
 }

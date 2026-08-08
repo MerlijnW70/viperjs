@@ -1020,9 +1020,9 @@ mod tests {
         let units: Vec<u16> = name.encode_utf16().collect();
         let key = heap
             .object(object)?
-            .own_property_keys(heap)
+            .own_property_keys()
             .into_iter()
-            .find(|key| key.as_string().and_then(|id| heap.string(id)) == Some(&units[..]))?;
+            .find(|key| key.spells(heap, &units))?;
         match heap.object(object)?.get_own_property(key)?.kind {
             PropertyKind::Data { value, .. } => Some(value),
             PropertyKind::Accessor { .. } => None,
@@ -1079,9 +1079,9 @@ mod tests {
         let units: Vec<u16> = name.encode_utf16().collect();
         let key = heap
             .object(object)?
-            .own_property_keys(heap)
+            .own_property_keys()
             .into_iter()
-            .find(|key| key.as_string().and_then(|id| heap.string(id)) == Some(&units[..]))?;
+            .find(|key| key.spells(heap, &units))?;
         let found = heap.object(object)?.get_own_property(key)?;
         let PropertyKind::Data { writable, .. } = found.kind else {
             return None;
@@ -1229,19 +1229,13 @@ mod tests {
         let prototype = realm.error_prototype();
         let keys = heap
             .object(prototype)
-            .map_or_else(Vec::new, |found| found.own_property_keys(&heap));
+            .map_or_else(Vec::new, |found| found.own_property_keys());
         // §20.5.3's four: the `name` and `message` an error inherits, the `toString` that prints
         // it, and the `constructor` that points back at `Error`. Named rather than counted, so
         // that adding a fifth is a decision rather than a number going up.
         let names: Vec<String> = keys
             .iter()
-            .map(|key| {
-                String::from_utf16_lossy(
-                    key.as_string()
-                        .and_then(|id| heap.string(id))
-                        .unwrap_or(&[]),
-                )
-            })
+            .map(|key| key.describe(&heap).unwrap_or_default())
             .collect();
         assert_eq!(names, ["name", "message", "constructor", "toString"]);
         for key in keys {

@@ -115,8 +115,22 @@ pub(super) fn get_index(
 /// The interpreter asks between instructions, and a built-in walking a length never gets back to
 /// it: `Array.prototype.reduceRight` over an object whose `length` is `2 ** 53 - 1` is a loop
 /// inside Rust with no instruction boundary in it. Asked here because this is the one place every
-/// such walk passes through, once per index, and because each pass interns a key — so a walk that
-/// is going nowhere is also a walk that is spending the budget.
+/// such walk passes through, once per index.
+///
+/// **This used to end "and each pass interns a key — so a walk that is going nowhere is also a walk
+/// that is spending the budget", and DR-0026 made that false.** An `Index` key allocates nothing,
+/// so a walk that reads absent elements out of a huge array-like now spends no heap and this never
+/// fires. That is *not* a hole to plug: `Array.prototype.indexOf.call({length: 2 ** 53 - 1}, x)` is
+/// a program the specification says to loop through, and node does not return from it either —
+/// measured, not assumed. The engine's answer to a program that will not stop is DR-0022's time
+/// budget, which is the host's to set. What this still catches is the walk that *does* allocate:
+/// `map` and `splice` build a result per index, and those are the ones a budget can be spent on.
+///
+/// One test was passing on the old behaviour and is worth naming, because the failure is the shape
+/// this repository keeps meeting: `slice` asked `ArraySpeciesCreate` for a **zero**-length array
+/// where §23.1.3.25 step 8 asks for `count`, so the RangeError that clause owes never came — and
+/// the walk ran into the heap budget instead, which threw a RangeError of its own that
+/// `assert.throws(RangeError, …)` could not tell apart.
 pub(super) fn within_budget(heap: &Heap) -> Completion<()> {
     if heap.is_exhausted() {
         return Err(Abrupt::range_error(
@@ -492,7 +506,18 @@ pub fn slice(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
         Value::Undefined => length,
         value => start_index(vm, heap, value, length)?,
     };
-    let Value::Object(taken) = array_species_create(vm, heap, object, 0)? else {
+    // §23.1.3.25 step 8 — `count`, and it is **not** the zero every neighbour passes. `filter`,
+    // `concat` and `flat` really do ask for an empty one because they cannot know how many they
+    // will keep; `slice` knows, and the number is observable twice over: it is the argument a
+    // `Symbol.species` constructor is called with, and it is what §10.4.2.2 step 1 refuses when it
+    // is past 2^32-1. `{length: 2 ** 32}.slice(0, 2 ** 32)` is that RangeError.
+    //
+    // **It passed a zero here until DR-0026, and the tests for it were green.** Interning a key per
+    // index used to spend DR-0013's heap budget, so a walk this long ended in a RangeError of a
+    // different kind — and `assert.throws(RangeError, …)` cannot tell two RangeErrors apart. An
+    // `Index` key allocates nothing, the budget stopped being spent, and the walk stopped ending.
+    let count = to.max(from) - from;
+    let Value::Object(taken) = array_species_create(vm, heap, object, count)? else {
         return Err(Abrupt::type_error(
             "the species of this array did not make an object",
         ));

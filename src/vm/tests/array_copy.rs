@@ -267,3 +267,47 @@ fn the_direction_a_copy_runs_in_is_visible_at_the_two_edges_of_the_overlap() {
         "g2s3g1s2g0s1"
     );
 }
+
+#[test]
+fn slice_asks_its_species_for_the_number_of_elements_it_is_about_to_take() {
+    // §23.1.3.25 step 8 is `ArraySpeciesCreate(O, count)`, and the count is observable in two
+    // places. First as the argument the species constructor is called with — `filter` and `concat`
+    // pass zero here because they cannot know, and `slice` can.
+    assert_eq!(
+        run(
+            "var seen; class A extends Array { constructor(n) { super(n); seen = n } }              var a = new A(); a.push(1, 2, 3, 4, 5); a.slice(1, 4); seen"
+        ),
+        "3"
+    );
+    assert_eq!(
+        run(
+            "var seen; class A extends Array { constructor(n) { super(n); seen = n } }              var a = new A(); a.push(1, 2, 3); a.slice(2, 1); seen"
+        ),
+        "0"
+    );
+    // …and second as the RangeError §10.4.2.2 step 1 owes for a count past `2^32 - 1`. An
+    // array-like may be longer than any Array, and the copy it is asking for is not one that
+    // exists — so the answer is a refusal rather than a walk of four billion absent elements.
+    assert_eq!(
+        run(
+            "var o = { length: 4294967296, slice: Array.prototype.slice };              try { o.slice(0, 4294967296); 'no error' } catch (e) { e.constructor.name }"
+        ),
+        "RangeError"
+    );
+    // The refusal comes *before* the walk, which is what makes it an answer rather than a hang:
+    // nothing is read out of the object at all.
+    assert_eq!(
+        run(
+            "var read = 0;              var o = { length: 4294967296, slice: Array.prototype.slice,                        get 0() { read = read + 1 } };              try { o.slice(0, 4294967296) } catch (e) {} read"
+        ),
+        "0"
+    );
+    // And a count that fits is still taken, so the check is a bound and not a refusal of
+    // array-likes: `2^32 - 1` is one too many and `2^32 - 2` is the largest Array there is.
+    assert_eq!(
+        run(
+            "var o = { length: 3, 0: 'a', 1: 'b', 2: 'c', slice: Array.prototype.slice };              o.slice(1).join()"
+        ),
+        "b,c"
+    );
+}

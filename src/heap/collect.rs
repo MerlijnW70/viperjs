@@ -577,12 +577,14 @@ impl Heap {
                 Some(other) => self.mark_value(other, marked),
                 None => {}
             }
-            for key in object.own_property_keys(self) {
+            for key in object.own_property_keys() {
                 // A key is reachable *because* it is a key: a property nothing else names still
                 // has its name. Both kinds — a Symbol key is the only reference to that Symbol
                 // once the code that made it has gone, and collecting it would leave a property
                 // nothing could ever ask for again.
-                if let Some(id) = key.as_string()
+                // An `Index` holds no String at all, so there is nothing here to keep alive —
+                // which is something DR-0026 bought besides speed.
+                if let crate::heap::PropertyKey::String(id) = key
                     && let Some(seen) = marked.strings.get_mut(id.index())
                 {
                     *seen = true;
@@ -984,15 +986,9 @@ mod tests {
         // been freed underneath it.
         let names: Vec<String> = heap
             .object(object)
-            .map_or_else(Vec::new, |found| found.own_property_keys(&heap))
+            .map_or_else(Vec::new, |found| found.own_property_keys())
             .into_iter()
-            .map(|key| {
-                String::from_utf16_lossy(
-                    key.as_string()
-                        .and_then(|id| heap.string(id))
-                        .unwrap_or(&[]),
-                )
-            })
+            .map(|key| key.describe(&heap).unwrap_or_default())
             .collect();
         assert_eq!(names, ["child", "text"]);
     }

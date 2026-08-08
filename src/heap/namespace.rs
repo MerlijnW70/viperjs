@@ -198,12 +198,20 @@ impl Heap {
     pub(crate) fn namespace_export(&self, object: ObjectId, key: PropertyKey) -> Option<Export> {
         let found = self.namespaces.get(&object)?;
         // §10.4.6.8 step 2 — a Symbol is not an export and goes to the ordinary object, which is
-        // where `@@toStringTag` is.
-        let name = key.as_string()?;
+        // where `@@toStringTag` is. No guard for it: `spells` answers `false` for a Symbol, so the
+        // walk below already declines one, and a guard in front would be a branch no program could
+        // tell from its absence.
+        //
+        // An export may be named by a String literal, so `export { x as "0" }` is a key an index
+        // represents. Compared rather than spelled: this has a `&Heap` and interning here would add
+        // a String to answer a lookup. DR-0026.
         let binding = found
             .exports
             .iter()
-            .find(|(export, _)| *export == name)
+            .find(|(export, _)| {
+                self.string(*export)
+                    .is_some_and(|units| key.spells(self, units))
+            })
             .map(|(_, binding)| *binding)?;
         Some(match binding {
             // `export * as n from "m"` — the value is another module's namespace object and there
@@ -273,7 +281,7 @@ impl Heap {
             .collect();
         keys.extend(
             self.object(object)
-                .map_or_else(Vec::new, |found| found.own_property_keys(self)),
+                .map_or_else(Vec::new, |found| found.own_property_keys()),
         );
         Some(keys)
     }

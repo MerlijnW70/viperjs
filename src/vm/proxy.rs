@@ -146,7 +146,7 @@ impl Vm {
                 target,
             } => (trap, handler, target),
         };
-        let named = Self::key_as_value(key);
+        let named = heap.key_value(key);
         let answer = self.call_value(
             trap,
             handler,
@@ -213,7 +213,7 @@ impl Vm {
                 target,
             } => (trap, handler, target),
         };
-        let named = Self::key_as_value(key);
+        let named = heap.key_value(key);
         let answer = self.call_value(
             trap,
             handler,
@@ -271,7 +271,7 @@ impl Vm {
                 target,
             } => (trap, handler, target),
         };
-        let named = Self::key_as_value(key);
+        let named = heap.key_value(key);
         let answer = self.call_value(trap, handler, &[Value::Object(target), named], heap)?;
         if answer.to_boolean(heap) {
             return Ok(Some(true));
@@ -322,7 +322,7 @@ impl Vm {
                 target,
             } => (trap, handler, target),
         };
-        let named = Self::key_as_value(key);
+        let named = heap.key_value(key);
         let answer = self.call_value(trap, handler, &[Value::Object(target), named], heap)?;
         if !answer.to_boolean(heap) {
             return Ok(Some(false));
@@ -334,18 +334,5 @@ impl Vm {
             ));
         }
         Ok(Some(true))
-    }
-
-    /// A property key as the value a trap is handed — a String or a Symbol, never anything else.
-    ///
-    /// The last arm is a key that is neither, which §6.2.2 does not have: a `PropertyKey` is one or
-    /// the other by construction. Answering `undefined` keeps the promise that nothing here panics
-    /// on a shape the types cannot rule out.
-    pub(super) fn key_as_value(key: PropertyKey) -> Value {
-        match (key.as_symbol(), key.as_string()) {
-            (Some(symbol), _) => Value::Symbol(symbol),
-            (None, Some(text)) => Value::String(text),
-            (None, None) => Value::Undefined,
-        }
     }
 }

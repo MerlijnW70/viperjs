@@ -34,7 +34,7 @@ use crate::heap::buffer::{Buffer, View};
 use crate::heap::collection::Collection;
 use crate::heap::promise::{Promise, Role};
 use crate::heap::{
-    ArgumentsMap, Callable, EnvironmentId, Heap, Helper, Iteration, Property, PropertyKey, Proxy,
+    ArgumentsMap, Callable, EnvironmentId, Helper, Iteration, Property, PropertyKey, Proxy,
     StringId, SymbolId, Weak,
 };
 use crate::value::Value;
@@ -42,7 +42,7 @@ use std::collections::HashMap;
 
 /// An object on the heap.
 ///
-/// Meaningful only to the [`Heap`] that issued it, on the same terms as [`crate::heap::StringId`].
+/// Meaningful only to the [`crate::heap::Heap`] that issued it, on the same terms as [`crate::heap::StringId`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ObjectId(pub(crate) usize);
 
@@ -858,10 +858,10 @@ impl Object {
     /// index, so it sorts with the strings — the same boundary [`PropertyKey::as_array_index`]
     /// draws, and observable through this.
     /// A String object's characters are *not* among these, because they are not stored and this
-    /// cannot make the keys that would name them. [`Heap::own_property_keys`] is the whole answer;
+    /// cannot make the keys that would name them. [`crate::heap::Heap::own_property_keys`] is the whole answer;
     /// this is the part of it the collector and the engine's own walks need, and neither of those
     /// cares about a character.
-    pub fn own_property_keys(&self, heap: &Heap) -> Vec<PropertyKey> {
+    pub fn own_property_keys(&self) -> Vec<PropertyKey> {
         let mut indices: Vec<(u32, PropertyKey)> = Vec::new();
         let mut names: Vec<PropertyKey> = Vec::new();
         // §10.1.11 step 4 — every Symbol key comes after every String one, in the order they were
@@ -869,7 +869,7 @@ impl Object {
         // insertion order and a sort would have to be told not to disturb it.
         let mut symbols: Vec<PropertyKey> = Vec::new();
         for (key, _) in &self.properties {
-            match (key.as_symbol(), key.as_array_index(heap)) {
+            match (key.as_symbol(), key.as_array_index()) {
                 (Some(_), _) => symbols.push(*key),
                 (None, Some(index)) => indices.push((index, *key)),
                 (None, None) => names.push(*key),
@@ -912,8 +912,10 @@ mod object_tests;
 mod tests {
     use super::*;
     // Named here rather than at the top of the file: §10.1's internal methods moved next door to
-    // `ordinary`, and these are the only rows left that build a descriptor by hand.
-    use crate::heap::{PropertyDescriptor, PropertyKind};
+    // `ordinary`, and these are the only rows left that build a descriptor by hand. `Heap` joined
+    // them when DR-0026 took it out of `own_property_keys` — a key knows its own index now, so the
+    // only thing left in this file wanting a heap is a test that builds one.
+    use crate::heap::{Heap, PropertyDescriptor, PropertyKind};
 
     fn key(heap: &mut Heap, text: &str) -> PropertyKey {
         PropertyKey::from_units(heap, &text.encode_utf16().collect::<Vec<_>>())
