@@ -648,12 +648,9 @@ there is roughly 10–20× of headroom inside the current architecture**, and it
 
 Ranked by what the measurements support, not by what sounds promising:
 
-1. **The interpreter loop's stack frame — 13,728 bytes.** Everything above rides on the 122 ns
-   baseline, and a frame that large means the hot loop keeps nothing in registers: every
-   instruction round-trips through memory. This is the *same* fact that blocks
-   `MAX_REENTRY_DEPTH` (see the engine's `coerce.rs`), so one piece of work pays two debts.
-   Splitting the loop's cold half into its own function is the structural change; arm-by-arm
-   outlining is already exhausted.
+1. ~~**The interpreter loop's stack frame.**~~ **Falsified the same day — see the correction
+   below.** The frame costs no speed at all; it remains a `MAX_REENTRY_DEPTH` problem and is not a
+   performance one.
 2. **An integer variant for `PropertyKey` — a measured +196 ns per varying index.** Today
    `a[i]` turns the Number into decimal text, encodes that to UTF-16, and interns it. A
    `PropertyKey::Index(u32)` removes all three from every indexed access.
@@ -670,3 +667,37 @@ Ranked by what the measurements support, not by what sounds promising:
 
 **Cost:** about an hour, most of it in the two benchmark runs and one re-run of node at a size where
 its numbers mean something.
+
+### Correction, an hour later: the frame is not the speed lever
+
+The recommendation above was a *deduction* — "everything rides on the 122 ns baseline, and a
+13,728-byte frame means the hot loop keeps nothing in registers" — and it is wrong. Falsified by
+inflating the frame on purpose rather than by arguing about it:
+
+| | release frame | ns/iteration |
+| --- | --- | --- |
+| as it is | 3,272 | 144.5 |
+| with a 16 KiB `black_box`'d array live across the loop | **19,704** | **144.5** |
+
+Six times the frame, no difference. Obvious afterwards: those bytes are *unused* on the hot path,
+the compiler keeps the handful of live locals in registers regardless, and `__chkstk` is paid once
+per `execute` **call** rather than per instruction.
+
+Two smaller things came out of the same hour and are worth keeping:
+
+- **`yield_from_generator` was not `#[inline(never)]`** and owned 105 stack slots, the largest
+  single contributor to the release frame. Marking it and two neighbours took the frame from 3,272
+  to 3,080 — **6%**, and no measurable speed. Reverted: it buys nothing anything can see.
+- **The debug frame did not move at all**, because a debug build inlines nothing to begin with. The
+  two frames have different causes: debug is the sum of the locals the `match` arms declare, release
+  is whatever survives sharing. `coerce.rs` already said the compiler shares slots across arms; it
+  was right and reading it first would have saved the experiment.
+
+**So the ranking above stands with item 1 struck out**, and the integer `PropertyKey` — +196 ns per
+varying index, isolated by construction rather than deduced — is the first item that rests on a
+measurement. DR-0026 is that.
+
+**And a third cost turned up while reading for it:** an object's own properties are a
+`Vec<(PropertyKey, Property)>`, so every lookup is a **linear scan**. That is adjacent to the key
+work and separate from it, and it is part of why eight shapes cost 469 ns against a single shape's
+170.
