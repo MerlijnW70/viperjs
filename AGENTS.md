@@ -155,6 +155,16 @@ refused wholesale until DR-0008's second amendment. A pattern carrying neither `
 `/}/` as a brace, `/\1/` with no group as a legacy octal escape, `/\8/` as an `8`, `/\c1/` as three
 characters and `/[\d-x]/` as a union. See the section below for the shape of it.
 
+**`tests/cli.rs` is invisible to mutation coverage, and that is worth knowing before writing a
+test there.** An integration test runs the binary as a **subprocess**, so a mutation in
+`src/bin/viper.rs` that only the subprocess would notice survives — the mutant reaches the binary
+the sandbox builds and not necessarily the one the test invokes. Found 2026-08-08 building `atob`:
+eight survivors over eleven lines of bit arithmetic, every one of them killed when the mutation was
+applied *by hand*. The count also moved between runs (8, then 4), which is the tell. **Put the
+decision in a `#[cfg(test)]` unit test inside the binary and leave the integration test to prove
+the *binding*** — doing that took the survivors to one, and the one that was left was a
+`with_capacity` hint no test could ever pin, so it went.
+
 **A run's number is stable and a *contended* one is not, and the difference cost a bad bless.**
 Three consecutive runs alone give the same figure to the test; a fourth taken while the machine was
 busy came back **204 lower**, all of it `RegExp/CharacterClassEscapes` and `property-escapes` — the

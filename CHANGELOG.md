@@ -14,6 +14,10 @@ public API is not stable and may change in any release.
   records the realm it was made in. §10.1.14 `GetFunctionRealm` answers for a bound function and a
   `Proxy` by recursing into their targets, and a call runs in the **callee's** realm as §10.3.1
   step 3 requires. An embedder wanting a sandbox per tenant wants exactly this. See DR-0025.
+- **`atob` and `btoa` on the command line**, the HTML standard's forgiving-base64 pair. Not
+  ECMAScript, and here on the same terms as `console`: in the Minimum Common API, pure arithmetic,
+  and a real blocker — `entities`, which `htmlparser2` and `cheerio` are built on, decodes its own
+  tables with `atob` while it loads.
 - The well-known Symbols moved to the heap, so every realm shares one `Symbol.iterator` as
   §6.1.5.1 requires.
 

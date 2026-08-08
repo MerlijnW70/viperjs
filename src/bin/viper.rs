@@ -47,7 +47,7 @@ use std::time::Duration;
 use viperjs::api::{Engine, Error, Host};
 use viperjs::heap::{Heap, NativeCall};
 use viperjs::parser::parse_module;
-use viperjs::value::{Completion, Value};
+use viperjs::value::{Abrupt, Completion, Value};
 use viperjs::vm::Vm;
 
 /// What the command line asked for.
@@ -191,6 +191,146 @@ loading: GOAL.md §3 says the host provides I/O and this host provides almost no
 exit status: 0 ran, 1 the script threw or would not parse, 2 the arguments made no sense.
 ";
 
+/// The base64 alphabet, in the order the HTML standard's forgiving-base64 numbers it.
+/// The base64 alphabet, in the order the HTML standard's forgiving-base64 numbers it.
+const BASE64: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+/// What every "this is not base64" refusal answers with.
+///
+/// One function rather than the sentence repeated: they are the same refusal reached three ways —
+/// a code point past U+00FF, a character outside the alphabet, and a `=` where no padding may be —
+/// and the standard gives all three the same name.
+///
+/// A **TypeError** carrying that name rather than the `InvalidCharacterError` DOMException the
+/// standard asks for, which this host has no way to make and no business inventing. The kind is
+/// wrong, the reason is not, and a caller matching on the message still finds the name.
+fn not_base64() -> Abrupt {
+    Abrupt::type_error("InvalidCharacterError: this is not base64")
+}
+
+/// The HTML standard's base64 *encode*, over one byte per element.
+///
+/// Separated from the host function around it so that mutation coverage can see it. `tests/cli.rs`
+/// exercises the binding by running the binary as a **subprocess**, and a mutation that only the
+/// subprocess would notice survives — the mutant is compiled into a binary the test then does not
+/// necessarily rebuild. So the arithmetic is tested here, where the mutant and the assertion are in
+/// one process, and the integration test is left to prove the *binding* rather than the bit-work.
+fn encode_base64(bytes: &[u8]) -> String {
+    // No capacity hint. The arithmetic for one — four characters per three bytes — is a claim no
+    // test can hold: a capacity too small or too large changes nothing but how often the String
+    // grows, so mutation coverage reported it as untested and was right. This repository's rule for
+    // an optimisation is that it earns a benchmark before it earns code, and none has asked.
+    let mut out = String::new();
+    for group in bytes.chunks(3) {
+        // Padded to three so the shifts are one expression rather than three cases; what differs
+        // between a full group and a short one is only how much of it is written out.
+        let packed = u32::from(group[0]) << 16
+            | u32::from(group.get(1).copied().unwrap_or(0)) << 8
+            | u32::from(group.get(2).copied().unwrap_or(0));
+        out.push(char::from(BASE64[(packed >> 18) as usize & 63]));
+        out.push(char::from(BASE64[(packed >> 12) as usize & 63]));
+        out.push(match group.len() {
+            1 => '=',
+            _ => char::from(BASE64[(packed >> 6) as usize & 63]),
+        });
+        out.push(match group.len() {
+            3 => char::from(BASE64[packed as usize & 63]),
+            _ => '=',
+        });
+    }
+    out
+}
+
+/// The HTML standard's *forgiving*-base64 decode, answering one code unit per byte.
+///
+/// "Forgiving" is the standard's own word and it names three allowances rather than a general
+/// leniency: ASCII whitespace is stripped anywhere, up to two trailing `=` are optional when the
+/// length is already a multiple of four, and **nothing else** is tolerated. A length one past a
+/// multiple of four is refused outright, because no number of bytes encodes to it.
+fn decode_base64(text: &str) -> Completion<String> {
+    // Step 1 — ASCII whitespace, which is the HTML infra set and **not** §12.2's: no U+000B, no
+    // U+00A0 and no Unicode spaces. A wider set here would accept input a browser refuses.
+    let mut trimmed: Vec<u8> = Vec::with_capacity(text.len());
+    for point in text.chars() {
+        if matches!(point, '\t' | '\n' | '\u{c}' | '\r' | ' ') {
+            continue;
+        }
+        match u8::try_from(point as u32) {
+            Ok(byte) => trimmed.push(byte),
+            Err(_) => return Err(not_base64()),
+        }
+    }
+    // Step 2 — the padding comes off only when the length is *already* a multiple of four, so
+    // `"YQ="` stays four-and-a-remainder and is refused rather than quietly read as `"YQ"`.
+    if trimmed.len().is_multiple_of(4) {
+        for _ in 0..2 {
+            if trimmed.last() == Some(&b'=') {
+                trimmed.pop();
+            }
+        }
+    }
+    // Step 3 — one past a multiple of four encodes no number of bytes at all.
+    if trimmed.len() % 4 == 1 {
+        return Err(Abrupt::type_error(
+            "InvalidCharacterError: this base64 has a length no number of bytes encodes to",
+        ));
+    }
+    let mut out = String::with_capacity(trimmed.len() / 4 * 3);
+    let mut buffer = 0_u32;
+    let mut bits = 0_u32;
+    for byte in trimmed {
+        let Some(index) = BASE64.iter().position(|known| *known == byte) else {
+            return Err(not_base64());
+        };
+        buffer = buffer << 6 | index as u32;
+        bits += 6;
+        if bits >= 8 {
+            bits -= 8;
+            // A byte, so the code unit is 0 to 255 and `from_u32` cannot fail. The `unwrap_or` is
+            // the total spelling rather than a case any input reaches.
+            out.push(char::from_u32(buffer >> bits & 0xff).unwrap_or('\u{0}'));
+        }
+    }
+    Ok(out)
+}
+
+/// `btoa(data)` — base64 encode, over one byte per code unit.
+///
+/// Not ECMAScript, and here on the same terms as `console`: it is in the Minimum Common API, every
+/// host has it, and it is pure arithmetic — no clock, no filesystem, no entropy. `entities`, which
+/// `htmlparser2` and `cheerio` are built on, decodes its own tables with `atob` while it loads and
+/// dies on a ReferenceError without it. That is how this was found.
+///
+/// **A code point above U+00FF is refused.** `btoa` encodes *bytes* and a String holds code units,
+/// so there is no encoding to choose and the standard refuses rather than choosing one.
+fn btoa(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let text = Host::new(vm, heap).text(call.argument(0))?;
+    let mut bytes = Vec::with_capacity(text.len());
+    for point in text.chars() {
+        match u8::try_from(point as u32) {
+            Ok(byte) => bytes.push(byte),
+            Err(_) => {
+                return Err(Abrupt::type_error(
+                    "InvalidCharacterError: btoa encodes bytes, and this string has a code point above U+00FF",
+                ));
+            }
+        }
+    }
+    let encoded = encode_base64(&bytes);
+    Ok(Host::new(vm, heap).string(&encoded))
+}
+
+/// `atob(data)` — forgiving-base64 decode, as one code unit per byte.
+///
+/// The answer is a String of code units 0 to 255 — bytes, not text. Deliberately: what the bytes
+/// *mean* is the caller's, which is why `entities` reads them back with `charCodeAt` and builds its
+/// own `Uint16Array` rather than asking for a decoded string.
+fn atob(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let text = Host::new(vm, heap).text(call.argument(0))?;
+    let decoded = decode_base64(&text)?;
+    Ok(Host::new(vm, heap).string(&decoded))
+}
+
 /// §19's `print` for a command line: write one argument and a newline.
 ///
 /// Kept beside `console` rather than replaced by it. This is what a script written *for* this host
@@ -246,6 +386,13 @@ fn main() -> ExitCode {
     let asked = read_arguments(&arguments, std::io::stdin().is_terminal());
     let mut engine = Engine::new();
     engine.bind("print", 1, print);
+    // The HTML standard's two, and the same argument that admitted `console`: not
+    // ECMAScript, in the Minimum Common API, and pure arithmetic. `entities` — which
+    // `htmlparser2` and `cheerio` are built on — decodes its own tables with `atob` while it
+    // loads, so without them a very common dependency chain dies on a ReferenceError before
+    // any of the program has run.
+    engine.bind("atob", 1, atob);
+    engine.bind("btoa", 1, btoa);
     // Six methods and no more. Real libraries reach for `console.warn` to report a deprecation and
     // `console.error` to report a failure they are handling; without one they die on a
     // ReferenceError in code that was never about output. `ajv` — a top-20 package — does exactly
@@ -438,6 +585,72 @@ fn prompt(engine: &mut Engine) -> ExitCode {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
+    #[test]
+    fn base64_encodes_every_group_length_and_pads_each_the_way_the_standard_says() {
+        // The three lengths a group can end on, each with its own amount of padding — and the
+        // padding is what a shift or a mask off by one place gets wrong while still looking like
+        // base64. A round trip alone does not catch that: two mistakes can cancel.
+        assert_eq!(encode_base64(b""), "");
+        assert_eq!(encode_base64(b"a"), "YQ==");
+        assert_eq!(encode_base64(b"ab"), "YWI=");
+        assert_eq!(encode_base64(b"abc"), "YWJj");
+        assert_eq!(encode_base64(b"hello"), "aGVsbG8=");
+        // The high bytes, which reach the top of the alphabet where the low ones never do.
+        assert_eq!(encode_base64(&[0xff, 0xfe]), "//4=");
+        assert_eq!(encode_base64(&[0x00, 0x00, 0x00]), "AAAA");
+        assert_eq!(encode_base64(&[0xff, 0xff, 0xff]), "////");
+        // One byte per position, so a shift that reads the wrong third of the group shows up.
+        assert_eq!(encode_base64(&[0xff, 0x00, 0x00]), "/wAA");
+        assert_eq!(encode_base64(&[0x00, 0xff, 0x00]), "AP8A");
+        assert_eq!(encode_base64(&[0x00, 0x00, 0xff]), "AAD/");
+    }
+
+    #[test]
+    fn base64_decodes_what_it_encoded_for_every_byte_there_is() {
+        // Every value, which is the only test that covers the alphabet's edges: a table with one
+        // character out of place round-trips almost everything and fails on a handful.
+        let all: Vec<u8> = (0..=255).collect();
+        let encoded = encode_base64(&all);
+        let back = decode_base64(&encoded).expect("what we encoded decodes"); // the test is the round trip
+        assert_eq!(
+            back.chars().map(|c| c as u32).collect::<Vec<_>>(),
+            (0..=255).collect::<Vec<u32>>()
+        );
+        // …and the encoding itself is the standard's, not merely self-consistent.
+        assert_eq!(&encoded[..8], "AAECAwQF");
+    }
+
+    #[test]
+    fn forgiving_base64_forgives_exactly_three_things() {
+        // Whitespace anywhere, and it is *ASCII* whitespace — the HTML infra set. U+000B and
+        // U+00A0 look blank and are not on it, so a string a reader would call empty is refused.
+        assert_eq!(
+            decode_base64(" a G V s b G 8 = ").ok().as_deref(),
+            Some("hello")
+        );
+        assert_eq!(decode_base64("aGVs\nbG8=").ok().as_deref(), Some("hello"));
+        assert!(decode_base64("aGVs\u{b}bG8=").is_err());
+        assert!(decode_base64("aGVs\u{a0}bG8=").is_err());
+
+        // The padding, optional only when the length is *already* a multiple of four — so `YQ=`
+        // stays four-and-a-remainder and is refused rather than read as `YQ`.
+        assert_eq!(decode_base64("aGVsbG8").ok().as_deref(), Some("hello"));
+        assert_eq!(decode_base64("YQ==").ok().as_deref(), Some("a"));
+        assert!(decode_base64("YQ=").is_err());
+
+        // And a length one past a multiple of four, which no number of bytes encodes to.
+        assert!(decode_base64("a").is_err());
+        assert!(decode_base64("aGVsb").is_err());
+
+        // Nothing else is forgiven.
+        for bad in ["!!!!", "a=b=", "ab-d", "ab_d", "\u{100}"] {
+            assert!(decode_base64(bad).is_err(), "for {bad:?}");
+        }
+        assert_eq!(decode_base64("").ok().as_deref(), Some(""));
+    }
+
     use super::{Asked, Command, read_arguments};
 
     /// The arguments, as a caller would pass them.

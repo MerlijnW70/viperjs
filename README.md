@@ -47,8 +47,11 @@ viper                    # a prompt, if stdin is a terminal
 viper --help             # every option, which is not many
 ```
 
-The host binds exactly one function, `print`. There is no `require`, no `fs` and no `console` —
-GOAL.md §3 says the host provides I/O, and this host provides almost none of it on purpose.
+The command line binds `print`, a `console` of six logging methods, and the HTML standard's `atob`
+and `btoa`. There is still no `require`, no `fs` and no `process` — GOAL.md §3 says the host
+provides I/O, and this host provides very little of it on purpose. What it does provide is the
+Minimum Common API's, which is the line: `console` and base64 are standards every JavaScript host
+has and are pure computation, where a module loader is a runtime.
 
 ```js
 // script.js
@@ -92,8 +95,8 @@ fn print(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
 
 let mut engine = Engine::new();
 
-// We provide the language; the host provides everything else. There is no `console`
-// until you bind one.
+// We provide the language; the host provides everything else. An `Engine` starts with no
+// `console`, no `print` and no I/O at all — the command line binds those, and so do you.
 engine.bind("print", 1, print);
 
 let answer = engine

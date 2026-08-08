@@ -308,3 +308,84 @@ fn a_heap_budget_that_makes_no_sense_is_refused_before_anything_runs() {
     assert!(err.contains("--heap-budget wants"), "{err}");
     assert_eq!(status, Some(2));
 }
+
+#[test]
+fn the_command_line_binds_the_html_standards_two_base64_functions() {
+    // Not ECMAScript, and here on the same terms as `console`: in the Minimum Common API, every
+    // host has them, and they are pure arithmetic. `entities` — which `htmlparser2` and `cheerio`
+    // are built on — decodes its own tables with `atob` while it loads, so a very common dependency
+    // chain died on a ReferenceError before any of the program ran.
+    let (out, _, status) = viper(&[], "print(btoa('hello')); print(atob('aGVsbG8='));\n");
+    assert_eq!(out, "aGVsbG8=\nhello\n");
+    assert_eq!(status, Some(0));
+
+    // Every byte value, which is the only test that covers the alphabet's edges — a table with one
+    // character out of place round-trips almost everything and fails on a handful.
+    let (out, _, _) = viper(
+        &[],
+        "var all = ''; for (var b = 0; b < 256; b++) { all += String.fromCharCode(b); }\
+         print(atob(btoa(all)) === all);\n",
+    );
+    assert_eq!(out.trim(), "true");
+
+    // The three lengths a group can end on, each with its own amount of padding.
+    let (out, _, _) = viper(
+        &[],
+        "print(btoa('a') + ' ' + btoa('ab') + ' ' + btoa('abc'));\n",
+    );
+    assert_eq!(out.trim(), "YQ== YWI= YWJj");
+}
+
+#[test]
+fn forgiving_base64_forgives_exactly_three_things_and_nothing_else() {
+    // "Forgiving" is the standard's own word and it names three allowances rather than a general
+    // leniency. Whitespace anywhere is the first…
+    let (out, _, _) = viper(&[], "print(atob(' a G V s b G 8 = '));\n");
+    assert_eq!(out.trim(), "hello");
+    // …and it is *ASCII* whitespace, the HTML infra set: no U+000B and no U+00A0, so a string that
+    // looks blank to a reader is still refused.
+    let (_, err, status) = viper(&[], "atob('aGVs\\u00a0bG8=');\n");
+    assert!(err.contains("InvalidCharacterError"), "{err}");
+    assert_eq!(status, Some(1));
+
+    // The second is the padding, which is optional only when the length is *already* a multiple of
+    // four — so `'YQ='` stays four-and-a-remainder and is refused rather than read as `'YQ'`.
+    let (out, _, _) = viper(&[], "print(atob('aGVsbG8'));\n");
+    assert_eq!(out.trim(), "hello");
+    let (_, err, _) = viper(&[], "atob('YQ=');\n");
+    assert!(err.contains("InvalidCharacterError"), "{err}");
+
+    // The third is that a length one past a multiple of four encodes no number of bytes at all.
+    let (_, err, _) = viper(&[], "atob('a');\n");
+    assert!(err.contains("no number of bytes"), "{err}");
+
+    // And nothing else is forgiven: a character outside the alphabet is refused wherever it is.
+    for bad in ["'!!!!'", "'a=b='", "'ab-d'"] {
+        let (_, err, status) = viper(&[], &format!("atob({bad});\n"));
+        assert!(err.contains("InvalidCharacterError"), "for {bad}: {err}");
+        assert_eq!(status, Some(1), "for {bad}");
+    }
+}
+
+#[test]
+fn btoa_encodes_bytes_and_refuses_a_string_that_is_not_made_of_them() {
+    // `btoa` encodes *bytes* and a String holds code units, so there is no encoding to choose and
+    // the standard refuses rather than choosing one. U+00FF goes; U+0100 does not, and the boundary
+    // between them is the whole rule.
+    let (out, _, status) = viper(&[], "print(btoa(String.fromCharCode(255, 254)));\n");
+    assert_eq!(out.trim(), "//4=");
+    assert_eq!(status, Some(0));
+
+    let (_, err, status) = viper(&[], "btoa(String.fromCharCode(256));\n");
+    assert!(err.contains("code point above U+00FF"), "{err}");
+    assert_eq!(status, Some(1));
+
+    // The error is a TypeError carrying the standard's name rather than a DOMException, which this
+    // host has no way to make. Recorded as a test so the difference is a decision and not a
+    // surprise — a caller matching on the message finds `InvalidCharacterError` either way.
+    let (out, _, _) = viper(
+        &[],
+        "try { btoa('\\u0100') } catch (e) { print(e.name + '|' + (e.message.indexOf('InvalidCharacterError') === 0)); }\n",
+    );
+    assert_eq!(out.trim(), "TypeError|true");
+}
