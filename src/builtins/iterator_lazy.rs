@@ -267,8 +267,13 @@ fn helper_next(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completio
         if let Step::Take(count) = what
             && counter >= count
         {
+            // The helper is done whatever the close finds, so it is marked first.
             finish(heap, object);
-            walk.close(vm, heap);
+            // …and the close carries a **NormalCompletion**, which is the whole difference from
+            // the abrupt closes above: §7.4.9 step 4 has nothing to keep, so steps 5 and 6 are what
+            // the program sees. `new ThrowingIterator().take(0).next()` therefore reports what the
+            // source's `return` threw rather than answering `{ done: true }` over the top of it.
+            walk.close_reporting(vm, heap)?;
             return Ok(result(vm, heap, Value::Undefined, true));
         }
         let Some(value) = walk.step(vm, heap)? else {

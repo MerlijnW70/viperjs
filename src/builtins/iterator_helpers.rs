@@ -107,7 +107,13 @@ fn consume(
             Consume::Every => (!liked).then_some(Value::Boolean(false)),
         };
         if let Some(answer) = stop {
-            walk.close(vm, heap);
+            // §27.1.4's `every`, `find` and `some` all close with a **NormalCompletion** here —
+            // `IteratorClose(iterated, NormalCompletion(x))` — where the callback's own throw above
+            // closes with an abrupt one. §7.4.9 step 4 keeps the original completion when there is
+            // one to keep and there is not here, so steps 5 and 6 are what the program sees: a
+            // `return` **getter** that throws, a `return` that throws when called, and one that
+            // answers a primitive are all reported rather than swallowed.
+            walk.close_reporting(vm, heap)?;
             return Ok(answer);
         }
         counter += 1;

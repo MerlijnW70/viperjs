@@ -240,3 +240,98 @@ fn the_two_accessors_write_to_the_receiver_and_refuse_their_own_home() {
         "through,true"
     );
 }
+
+#[test]
+fn a_helper_that_stops_early_reports_what_closing_found_and_one_that_throws_does_not() {
+    // §7.4.9 step 4 is the whole distinction, and this asserts the pair rather than either half.
+    //
+    // `every`, `find` and `some` stop with `IteratorClose(iterated, NormalCompletion(x))`. There is
+    // no original completion to keep, so steps 5 and 6 are what the program sees: a `return` that
+    // throws is *reported*.
+    let source = "var made = function () { var i = 0; return {\
+        [Symbol.iterator]: function () { return this },\
+        next: function () { return { value: i++, done: false } },\
+        return: function () { throw new RangeError('closing') } } };";
+    assert_eq!(
+        run(&format!(
+            "{source} try {{ Iterator.from(made()).every(function () {{ return false }}) }}\
+             catch (e) {{ e.name }}"
+        )),
+        "RangeError"
+    );
+    assert_eq!(
+        run(&format!(
+            "{source} try {{ Iterator.from(made()).some(function () {{ return true }}) }}\
+             catch (e) {{ e.name }}"
+        )),
+        "RangeError"
+    );
+    assert_eq!(
+        run(&format!(
+            "{source} try {{ Iterator.from(made()).find(function () {{ return true }}) }}\
+             catch (e) {{ e.name }}"
+        )),
+        "RangeError"
+    );
+    // §7.4.9 step 2 is inside the close as well, so a `return` **getter** that throws is reported
+    // by the same steps — which is why the clause says `Completion(...)` around the lookup.
+    let getter = "var made = function () { var i = 0; return {\
+        [Symbol.iterator]: function () { return this },\
+        next: function () { return { value: i++, done: false } },\
+        get return() { throw new RangeError('reading') } } };";
+    assert_eq!(
+        run(&format!(
+            "{getter} try {{ Iterator.from(made()).every(function () {{ return false }}) }}\
+             catch (e) {{ e.name }}"
+        )),
+        "RangeError"
+    );
+
+    // …and the other side of step 4: when the *callback* throws, the walk is being abandoned for a
+    // reason it already has, so the close's own trouble is discarded and the callback's error is
+    // what comes out. Same iterator, same `return`, opposite answer.
+    assert_eq!(
+        run(&format!(
+            "{source} try {{ Iterator.from(made()).every(function () {{ throw new TypeError() }}) }}\
+             catch (e) {{ e.name }}"
+        )),
+        "TypeError"
+    );
+}
+
+#[test]
+fn take_reports_what_closing_the_source_found_when_it_has_had_its_fill() {
+    // §27.1.4.9 step 8.b.i.1 — `take` that has had its fill closes with a **NormalCompletion**, so
+    // a `return` that throws is reported rather than being papered over with `{ done: true }`.
+    let source = "var made = function () { return {\
+        [Symbol.iterator]: function () { return this },\
+        next: function () { return { value: 1, done: false } },\
+        return: function () { throw new RangeError('closing') } } };";
+    assert_eq!(
+        run(&format!(
+            "{source} try {{ Iterator.from(made()).take(0).next() }} catch (e) {{ e.name }}"
+        )),
+        "RangeError"
+    );
+    // The close happens *before* the next value is drawn, so a source whose `done` getter throws is
+    // never asked at all — `take(0)` reads nothing.
+    assert_eq!(
+        run(
+            "var read = 0; var made = { [Symbol.iterator]: function () { return this },\
+             next: function () { read++; return { value: 1, done: false } },\
+             return: function () { return {} } };\
+             Iterator.from(made).take(0).next(); read"
+        ),
+        "0"
+    );
+    // And a `take` that has *not* had its fill closes nothing, so the same source walks normally.
+    assert_eq!(
+        run(
+            "var made = { [Symbol.iterator]: function () { return this },\
+             next: function () { return { value: 7, done: false } },\
+             return: function () { throw new RangeError() } };\
+             Iterator.from(made).take(2).next().value"
+        ),
+        "7"
+    );
+}

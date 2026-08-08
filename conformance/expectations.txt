@@ -1560,16 +1560,8 @@ built-ins/Iterator/prototype/drop/argument-validation-failure-closes-underlying.
 built-ins/Iterator/prototype/drop/argument-validation-failure-closes-underlying.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true
 built-ins/Iterator/prototype/drop/throws-typeerror-when-generator-is-running.js :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Iterator/prototype/drop/throws-typeerror-when-generator-is-running.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
-built-ins/Iterator/prototype/every/get-return-method-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Iterator/prototype/every/get-return-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Iterator/prototype/every/iterator-return-method-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Iterator/prototype/every/iterator-return-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Iterator/prototype/filter/throws-typeerror-when-generator-is-running.js :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Iterator/prototype/filter/throws-typeerror-when-generator-is-running.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
-built-ins/Iterator/prototype/find/get-return-method-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Iterator/prototype/find/get-return-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Iterator/prototype/find/iterator-return-method-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Iterator/prototype/find/iterator-return-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Iterator/prototype/flatMap/return-is-forwarded-to-mapper-result.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Iterator/prototype/flatMap/return-is-forwarded-to-mapper-result.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Iterator/prototype/flatMap/throws-typeerror-when-generator-is-running.js :: it threw an object with no name: Expected a TypeError but got a RangeError
@@ -1608,20 +1600,8 @@ built-ins/Iterator/prototype/join/separator-tostring.js :: it threw TypeError: w
 built-ins/Iterator/prototype/join/separator-tostring.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/map/throws-typeerror-when-generator-is-running.js :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Iterator/prototype/map/throws-typeerror-when-generator-is-running.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
-built-ins/Iterator/prototype/some/get-return-method-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Iterator/prototype/some/get-return-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Iterator/prototype/some/iterator-return-method-throws.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Iterator/prototype/some/iterator-return-method-throws.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Iterator/prototype/take/argument-validation-failure-closes-underlying.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true
 built-ins/Iterator/prototype/take/argument-validation-failure-closes-underlying.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true
-built-ins/Iterator/prototype/take/exhaustion-calls-return.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Iterator/prototype/take/exhaustion-calls-return.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Iterator/prototype/take/next-method-returns-throwing-done.js :: it threw an object with no name: Expected a ReturnCalledError to be thrown but no exception was thrown at all
-built-ins/Iterator/prototype/take/next-method-returns-throwing-done.js (strict) :: it threw an object with no name: Expected a ReturnCalledError to be thrown but no exception was thrown at all
-built-ins/Iterator/prototype/take/next-method-returns-throwing-value-done.js :: it threw an object with no name: Expected a ReturnCalledError to be thrown but no exception was thrown at all
-built-ins/Iterator/prototype/take/next-method-returns-throwing-value-done.js (strict) :: it threw an object with no name: Expected a ReturnCalledError to be thrown but no exception was thrown at all
-built-ins/Iterator/prototype/take/next-method-returns-throwing-value.js :: it threw an object with no name: Expected a ReturnCalledError to be thrown but no exception was thrown at all
-built-ins/Iterator/prototype/take/next-method-returns-throwing-value.js (strict) :: it threw an object with no name: Expected a ReturnCalledError to be thrown but no exception was thrown at all
 built-ins/Iterator/prototype/take/throws-typeerror-when-generator-is-running.js :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Iterator/prototype/take/throws-typeerror-when-generator-is-running.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Iterator/zip/basic-longest.js :: it threw TypeError: what was called is not a function
