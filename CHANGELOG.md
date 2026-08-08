@@ -32,6 +32,11 @@ public API is not stable and may change in any release.
   and §23.1.2.1 step 5), refuse per element with `CreateDataPropertyOrThrow`, and set `length` with
   a throwing write. `Array.from` also closes the iterator when its own mapper or write throws, which
   is only possible because the write happens inside the walk.
+- **An Iterator Helper that stops early reports what closing the source found.** §27.1.4's `every`,
+  `find`, `some` and `take` close with a `NormalCompletion`, so §7.4.9 step 4 has nothing to keep
+  and a `return` that throws — or a `return` getter that throws — reaches the program. A helper
+  whose *callback* throws still discards the close's own trouble, which is the same clause read
+  from the other side.
 - **`%TypedArray%.prototype.set` reads its buffer again after converting the offset** (§23.2.3.26
   steps 8 and 9). A `valueOf` in the offset may detach or resize the buffer, and everything learned
   before the conversion described a buffer that may no longer exist.
