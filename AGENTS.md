@@ -185,16 +185,28 @@ frame beside the `this` and the `new.target` it already saved. §10.1.13 is a re
 takes its default from the constructor's realm, which fixed every built-in constructor at once. See
 `notes/FINDINGS.md` for the three ordering faults that fell out of it.
 
-Conformance as of this commit is **85.66% of test262** — 79,802 of 93,161 runs on the run this
-sentence was written from, and a few hundred either way on the next. Treat that number as
-perishable and re-measure rather than quoting it; the point of the figure is the work list under it.
-Only 316 runs are now *stopped* before anything executes. **One of them was misfiled here for a
-long time and it matters:** `(?i:…)` 170 is the RegExp **modifiers** proposal and is excluded, but a
-property of strings is **not** a proposal — `regexp-v-flag` sits unmarked in test262's
-`features.txt` and shipped in ES2024. `\q{…}` was 54 of those and is now built; what is left of the
-flag is the 86 runs that need Unicode emoji sequence data (92 on the current run, six of them the
-`v`-flag's other stragglers). The rest is `this agent cannot block` 14, `super` in an arrow's direct
-`eval` 16, and two dozen module-beside-the-test parse failures that are proposals.
+**And `$262.agent` runs, so ViperJS has more than one agent** — worth **+168**, and it is threads
+rather than a scheduler because `atomicsHelper.js` waits for an agent with a `while` loop that has no
+yield in it. A `SharedArrayBuffer`'s bytes are a `heap::Block` now: one allocation behind an `Arc`
+that any number of heaps may hold, with §25.4.1's waiter list under the same lock so that a blocking
+`Atomics.wait` compares and enqueues in one step. §9.7's `[[CanBlock]]` is a property of the *agent*,
+answered by the host — `false` for an engine embedded on its own, `true` throughout `conformance`,
+which is what swaps the `CanBlockIsFalse`/`CanBlockIsTrue` flags over. **Read
+`notes/FINDINGS.md` before touching it**: the read-modify-write operations were not atomic and no
+single-agent test could ever have said so, and the shape of the failure was a suite that hung rather
+than a number that was wrong.
+
+Conformance as of this commit is **85.91% of test262** — 80,033 of 93,161 runs, the same figure on
+three consecutive runs alone. Treat that number as perishable and re-measure rather than quoting it;
+the point of the figure is the work list under it. Only 306 runs are now *stopped* before anything
+executes. **One of them was misfiled here for a long time and it matters:** `(?i:…)` 170 is the
+RegExp **modifiers** proposal and is excluded, but a property of strings is **not** a proposal —
+`regexp-v-flag` sits unmarked in test262's `features.txt` and shipped in ES2024. `\q{…}` was 54 of
+those and is now built; what is left of the flag is the 92 runs that need Unicode emoji sequence
+data, six of them the `v`-flag's other stragglers. The rest is `super` in an arrow's direct `eval`
+16, two dozen module-beside-the-test parse failures that are proposals, and **`this agent can
+block` 4** — which used to read `this agent cannot block` 14 and is now the *other* flag: see the
+agents entry below.
 
 **The failure buckets are the whole work list now.** Sorted by reason the largest look actionable
 and mostly are not, which is worth doing once and writing down rather than re-deriving:
@@ -203,7 +215,7 @@ and mostly are not, which is worth doing once and writing down rather than re-de
 | --- | --- | --- |
 | 8,316 | `Temporal is not defined` | a proposal — costed and refused, see below |
 | 405 | `what was called is not a function` | proposals now, and only now: `Array.fromAsync`, `Iterator.zip`/`zipKeyed`/`concat`, `Promise.allKeyed`/`allSettledKeyed`, `Map`/`WeakMap`'s `getOrInsert`, `Uint8Array` base64, `DataView`'s `getFloat16`. **It was 939, then 821, and this file called it "mostly proposals" at both figures — twice wrongly.** Seven *shipped* functions were hiding in it the first time and **369 runs of `$262.createRealm`** the second, which is nearly half. It is 407 because both were built. **Ask the engine what it has** before believing this row; it has misled two readers already |
-| 352 | `cannot read a property…` | **Atomics 224, and every one of them is `$262.agent`** — the row is `$262.agent.start` reading a property of `undefined`. Done as a target, see `notes/FINDINGS.md`. Beside it `Error.prototype.stack` 64, a proposal, and `legacy-accessors` 24, which is another |
+| 126 | `cannot read a property…` | **was 352 and the 224 that went were `$262.agent`, which is built** — see below. What is left is `Error.prototype.stack` 64 and `legacy-accessors` 24, both proposals, `Promise.allKeyed`/`allSettledKeyed` 26, another, and a dozen real ones |
 | 208 | `$DONE with what was called is not a function` | the asynchronous half of the row above, and the same proposals |
 | 293 | `expected 'meta', found an identifier` | `import.defer` and `import.source` — two proposals, not `import.meta` |
 | 238 | `Calling as constructor…` | all `Temporal` |

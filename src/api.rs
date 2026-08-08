@@ -562,6 +562,19 @@ impl Engine {
         self.vm.set_can_block(can);
     }
 
+    /// This engine's realm — its intrinsics, its global, and the identity a function is made in.
+    ///
+    /// An escape hatch like [`Engine::heap_mut`], and named as one: a [`Realm`](crate::realm::Realm)
+    /// is an engine internal whose shape this record does not promise to keep. What it is for is a
+    /// host building something this surface cannot express yet. [`Engine::bind`] makes a function on
+    /// the global and [`Engine::bind_namespace`] an object of them; anything a level deeper than
+    /// that needs the prototypes only a realm has, which is how `conformance` builds a `$262` with
+    /// an `agent` inside it.
+    #[must_use]
+    pub fn realm(&self) -> crate::realm::Realm {
+        self.vm.realm()
+    }
+
     /// The bytes a `SharedArrayBuffer` holds, as something another engine can be given.
     ///
     /// `None` for every other value, an ordinary `ArrayBuffer` included: §25.1's bytes belong to one
@@ -1546,6 +1559,77 @@ mod tests {
             "the other agent never reached its wait",
         );
         assert_eq!(other.join().expect("the agent finished"), "ok");
+    }
+
+    #[test]
+    fn two_agents_adding_to_one_slot_lose_nothing() {
+        // §25.4.1.2's read-modify-write is **one** step, and with a single agent nothing can tell
+        // that from a read followed by a write. With two, everything can: this row counted 39,997
+        // of 40,000 the first time it was run against a version that read and wrote separately.
+        //
+        // It is not an academic number. `atomicsHelper.js` waits for agents to start by spinning
+        // until `Atomics.add(i32a, RUNNING, 1)` has reached the number of them — so a lost update
+        // there is not a wrong answer but a test that never finishes, which is how this was found.
+        const EACH: usize = 20_000;
+        let mut main = Engine::new();
+        main.eval("var sab = new SharedArrayBuffer(8); var i32 = new Int32Array(sab)")
+            .expect("it runs");
+        let sab = main.eval("sab").expect("it runs");
+        let block = main.shared_block(sab).expect("a shared buffer has one");
+        let other = agent(
+            block,
+            "var a = new Int32Array(sab); \
+             for (var i = 0; i < 20000; i++) { Atomics.add(a, 0, 1); } 'done'",
+        );
+        main.eval("for (var i = 0; i < 20000; i++) { Atomics.add(i32, 0, 1); }")
+            .expect("it runs");
+        assert_eq!(other.join().expect("the agent finished"), "done");
+        assert_eq!(
+            answered(&mut main, "Atomics.load(i32, 0)"),
+            (EACH * 2).to_string()
+        );
+    }
+
+    #[test]
+    fn two_agents_incrementing_by_compare_exchange_lose_nothing() {
+        // The same claim about §25.4.3.3, and it took two attempts to state it in a way that could
+        // fail. The first built a mutual-exclusion lock out of `compareExchange` and counted inside
+        // it; that passed against a version where the compare and the write were separate steps,
+        // because both agents entering needed a *second* collision on the unprotected counter and
+        // two thousand rounds never produced one. It was a test that asserted what the code did.
+        //
+        // This one puts the collision where the bug is. A compare-exchange increment loop retries
+        // until the slot still holds what it read, so if two agents can both find the same `old`
+        // and both write `old + 1`, one increment is gone — and the window for that is the exchange
+        // itself, the same window the `Atomics.add` row above loses four hundred updates in.
+        const EACH: usize = 10_000;
+        let mut main = Engine::new();
+        main.eval("var sab = new SharedArrayBuffer(8); var i32 = new Int32Array(sab)")
+            .expect("it runs");
+        let sab = main.eval("sab").expect("it runs");
+        let block = main.shared_block(sab).expect("a shared buffer has one");
+        let other = agent(
+            block,
+            "var a = new Int32Array(sab); \
+             for (var i = 0; i < 10000; i++) { \
+                 var old; \
+                 do { old = Atomics.load(a, 0); } \
+                 while (Atomics.compareExchange(a, 0, old, old + 1) !== old); \
+             } 'done'",
+        );
+        main.eval(
+            "for (var i = 0; i < 10000; i++) { \
+                 var old; \
+                 do { old = Atomics.load(i32, 0); } \
+                 while (Atomics.compareExchange(i32, 0, old, old + 1) !== old); \
+             }",
+        )
+        .expect("it runs");
+        assert_eq!(other.join().expect("the agent finished"), "done");
+        assert_eq!(
+            answered(&mut main, "Atomics.load(i32, 0)"),
+            (EACH * 2).to_string()
+        );
     }
 
     #[test]

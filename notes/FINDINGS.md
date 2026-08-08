@@ -10,6 +10,7 @@ in.
 
 ## Index
 
+- [An agent is a thread, and the two bugs only a second one can find — `$262.agent`](#an-agent-is-a-thread-and-the-two-bugs-only-a-second-one-can-find--262agent)
 - [A second realm, and the five things that had never had to say *whose* intrinsics — DR-0025](#a-second-realm-and-the-five-things-that-had-never-had-to-say-whose-intrinsics--dr-0025)
 - [A fallback on *failure* where the clause has one on *absence* — §23.2, +36](#a-fallback-on-failure-where-the-clause-has-one-on-absence--232-36)
 - [§15.10's tail calls, and a whole feature that was on no work list at all](#1510s-tail-calls-and-a-whole-feature-that-was-on-no-work-list-at-all)
@@ -37,6 +38,83 @@ in.
 - [79.38% to 81.26% in sixteen slices, and what they have in common](#7938-to-8126-in-sixteen-slices-and-what-they-have-in-common)
 - [§B.3 is built, and what it actually cost is worth reading before touching that area](#b3-is-built-and-what-it-actually-cost-is-worth-reading-before-touching-that-area)
 - [What is left, in the order the numbers put it](#what-is-left-in-the-order-the-numbers-put-it)
+
+---
+
+### An agent is a thread, and the two bugs only a second one can find — `$262.agent`
+
++168 runs over two slices, 79,865 to 80,033, and the first slice moved **nothing**: a
+`SharedArrayBuffer` whose bytes are a `heap::Block` behaves identically to one whose bytes are a
+`Vec<u8>` until something else is holding the block. The number came entirely from the second, and
+so did both bugs.
+
+**This is threads, and the tests decide that rather than the design.** `harness/atomicsHelper.js`
+waits for an agent with `while (Atomics.load(ta, i) !== expected) ;` — no yield, nothing a
+cooperative scheduler could hook, and the only thing that ends it is another agent writing while
+this one runs. So `$262.agent.start` is `std::thread::spawn` with an `api::Engine` of its own, and
+the only thing the two share is the block.
+
+**§9.7's `[[CanBlock]]` is `true` for the agent running the test file, and that is forced.**
+`safeBroadcast` decides whether a TypedArray is shareable by calling `Atomics.wait` on a throwaway
+one and reading **any** throw as "it is not" — so on a host that cannot block, the throw is
+`AgentCanSuspend()` refusing and every file that uses it fails before broadcasting. That is 106 of
+the 109 files that start an agent. Against it: `CanBlockIsFalse` is 2 files and `CanBlockIsTrue` is
+7, and the harness already understood both flags, so the change is which one is skipped. **The hang
+risk was measured rather than assumed**: outside the agent tests the suite makes nine `Atomics.wait`
+calls with no timeout argument, and every one throws first — a Symbol index, a `Float64Array`, an
+index out of range. Nothing parks for ever with nobody left to notify it.
+
+**`Atomics.add` was not atomic, and one agent could never have shown it.** `modify` read the slot,
+released the lock, and wrote it back; with a single agent that is indistinguishable from one step.
+With two it lost **407 of 40,000** increments. Three things about that are worth carrying:
+
+- **The failure is not a wrong number, it is a program that does not finish.** `waitUntil` spins
+  until `Atomics.add(i32a, RUNNING, 1)` has reached the number of agents, so a lost update means the
+  count never arrives. It was found as a thirty-second timeout in
+  `wait/waiterlist-order-of-operations-is-fifo.js`, with nothing in the report to say what was wrong.
+- **A timeout in a full run is not a bug until it reproduces alone**, and here two files that looked
+  identical in the report were opposite: `notify/notify-all-on-loc.js` passed alone in three
+  seconds — it had been starved at sixteen workers by the *other* file holding a worker for thirty —
+  and the FIFO one hung alone in thirty-one. AGENTS.md already says a red under contention is not a
+  red; this is the same rule with the note that a *green* under contention would have hidden the
+  real one.
+- **The fix is a primitive and not a patch.** `Buffer::modify_bytes` reads, hands the bytes to a
+  closure and writes back what it answers, all inside one critical section — and the closure is a
+  pure function of the bytes, because the conversions that can run a program are §25.4.3.1's steps
+  1 to 3 and have already happened. `compareExchange` is the same primitive with a comparison in the
+  closure, and it had the same bug: read separately, two agents both find the expected value and
+  both are told they won.
+
+**And the test for that had to be written twice, which is the overfitting AGENTS.md warns about
+caught in the act.** The first `compareExchange` test built a mutual-exclusion lock and counted
+inside it — and **passed against the broken code**, because two agents both entering needed a
+*second* collision on the unprotected counter, and two thousand rounds never produced one. Rewritten
+as a compare-exchange increment loop, where the collision window *is* the exchange, it fails at
+18,517 of 20,000. The lesson is the placement: a concurrency test has to put the race where the bug
+is, not somewhere the bug could propagate to.
+
+**§25.4.1's waiter list had to become two lists, and the seam is a count.** A blocking waiter is a
+parked thread and lives in the block, where any agent can take it off; an asynchronous one is a
+promise, and a promise is settled by running a job on the machine that made it, so it stays on that
+`Vm`. `Atomics.notify` empties both and adds the counts, and it takes the **blocking** ones first —
+a count spent on a promise this agent will settle at its leisure while a thread in another agent
+stayed parked is a right number and a program that hangs. See DR-0024's amendment.
+
+**What crosses between agents is three things**: the block, a report, and `broadcast`'s second
+argument — which crosses as its **source text**, because a `Value` is a handle into one heap and
+names something else in another. The `n` on a BigInt is the whole of what tells the two apart, and
+dropping it would hand the agent a Number in silence.
+
+**`conformance/src/agent.rs` is out of the mutation-coverage source list on purpose**, beside `drive.rs`: every
+branch in it is decided by whether another operating-system thread has got somewhere yet, so a mutant
+is killed by a *timeout* or by nothing depending on scheduling, which is a coverage number that means
+less than no number. What checks it is the 109 files.
+
+**What is left is 66 runs and they are one thing**: `waitAsync` inside an agent. Both halves of it
+need the same missing piece — an agent cannot settle another agent's promise, and no promise can be
+settled at a *moment* — and DR-0024 says what that piece is. They fail with an honest reason now
+(`the test never called $DONE`, or a notify count of 0 where 1 was wanted) where before they all said
+`cannot read a property of something that is not an object`, which was `$262.agent` being absent.
 
 ---
 

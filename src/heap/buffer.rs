@@ -442,6 +442,42 @@ impl Buffer {
         }
     }
 
+    /// §25.4.1.2's read-modify-write: read `width` bytes at `offset`, hand them to `change`, and
+    /// write back what it answers — **all inside one critical section**.
+    ///
+    /// Answers the bytes that *were* there, which is what every one of §25.4.3's arithmetic
+    /// operations returns; `change` answering `None` leaves them alone, which is what
+    /// `compareExchange` does when the slot does not hold what was expected.
+    ///
+    /// **This is what makes those operations atomic, and reading and then writing is not.** With one
+    /// agent the two are indistinguishable, so this looked like a refactor right up until there was
+    /// a second agent: `Atomics.add(i32a, 0, 1)` called by three agents through a read and a write
+    /// loses updates, and test262's agent tests are built on exactly that counter —
+    /// `atomicsHelper.js`'s `waitUntil` spins until it reaches the number of agents, so a lost
+    /// update is not a wrong answer but a test that never finishes.
+    ///
+    /// `change` runs with the lock held, so it must not touch this block again. Every caller hands
+    /// it a pure function of the bytes: [`Element::read`], some arithmetic, [`Element::write_numeric`].
+    /// The **conversions** that can run a program's own code happen before this is called, which is
+    /// also what §25.4.3.1's step order asks for.
+    pub fn modify_bytes(
+        &mut self,
+        offset: usize,
+        width: usize,
+        change: impl FnOnce(&[u8]) -> Option<Vec<u8>>,
+    ) -> Option<Vec<u8>> {
+        self.with_bytes_mut(|bytes| {
+            let slot = bytes?.get_mut(offset..offset + width)?;
+            let held = slot.to_vec();
+            if let Some(written) = change(&held)
+                && let Some(target) = slot.get_mut(..written.len())
+            {
+                target.copy_from_slice(&written);
+            }
+            Some(held)
+        })
+    }
+
     /// `[[ArrayBufferByteLength]]` — **0** for a detached buffer, which §25.1.5.1 is explicit about.
     #[must_use]
     pub fn byte_length(&self) -> usize {

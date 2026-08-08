@@ -773,40 +773,8 @@ built-ins/Atomics/compareExchange/immutable-buffer.js :: it threw an object with
 built-ins/Atomics/compareExchange/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/exchange/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/exchange/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/Atomics/notify/bigint/notify-all-on-loc.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/bigint/notify-all-on-loc.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/count-defaults-to-infinity-missing.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/count-defaults-to-infinity-missing.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/count-defaults-to-infinity-undefined.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/count-defaults-to-infinity-undefined.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/notify/immutable-buffer-returns-0.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/notify/immutable-buffer-returns-0.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/Atomics/notify/negative-count.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/negative-count.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-all-on-loc.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-all-on-loc.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-all.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-all.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-in-order-one-time.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-in-order-one-time.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-in-order.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-in-order.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-nan.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-nan.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-one.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-one.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-renotify-noop.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-renotify-noop.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-two.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-two.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-with-no-agents-waiting.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-with-no-agents-waiting.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-with-no-matching-agents-waiting.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-with-no-matching-agents-waiting.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-zero.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/notify-zero.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/undefined-index-defaults-to-zero.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/notify/undefined-index-defaults-to-zero.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Atomics/or/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/or/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/pause/descriptor.js :: it threw an object with no name: pause should be an own property
@@ -823,198 +791,72 @@ built-ins/Atomics/store/immutable-buffer.js :: it threw an object with no name: 
 built-ins/Atomics/store/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/sub/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/sub/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/Atomics/wait/bigint/false-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/false-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/nan-for-timeout.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/nan-for-timeout.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/negative-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/negative-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/no-spurious-wakeup-no-operation.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/no-spurious-wakeup-no-operation.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/no-spurious-wakeup-on-add.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/no-spurious-wakeup-on-add.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/no-spurious-wakeup-on-and.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/no-spurious-wakeup-on-and.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/no-spurious-wakeup-on-compareExchange.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/no-spurious-wakeup-on-compareExchange.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/no-spurious-wakeup-on-exchange.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/no-spurious-wakeup-on-exchange.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/no-spurious-wakeup-on-or.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/no-spurious-wakeup-on-or.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/no-spurious-wakeup-on-store.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/no-spurious-wakeup-on-store.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/no-spurious-wakeup-on-sub.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/no-spurious-wakeup-on-sub.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/no-spurious-wakeup-on-xor.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/no-spurious-wakeup-on-xor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/value-not-equal.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/value-not-equal.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/waiterlist-block-indexedposition-wake.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/waiterlist-block-indexedposition-wake.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/waiterlist-order-of-operations-is-fifo.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/waiterlist-order-of-operations-is-fifo.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/was-woken-before-timeout.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/bigint/was-woken-before-timeout.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/false-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/false-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/good-views.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/good-views.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/nan-for-timeout.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/nan-for-timeout.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/negative-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/negative-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/no-spurious-wakeup-no-operation.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/no-spurious-wakeup-no-operation.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/no-spurious-wakeup-on-add.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/no-spurious-wakeup-on-add.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/no-spurious-wakeup-on-and.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/no-spurious-wakeup-on-and.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/no-spurious-wakeup-on-compareExchange.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/no-spurious-wakeup-on-compareExchange.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/no-spurious-wakeup-on-exchange.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/no-spurious-wakeup-on-exchange.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/no-spurious-wakeup-on-or.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/no-spurious-wakeup-on-or.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/no-spurious-wakeup-on-store.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/no-spurious-wakeup-on-store.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/no-spurious-wakeup-on-sub.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/no-spurious-wakeup-on-sub.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/no-spurious-wakeup-on-xor.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/no-spurious-wakeup-on-xor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/null-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/null-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/object-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/object-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/poisoned-object-for-timeout-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/poisoned-object-for-timeout-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/symbol-for-index-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/symbol-for-index-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/symbol-for-timeout-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/symbol-for-timeout-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/symbol-for-value-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/symbol-for-value-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/true-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/true-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/undefined-for-timeout.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/undefined-for-timeout.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/undefined-index-defaults-to-zero.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/undefined-index-defaults-to-zero.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/value-not-equal.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/value-not-equal.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/wait-index-value-not-equal.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/wait-index-value-not-equal.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/waiterlist-block-indexedposition-wake.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/waiterlist-block-indexedposition-wake.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/waiterlist-order-of-operations-is-fifo.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/waiterlist-order-of-operations-is-fifo.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/was-woken-before-timeout.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/wait/was-woken-before-timeout.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/false-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/false-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/good-views.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/good-views.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/nan-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/nan-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/negative-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/negative-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-no-operation.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-no-operation.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-add.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-add.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-and.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-and.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-compareExchange.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-compareExchange.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-exchange.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-exchange.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-or.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-or.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-store.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-store.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-sub.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-sub.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-xor.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-xor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/null-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/null-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/object-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/object-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/poisoned-object-for-timeout-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/poisoned-object-for-timeout-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/symbol-for-index-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/symbol-for-index-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/symbol-for-timeout-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/symbol-for-timeout-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/symbol-for-value-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/symbol-for-value-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/true-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/true-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/true-for-timeout.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/true-for-timeout.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/undefined-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/undefined-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/undefined-index-defaults-to-zero-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/undefined-index-defaults-to-zero-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/value-not-equal-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/value-not-equal-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/waiterlist-block-indexedposition-wake.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/waiterlist-block-indexedposition-wake.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/was-woken-before-timeout.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/bigint/was-woken-before-timeout.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/false-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/false-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/good-views.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/good-views.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/nan-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/nan-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/negative-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/negative-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/no-spurious-wakeup-no-operation.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/no-spurious-wakeup-no-operation.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-add.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-add.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-and.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-and.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-compareExchange.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-compareExchange.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-exchange.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-exchange.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-or.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-or.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-store.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-store.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-sub.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-sub.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-xor.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-xor.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/null-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/null-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/object-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/object-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/poisoned-object-for-timeout-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/poisoned-object-for-timeout-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/returns-result-object-value-is-promise-resolves-to-timed-out.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/returns-result-object-value-is-promise-resolves-to-timed-out.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/symbol-for-index-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/symbol-for-index-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/symbol-for-timeout-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/symbol-for-timeout-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/symbol-for-value-throws-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/symbol-for-value-throws-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/true-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/true-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/true-for-timeout.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/true-for-timeout.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/undefined-for-timeout-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/undefined-for-timeout-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/undefined-index-defaults-to-zero-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/undefined-index-defaults-to-zero-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/value-not-equal-agent.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/value-not-equal-agent.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/waiterlist-block-indexedposition-wake.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/waiterlist-block-indexedposition-wake.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/was-woken-before-timeout.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Atomics/waitAsync/was-woken-before-timeout.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
+built-ins/Atomics/waitAsync/bigint/nan-for-timeout-agent.js :: the test called $DONE with Test262Error: Atomics.notify(new BigInt64Array(new SharedArrayBuffer(BigInt64Array.BYTES_PER_ELEMENT * 4)), 0) must return 1 Expected SameValue(«0», «1») to be true
+built-ins/Atomics/waitAsync/bigint/nan-for-timeout-agent.js (strict) :: the test called $DONE with Test262Error: Atomics.notify(new BigInt64Array(new SharedArrayBuffer(BigInt64Array.BYTES_PER_ELEMENT * 4)), 0) must return 1 Expected SameValue(«0», «1») to be true
+built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-no-operation.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-no-operation.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-add.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-add.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-and.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-and.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-compareExchange.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-compareExchange.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-exchange.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-exchange.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-or.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-or.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-store.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-store.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-sub.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-sub.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-xor.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-xor.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/true-for-timeout-agent.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/true-for-timeout-agent.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/true-for-timeout.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/true-for-timeout.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/bigint/undefined-for-timeout-agent.js :: the test called $DONE with Test262Error: Atomics.notify(new BigInt64Array(new SharedArrayBuffer(BigInt64Array.BYTES_PER_ELEMENT * 4)), 0, 2) must return the value of NOTIFYCOUNT Expected SameValue(«0», «2») to be true
+built-ins/Atomics/waitAsync/bigint/undefined-for-timeout-agent.js (strict) :: the test called $DONE with Test262Error: Atomics.notify(new BigInt64Array(new SharedArrayBuffer(BigInt64Array.BYTES_PER_ELEMENT * 4)), 0, 2) must return the value of NOTIFYCOUNT Expected SameValue(«0», «2») to be true
+built-ins/Atomics/waitAsync/bigint/undefined-index-defaults-to-zero-agent.js :: the test called $DONE with Test262Error: Atomics.notify(new BigInt64Array(new SharedArrayBuffer(BigInt64Array.BYTES_PER_ELEMENT * 4)), 0, 2) must return the value of NOTIFYCOUNT Expected SameValue(«0», «2») to be true
+built-ins/Atomics/waitAsync/bigint/undefined-index-defaults-to-zero-agent.js (strict) :: the test called $DONE with Test262Error: Atomics.notify(new BigInt64Array(new SharedArrayBuffer(BigInt64Array.BYTES_PER_ELEMENT * 4)), 0, 2) must return the value of NOTIFYCOUNT Expected SameValue(«0», «2») to be true
+built-ins/Atomics/waitAsync/bigint/waiterlist-block-indexedposition-wake.js :: the test called $DONE with Test262Error: Atomics.notify(new BigInt64Array(new SharedArrayBuffer(BigInt64Array.BYTES_PER_ELEMENT * 5)), 2) must return 1 Expected SameValue(«0», «1») to be true
+built-ins/Atomics/waitAsync/bigint/waiterlist-block-indexedposition-wake.js (strict) :: the test called $DONE with Test262Error: Atomics.notify(new BigInt64Array(new SharedArrayBuffer(BigInt64Array.BYTES_PER_ELEMENT * 5)), 2) must return 1 Expected SameValue(«0», «1») to be true
+built-ins/Atomics/waitAsync/bigint/was-woken-before-timeout.js :: the test called $DONE with Test262Error: Atomics.notify(new BigInt64Array(new SharedArrayBuffer(BigInt64Array.BYTES_PER_ELEMENT * 4)), 0) must return 1 Expected SameValue(«0», «1») to be true
+built-ins/Atomics/waitAsync/bigint/was-woken-before-timeout.js (strict) :: the test called $DONE with Test262Error: Atomics.notify(new BigInt64Array(new SharedArrayBuffer(BigInt64Array.BYTES_PER_ELEMENT * 4)), 0) must return 1 Expected SameValue(«0», «1») to be true
+built-ins/Atomics/waitAsync/nan-for-timeout-agent.js :: the test called $DONE with Test262Error: Atomics.notify(new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4)), 0) must return 1 Expected SameValue(«0», «1») to be true
+built-ins/Atomics/waitAsync/nan-for-timeout-agent.js (strict) :: the test called $DONE with Test262Error: Atomics.notify(new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4)), 0) must return 1 Expected SameValue(«0», «1») to be true
+built-ins/Atomics/waitAsync/no-spurious-wakeup-no-operation.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/no-spurious-wakeup-no-operation.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-add.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-add.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-and.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-and.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-compareExchange.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-compareExchange.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-exchange.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-exchange.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-or.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-or.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-store.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-store.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-sub.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-sub.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-xor.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/no-spurious-wakeup-on-xor.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/returns-result-object-value-is-promise-resolves-to-timed-out.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/returns-result-object-value-is-promise-resolves-to-timed-out.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/true-for-timeout-agent.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/true-for-timeout-agent.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/true-for-timeout.js :: the test never called $DONE
+built-ins/Atomics/waitAsync/true-for-timeout.js (strict) :: the test never called $DONE
+built-ins/Atomics/waitAsync/undefined-for-timeout-agent.js :: the test called $DONE with Test262Error: Atomics.notify(new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4)), 0, 2) must return the value of NOTIFYCOUNT Expected SameValue(«0», «2») to be true
+built-ins/Atomics/waitAsync/undefined-for-timeout-agent.js (strict) :: the test called $DONE with Test262Error: Atomics.notify(new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4)), 0, 2) must return the value of NOTIFYCOUNT Expected SameValue(«0», «2») to be true
+built-ins/Atomics/waitAsync/undefined-index-defaults-to-zero-agent.js :: the test called $DONE with Test262Error: Atomics.notify(new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4)), 0, 2) must return the value of NOTIFYCOUNT Expected SameValue(«0», «2») to be true
+built-ins/Atomics/waitAsync/undefined-index-defaults-to-zero-agent.js (strict) :: the test called $DONE with Test262Error: Atomics.notify(new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4)), 0, 2) must return the value of NOTIFYCOUNT Expected SameValue(«0», «2») to be true
+built-ins/Atomics/waitAsync/waiterlist-block-indexedposition-wake.js :: the test called $DONE with Test262Error: Atomics.notify(new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 5)), 2) must return 1 Expected SameValue(«0», «1») to be true
+built-ins/Atomics/waitAsync/waiterlist-block-indexedposition-wake.js (strict) :: the test called $DONE with Test262Error: Atomics.notify(new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 5)), 2) must return 1 Expected SameValue(«0», «1») to be true
+built-ins/Atomics/waitAsync/was-woken-before-timeout.js :: the test called $DONE with Test262Error: Atomics.notify(new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4)), 0) must return 1 Expected SameValue(«0», «1») to be true
+built-ins/Atomics/waitAsync/was-woken-before-timeout.js (strict) :: the test called $DONE with Test262Error: Atomics.notify(new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4)), 0) must return 1 Expected SameValue(«0», «1») to be true
 built-ins/Atomics/xor/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/xor/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/BigInt/is-a-constructor.js :: it threw an object with no name: isConstructor(BigInt) must return true Expected SameValue(«false», «true») to be true

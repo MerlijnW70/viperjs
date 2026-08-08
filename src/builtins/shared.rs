@@ -439,21 +439,43 @@ fn modify(
     what: Operation,
 ) -> Completion<Value> {
     let (view, element, at) = target(vm, heap, call, Kinds::Integer)?;
-    // The value is converted *after* the index is validated, and its conversion may run user code
-    // that detaches the buffer — so the write is checked again below rather than assumed. Which
-    // conversion is §25.4.3.1 step 3's: `ToBigInt` for the two 64-bit kinds and `ToNumber` for the
-    // six others, so `Atomics.add(new BigInt64Array(1), 0, 1)` is a TypeError.
+    // The value is converted *after* the index is validated, and before anything is read: its
+    // conversion may run user code, and §25.4.3.1's read-modify-write is a critical section that
+    // must have no program in it. Which conversion is step 3's — `ToBigInt` for the two 64-bit
+    // kinds and `ToNumber` for the six others, so `Atomics.add(new BigInt64Array(1), 0, 1)` is a
+    // TypeError.
     let given = vm.to_numeric(element.holds_big(), call.argument(2), heap)?;
-    let Some(held) = heap.numeric_at(view, at) else {
+    let Some(held) = read_modify_write(heap, view, element, at, |held| {
+        // Never clamped: §25.4.3.4 refuses a `Uint8ClampedArray` before this is reached, so the
+        // question §7.1.11 answers is one no operation here can ask.
+        element.write_numeric(&what.apply(held, &given), false)
+    }) else {
         return Err(Abrupt::type_error("this ArrayBuffer has been detached"));
     };
-    let Value::Object(object) = call.argument(0) else {
-        return Err(Abrupt::type_error("this is not an integer TypedArray"));
-    };
-    heap.write_element(object, at, &what.apply(&held, &given));
-    // Every one of them answers the value that *was* there, which is what makes them atomic
+    // Every one of them answers the value that *was* there, which is what makes them
     // read-modify-writes rather than writes.
     Ok(heap.numeric_value(held))
+}
+
+/// §25.4.1.2 through the buffer: read the slot, decide the new value from it, write it back — and
+/// answer what was there — without the lock being let go in between.
+///
+/// `None` when the buffer has been detached or the slot is not there, which every caller reports as
+/// the detachment it is: the index was validated before whatever conversion ran, and a program's
+/// own `valueOf` is the only thing that can have taken the bytes away since.
+fn read_modify_write(
+    heap: &mut Heap,
+    view: View,
+    element: Element,
+    at: usize,
+    change: impl FnOnce(&Numeric) -> Option<Vec<u8>>,
+) -> Option<Numeric> {
+    let offset = view.offset + at * element.width();
+    let buffer = heap
+        .object_mut(view.buffer)
+        .and_then(crate::heap::Object::buffer_mut)?;
+    let held = buffer.modify_bytes(offset, element.width(), |held| change(&element.read(held)))?;
+    Some(element.read(&held))
 }
 
 /// §25.4.3.9 `Atomics.load`.
@@ -490,12 +512,6 @@ fn compare_exchange(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comp
     let big = element.holds_big();
     let expected = vm.to_numeric(big, call.argument(1 + 1), heap)?;
     let replacement = vm.to_numeric(big, call.argument(3), heap)?;
-    let Some(held) = heap.numeric_at(view, at) else {
-        return Err(Abrupt::type_error("this ArrayBuffer has been detached"));
-    };
-    let Value::Object(object) = call.argument(0) else {
-        return Err(Abrupt::type_error("this is not an integer TypedArray"));
-    };
     // §25.4.3.3 step 9 — the comparison is against the expected value **as this kind would store
     // it**, not against what was handed over: expecting 300 of a `Uint8Array` holding 44 is a
     // match, because 300 stored there *is* 44. Comparing the raw arguments would never match and
@@ -505,12 +521,23 @@ fn compare_exchange(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comp
     // give the bytes it was already read from, so the two sides are not symmetrical however alike
     // they look — and a second encoding is a second place for §7.1.11's clamping to be asked for,
     // where no answer to it is observable.
+    //
+    // Encoded **before** the critical section, because it is the same for every slot and the
+    // section is one no more work belongs in than has to be there.
     let stored = element
         .write_numeric(&expected, false)
         .map(|bytes| element.read(&bytes));
-    if stored.as_ref() == Some(&held) {
-        heap.write_element(object, at, &replacement);
-    }
+    // The comparison and the write are one step, which is the whole of what makes this a
+    // *compare*-exchange: read separately, two agents can both find the expected value and both
+    // write, and each is told it won.
+    let Some(held) = read_modify_write(heap, view, element, at, |held| {
+        match stored.as_ref() == Some(held) {
+            true => element.write_numeric(&replacement, false),
+            false => None,
+        }
+    }) else {
+        return Err(Abrupt::type_error("this ArrayBuffer has been detached"));
+    };
     Ok(heap.numeric_value(held))
 }
 

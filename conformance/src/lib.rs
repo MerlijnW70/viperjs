@@ -24,6 +24,7 @@
 //! error it named — a `parse` test that fails at run time has *not* passed, however loudly it
 //! failed.
 
+pub mod agent;
 pub mod drive;
 pub mod expectations;
 pub mod frontmatter;

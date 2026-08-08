@@ -23,13 +23,13 @@ pub enum Verdict {
     /// Nothing was run: the file asks for something this harness does not do yet.
     ///
     /// Not a pass and not a failure. A test that needs a module goal, or a host API, is a test
-    /// this engine has no answer for — counting it either way would be a number that lies.
+    /// this engine has no answer for â€” counting it either way would be a number that lies.
     Skipped(String),
 }
 
 /// One test, in one mode.
 ///
-/// A file with neither `onlyStrict` nor `noStrict` is *two* tests: §11.2.2's strict mode changes
+/// A file with neither `onlyStrict` nor `noStrict` is *two* tests: Â§11.2.2's strict mode changes
 /// what the same source means, so both are run and both are counted.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Outcome {
@@ -44,7 +44,7 @@ pub struct Outcome {
 impl Outcome {
     /// The name the expectations file lists this run under.
     ///
-    /// The mode is part of it, because a test can pass in one mode and fail in the other — and an
+    /// The mode is part of it, because a test can pass in one mode and fail in the other â€” and an
     /// entry that did not say which would hide half of that.
     pub fn key(&self) -> String {
         match self.strict {
@@ -54,7 +54,7 @@ impl Outcome {
     }
 }
 
-/// Every outcome a killed worker leaves behind — what it answered, and what it did not.
+/// Every outcome a killed worker leaves behind â€” what it answered, and what it did not.
 ///
 /// Here rather than beside the supervisor that calls it because it is a *decision* about what a
 /// run came to, which is this module's subject, and because a decision is something the mutation
@@ -91,7 +91,7 @@ pub fn unfinished(
     answered
 }
 
-/// What running one file is going to consist of — §11.2.2's modes, settled before the first runs.
+/// What running one file is going to consist of â€” Â§11.2.2's modes, settled before the first runs.
 ///
 /// Holds the source and the frontmatter so that deciding the modes and running them is one read of
 /// the file rather than two. The file is read once and may be run twice, and a file that changed
@@ -103,7 +103,7 @@ pub struct Plan {
     pub modes: Vec<bool>,
     source: String,
     block: Frontmatter,
-    /// The directory the file is in — §16.2.1.7's resolution base for a module's specifiers.
+    /// The directory the file is in â€” Â§16.2.1.7's resolution base for a module's specifiers.
     ///
     /// A specifier in test262 is a relative path beside the test, and `INTERPRETING.md` says so.
     /// Kept on the plan rather than recomputed because the run has the path and the evaluation
@@ -157,7 +157,7 @@ impl Runner {
     /// a child that is killed mid-file cannot report, and the parent can only answer for the
     /// scenarios it was told to expect. See [`crate::wire`] for what goes wrong without that.
     ///
-    /// A file that settles without running — unreadable, or no frontmatter — answers `Err` with
+    /// A file that settles without running â€” unreadable, or no frontmatter â€” answers `Err` with
     /// the outcome that settles it. There is nothing to announce in that case and nothing that can
     /// hang, so the distinction costs the caller one `match` and buys an honest count.
     pub fn plan(&self, path: &Path) -> Result<Plan, Outcome> {
@@ -180,7 +180,7 @@ impl Runner {
                 verdict: Verdict::Skipped("no frontmatter".to_string()),
             });
         };
-        // §11.2.2 — the same source means different things in the two modes, so a file that names
+        // Â§11.2.2 â€” the same source means different things in the two modes, so a file that names
         // neither is two tests rather than one.
         let modes: Vec<bool> = if block.has("onlyStrict") {
             vec![true]
@@ -235,20 +235,27 @@ impl Runner {
         beside: &Path,
         beside_name: Option<String>,
     ) -> Verdict {
-        // §25.4.3.14's `AgentCanSuspend()` is **false** for ViperJS: there is no second agent to
-        // notify a suspended one, so `Atomics.wait` throws where a host with workers would block.
-        // A test flagged `CanBlockIsFalse` is written for exactly that host and needs no agents at
-        // all, so skipping it was the harness answering a question about itself — the shape this
-        // repository keeps meeting, where a reason string describes the runner and not the engine.
-        // `CanBlockIsTrue` is the other host and stays skipped, because that one is about agents.
-        if block.has("CanBlockIsTrue") {
-            return Verdict::Skipped("this agent cannot block".to_string());
+        // Â§25.4.3.14's `AgentCanSuspend()` asks Â§9.7's `[[CanBlock]]`, which is the **host's** to
+        // answer, and this host answers *true* â€” on the agent running the file as much as on the
+        // ones `$262.agent.start` starts. [`crate::agent`] has the measurement behind that: it is
+        // not a free choice, because `atomicsHelper.js` decides whether a TypedArray is shareable
+        // by calling `Atomics.wait` on a throwaway one and reading any throw as "it is not", so a
+        // host that cannot block fails 106 of the 109 files that start an agent before they
+        // broadcast anything.
+        //
+        // **So the two flags swap, and they are opposite claims about the host of which exactly one
+        // may run.** They were both skipped once, for "agents are not implemented", and that was
+        // the harness answering a question about itself; then `CanBlockIsFalse` ran and
+        // `CanBlockIsTrue` was skipped; now it is the other way round. Two files against seven, and
+        // the hundred behind them.
+        if block.has("CanBlockIsFalse") {
+            return Verdict::Skipped("this agent can block".to_string());
         }
         // An `async` test signals that it finished by calling `$DONE`. INTERPRETING.md leaves the
-        // function to the host, and this host defines it below — the prologue, because a *later*
+        // function to the host, and this host defines it below â€” the prologue, because a *later*
         // definition would be the test's own and the point is that the host supplies it.
         let asynchronous = block.has("async");
-        // `raw` means exactly the text and nothing else — no harness, no strict prologue. It is
+        // `raw` means exactly the text and nothing else â€” no harness, no strict prologue. It is
         // used by tests that are *about* the prologue, so prepending one would test the reverse.
         let mut program = String::new();
         if strict {
@@ -270,7 +277,7 @@ impl Runner {
             }
         }
         // Before the test and after the includes, because `asyncHelpers.js` asks whether `$DONE`
-        // is an **own property of the global object** and refuses to run if it is not — which a
+        // is an **own property of the global object** and refuses to run if it is not â€” which a
         // function declaration at the top level of a script is, and nothing else here would be.
         if asynchronous {
             program.push_str(DONE);
@@ -280,10 +287,10 @@ impl Runner {
     }
 }
 
-/// `$262.detachArrayBuffer` — §INTERPRETING.md's, spelled through the buffer's own `transfer`.
+/// `$262.detachArrayBuffer` â€” Â§INTERPRETING.md's, spelled through the buffer's own `transfer`.
 ///
-/// §25.1.5.5's `transfer` is the operation the host API *is* — it throws the bytes away and leaves
-/// the object — so this reaches for the language's own rather than detaching the buffer behind its
+/// Â§25.1.5.5's `transfer` is the operation the host API *is* â€” it throws the bytes away and leaves
+/// the object â€” so this reaches for the language's own rather than detaching the buffer behind its
 /// back. A second implementation in Rust would be a second thing that could disagree with the
 /// first.
 fn detach_array_buffer(
@@ -298,7 +305,7 @@ fn detach_array_buffer(
     Ok(viperjs::value::Value::Undefined)
 }
 
-/// `$262.evalScript` — §INTERPRETING.md's, and it is `ScriptEvaluation` rather than an `eval`.
+/// `$262.evalScript` â€” Â§INTERPRETING.md's, and it is `ScriptEvaluation` rather than an `eval`.
 ///
 /// The difference is one argument to `CreateGlobalVarBinding` and it is what sixteen of
 /// `annexB/language/global-code`'s tests measure: they declare a function in a block and then ask
@@ -310,7 +317,7 @@ fn eval_script(
     call: &viperjs::heap::NativeCall<'_>,
 ) -> viperjs::value::Completion<viperjs::value::Value> {
     let mut host = Host::new(vm, heap);
-    // §INTERPRETING.md says "accepts a string value", and every test passes one — but `ToString`
+    // Â§INTERPRETING.md says "accepts a string value", and every test passes one â€” but `ToString`
     // rather than a refusal, because a host is not the place to invent an error the document does
     // not describe.
     let source = host.text(call.argument(0))?;
@@ -324,13 +331,13 @@ fn eval_script(
 /// missing: a host could bind a function and not a namespace, and a native could not evaluate
 /// source at all. Both are `api.rs` operations now, and this is their first real caller.
 ///
-/// What is absent stays absent — `agent`, `gc` and `IsHTMLDDA` — so a test that needs one fails
-/// saying so rather than passing against a stub.
+/// What is absent stays absent â€” `gc` and `IsHTMLDDA` â€” so a test that needs one fails saying so
+/// rather than passing against a stub. `agent` used to be on that list and is [`crate::agent`] now.
 ///
 /// Takes the realm rather than reading `vm.realm()`, because `createRealm` calls this for a realm
 /// the machine is **not** running in: INTERPRETING.md says the new realm's global gets the same API,
 /// and a `$262` built against the running realm would put realm A's `global` on realm B's object.
-fn install_host(heap: &mut Heap, realm: &viperjs::realm::Realm) -> viperjs::heap::ObjectId {
+pub fn install_host(heap: &mut Heap, realm: &viperjs::realm::Realm) -> viperjs::heap::ObjectId {
     let prototype = realm.object_prototype();
     let object = heap.new_object(Some(prototype));
     let global = viperjs::value::Value::Object(realm.global());
@@ -341,7 +348,7 @@ fn install_host(heap: &mut Heap, realm: &viperjs::realm::Realm) -> viperjs::heap
         let _ =
             heap.define_own_property(object, key, &viperjs::heap::PropertyDescriptor::data(value));
     };
-    // `global` is §19.1's `globalThis` and not `this`: at the top level of a Script the two are the
+    // `global` is Â§19.1's `globalThis` and not `this`: at the top level of a Script the two are the
     // same object, and at the top level of a *module* `this` is **undefined**.
     define(heap, "global", global);
     for (name, native) in [
@@ -355,6 +362,10 @@ fn install_host(heap: &mut Heap, realm: &viperjs::realm::Realm) -> viperjs::heap
         let function = heap.new_native_function(function_prototype, native, realm.id());
         define(heap, name, viperjs::value::Value::Object(function));
     }
+    // Inside `install_host` and not beside it, so that `$262.createRealm()` gets one too:
+    // INTERPRETING.md says the new realm's global has the same API, and which *half* of the agent
+    // API that is depends on the thread rather than on the realm â€” see [`crate::agent::attach`].
+    crate::agent::attach(heap, realm, object);
     let units: Vec<u16> = "$262".encode_utf16().collect();
     let key = PropertyKey::from_units(heap, &units);
     let host = viperjs::value::Value::Object(object);
@@ -366,7 +377,7 @@ fn install_host(heap: &mut Heap, realm: &viperjs::realm::Realm) -> viperjs::heap
     object
 }
 
-/// `$262.createRealm` — a second realm, with this same API on its global, answered as its `$262`.
+/// `$262.createRealm` â€” a second realm, with this same API on its global, answered as its `$262`.
 ///
 /// INTERPRETING.md is exact about the three parts and the third is the one worth naming: it answers
 /// the **`$262` of the new realm**, not the realm and not its global, so a test reaches the new
@@ -375,7 +386,7 @@ fn install_host(heap: &mut Heap, realm: &viperjs::realm::Realm) -> viperjs::heap
 /// What is not here yet is running code *in* the new realm: DR-0025's frame field is unbuilt, so
 /// the machine's realm never changes and `createRealm().global.eval` evaluates against the realm
 /// that called it. A test that turns on that distinction fails; one that only takes an object or a
-/// constructor across — which is most of them — does not.
+/// constructor across â€” which is most of them â€” does not.
 fn create_realm(
     vm: &mut Vm,
     heap: &mut Heap,
@@ -386,7 +397,7 @@ fn create_realm(
     Ok(viperjs::value::Value::Object(host))
 }
 
-/// The host's `$DONE`, in the terms §INTERPRETING.md gives it.
+/// The host's `$DONE`, in the terms Â§INTERPRETING.md gives it.
 ///
 /// test262 ships `harness/doneprintHandle.js`, which spells the same thing in terms of a host
 /// `print`. This is that with the printing taken out: ViperJS has no `print` and inventing one would
@@ -399,10 +410,10 @@ fn create_realm(
 ///
 /// **Written onto `globalThis` and not with `var`, because a module test's prologue is part of the
 /// module.** The prologue is prepended to the source and the whole thing is parsed together, so for
-/// a `flags: [module]` test `var $__status` is a *module* binding — which the test can reach and
+/// a `flags: [module]` test `var $__status` is a *module* binding â€” which the test can reach and
 /// [`PROBE`] cannot, because that runs afterwards as a separate Script. Every async module test
 /// therefore reported "the test's status could not be read", which named the harness's own reach
-/// and said nothing about the engine. §19.1's `globalThis` is the one spelling that means the same
+/// and said nothing about the engine. Â§19.1's `globalThis` is the one spelling that means the same
 /// thing in both, and it still satisfies `asyncHelpers.js`, which requires `$DONE` to be an **own
 /// property of the global object**.
 const DONE: &str = "globalThis.$__status = 'the test never called $DONE';
@@ -413,24 +424,24 @@ const DONE: &str = "globalThis.$__status = 'the test never called $DONE';
      };
 ";
 
-/// The second script, which reads the status after §9.5's jobs have run.
+/// The second script, which reads the status after Â§9.5's jobs have run.
 const PROBE: &str = "$__status;";
 
 /// What a `SyntaxError` decided before anything ran means, given what the test expected.
 ///
-/// §16's early errors are reported by the parser for most of the grammar and by the compiler for
-/// §22.2.1's patterns, and test262 calls the phase either `parse` or `early`. Both mean "before
-/// anything ran", which is the only distinction ViperJS draws — so both are accepted here and
+/// Â§16's early errors are reported by the parser for most of the grammar and by the compiler for
+/// Â§22.2.1's patterns, and test262 calls the phase either `parse` or `early`. Both mean "before
+/// anything ran", which is the only distinction ViperJS draws â€” so both are accepted here and
 /// neither is checked against the other.
 fn judge_early(negative: Option<&Negative>, why: &str) -> Verdict {
     judge_before_running(negative, why, &["parse", "early"])
 }
 
-/// The same judgement for §16.2.1.5's own errors, which test262 files under a third phase.
+/// The same judgement for Â§16.2.1.5's own errors, which test262 files under a third phase.
 ///
 /// `resolution` is what a *graph* failed at rather than what a file did: a specifier nothing
 /// answers, a name nothing exports, a name two star exports disagree about. A host reports all
-/// three as a SyntaxError, and the phase is what tells them from a file that would not parse — so a
+/// three as a SyntaxError, and the phase is what tells them from a file that would not parse â€” so a
 /// test asking for one must not be satisfied by the other.
 fn judge_resolution(negative: Option<&Negative>, why: &str) -> Verdict {
     judge_before_running(negative, why, &["resolution"])
@@ -458,11 +469,11 @@ fn judge_before_running(negative: Option<&Negative>, why: &str, phases: &[&str])
 /// What the entry module is called inside the graph.
 ///
 /// A name no specifier can be, so it cannot collide with one a test writes. The entry is not
-/// imported by anything, so nothing ever asks for it by name — it is only how the graph and the
+/// imported by anything, so nothing ever asks for it by name â€” it is only how the graph and the
 /// evaluation agree about where to start.
 const ENTRY: &str = "\u{0}entry";
 
-/// §16.2.1.7 `HostLoadImportedModule` for test262 — a specifier is a path beside the test.
+/// Â§16.2.1.7 `HostLoadImportedModule` for test262 â€” a specifier is a path beside the test.
 ///
 /// `INTERPRETING.md` says so in as many words, and it is the whole of what this host does: no bare
 /// specifiers, no package resolution, no cache of its own. The engine memoises, so this is asked at
@@ -488,7 +499,7 @@ impl viperjs::vm::ModuleLoader for Beside {
             .map_err(|error| format!("an imported module did not parse: {}", error.kind))?;
         let compiled = compile_module(&parsed, heap).map_err(|error| error.message())?;
         // test262's module specifiers are all relative to the one directory the test sits in, so
-        // the specifier *is* the key here and the referrer answers nothing this needs — DR-0020's
+        // the specifier *is* the key here and the referrer answers nothing this needs â€” DR-0020's
         // degenerate case, spelled out rather than left to look like an oversight.
         Ok((specifier.to_string(), Rc::new(compiled)))
     }
@@ -496,7 +507,7 @@ impl viperjs::vm::ModuleLoader for Beside {
 
 /// Read, parse and compile everything `specifier` reaches, into `graph`.
 ///
-/// §16.2.1.7's `HostLoadImportedModule`, and it is depth-first because a module's own imports are
+/// Â§16.2.1.7's `HostLoadImportedModule`, and it is depth-first because a module's own imports are
 /// only known once it has been parsed. A specifier already in the graph is one a diamond or a
 /// cycle has reached before, and stopping there is what makes both terminate.
 fn gather(graph: &mut Graph, from: &str, beside: &Path, heap: &mut Heap) -> Result<(), String> {
@@ -504,7 +515,7 @@ fn gather(graph: &mut Graph, from: &str, beside: &Path, heap: &mut Heap) -> Resu
         return Ok(());
     };
     // Every edge, and an `export` makes them too: `export * from "m"` and `export { a } from "m"`
-    // name a module this one never imports, and it still has to be here for §16.2.1.6.3 to walk
+    // name a module this one never imports, and it still has to be here for Â§16.2.1.6.3 to walk
     // into. Missing them, a re-export resolved to nothing and read as "does not export".
     let reached = chunk
         .imports()
@@ -542,13 +553,13 @@ fn gather(graph: &mut Graph, from: &str, beside: &Path, heap: &mut Heap) -> Resu
 
 /// Which goal symbol a test's frontmatter asked for, with the tree it produced.
 ///
-/// §16.1 and §16.2 are two productions and two compilers, and the difference is decided by one
-/// flag on the test rather than by anything in the text — so it is carried as a value here rather
+/// Â§16.1 and Â§16.2 are two productions and two compilers, and the difference is decided by one
+/// flag on the test rather than by anything in the text â€” so it is carried as a value here rather
 /// than by two copies of everything below.
 enum Goal {
-    /// §16.1's `Script`.
+    /// Â§16.1's `Script`.
     Script(viperjs::ast::Script),
-    /// §16.2's `Module`.
+    /// Â§16.2's `Module`.
     Module(viperjs::ast::Module),
 }
 
@@ -561,8 +572,12 @@ fn evaluate(
     beside_name: Option<String>,
 ) -> Verdict {
     let negative = block.negative.as_ref();
+    // Before anything else, because a worker process runs test after test and the agents one test
+    // started are not the next one's to broadcast to. Here rather than at the end of a run, so that
+    // a test which failed to parse â€” and therefore never reached an end â€” is cleaned up too.
+    crate::agent::forget();
     let mut heap = Heap::new();
-    // §16.2 — a module is a different goal symbol, read and compiled by its own pair. Everything
+    // Â§16.2 â€” a module is a different goal symbol, read and compiled by its own pair. Everything
     // after that is the same: a module throws, or does not, exactly as a script does.
     let module = block.has("module");
 
@@ -573,9 +588,9 @@ fn evaluate(
     let parsed = match parsed {
         Ok(parsed) => parsed,
         Err(error) => {
-            // §16's early errors are reported by the parser, and test262 calls that phase either
+            // Â§16's early errors are reported by the parser, and test262 calls that phase either
             // `parse` or `early`. Both mean "before anything ran", which is what ViperJS's parser
-            // decides — so both are accepted here and the distinction between them is not one
+            // decides â€” so both are accepted here and the distinction between them is not one
             // this engine draws.
             return judge_early(negative, &error.kind.to_string());
         }
@@ -584,9 +599,9 @@ fn evaluate(
     // nothing can be said about what it would have done. Counting these as failures would fill
     // the expectations file with the same sentence thousands of times and hide the real ones.
     //
-    // **Except one kind.** §22.2.1's early errors are decided by the compiler rather than the
-    // parser — a regular expression literal's shape is read by §12.9.5 and its *pattern* only
-    // afterwards — and they are as much a decision about the program as anything the parser says.
+    // **Except one kind.** Â§22.2.1's early errors are decided by the compiler rather than the
+    // parser â€” a regular expression literal's shape is read by Â§12.9.5 and its *pattern* only
+    // afterwards â€” and they are as much a decision about the program as anything the parser says.
     // Skipping them let a test that expected no error at all disappear into the "not run" column
     // instead of failing, which is a hole in the ratchet rather than a kindness.
     let compiled = match &parsed {
@@ -601,10 +616,14 @@ fn evaluate(
         Err(error) => return Verdict::Skipped(error.message()),
     };
     let mut vm = Vm::new(&mut heap);
-    // §INTERPRETING.md's `$262`, built rather than written as source — see `install_host`.
+    // Â§9.7's `[[CanBlock]]` â€” see the flag check in `run_once` for why this host answers true, and
+    // what the two test262 flags that describe it cost either way. Set for a `raw` test as well: it
+    // is a property of the agent and not of the API the agent was given.
+    vm.set_can_block(true);
+    // Â§INTERPRETING.md's `$262`, built rather than written as source â€” see `install_host`.
     //
     // Not for a `raw` test. "Exactly the text" is the whole meaning of that flag, and the tests
-    // that use it are largely tests *about* what the global object has — a host object appearing
+    // that use it are largely tests *about* what the global object has â€” a host object appearing
     // in one would change the answer it came to check. This used to be guarded where the prologue
     // was assembled; the object is built here now, so the guard is here.
     if !block.has("raw") {
@@ -623,26 +642,26 @@ fn evaluate(
     {
         vm.set_collection_growth(Some(growth));
     }
-    // §16.2.1.7 at *run* time, which is the half a pre-built graph cannot answer: a dynamic
+    // Â§16.2.1.7 at *run* time, which is the half a pre-built graph cannot answer: a dynamic
     // `import()`'s specifier is whatever an expression evaluated to, so the directory has to stay
-    // reachable while the test runs. Given to every test and not only to a module one — §13.3.10 is
+    // reachable while the test runs. Given to every test and not only to a module one â€” Â§13.3.10 is
     // an expression, and a Script may write it.
     vm.set_module_loader(Box::new(Beside {
         directory: beside.to_path_buf(),
     }));
-    // §16.2.1.7 `HostLoadImportedModule` is the host's, and this host is a directory: a specifier
+    // Â§16.2.1.7 `HostLoadImportedModule` is the host's, and this host is a directory: a specifier
     // is a path beside the test. Everything it reaches is read, parsed and compiled here, and the
-    // engine is handed a graph it can link — see `viperjs::vm::Graph`.
+    // engine is handed a graph it can link â€” see `viperjs::vm::Graph`.
     //
     // *Every* module goes through this, including one that imports nothing: linking a graph of one
-    // is what §16.2.1.6 says to do, and a second path for the empty case would be a branch whose
+    // is what Â§16.2.1.6 says to do, and a second path for the empty case would be a branch whose
     // two sides must agree for ever without anything checking that they do.
     let outcome = if module {
         let mut graph = Graph::new();
         let root = Rc::new(chunk);
         graph.insert(ENTRY, Rc::clone(&root));
-        // A module may import *itself* — `instn-named-bndng-cls.js` does, to watch its own binding
-        // in its dead zone — so the entry answers to the specifiers that name it as well. The
+        // A module may import *itself* â€” `instn-named-bndng-cls.js` does, to watch its own binding
+        // in its dead zone â€” so the entry answers to the specifiers that name it as well. The
         // engine keys a module by its chunk rather than by the name that reached it, so these are
         // all one record and the body runs once.
         if let Some(file) = beside_name {
@@ -654,7 +673,7 @@ fn evaluate(
         }
         match vm.run_module_graph(ENTRY, &graph, &mut heap) {
             Ok(Ok(outcome)) => Ok(outcome),
-            // §16.2.1.5's own errors — a specifier nothing answers, a name nothing exports, a name
+            // Â§16.2.1.5's own errors â€” a specifier nothing answers, a name nothing exports, a name
             // two star exports disagree about. A host reports all three as a SyntaxError, and the
             // phase test262 files them under is `resolution` rather than `parse`.
             Ok(Err(error)) => return judge_resolution(negative, &error.message()),
@@ -665,7 +684,7 @@ fn evaluate(
     };
     match outcome {
         Err(fault) => Verdict::Failed(format!("the chunk did not make sense: {fault:?}")),
-        // DR-0022's time budget, which this harness does not set — so reaching here means something
+        // DR-0022's time budget, which this harness does not set â€” so reaching here means something
         // else did, and a run that was stopped part-way has not passed whatever it was asked.
         //
         // Worth knowing rather than worth doing yet: setting one *would* replace the per-test
@@ -676,8 +695,8 @@ fn evaluate(
             Verdict::Failed("the run was stopped before it finished".to_string())
         }
         // Nothing was thrown, which for an ordinary test is the whole answer and for an async one
-        // is not an answer at all: what it says about itself is in `$DONE`, which was called — or
-        // was not — while the jobs ran.
+        // is not an answer at all: what it says about itself is in `$DONE`, which was called â€” or
+        // was not â€” while the jobs ran.
         Ok(VmOutcome::Value(_)) if asynchronous && negative.is_none() => {
             reported(&mut vm, &mut heap)
         }
@@ -713,8 +732,8 @@ fn evaluate(
 
 /// What the test said about itself through `$DONE`.
 ///
-/// A second script in the same realm, run after the first has finished and after §9.5's jobs have
-/// run with it — which is the only moment the answer exists. DR-0016 explains why it cannot be the
+/// A second script in the same realm, run after the first has finished and after Â§9.5's jobs have
+/// run with it â€” which is the only moment the answer exists. DR-0016 explains why it cannot be the
 /// first script's completion value: that is decided by its last statement, and a handler that calls
 /// `$DONE` has not run yet at that point.
 fn reported(vm: &mut Vm, heap: &mut Heap) -> Verdict {
@@ -747,7 +766,7 @@ fn describe(thrown: viperjs::value::Value, heap: &mut Heap) -> String {
         let what = thrown.type_of(heap);
         return match thrown.to_string(heap) {
             Ok(id) => format!("the {what} {}", text(heap, id)),
-            // Only an object can refuse `ToString`, and this one is not an object — but saying so
+            // Only an object can refuse `ToString`, and this one is not an object â€” but saying so
             // costs a line and guessing costs a wrong failure message.
             Err(_) => format!("a {what}"),
         };
@@ -770,7 +789,7 @@ fn describe(thrown: viperjs::value::Value, heap: &mut Heap) -> String {
 ///
 /// `describe` answers the *kind* alone because that is what `negative.type` names and what a
 /// negative test is checked against. A failure line is read by a person deciding what to build
-/// next, and seventeen thousand lines reading `it threw ReferenceError` say nothing at all —
+/// next, and seventeen thousand lines reading `it threw ReferenceError` say nothing at all â€”
 /// where `ReferenceError: Object is not defined` names the builtin that is missing and sorts
 /// itself into a bucket.
 fn explain(thrown: viperjs::value::Value, heap: &mut Heap) -> String {
@@ -783,7 +802,7 @@ fn explain(thrown: viperjs::value::Value, heap: &mut Heap) -> String {
 
 /// An error's own `message`, if it has one that is a string.
 ///
-/// Own rather than inherited, because §20.5.3.3 puts an empty `message` on `Error.prototype` and
+/// Own rather than inherited, because Â§20.5.3.3 puts an empty `message` on `Error.prototype` and
 /// an inherited empty string is the absence of a message rather than a message.
 fn message(thrown: viperjs::value::Value, heap: &mut Heap) -> Option<String> {
     use viperjs::heap::{PropertyKey, PropertyKind};
@@ -821,8 +840,8 @@ mod tests {
 
     #[test]
     fn a_file_that_hangs_answers_for_every_mode_it_said_it_would_run() {
-        // The defect this exists for. A file with both of §11.2.2's modes is two runs, and a
-        // worker killed inside the first used to leave *one* outcome behind — so the size of the
+        // The defect this exists for. A file with both of Â§11.2.2's modes is two runs, and a
+        // worker killed inside the first used to leave *one* outcome behind â€” so the size of the
         // suite fell by one for every timeout, and a change that made tests slower read as a
         // change that removed them. Both are named here, or the count is still wrong.
         let left = unfinished(Vec::new(), &both_modes("a.js"), Duration::from_secs(10));
@@ -839,7 +858,7 @@ mod tests {
     fn the_run_that_hung_is_named_as_such_and_the_one_behind_it_is_not() {
         // Announcements are in the order they run, so the first outstanding scenario is the one
         // the child was inside and the rest never got a turn. Told the same way round, a file with
-        // two modes would report that it hung twice — which is not what happened, and would double
+        // two modes would report that it hung twice â€” which is not what happened, and would double
         // every timeout in the failure buckets the work list is read from.
         let left = unfinished(Vec::new(), &both_modes("a.js"), Duration::from_secs(10));
         let Verdict::Failed(hung) = &left[0].verdict else {
@@ -903,7 +922,7 @@ mod tests {
         // The prologue is prepended to the source and the two are parsed *together*, so for a
         // module test every name it declares is a **module** binding. `PROBE` runs afterwards as a
         // separate Script and cannot see one, so a `var $__status` made every async module test
-        // report "the test's status could not be read" — a sentence about the harness's reach with
+        // report "the test's status could not be read" â€” a sentence about the harness's reach with
         // nothing in it about the engine. Writing it onto `globalThis` is what makes the two halves
         // meet, and this row is the one that says so.
         assert!(matches!(
@@ -915,7 +934,7 @@ $DONE();"
             ),
             Verdict::Passed
         ));
-        // …and the failure report crosses the same way, which a status that merely *existed* would
+        // â€¦and the failure report crosses the same way, which a status that merely *existed* would
         // not prove: reading it from the wrong place would answer "never called" for both.
         let failed = verdict(
             "/*---
@@ -932,7 +951,7 @@ $DONE('it went wrong');",
     #[test]
     fn an_async_test_passes_only_when_it_says_so_and_never_by_finishing() {
         // The whole reason this was refused for so long. A test that *did not finish* ends without
-        // throwing, exactly as one that finished cleanly does — so "nothing was thrown" cannot be
+        // throwing, exactly as one that finished cleanly does â€” so "nothing was thrown" cannot be
         // the verdict, and reading `$DONE` is the only thing that separates them.
         assert!(matches!(
             verdict(
@@ -953,7 +972,7 @@ var quietly = 1;",
             matches!(&never, Verdict::Failed(why) if why.contains("never called $DONE")),
             "{never:?}"
         );
-        // `$DONE(error)` is the failure report, and the reason travels into the verdict — which is
+        // `$DONE(error)` is the failure report, and the reason travels into the verdict â€” which is
         // what makes the expectations file say something useful about an async test rather than
         // the same sentence thousands of times over.
         let failed = verdict(
@@ -998,7 +1017,7 @@ $DONE('first'); $DONE();",
             verdict("if (typeof $DONE !== 'undefined') { throw new Error('it was defined'); }"),
             Verdict::Passed
         ));
-        // …and the answer arrives from a *job*, which is what every real async test does. This is
+        // â€¦and the answer arrives from a *job*, which is what every real async test does. This is
         // the row that fails if the status is read as the script's completion value: by then the
         // handler has not run. DR-0016 is the long version.
         assert!(matches!(
@@ -1050,7 +1069,7 @@ Promise.resolve().then(function () { $DONE(); });"
             verdict("/*---\ndescription: fine\n---*/\nvar x = 1;"),
             Verdict::Passed
         );
-        // …and fails by throwing, whatever it threw.
+        // â€¦and fails by throwing, whatever it threw.
         assert!(matches!(
             verdict("/*---\ndescription: throws\n---*/\nthrow 1;"),
             Verdict::Failed(_)
@@ -1060,14 +1079,14 @@ Promise.resolve().then(function () { $DONE(); });"
     #[test]
     fn a_negative_test_must_fail_in_the_phase_it_named() {
         // The phase is not a formality. A test that says the program must not *parse* has not
-        // passed by throwing while it runs — the program should never have begun.
+        // passed by throwing while it runs â€” the program should never have begun.
         let parse_time = "/*---\nnegative:\n  phase: parse\n  type: SyntaxError\n---*/\nvar 1 = 2;";
         assert_eq!(verdict(parse_time), Verdict::Passed);
 
         let wrong_phase = "/*---\nnegative:\n  phase: parse\n  type: SyntaxError\n---*/\nnull.x;";
         assert!(matches!(verdict(wrong_phase), Verdict::Failed(_)));
 
-        // …and a run-time test must throw the error it named and not another.
+        // â€¦and a run-time test must throw the error it named and not another.
         let runtime = "/*---\nnegative:\n  phase: runtime\n  type: TypeError\n---*/\nnull.x;";
         assert_eq!(verdict(runtime), Verdict::Passed);
         let wrong_kind = "/*---\nnegative:\n  phase: runtime\n  type: RangeError\n---*/\nnull.x;";
@@ -1082,15 +1101,15 @@ Promise.resolve().then(function () { $DONE(); });"
         // Nothing ran, so nothing can be said about what it would have done. Counting these as
         // failures would write the same sentence into the expectations file thousands of times
         // and bury the ones that mean something.
-        // The example has to be replaced each time a refusal lands — `class C {}` was here until
+        // The example has to be replaced each time a refusal lands â€” `class C {}` was here until
         // classes compiled, `function* g() {}` until generators did, `async function f() {}` until
-        // `await` did, a destructuring rest parameter until §15.1 did, and `import.meta` until
-        // §13.3.12 did.
+        // `await` did, a destructuring rest parameter until Â§15.1 did, and `import.meta` until
+        // Â§13.3.12 did.
         //
-        // `(?i:…)` now, and it should not need replacing: the RegExp **modifiers** proposal is
+        // `(?i:â€¦)` now, and it should not need replacing: the RegExp **modifiers** proposal is
         // Stage 3 and building it is on nobody's list, so this is a refusal with no owner. The
-        // distinction it is really about is `Unsupported` against `BadPattern` — a gap the compiler
-        // admits to, against a pattern the grammar rejects — and only the first is a skip. Getting
+        // distinction it is really about is `Unsupported` against `BadPattern` â€” a gap the compiler
+        // admits to, against a pattern the grammar rejects â€” and only the first is a skip. Getting
         // that backwards is not symmetric: a gap recorded as an early error passes every test
         // asserting the construct must be rejected.
         assert!(matches!(
@@ -1107,9 +1126,9 @@ Promise.resolve().then(function () { $DONE(); });"
 
     #[test]
     fn a_module_test_is_run_as_a_module_and_a_script_test_is_not() {
-        // §16.1 and §16.2 are two goal symbols, and the frontmatter's one word is the whole of what
-        // decides between them here. `this` is the cheapest thing that tells them apart: §16.2.1.6
-        // gives a module's top level `undefined`, and §16.1.6 gives a script the global object.
+        // Â§16.1 and Â§16.2 are two goal symbols, and the frontmatter's one word is the whole of what
+        // decides between them here. `this` is the cheapest thing that tells them apart: Â§16.2.1.6
+        // gives a module's top level `undefined`, and Â§16.1.6 gives a script the global object.
         let root = checkout("goal-symbol");
         let outcomes = run(
             &root,
@@ -1123,7 +1142,7 @@ if (this !== undefined) { throw 1; }",
             outcomes.iter().all(|run| run.verdict == Verdict::Passed),
             "{outcomes:?}"
         );
-        // …and the same source as a script sees the global object instead, so neither row passes by
+        // â€¦and the same source as a script sees the global object instead, so neither row passes by
         // the harness having only one path.
         let outcomes = run(
             &root,
@@ -1141,7 +1160,7 @@ if (this !== globalThis) { throw 1; }",
 
     #[test]
     fn a_modules_imports_are_read_from_beside_the_test() {
-        // §16.2.1.7 `HostLoadImportedModule` is the host's to answer, and test262's host is a
+        // Â§16.2.1.7 `HostLoadImportedModule` is the host's to answer, and test262's host is a
         // directory: `import { x } from './dep.js'` means the file next to the test. Nothing in the
         // engine can find that file, so this is the harness's own half of the module goal.
         let root = checkout("beside");
@@ -1186,7 +1205,7 @@ import { a } from './nowhere.js';",
     fn a_module_two_others_import_is_read_once_and_a_cycle_terminates() {
         // Depth-first over a graph, so the only thing that makes it stop is the check that a
         // specifier already gathered is not gathered again. Without it a diamond compiles a module
-        // twice — two records for one file, and §16.2.1.6's "evaluated once" quietly broken — and a
+        // twice â€” two records for one file, and Â§16.2.1.6's "evaluated once" quietly broken â€” and a
         // cycle does not return at all.
         let root = checkout("diamond");
         for (file, text) in [
@@ -1234,8 +1253,8 @@ flags: [module]
 
     #[test]
     fn a_strict_run_prepends_the_prologue_and_a_sloppy_one_does_not() {
-        // Observable because §12.9.3.1 keeps Annex B's legacy octal literals out of strict code
-        // and B.1.1 allows them everywhere else — so the same source parses in one mode and not
+        // Observable because Â§12.9.3.1 keeps Annex B's legacy octal literals out of strict code
+        // and B.1.1 allows them everywhere else â€” so the same source parses in one mode and not
         // the other, and only a prologue that is really there can make that happen.
         let root = checkout("prologue");
         let outcomes = run(&root, "/*---\ndescription: x\n---*/\nvar x = 010;");
@@ -1255,7 +1274,7 @@ flags: [module]
     #[test]
     fn a_pattern_the_specification_forbids_is_judged_and_one_viperjs_lacks_is_not() {
         let root = checkout("patterns");
-        // §22.2.1's early errors are the compiler's, not the parser's, and they are still early:
+        // Â§22.2.1's early errors are the compiler's, not the parser's, and they are still early:
         // a test asserting that a pattern must be rejected is *passed* by rejecting it.
         let forbidden = run(
             &root,
@@ -1267,7 +1286,7 @@ negative:
 var r = /(/;",
         );
         assert_eq!(forbidden[0].verdict, Verdict::Passed);
-        // …and the other direction is the reason this is worth a test rather than a line: a
+        // â€¦and the other direction is the reason this is worth a test rather than a line: a
         // program that expected no error at all now *fails* here, where it used to disappear into
         // the "not run" column and take a real regression with it.
         let unexpected = run(
@@ -1282,8 +1301,8 @@ var r = /(/;",
             "{unexpected:?}"
         );
         // A pattern ViperJS has not *built* is still skipped, and that difference is the whole
-        // point of the split: judging it would pass every negative test the proposal ships —
-        // which asserts that particular malformed modifier groups are rejected — while every
+        // point of the split: judging it would pass every negative test the proposal ships â€”
+        // which asserts that particular malformed modifier groups are rejected â€” while every
         // positive one failed. An engine implementing none of it would be credited with half.
         let unbuilt = run(
             &root,
@@ -1304,17 +1323,17 @@ var r = /(?i:a)/;",
     #[test]
     fn what_this_harness_cannot_honestly_run_is_skipped_and_says_which() {
         let root = checkout("declined");
-        // A module is a different goal symbol, and it **runs** — read by `parse_module` and
-        // compiled by `compile_module`, which is §16.2's half of the pair.
+        // A module is a different goal symbol, and it **runs** â€” read by `parse_module` and
+        // compiled by `compile_module`, which is Â§16.2's half of the pair.
         let module = run(&root, "/*---\nflags: [module]\n---*/\nassert(true);");
         assert!(matches!(&module[0].verdict, Verdict::Passed), "{module:?}");
-        // …including one that exports, which the graph the host resolves is linked through.
+        // â€¦including one that exports, which the graph the host resolves is linked through.
         let exports = run(&root, "/*---\nflags: [module]\n---*/\nexport var a = 1;");
         assert!(
             matches!(&exports[0].verdict, Verdict::Passed),
             "{exports:?}"
         );
-        // …and one that reaches into another module's *list* rather than at a name of its own,
+        // â€¦and one that reaches into another module's *list* rather than at a name of its own,
         // which makes an edge in the graph exactly as an `import` does and is resolved the same way.
         std::fs::write(root.join("test").join("a.js"), "export var reached = 3;")
             .expect("writable"); // the test needs the file
@@ -1336,18 +1355,18 @@ var r = /(?i:a)/;",
             matches!(&missing[0].verdict, Verdict::Skipped(why) if why.contains("no module")),
             "{missing:?}"
         );
-        // …and it is one run rather than two: a module is always strict, so there is no second
+        // â€¦and it is one run rather than two: a module is always strict, so there is no second
         // mode to measure.
         assert_eq!(module.len(), 1);
         assert!(!module[0].strict);
 
-        // An async test is *run*, and what it says about itself comes from `$DONE` — which this
+        // An async test is *run*, and what it says about itself comes from `$DONE` â€” which this
         // host defines in the prologue, so the test finds it on the global object as its own
         // property, which is what `asyncHelpers.js` insists on.
         let done = run(&root, "/*---\nflags: [async]\n---*/\n$DONE();");
         assert!(matches!(&done[0].verdict, Verdict::Passed), "{done:?}");
 
-        // §INTERPRETING.md's `$262`, with the three members this host can answer. `detachArrayBuffer`
+        // Â§INTERPRETING.md's `$262`, with the three members this host can answer. `detachArrayBuffer`
         // is what `harness/detachArrayBuffer.js` looks for, and without it every test about a
         // buffer going away reports that the *harness* is missing something rather than testing
         // what it came to test.
@@ -1361,7 +1380,7 @@ var r = /(?i:a)/;",
         );
         assert!(matches!(&host[0].verdict, Verdict::Passed), "{host:?}");
 
-        // `evalScript` is §16.1.7's goal and not §19.2.1.1's, which is one argument to
+        // `evalScript` is Â§16.1.7's goal and not Â§19.2.1.1's, which is one argument to
         // `CreateGlobalVarBinding` and is exactly what the tests using it measure: a `var` it
         // declares is a **permanent** property of the global object. Written as `(0, eval)(source)`
         // this row would report `true` and sixteen `annexB/language/global-code` tests would fail.
@@ -1377,7 +1396,7 @@ var r = /(?i:a)/;",
         );
         assert!(matches!(&script[0].verdict, Verdict::Passed), "{script:?}");
 
-        // `createRealm` answers the new realm's **`$262`** — not the realm and not its global, which
+        // `createRealm` answers the new realm's **`$262`** â€” not the realm and not its global, which
         // is what makes `$262.createRealm().global` the way a test reaches the other side. The API
         // on it has to be the same one, and its `global` has to be the *new* global rather than the
         // one this `$262` was built against: a `$262` assembled from the running realm would answer
@@ -1395,14 +1414,20 @@ var r = /(?i:a)/;",
         );
         assert!(matches!(&realm[0].verdict, Verdict::Passed), "{realm:?}");
 
-        // …and the three it still cannot do are *absent* rather than stubbed, so a test that needs
+        // â€¦and the two it still cannot do are *absent* rather than stubbed, so a test that needs
         // one fails saying so rather than reporting a failure about the wrong thing entirely.
+        // `agent` was on this list until there were threads to put behind it, and the row below is
+        // what stops it being *put back* as a stub: an object with the five names on it and nothing
+        // underneath would satisfy `typeof` and hang every test that broadcast to it.
         let absent = run(
             &root,
             "/*---\ndescription: absent\n---*/\n\
-             if (typeof $262.agent !== 'undefined') { throw new Error('pretending'); }\n\
              if (typeof $262.gc !== 'undefined') { throw new Error('pretending'); }\n\
-             if (typeof $262.IsHTMLDDA !== 'undefined') { throw new Error('pretending'); }",
+             if (typeof $262.IsHTMLDDA !== 'undefined') { throw new Error('pretending'); }\n\
+             var api = ['start', 'broadcast', 'getReport', 'sleep', 'monotonicNow'];\n\
+             for (var i = 0; i < api.length; i++) {\n\
+                 if (typeof $262.agent[api[i]] !== 'function') { throw new Error(api[i]); }\n\
+             }",
         );
         assert!(matches!(&absent[0].verdict, Verdict::Passed), "{absent:?}");
 
@@ -1419,17 +1444,18 @@ description: plain
         );
         assert!(matches!(&plain[0].verdict, Verdict::Passed), "{plain:?}");
 
-        // The two spellings are opposite claims about the host and must not share an answer.
-        // ViperJS cannot block, so a `CanBlockIsFalse` test is written for *this* host and is run;
-        // only `CanBlockIsTrue` describes a host with agents. Asserting both sides is what stops
-        // the pair collapsing back into one skip, which is what they were until Atomics.wait
-        // existed to be tested.
+        // The two spellings are opposite claims about the host and must not share an answer. This
+        // host *can* block, so a `CanBlockIsTrue` test is written for it and is run; a
+        // `CanBlockIsFalse` test describes a browser's main thread and is skipped. Asserting both
+        // sides is what stops the pair collapsing back into one skip, which is what they were until
+        // `Atomics.wait` existed to be tested â€” and what stops the pair silently *swapping* again,
+        // which is what this slice did to them.
         let blockable = run(
             &root,
             "/*---\nflags: [CanBlockIsTrue]\n---*/\nassert(true);",
         );
         assert!(
-            matches!(&blockable[0].verdict, Verdict::Skipped(why) if why.contains("cannot block")),
+            matches!(&blockable[0].verdict, Verdict::Passed),
             "{blockable:?}"
         );
         let unblockable = run(
@@ -1437,8 +1463,23 @@ description: plain
             "/*---\nflags: [CanBlockIsFalse]\n---*/\nassert(true);",
         );
         assert!(
-            matches!(&unblockable[0].verdict, Verdict::Passed),
+            matches!(&unblockable[0].verdict, Verdict::Skipped(why) if why.contains("can block")),
             "{unblockable:?}"
+        );
+        // â€¦and this is the host's actual Â§9.7 answer, which the two rows above only *describe*.
+        // They read the frontmatter and would go on agreeing with each other if the machine were
+        // never told, so the flag needs a row that reaches `Atomics.wait` itself. `safeBroadcast`
+        // is exactly this program â€” a wait whose value has already changed, made only to see
+        // whether the call throws â€” and every one of the 109 files that starts an agent runs it.
+        let waiting = run(
+            &root,
+            "/*---\ndescription: blocks\n---*/\n\
+             var i32 = new Int32Array(new SharedArrayBuffer(8));\n\
+             if (Atomics.wait(i32, 0, 1) !== 'not-equal') { throw new Error('did not wait'); }",
+        );
+        assert!(
+            matches!(&waiting[0].verdict, Verdict::Passed),
+            "{waiting:?}"
         );
         let _ = std::fs::remove_dir_all(&root);
     }
@@ -1467,7 +1508,7 @@ description: plain
 
     #[test]
     fn every_test_gets_assert_and_sta_whether_it_asked_for_them_or_not() {
-        // `INTERPRETING.md` says so, and a test that named neither still uses what they define —
+        // `INTERPRETING.md` says so, and a test that named neither still uses what they define â€”
         // most of test262 calls `assert` without an `includes` line anywhere in the file.
         let root = checkout("always");
         let outcomes = run(
@@ -1477,7 +1518,7 @@ description: plain
         assert!(outcomes.iter().all(|run| run.verdict == Verdict::Passed));
 
         // `raw` means exactly the text and nothing else. Nothing was prepended, so the name that
-        // `sta.js` would have declared is a name nothing declares — and reading one of those is a
+        // `sta.js` would have declared is a name nothing declares â€” and reading one of those is a
         // ReferenceError, which is how the absence is observed.
         let outcomes = run(&root, "/*---\nflags: [raw]\n---*/\nvar x = fromSta;");
         assert!(
@@ -1501,7 +1542,7 @@ description: plain
 
     #[test]
     fn a_file_with_neither_mode_flag_is_two_runs_and_one_with_a_flag_is_one() {
-        // §11.2.2 — the same source means different things in the two modes, so a file that names
+        // Â§11.2.2 â€” the same source means different things in the two modes, so a file that names
         // neither has to be measured in both or half of any disagreement goes unseen.
         let root = checkout("modes");
         let both = run(&root, "/*---\ndescription: x\n---*/\nassert(true);");
@@ -1536,11 +1577,11 @@ description: plain
         assert!(
             matches!(&outcomes[0].verdict, Verdict::Skipped(why) if why.contains("frontmatter"))
         );
-        // Recorded as the sloppy run, because there is only one of it — a name that said
+        // Recorded as the sloppy run, because there is only one of it â€” a name that said
         // "(strict)" would claim a mode was measured when nothing was.
         assert!(!outcomes[0].strict);
 
-        // …and neither is a file that cannot be read, which on every platform includes a
+        // â€¦and neither is a file that cannot be read, which on every platform includes a
         // directory. Also one run, and also the sloppy one.
         let outcomes = Runner::new(&root).run_file(&root.join("test"));
         assert_eq!(outcomes.len(), 1);
@@ -1552,7 +1593,7 @@ description: plain
     #[test]
     fn a_test_is_named_by_its_path_below_test_slash() {
         // The name is what the expectations file keys on, so it has to be the same on a machine
-        // whose checkout is somewhere else — and the same on Windows, whose paths are otherwise
+        // whose checkout is somewhere else â€” and the same on Windows, whose paths are otherwise
         // spelled with backslashes.
         let root = checkout("naming");
         let outcomes = run(&root, "/*---\ndescription: x\n---*/\nassert(true);");
@@ -1572,7 +1613,7 @@ var e = {}; e.name = 'Weird'; e.message = 'because'; throw e;";
             verdict(thrown),
             Verdict::Failed("it threw Weird: because".to_string())
         );
-        // An *empty* message is the absence of one, not a message that is blank — so the kind
+        // An *empty* message is the absence of one, not a message that is blank â€” so the kind
         // stands alone rather than trailing a colon with nothing after it.
         let blank = "/*---
 description: x
@@ -1582,7 +1623,7 @@ var e = {}; e.name = 'Weird'; e.message = ''; throw e;";
             verdict(blank),
             Verdict::Failed("it threw Weird".to_string())
         );
-        // …and so is no `message` property at all, which is what §20.5.1.1 gives `new Error()`.
+        // â€¦and so is no `message` property at all, which is what Â§20.5.1.1 gives `new Error()`.
         let silent = "/*---
 description: x
 ---*/

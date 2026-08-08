@@ -1172,8 +1172,12 @@ impl Vm {
         self.can_block
     }
 
-    /// Say whether this agent may be suspended, which only a host that started it knows.
-    pub(crate) fn set_can_block(&mut self, can: bool) {
+    /// Say whether this agent may be suspended, which only the host that started it knows.
+    ///
+    /// Public alongside [`Vm::set_module_loader`] and for the same reason: it is a fact about the
+    /// **embedding** that nothing inside the engine can work out for itself. `api::Engine` wraps it
+    /// for a host that has one, and `conformance` assembles its machine by hand and needs it here.
+    pub fn set_can_block(&mut self, can: bool) {
         self.can_block = can;
     }
 
