@@ -142,6 +142,11 @@ threads now**, and three consecutive runs of one commit are identical — which 
 expectations file usable as a ratchet rather than a weather report. `--workers` and `--budget` make
 it measurable, and a run prints both, because a number is comparable only with one taken under the
 same pair.
+
+**Give the run the machine, though.** That stability is a property of a suite running alone: a run
+made while a second one was still going came back 34 lower, and nothing had changed. The tests near
+the per-test budget are the ones that move, exactly as they did before — so a number taken under
+load is not a number.
 `conformance/expectations.txt` is the real record — it may only shrink, so a genuine regression is
 still a hard failure.
 
