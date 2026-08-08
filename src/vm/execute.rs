@@ -550,6 +550,14 @@ impl Vm {
                     let how = if method { Entry::Method } else { Entry::Plain };
                     self.enter(how, count, heap, root, current, at)?;
                 }
+                // §15.10 — the same two calls, with §15.10.4's `PrepareForTailCall` in front of
+                // them. The `Return` the compiler emitted after this is never reached: the callee
+                // answers to whoever this frame was answering to, which is what a tail call *is*.
+                Instruction::CallTail(count) | Instruction::CallTailMethod(count) => {
+                    let method = matches!(instruction, Instruction::CallTailMethod(_));
+                    let how = if method { Entry::Method } else { Entry::Plain };
+                    self.enter_at(how, count, heap, root, current, at, true)?;
+                }
                 Instruction::CallDirectEval(count) | Instruction::CallDirectEvalMethod(count) => {
                     // Whether §9.1.1.2.10's `WithBaseObject` is sitting under the callee, which is
                     // the only thing the two spellings differ in — the *question* they carry is the

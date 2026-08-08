@@ -5,6 +5,7 @@
 //! numberings must not share a table — and the separation is what makes a nested body unable to
 //! reach a slot it has no environment for.
 
+use super::statement::Position;
 use super::{
     CompileError, Compiler, ErrorKind, Instruction, Local, THIS_BINDING, ThisSlot, unsupported,
 };
@@ -271,6 +272,22 @@ impl Compiler<'_> {
         optional: bool,
         span: Span,
     ) -> Result<(), CompileError> {
+        self.call_at(callee, arguments, optional, span, Position::Ordinary)
+    }
+
+    /// The same, told whether §15.10 puts this call in tail position.
+    ///
+    /// A parameter rather than a flag on the compiler, because `return f(g())` has two calls in it
+    /// and only the outer one is in tail position — a flag set around the argument would mark `g`,
+    /// which is compiled first and returns to a frame that is still needed. DR-0027.
+    pub(super) fn call_at(
+        &mut self,
+        callee: &Expr,
+        arguments: &[Argument],
+        optional: bool,
+        span: Span,
+        position: Position,
+    ) -> Result<(), CompileError> {
         // §13.3.6.1 — a method call keeps the object the method was *found on* as the receiver.
         // The base is evaluated once and copied, because `f().m()` must call `f` once.
         // §13.3.7 — `super(…)` names no callee at all: the parent is the running function's
@@ -352,11 +369,18 @@ impl Compiler<'_> {
         // Four cases and not three. A receiver decides the *shape* of the call and the bare name
         // decides whether it may be a direct eval; the two are independent, and folding them into
         // `(true, _)` threw the second away for every `eval` written inside a `with`.
-        self.chunk.emit(match (method, direct_eval) {
-            (true, true) => Instruction::CallDirectEvalMethod(count),
-            (true, false) => Instruction::CallMethod(count),
-            (false, true) => Instruction::CallDirectEval(count),
-            (false, false) => Instruction::Call(count),
+        // §15.10's tail position, and **never for a direct eval**: the compiler cannot know whether
+        // the name `eval` holds `%eval%`, and if it does the text runs in *this* frame's scopes —
+        // which a tail call has just taken down. Refusing it costs the four `tco-non-eval-*` runs
+        // and is the honest reading; see DR-0027 on what a tail call for those would have to check.
+        let tail = matches!(position, Position::Tail) && !direct_eval;
+        self.chunk.emit(match (method, direct_eval, tail) {
+            (true, true, _) => Instruction::CallDirectEvalMethod(count),
+            (true, false, false) => Instruction::CallMethod(count),
+            (true, false, true) => Instruction::CallTailMethod(count),
+            (false, true, _) => Instruction::CallDirectEval(count),
+            (false, false, false) => Instruction::Call(count),
+            (false, false, true) => Instruction::CallTail(count),
         });
         Ok(())
     }

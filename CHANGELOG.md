@@ -61,6 +61,21 @@ public API is not stable and may change in any release.
 - Three ordering faults that only a real `Get` could expose: `AllocateArrayBuffer`'s length check,
   §23.2.5.1's two branches, and §10.2.2's steps 14 and 15 belonging to the caller.
 
+- **Proper tail calls — §15.10.** A `return` whose argument is a call no longer grows the call
+  stack in strict code, so `function f(n) { "use strict"; return n === 0 ? "done" : f(n - 1) }` runs
+  at any depth instead of throwing a RangeError at ten thousand. The frame the call is made from is
+  taken down before the call and the callee inherits its return target whole, so `frames` gains one
+  entry and loses one.
+
+  Where the compiler says it is safe: strict code, not a derived constructor, and no `finally`,
+  iterator close or **armed** handler left to cross — so a `catch` block and a `finally` block are
+  tail positions and a `try` block is not. Where the machine declines it, because the same body runs
+  for `f(1)` and `new f(1)`: a construction, whose frame is holding the object it made, and a
+  generator, `async` function or async generator, which answer with something other than what they
+  returned. Those degrade to an ordinary call. See DR-0027, and its list of what is deliberately
+  left out: a call written as the bare name `eval`, a spread argument, and the tail positions inside
+  `?:`, `&&`, `||`, `??` and a comma.
+
 ### Changed
 
 - **An array index is now a kind of property key.** `PropertyKey` gained an `Index(u32)` variant,

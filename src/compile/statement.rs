@@ -18,8 +18,9 @@ use super::{
     Closing, CompileError, Compiler, Crossing, Instruction, Unpatched, Unwind, unsupported,
 };
 use crate::ast::{
-    BinaryOperator, Declaration, DeclarationKind, ForInOfKind, ForInOfStatement, ForInOfTarget,
-    ForInit, ForStatement, LabelledStatement, Stmt, StmtKind, SwitchStatement, TryStatement,
+    BinaryOperator, Declaration, DeclarationKind, ExprKind, ForInOfKind, ForInOfStatement,
+    ForInOfTarget, ForInit, ForStatement, LabelledStatement, Stmt, StmtKind, SwitchStatement,
+    TryStatement,
 };
 use crate::span::Span;
 use crate::value::Value;
@@ -48,6 +49,20 @@ impl Exit {
             false => Self::Continue(depth),
         }
     }
+}
+
+/// Whether §15.10 puts a call in **tail position** — the one thing a `return` tells its argument.
+///
+/// Two values rather than a `bool` so the call sites read as what they mean: `Position::Ordinary`
+/// is every call in the language, and `Position::Tail` is the narrow case where the frame this call
+/// is made from has nothing left to do. DR-0027.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Position {
+    /// The call answers into the frame it was made from, which therefore has to still be there.
+    Ordinary,
+    /// §15.10.4 `PrepareForTailCall` — the frame goes down first, and the callee answers to
+    /// whoever this one was answering to.
+    Tail,
 }
 
 impl Compiler<'_> {
@@ -194,8 +209,28 @@ impl Compiler<'_> {
                 if self.is_script {
                     return Err(unsupported("return outside a function", span));
                 }
+                // §15.10 — a `return` whose argument is a call may be a *tail* call, and this is
+                // the only statement that can say so. What decides it is `tail_position`, and the
+                // call is compiled through `call_at` rather than through `expression` because only
+                // the outermost call is in tail position: `return f(g())` must not mark `g`.
                 match argument {
-                    Some(argument) => self.expression(argument)?,
+                    Some(argument) => match (&argument.kind, self.tail_position()) {
+                        (
+                            ExprKind::Call {
+                                optional,
+                                callee,
+                                arguments,
+                            },
+                            true,
+                        ) => self.call_at(
+                            callee,
+                            arguments,
+                            *optional,
+                            argument.span,
+                            Position::Tail,
+                        )?,
+                        _ => self.expression(argument)?,
+                    },
                     None => self.constant(Value::Undefined)?,
                 }
                 // §14.15.3 and §7.4.9 — a `return` leaves *every* enclosing statement, so each
@@ -224,6 +259,53 @@ impl Compiler<'_> {
             }
         }
     }
+    /// Whether a `return` written here can be §15.10's tail call — DR-0027's four conditions.
+    ///
+    /// Three of them are one line each and the fourth is the interesting one. §15.10.2's
+    /// `HasCallInTailPosition` is thirty productions of static semantics, and what it computes is
+    /// "is there anything left to do in this function after the call answers". This compiler
+    /// already keeps that, because a `return` has to emit it: the [`Crossing`] entries. So the
+    /// question is asked of those rather than of the grammar, and the two cannot disagree.
+    ///
+    /// `Crossing::Scope` and `Crossing::Operand` are crossed freely — a scope is popped before the
+    /// call and an operand goes when the frame does. `Crossing::Finally` and `Crossing::Iterator`
+    /// emit code that runs **after** the argument is evaluated, which is exactly what a tail call
+    /// has thrown the frame away for. `Crossing::Handlers` is refused for a different reason and
+    /// it is §14.6.1's: a `return` inside a `try` block is not in tail position however the block
+    /// ends, because the `catch` beside it must still be able to catch.
+    ///
+    /// That gets `try { } finally { return f() }` right, which is a tail call, and
+    /// `try { return f() } finally { }`, which is not — without either being written down as a
+    /// case.
+    fn tail_position(&self) -> bool {
+        // §15.10.3 — only strict function code, which is what every one of test262's files sets.
+        // A sloppy function may have an `arguments` object joined to its parameters and a `caller`
+        // a program can walk, and neither survives the frame going down.
+        if !self.chunk.strict || self.is_script {
+            return false;
+        }
+        // §10.2.2 step 13 — a derived constructor's return emits `CompleteDerivedReturn` after the
+        // value is in hand, which is code that runs after the call.
+        if self.chunk.derived_this.is_some() {
+            return false;
+        }
+        !self.unwinds.iter().any(|entry| match &entry.what {
+            // Both emit code that runs *after* the argument is evaluated, which is exactly what a
+            // tail call has thrown the frame away for.
+            Crossing::Finally(..) | Crossing::Iterator(..) => true,
+            // **The count and not the entry.** §14.6.1 refuses a `return` inside a `try` block
+            // because the `catch` beside it must still be able to catch — and that is a handler
+            // being *armed*, not a `try` being written. The entry outlives the block: entering a
+            // catch sets the count to what is still armed there, which for a `try`/`catch` with no
+            // `finally` is zero, because a handler that fired was taken off by the throw that found
+            // it. So the catch block is a tail position and the try block is not, which is what
+            // §14.6.1 says and what this asks in one comparison.
+            Crossing::Handlers(armed) => *armed > 0,
+            // A scope is popped before the call, and an operand goes when the frame does.
+            Crossing::Scope | Crossing::Operand => false,
+        })
+    }
+
     /// §14.2.2 — start this statement's completion value at `undefined`, if its clause says to.
     ///
     /// Eight statement forms begin their evaluation with a `V` of `undefined` — `if` (§14.6.2's

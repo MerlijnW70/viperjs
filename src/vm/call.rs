@@ -27,6 +27,27 @@ impl Vm {
         current: &mut Option<Rc<Chunk>>,
         at: &mut usize,
     ) -> Result<(), Fault> {
+        self.enter_at(how, count, heap, chunk, current, at, false)
+    }
+
+    /// The same, told whether §15.10.4's `PrepareForTailCall` runs first — DR-0027.
+    ///
+    /// A tail call is the ordinary entry with one thing done before it: the frame this call is made
+    /// from is taken down, so the callee answers to whoever *that* frame was answering to and
+    /// `frames` gains one entry and loses one. Everything else — the environment, the parameters,
+    /// the arguments object, the realm — is identical, which is why this is a parameter rather than
+    /// a second function.
+    #[allow(clippy::too_many_arguments)] // one more than `enter`, and the reason is the same
+    pub(super) fn enter_at(
+        &mut self,
+        how: Entry,
+        count: u32,
+        heap: &mut Heap,
+        chunk: &Chunk,
+        current: &mut Option<Rc<Chunk>>,
+        at: &mut usize,
+        tail: bool,
+    ) -> Result<(), Fault> {
         let count = count as usize;
         // Which ways in have a value under the callee. A method call has its receiver there, and
         // §28.1.2's has the `new.target` the caller named — a construction makes its own receiver,
@@ -368,35 +389,55 @@ impl Vm {
         // call and parks itself at `Instruction::GeneratorStart`, which the compiler puts after the
         // parameters. Diverting here instead put the parameter list inside the parked body, where
         // it ran at the first `next` — see that instruction.
-        self.stack.truncate(receiver_at);
-        self.frames.push(Frame {
-            code: (*current).take(),
-            at: *at,
-            this_value: self.this_value,
-            new_target: self.new_target,
-            realm: self.realm.id(),
-            environment: self.environment,
-            stack_base: receiver_at,
-            handlers_base: self.handlers.len(),
-            // §10.2.2 step 13 — a constructor's call answers with the object it was given
-            // unless its body returned an object of its own. A primitive `return` is ignored,
-            // which is why `function F() { return 1; }` still constructs an `F`.
-            // …and nothing for a derived one, whose answer §10.2.2 step 13 settles in the body:
-            // `CompleteDerivedReturn` puts the object on the stack, so by the time `Return` runs
-            // there is nothing left for the frame to prefer.
-            constructed: match how {
-                Entry::Construct | Entry::Super | Entry::Named if !derived => Some(receiver),
-                _ => None,
+        // §15.10.4 `PrepareForTailCall` — the frame this call is made from goes down *before* the
+        // call, and the frame pushed for the callee inherits its return target whole: its code, its
+        // instruction, its `this`, its `new.target`, its realm, its environment and both its floors.
+        // That is the whole of DR-0027, and why the answer is indistinguishable from the ordinary
+        // call's: the callee answers to whoever this frame was going to answer to.
+        //
+        // `None` is either an ordinary call or one of the two shapes the source could not see — a
+        // construction or a suspendable body — and then this is the frame it always was.
+        let mut frame = match tail.then(|| self.take_frame_for_tail(heap)).flatten() {
+            Some(replaced) => replaced,
+            None => Frame {
+                code: (*current).take(),
+                at: *at,
+                this_value: self.this_value,
+                new_target: self.new_target,
+                realm: self.realm.id(),
+                environment: self.environment,
+                stack_base: receiver_at,
+                handlers_base: self.handlers.len(),
+                constructed: None,
+                function: None,
+                generator: None,
             },
-            function: Some(object),
-            // An `async` function's context object, or nothing. A **generator's** own object is not
-            // known yet and reaches the frame later: the body is entered as an ordinary call and
-            // `Vm::start_generator` fills this in when `Instruction::GeneratorStart` runs, which is
-            // after the parameters. This used to say a generator's frame was not pushed here at
-            // all, which stopped being true when that instruction arrived — and contradicted the
-            // comment twenty lines above it.
-            generator: context,
-        });
+        };
+        // §10.2.2 step 13 — a constructor's call answers with the object it was given
+        // unless its body returned an object of its own. A primitive `return` is ignored,
+        // which is why `function F() { return 1; }` still constructs an `F`.
+        // …and nothing for a derived one, whose answer §10.2.2 step 13 settles in the body:
+        // `CompleteDerivedReturn` puts the object on the stack, so by the time `Return` runs
+        // there is nothing left for the frame to prefer.
+        frame.constructed = match how {
+            Entry::Construct | Entry::Super | Entry::Named if !derived => Some(receiver),
+            _ => None,
+        };
+        frame.function = Some(object);
+        // An `async` function's context object, or nothing. A **generator's** own object is not
+        // known yet and reaches the frame later: the body is entered as an ordinary call and
+        // `Vm::start_generator` fills this in when `Instruction::GeneratorStart` runs, which is
+        // after the parameters. This used to say a generator's frame was not pushed here at
+        // all, which stopped being true when that instruction arrived — and contradicted the
+        // comment twenty lines above it.
+        frame.generator = context;
+        // To the *replaced* frame's floor for a tail call, which is what stops the operand stack
+        // growing where the frame no longer does: `switch (0) { case 0: return f(n - 1) }` leaves
+        // its discriminant above this line, and a hundred thousand of those is the leak this
+        // truncation is the absence of. Safe here and nowhere earlier — the arguments were copied
+        // into the environment several steps above.
+        self.stack.truncate(frame.stack_base);
+        self.frames.push(frame);
         self.environment = environment;
         // §10.2.1.2 step 1 — an arrow's `[[ThisMode]]` is `lexical`, so `OrdinaryCallBindThis`
         // returns without binding anything and the receiver computed above is discarded. What the
@@ -420,6 +461,28 @@ impl Vm {
         *at = 0;
         Ok(())
     }
+    /// Take this frame down for a tail call, unless its return is one that still has work to do.
+    ///
+    /// **The two cases the compiler cannot see**, because both are facts about how the frame was
+    /// *entered* rather than about what the body says — the same body runs for `f(1)` and for
+    /// `new f(1)`:
+    ///
+    /// - A construction. §10.2.2 step 13 answers with the object that was made unless the body
+    ///   returned one of its own, so the frame is still holding the answer.
+    /// - A suspendable body. A generator answers `{ value, done: true }`, an `async` function
+    ///   resolves a promise, an async generator settles a request — none of them answers with the
+    ///   value returned, so none of them can hand its return over to a callee.
+    ///
+    /// `None` in either case, and the call then proceeds as an ordinary one. That is observable
+    /// only as the stack growing, which is what an engine with no §15.10 at all does everywhere.
+    fn take_frame_for_tail(&mut self, heap: &Heap) -> Option<Frame> {
+        let frame = self.frames.last()?;
+        if frame.constructed.is_some() || Self::suspendable_of(frame, heap).is_some() {
+            return None;
+        }
+        self.frames.pop()
+    }
+
     /// Enter what a bound function stands in front of — §10.4.1.1 and §10.4.1.2.
     ///
     /// The chain is flattened rather than followed by recursing. `f.bind(a).bind(b)` is a bound

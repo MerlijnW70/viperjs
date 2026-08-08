@@ -278,6 +278,52 @@ caller's and the trap's arguments array is made in it. ViperJS gives a proxy its
 step 7.a's `%Object.prototype%`, `bind`'s prototype, `Symbol.split`'s splitter and a dozen others,
 each two to ten runs and each its own clause. `ShadowRealm`'s 118 are a different proposal.
 
+### §15.10's tail calls, and a whole feature that was on no work list at all
+
++21 runs, DR-0027. `function f(n) { "use strict"; return n === 0 ? "done" : f(n - 1) }` threw a
+RangeError at `MAX_CALL_DEPTH`; it does not now, and neither does the same shape at 200,000 deep.
+
+**How it was found is the most reusable part.** It is not in any revision of this file's work list,
+and it was not found by looking for missing features — it came out of sorting the expectations file
+by reason and reading what `too much recursion` turned out to be. Everything above that row is a
+proposal. **Sort by reason, then read the *paths*: a row whose reason names an engine limit rather
+than a missing function is a feature nobody has costed.**
+
+**It is small here for a reason `MAX_CALL_DEPTH`'s own doc had already written down** — "a call here
+is a frame *record* and not a Rust frame" — so eliminating one is `frames` gaining an entry and
+losing one, rather than teaching a compiler to reuse machine frames. `return_from_call` already did
+the exact teardown, and a tail call is that teardown followed by an ordinary entry instead of by
+pushing a value.
+
+Four things around it cost more than the mechanism:
+
+- **§15.10.2's thirty productions are one question the compiler already answers.** `HasCallInTailPosition`
+  computes "is there anything left to do in this function after the call answers", and
+  `unwind_across`'s `Crossing` entries *are* that list. Deriving it from the crossings rather than
+  from the grammar means the two cannot disagree — and it gets `try { } finally { return f() }`
+  right, which is a tail call, and `try { return f() } finally { }`, which is not, without either
+  being written down as a case.
+- **A crossing that carries a number is telling you something the variant alone is not.**
+  `Crossing::Handlers(armed)` survives into the catch block with its count reduced to what is still
+  armed there — zero for a `try`/`catch` with no `finally`, because a handler that fires is taken
+  off by the throw that found it. Refusing on the *variant* refused the catch block, which §14.6.1
+  makes a tail position and test262 measures.
+- **Two conditions belong to the machine because the same body runs for `f(1)` and `new f(1)`.** A
+  construction's frame is holding the object it made and a suspendable body answers with something
+  other than what it returned, so neither can hand its return over to a callee. The compiler cannot
+  see either.
+- **The operand stack has to come down with the frame.** `switch (0) { case 0: return f(n - 1) }`
+  leaves its discriminant behind, and a hundred thousand of those is a leak where the frame no
+  longer is one. Truncating to the *replaced* frame's floor is the whole fix, and it is safe only
+  after the arguments have been copied into the environment.
+
+**And four mutation survivors said the refusal tests were testing nothing.** They asked for a
+RangeError from `return new C(n - 1)` — but `new` is not a call, so the compiler never marked it and
+the guard was never reached. The rows that kill them assert the **answer**: a base constructor whose
+body tail-calls answers with the object it made, a generator's with `{ value, done: true }`, an
+`async` function's with a promise, a derived constructor's with its instance. **A guard whose test
+asks for a resource limit is usually testing the limit rather than the guard.**
+
 ### An array index is a key of its own, and the biggest win was in the file nobody costed
 
 DR-0026, and the first slice here taken for **speed** rather than for a conformance number — which

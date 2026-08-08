@@ -817,3 +817,94 @@ fn an_update_expression_resolves_a_name_at_run_time_only_where_it_has_to() {
         1
     );
 }
+
+/// Whether the first function in `source` makes its `return`'s call a §15.10 tail call.
+///
+/// Asked of the emitted instructions rather than of a program, because every one of DR-0027's six
+/// conditions is a decision the compiler makes and only depth makes it visible: a behavioural test
+/// for any single row would have to recurse past `MAX_CALL_DEPTH`, which is ten thousand, and would
+/// then be measuring the whole feature rather than the row.
+fn tail_called(source: &str) -> bool {
+    let mut heap = Heap::new();
+    let script = parse_script(source).expect("the source parses"); // a compiler test needs a tree
+    let chunk = compile_script(&script, &mut heap).expect("it compiles"); // as above
+    let body = chunk.function(0).expect("the script declares one function");
+    body.code().iter().any(|instruction| {
+        matches!(
+            instruction,
+            Instruction::CallTail(_) | Instruction::CallTailMethod(_)
+        )
+    })
+}
+
+#[test]
+fn a_return_is_a_tail_call_exactly_where_the_source_says_it_is_safe() {
+    // DR-0027's four compile-time conditions, one row each, and the rows are paired: every `false`
+    // here differs from a `true` above it in one thing. §15.10.2's `HasCallInTailPosition` is
+    // thirty productions of static semantics, and this is the whole of what they decide.
+    for source in [
+        // The plain shape, and the same call reached as a method.
+        "function f(n) { 'use strict'; return f(n - 1); }",
+        "var o = { m: function (n) { 'use strict'; return o.m(n - 1); } };",
+        // §14.6.1 — a `catch` block is a tail position, and so is a `finally` block. Both are
+        // places where nothing of this function is left to run.
+        "function f(n) { 'use strict'; try { throw 0 } catch (e) { return f(n - 1) } }",
+        "function f(n) { 'use strict'; try { } finally { return f(n - 1) } }",
+        // A block, a loop body and a switch case are all just places, and the crossings they push
+        // — a scope, an operand — go with the frame.
+        "function f(n) { 'use strict'; { let x = 1; return f(n - x); } }",
+        "function f(n) { 'use strict'; while (n) { return f(n - 1); } }",
+        "function f(n) { 'use strict'; switch (0) { case 0: return f(n - 1); } }",
+    ] {
+        assert!(tail_called(source), "should be a tail call: {source}");
+    }
+
+    for source in [
+        // §15.10.3 — sloppy code, where an `arguments` object may be joined to the parameters and
+        // a `caller` may be walked. Identical to the first row above but for the directive.
+        "function f(n) { return f(n - 1); }",
+        // §14.6.1 — inside a `try` block, however the block ends: the `catch` beside it must still
+        // be able to catch, and a `finally` beside it must still run.
+        "function f(n) { 'use strict'; try { return f(n - 1) } catch (e) { } }",
+        "function f(n) { 'use strict'; try { return f(n - 1) } finally { } }",
+        // …and inside a `catch` that still has a `finally` under it, which is the row that shows
+        // the question is about what is armed rather than about what is written.
+        "function f(n) { 'use strict'; try { throw 0 } catch (e) { return f(n - 1) } finally { } }",
+        // §7.4.9 — a `for`-`of` closes its iterator on the way out, which is work after the call.
+        "function f(n) { 'use strict'; for (var x of [1]) { return f(n - 1); } }",
+        // Not a call at all, and a call that is not the whole of the argument: `return f(g())`
+        // must mark `f` and never `g`, and neither is marked when the argument is arithmetic.
+        "function f(n) { 'use strict'; return n - 1; }",
+        "function f(n) { 'use strict'; return 1 + f(n - 1); }",
+        // §13.3.6.1 — written as the bare name `eval`. The compiler cannot know whether it holds
+        // `%eval%`, and if it does the text runs in *this* frame's scopes.
+        "function f(n) { 'use strict'; return eval(n - 1); }",
+    ] {
+        assert!(!tail_called(source), "should not be a tail call: {source}");
+    }
+}
+
+#[test]
+fn only_the_outermost_call_of_a_return_is_in_tail_position() {
+    // The reason `call_at` takes the position as an argument rather than reading a flag off the
+    // compiler: `return f(g())` has two calls in it, `g` is compiled first, and a flag set around
+    // the argument would mark `g` — which answers into a frame that is still needed.
+    let mut heap = Heap::new();
+    let script =
+        parse_script("function f(n) { 'use strict'; return f(g(n)); }").expect("the source parses"); // a compiler test needs a tree
+    let chunk = compile_script(&script, &mut heap).expect("it compiles"); // as above
+    let body = chunk.function(0).expect("the script declares one function");
+    let calls: Vec<&Instruction> = body
+        .code()
+        .iter()
+        .filter(|instruction| {
+            matches!(instruction, Instruction::Call(_) | Instruction::CallTail(_))
+        })
+        .collect();
+    // `g` first and ordinary, `f` second and tail — in that order, because the argument is
+    // evaluated before the call that takes it.
+    assert!(matches!(
+        calls.as_slice(),
+        [Instruction::Call(1), Instruction::CallTail(1)]
+    ));
+}

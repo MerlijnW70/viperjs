@@ -12094,8 +12094,6 @@ language/expressions/call/eval-spread-empty-trailing.js :: it threw an object wi
 language/expressions/call/eval-spread-empty-trailing.js (strict) :: it threw an object with no name: Expected SameValue(«"local"», «0») to be true
 language/expressions/call/eval-spread.js :: it threw an object with no name: Expected SameValue(«"local"», «1») to be true
 language/expressions/call/eval-spread.js (strict) :: it threw an object with no name: Expected SameValue(«"local"», «1») to be true
-language/expressions/call/tco-call-args.js (strict) :: it threw RangeError: too much recursion
-language/expressions/call/tco-member-args.js (strict) :: it threw RangeError: too much recursion
 language/expressions/call/tco-non-eval-function-dynamic.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/expressions/call/tco-non-eval-function.js :: it threw RangeError: too much recursion
 language/expressions/call/tco-non-eval-global.js :: it threw RangeError: too much recursion
@@ -12516,7 +12514,6 @@ language/expressions/super/realm.js :: it threw an object with no name: Expected
 language/expressions/super/realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 language/expressions/tagged-template/tco-call.js (strict) :: it threw RangeError: too much recursion
 language/expressions/tagged-template/tco-member.js (strict) :: it threw RangeError: too much recursion
-language/expressions/tco-pos.js (strict) :: it threw RangeError: too much recursion
 language/function-code/10.4.3-1-19-s.js (strict) :: it threw an object with no name: my_eval("this") Expected SameValue(«undefined», «[object Object]») to be true
 language/function-code/S10.2.1_A2.js :: it threw an object with no name: #1: f1(1, 2) === 2
 language/function-code/S10.2.1_A3.js :: it threw an object with no name: #1: f1(1, 2) === undefined
@@ -12838,8 +12835,6 @@ language/statements/await-using/throws-if-initializer-not-object.js :: it did no
 language/statements/await-using/throws-if-initializer-not-object.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/throws-suppressederror-if-multiple-errors-during-disposal.js :: it did not parse: expected `;`, found an identifier
 language/statements/await-using/throws-suppressederror-if-multiple-errors-during-disposal.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/block/tco-stmt-list.js (strict) :: it threw RangeError: too much recursion
-language/statements/block/tco-stmt.js (strict) :: it threw RangeError: too much recursion
 language/statements/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js (strict) :: it did not parse: unexpected character
 language/statements/class/decorator/syntax/valid/class-element-decorator-call-expr-identifier-reference.js :: it did not parse: unexpected character
@@ -12905,7 +12900,6 @@ language/statements/class/subclass/default-constructor-spread-override.js (stric
 language/statements/class/subclass/private-class-field-on-nonextensible-return-override.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/subclass/superclass-bound-function.js :: it threw TypeError: undefined and null cannot be converted to an object
 language/statements/class/subclass/superclass-bound-function.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-language/statements/do-while/tco-body.js (strict) :: it threw RangeError: too much recursion
 language/statements/for-await-of/head-lhs-async.js :: it did not parse: expected `=>`, found `[`
 language/statements/for-await-of/head-lhs-async.js (strict) :: it did not parse: expected `=>`, found `[`
 language/statements/for-of/head-await-using-bound-names-fordecl-tdz.js :: it did not parse: expected `;`, found an identifier
@@ -12915,10 +12909,6 @@ language/statements/for-of/head-using-bound-names-fordecl-tdz.js :: it did not p
 language/statements/for-of/head-using-bound-names-fordecl-tdz.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/for-of/head-using-fresh-binding-per-iteration.js :: it did not parse: expected `;`, found an identifier
 language/statements/for-of/head-using-fresh-binding-per-iteration.js (strict) :: it did not parse: expected `;`, found an identifier
-language/statements/for/tco-const-body.js (strict) :: it threw RangeError: too much recursion
-language/statements/for/tco-let-body.js (strict) :: it threw RangeError: too much recursion
-language/statements/for/tco-lhs-body.js (strict) :: it threw RangeError: too much recursion
-language/statements/for/tco-var-body.js (strict) :: it threw RangeError: too much recursion
 language/statements/function/S13.2.2_A14.js :: it threw an object with no name: #1: var obj = new FACTORY() does not lead to throwing exception
 language/statements/function/scope-param-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/statements/function/scope-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
@@ -12928,14 +12918,7 @@ language/statements/generators/scope-param-elem-var-close.js :: it threw SyntaxE
 language/statements/generators/scope-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/statements/generators/scope-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/statements/generators/scope-param-rest-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
-language/statements/if/tco-else-body.js (strict) :: it threw RangeError: too much recursion
-language/statements/if/tco-if-body.js (strict) :: it threw RangeError: too much recursion
-language/statements/labeled/tco.js (strict) :: it threw RangeError: too much recursion
 language/statements/let/syntax/let-newline-yield-in-generator-function.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/statements/return/tco.js (strict) :: it threw RangeError: too much recursion
-language/statements/switch/tco-case-body-dflt.js (strict) :: it threw RangeError: too much recursion
-language/statements/switch/tco-case-body.js (strict) :: it threw RangeError: too much recursion
-language/statements/switch/tco-dftl-body.js (strict) :: it threw RangeError: too much recursion
 language/statements/try/completion-values.js :: it threw an object with no name: Expected SameValue(«39», «undefined») to be true
 language/statements/try/completion-values.js (strict) :: it threw an object with no name: Expected SameValue(«39», «undefined») to be true
 language/statements/try/cptn-finally-from-catch.js :: it threw an object with no name: Expected SameValue(«5», «undefined») to be true
@@ -12944,9 +12927,6 @@ language/statements/try/cptn-finally-skip-catch.js :: it threw an object with no
 language/statements/try/cptn-finally-skip-catch.js (strict) :: it threw an object with no name: Expected SameValue(«5», «undefined») to be true
 language/statements/try/cptn-finally-wo-catch.js :: it threw an object with no name: Expected SameValue(«5», «undefined») to be true
 language/statements/try/cptn-finally-wo-catch.js (strict) :: it threw an object with no name: Expected SameValue(«5», «undefined») to be true
-language/statements/try/tco-catch-finally.js (strict) :: it threw RangeError: too much recursion
-language/statements/try/tco-catch.js (strict) :: it threw RangeError: too much recursion
-language/statements/try/tco-finally.js (strict) :: it threw RangeError: too much recursion
 language/statements/using/Symbol.dispose-getter.js :: it did not parse: expected `;`, found an identifier
 language/statements/using/Symbol.dispose-getter.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/using/Symbol.dispose-method-called-with-correct-this.js :: it did not parse: expected `;`, found an identifier
@@ -13042,7 +13022,6 @@ language/statements/using/using-allows-undefined-initializer.js :: it did not pa
 language/statements/using/using-allows-undefined-initializer.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/variable/12.2.1-11.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a function is not implemented yet
 language/statements/variable/binding-resolution.js :: it threw an object with no name: Expected SameValue(«undefined», «true») to be true
-language/statements/while/tco-body.js (strict) :: it threw RangeError: too much recursion
 language/statements/with/set-mutable-binding-binding-deleted-with-typed-array-in-proto-chain-strict-mode.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/types/string/S8.4_A7.1.js :: it threw an object with no name: Expected a ReferenceError but got a SyntaxError
 language/types/string/S8.4_A7.2.js :: it threw an object with no name: Expected a ReferenceError but got a SyntaxError

@@ -769,3 +769,116 @@ fn a_wrapped_receiver_is_what_a_sloppy_function_writes_to_and_can_hand_back() {
         "object,true"
     );
 }
+
+#[test]
+fn a_tail_call_answers_what_the_same_call_would_have_answered() {
+    // DR-0027's second invariant, and the one that says the optimisation is *correct*. The frame a
+    // tail call replaces is the one whose return value it becomes, so nothing a program can write
+    // tells the two apart — and if anything ever does, the tail call has skipped work the crossings
+    // should have named.
+    let recursive = "function sum(n, acc) { 'use strict';                      return n === 0 ? acc : sum(n - 1, acc + n) } sum(100, 0)";
+    assert_eq!(run(recursive), "5050");
+    // The same shape reached as a method, and through a `catch` and a `finally` — the three places
+    // §14.6.1 puts a tail position that are not simply "the body".
+    assert_eq!(
+        run(
+            "var o = { m: function (n) { 'use strict'; if (n === 0) { return 'end' }              return o.m(n - 1) } }; o.m(10)"
+        ),
+        "end"
+    );
+    assert_eq!(
+        run(
+            "function f(n) { 'use strict'; if (n === 0) { return 'caught' }              try { throw 0 } catch (e) { return f(n - 1) } } f(10)"
+        ),
+        "caught"
+    );
+    assert_eq!(
+        run(
+            "function f(n) { 'use strict'; if (n === 0) { return 'finally' }              try { } finally { return f(n - 1) } } f(10)"
+        ),
+        "finally"
+    );
+    // A `finally` that returns something of its own still wins over the try's value, which is the
+    // one place the two could have been confused: a tail call in the finally must answer for the
+    // whole function and not for the block it is written in.
+    assert_eq!(
+        run(
+            "function id(x) { 'use strict'; return x }              function f() { 'use strict'; try { return 'try' } finally { return id('finally') } } f()"
+        ),
+        "finally"
+    );
+}
+
+#[test]
+fn a_tail_recursive_function_runs_past_the_depth_a_call_stack_would_stop_at() {
+    // §15.10, and the whole point of it: `MAX_CALL_DEPTH` is ten thousand, and this is five times
+    // that. What makes it pass is that `frames` gains one entry and loses one per call, so there is
+    // no depth to run out of — the recursion is bounded only by what the program itself holds.
+    assert_eq!(
+        run(
+            "function count(n) { 'use strict'; if (n === 0) { return 'done' } return count(n - 1) }              count(50000)"
+        ),
+        "done"
+    );
+    // The same, through a `switch`, which leaves its discriminant on the operand stack. A tail call
+    // that took the frame down without also taking the stack down would leak one value per pass and
+    // this would exhaust the heap instead of answering.
+    assert_eq!(
+        run(
+            "function count(n) { 'use strict'; if (n === 0) { return 'done' }              switch (0) { case 0: return count(n - 1); } } count(50000)"
+        ),
+        "done"
+    );
+}
+
+#[test]
+fn the_two_frames_a_tail_call_may_not_replace_are_the_ones_the_source_cannot_see() {
+    // DR-0027: the same body runs for `f(1)` and for `new f(1)`, so the compiler cannot decide
+    // these and the machine has to. What each row asserts is the *answer* and not the depth —
+    // replacing one of these frames does not run out of stack, it produces the wrong value, which
+    // is the more expensive failure and the one worth pinning. A first version of this test asked
+    // for a RangeError from `return new C(n - 1)`, and every one of its guards survived mutation:
+    // `new` is not a call, so the compiler never marked it and the guard was never reached.
+    //
+    // §10.2.2 step 13 — a construction's frame is holding the object it made, and a primitive
+    // `return` is ignored. Hand that frame to a callee and `new C()` answers the callee's value.
+    assert_eq!(
+        run(
+            "function tail() { 'use strict'; return 'not the object' } function C() { 'use strict'; this.made = true; return tail() } var made = new C(); typeof made + ',' + made.made"
+        ),
+        "object,true"
+    );
+    // §27.5.3.2 step 5 — a generator's body answers with `{ value, done: true }` rather than with
+    // what it returned, so it has something to do after the call and cannot hand its return over.
+    assert_eq!(
+        run(
+            "function tail() { 'use strict'; return 'end' } function* g() { 'use strict'; return tail() } var step = g().next(); step.value + ',' + step.done"
+        ),
+        "end,true"
+    );
+    // §27.7.5.1 — and an `async` function *resolves a promise* with what it returned, which is the
+    // third shape `suspendable_of` answers for. What would go missing is the promise itself.
+    assert_eq!(
+        run(
+            "function tail() { 'use strict'; return 'awaited' } async function a() { 'use strict'; return tail() } var seen = 'nothing'; a().then(function (v) { seen = v }); typeof a().then + ',' + seen"
+        ),
+        "function,nothing"
+    );
+    // §10.2.2 step 13 again, for the *derived* constructor the compiler refuses rather than the
+    // machine: its `return` emits `CompleteDerivedReturn` after the value is in hand, and a tail
+    // call would jump over it — so `new D()` would answer `undefined` instead of the instance.
+    assert_eq!(
+        run(
+            "function tail() { 'use strict'; } class B { constructor() { this.b = 1 } } class D extends B { constructor() { super(); return tail() } } var made = new D(); (made instanceof D) + ',' + made.b"
+        ),
+        "true,1"
+    );
+    // The refusal is a refusal to *optimise* and not to run: a construction still recurses as an
+    // ordinary call, which is what the depth says.
+    assert_eq!(
+        run(
+            "function C(n) { 'use strict'; if (n === 0) { return } return new C(n - 1) } try { new C(50000); 'no error' } catch (e) { e.constructor.name }"
+        ),
+        "RangeError"
+    );
+}

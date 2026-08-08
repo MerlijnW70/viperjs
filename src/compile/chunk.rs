@@ -713,6 +713,23 @@ pub enum Instruction {
     /// call the same function with different `this`, which is the whole reason the receiver
     /// travels with the call rather than with the function.
     CallMethod(u32),
+    /// [`Instruction::Call`] in §15.10's **tail position** — the frame goes down before the call.
+    ///
+    /// The call itself is identical; what differs is that the frame this body is running in is
+    /// taken down first, so `frames` gains one entry and loses one and the depth does not grow.
+    /// A `Return` is still emitted after it and is simply never reached, because the callee's frame
+    /// returns to wherever *this* one was going to. DR-0027.
+    ///
+    /// Emitted only where the source says it is safe — strict code, no derived constructor, and no
+    /// `finally`, iterator close or handler left to cross. The machine declines it for the two
+    /// things the source cannot see, a construction and a suspendable body, and then this behaves
+    /// exactly as [`Instruction::Call`].
+    CallTail(u32),
+    /// [`Instruction::CallMethod`] in §15.10's tail position — see [`Instruction::CallTail`].
+    ///
+    /// A separate instruction for the reason the pair it mirrors is: the receiver is one more stack
+    /// entry to carry down, and the count alone does not say whether it is there.
+    CallTailMethod(u32),
     /// Take a constructor and this many arguments and construct — §13.3.5.
     ///
     /// Not a call with a different receiver: the receiver is *made* here, out of the
@@ -1464,6 +1481,8 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::CallDirectEvalMethod(_)
         | Instruction::Construct(_)
         | Instruction::CallMethod(_)
+        | Instruction::CallTail(_)
+        | Instruction::CallTailMethod(_)
         | Instruction::LoadThis
         | Instruction::LoadNewTarget
         | Instruction::LoadThrough(_)
