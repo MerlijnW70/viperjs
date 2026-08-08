@@ -122,8 +122,8 @@ cargo run --release -p conformance -- --test262 ../test262
 ```
 
 ```
-79710 passed, 13135 failed, 316 not run
-85.85% of what ran — 85.56% of the whole suite
+79760 passed, 13085 failed, 316 not run
+85.91% of what ran — 85.62% of the whole suite
 ```
 
 **Two caveats, both honest.** The second percentage is the one to quote; the first flatters an
