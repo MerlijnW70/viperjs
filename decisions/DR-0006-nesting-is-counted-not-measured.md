@@ -31,6 +31,34 @@ makes nesting more expensive. A stack-headroom check has nothing equivalent — 
 wrong, only differently generous, so nothing would ever fail and the cost of each production
 would go unnoticed.
 
+## Measured against real code on 2026-08-08, and the number is 77
+
+Two published packages now sit past the cap, and the second one puts a figure on it. `three`'s
+`draco_decoder.js` — 702 KiB of emscripten output, the WASM glue for its mesh decoder — needs
+**77** levels; the cap is 64. Bisected by rebuilding, so it is the file's requirement and not an
+estimate. `ajv` was the first, through `new Function` on a generated validator.
+
+**And the default cannot simply rise to meet it.** At 77,
+`parsing_at_the_cap_fits_in_the_stack_it_claims_to_need` dies with `STATUS_STACK_OVERFLOW` in a
+debug build on one mebibyte — which is the guard doing exactly what this record designed it to do,
+and is the whole argument for a count restated as a measurement. 64 is not a cautious number; it is
+the number.
+
+So the route left is the third bullet below, which has never been built: **the limit is the
+embedder's to set.** A host that knows it has eight mebibytes can afford 77 and the command line
+cannot know that on its behalf. What must not move is the *default*, for the reason above the
+bullets: which programs parse would otherwise depend on the build, and the conformance number would
+mean less.
+
+Two things worth carrying to whoever builds it:
+
+- **Brace nesting in that file is only 38.** It is *expression* nesting that reaches 77 — one
+  budget shared between the grammar's recursive paths, as this record says, and expressions are
+  what spend it.
+- **Raising it is a stack promise, not a flag.** An overflow aborts the process, which DR-0002 says
+  no `Result` rescues, so the API has to say plainly that the number is a claim about the caller's
+  stack and that the guard test measures only the default.
+
 What follows from this decision:
 
 - The number is measured before it is set, in a debug build, against the smallest stack in common
