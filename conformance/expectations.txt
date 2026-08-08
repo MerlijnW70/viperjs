@@ -215,28 +215,10 @@ built-ins/AggregateError/message-tostring-abrupt.js :: it threw an object with n
 built-ins/AggregateError/message-tostring-abrupt.js (strict) :: it threw an object with no name: toPrimitive Expected a Test262Error but got a TypeError
 built-ins/AggregateError/order-of-args-evaluation.js :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/AggregateError/order-of-args-evaluation.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Array/from/Array.from_forwards-length-for-array-likes.js :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/from/Array.from_forwards-length-for-array-likes.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Array/from/elements-deleted-after.js :: it threw an object with no name: The value of value is expected to equal the value of array[this.arrayIndex] Expected SameValue(«4», «undefined») to be true
-built-ins/Array/from/elements-deleted-after.js (strict) :: it threw an object with no name: The value of value is expected to equal the value of array[this.arrayIndex] Expected SameValue(«4», «undefined») to be true
-built-ins/Array/from/elements-updated-after.js :: it threw an object with no name: The value of value is expected to be 127 Expected SameValue(«4», «127») to be true
-built-ins/Array/from/elements-updated-after.js (strict) :: it threw an object with no name: The value of value is expected to be 127 Expected SameValue(«4», «127») to be true
 built-ins/Array/from/iter-cstm-ctor-err.js :: it threw an object with no name: Array.from.call(C, items) throws a Test262Error exception Expected a Test262Error but got a TypeError
 built-ins/Array/from/iter-cstm-ctor-err.js (strict) :: it threw an object with no name: Array.from.call(C, items) throws a Test262Error exception Expected a Test262Error but got a TypeError
-built-ins/Array/from/iter-cstm-ctor.js :: it threw an object with no name: The result of evaluating (result instanceof C) is expected to be true
-built-ins/Array/from/iter-cstm-ctor.js (strict) :: it threw an object with no name: The result of evaluating (result instanceof C) is expected to be true
-built-ins/Array/from/iter-map-fn-err.js :: it threw an object with no name: Array.from(items, mapFn) throws a Test262Error exception Expected a Test262Error but got a RangeError
-built-ins/Array/from/iter-map-fn-err.js (strict) :: it threw an object with no name: Array.from(items, mapFn) throws a Test262Error exception Expected a Test262Error but got a RangeError
-built-ins/Array/from/iter-set-elem-prop-err.js :: it threw an object with no name: Array.from.call(constructorSetsIndex0ConfigurableFalse, items) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/from/iter-set-elem-prop-err.js (strict) :: it threw an object with no name: Array.from.call(constructorSetsIndex0ConfigurableFalse, items) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/from/iter-set-length-err.js :: it threw an object with no name: Array.from.call(poisonedPrototypeLength, items) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/from/iter-set-length-err.js (strict) :: it threw an object with no name: Array.from.call(poisonedPrototypeLength, items) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/from/proto-from-ctor-realm.js :: it threw an object with no name: Object.getPrototypeOf(Array.from.call(C, [])) returns other.Object.prototype Expected SameValue(«», «[object Object]») to be true
-built-ins/Array/from/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Object.getPrototypeOf(Array.from.call(C, [])) returns other.Object.prototype Expected SameValue(«», «[object Object]») to be true
-built-ins/Array/from/source-object-constructor.js :: it threw an object with no name: The value of Array.from.call(Object, []).constructor is expected to equal the value of Object Expected SameValue(«function Array() { [native code] }», «function Object() { [native code] }») to be true
-built-ins/Array/from/source-object-constructor.js (strict) :: it threw an object with no name: The value of Array.from.call(Object, []).constructor is expected to equal the value of Object Expected SameValue(«function Array() { [native code] }», «function Object() { [native code] }») to be true
-built-ins/Array/from/source-object-length-set-elem-prop-err.js :: it threw an object with no name: Array.from.call(A1, items) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/from/source-object-length-set-elem-prop-err.js (strict) :: it threw an object with no name: Array.from.call(A1, items) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
+built-ins/Array/from/proto-from-ctor-realm.js :: it threw an object with no name: Object.getPrototypeOf(Array.from.call(C, [])) returns other.Object.prototype Expected SameValue(«[object Object]», «[object Object]») to be true
+built-ins/Array/from/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Object.getPrototypeOf(Array.from.call(C, [])) returns other.Object.prototype Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Array/fromAsync/async-iterable-async-mapped-awaits-once.js :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Array/fromAsync/async-iterable-async-mapped-awaits-once.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Array/fromAsync/async-iterable-input-does-not-await-input.js :: the test called $DONE with TypeError: what was called is not a function
@@ -423,22 +405,8 @@ built-ins/Array/fromAsync/thisarg-omitted-sloppy.js :: the test called $DONE wit
 built-ins/Array/fromAsync/thisarg-omitted-strict.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Array/fromAsync/thisarg-primitive-sloppy.js :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Array/fromAsync/thisarg-primitive-strict.js (strict) :: the test called $DONE with TypeError: what was called is not a function
-built-ins/Array/of/construct-this-with-the-number-of-arguments.js :: it threw an object with no name: The value of len is expected to be 0 Expected SameValue(«undefined», «0») to be true
-built-ins/Array/of/construct-this-with-the-number-of-arguments.js (strict) :: it threw an object with no name: The value of len is expected to be 0 Expected SameValue(«undefined», «0») to be true
-built-ins/Array/of/proto-from-ctor-realm.js :: it threw an object with no name: Object.getPrototypeOf(Array.of.call(C, 1, 2, 3)) returns other.Object.prototype Expected SameValue(«», «[object Object]») to be true
-built-ins/Array/of/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Object.getPrototypeOf(Array.of.call(C, 1, 2, 3)) returns other.Object.prototype Expected SameValue(«», «[object Object]») to be true
-built-ins/Array/of/return-a-custom-instance.js :: it threw an object with no name: The result of evaluating (coop instanceof Coop) is expected to be true
-built-ins/Array/of/return-a-custom-instance.js (strict) :: it threw an object with no name: The result of evaluating (coop instanceof Coop) is expected to be true
-built-ins/Array/of/return-abrupt-from-contructor.js :: it threw an object with no name: Array.of.call(T) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/of/return-abrupt-from-contructor.js (strict) :: it threw an object with no name: Array.of.call(T) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/of/return-abrupt-from-data-property-using-proxy.js :: it threw an object with no name: Array.of.call(T, "Bob") throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/of/return-abrupt-from-data-property-using-proxy.js (strict) :: it threw an object with no name: Array.of.call(T, "Bob") throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/of/return-abrupt-from-data-property.js :: it threw an object with no name: Array.of.call(T1, "Bob") throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/of/return-abrupt-from-data-property.js (strict) :: it threw an object with no name: Array.of.call(T1, "Bob") throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Array/of/return-abrupt-from-setting-length.js :: it threw an object with no name: Array.of.call(T) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/of/return-abrupt-from-setting-length.js (strict) :: it threw an object with no name: Array.of.call(T) throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Array/of/sets-length.js :: it threw an object with no name: The value of hits is expected to be 1 Expected SameValue(«0», «1») to be true
-built-ins/Array/of/sets-length.js (strict) :: it threw an object with no name: The value of hits is expected to be 1 Expected SameValue(«0», «1») to be true
+built-ins/Array/of/proto-from-ctor-realm.js :: it threw an object with no name: Object.getPrototypeOf(Array.of.call(C, 1, 2, 3)) returns other.Object.prototype Expected SameValue(«[object Object]», «[object Object]») to be true
+built-ins/Array/of/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Object.getPrototypeOf(Array.of.call(C, 1, 2, 3)) returns other.Object.prototype Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Array/prototype/concat/create-proto-from-ctor-realm-array.js :: it threw an object with no name: The value of callCount is expected to be 0 Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/concat/create-proto-from-ctor-realm-array.js (strict) :: it threw an object with no name: The value of callCount is expected to be 0 Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/every/15.4.4.16-1-10.js :: it threw an object with no name: Array.prototype.every.call(Math, callbackfn) Expected SameValue(«true», «false») to be true

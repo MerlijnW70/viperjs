@@ -207,22 +207,70 @@ fn from(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
         _ => return Err(Abrupt::type_error("the mapping function must be callable")),
     };
     let receiver = call.argument(2);
-    let taken = match iterator_of(vm, heap, items)? {
-        Some(iterator) => drain(vm, heap, iterator)?,
-        None => spread_array_like(vm, heap, items)?,
-    };
-    let mut built = Vec::with_capacity(taken.len());
-    for (at, value) in taken.into_iter().enumerate() {
-        let Some(mapper) = mapper else {
-            built.push(value);
-            continue;
+    // Steps 5 and 7 both make the target **before** anything is read, and the two say different
+    // things about the arguments: the iterator path constructs with none, because nobody has
+    // counted the iterable yet, and the array-like path passes the `length` it just read.
+    // Steps 5 and 7 both make the target **before** anything is read, and the two differ in what
+    // they tell the constructor: the iterator path passes no arguments, because nobody has counted
+    // the iterable yet, and the array-like path passes the `length` it just read.
+    if let Some(method) = iterator_method_of(vm, heap, items)? {
+        let walk = super::iterator::Walk::from_method(vm, heap, items, method)?;
+        let target = collect_into(vm, heap, call.this_value, &[])?;
+        let Value::Object(object) = target else {
+            return Err(Abrupt::type_error("a constructor must answer an object"));
         };
-        // Step 6.e.vii — the index goes with the value, which is what makes
-        // `Array.from({length: 3}, (_, i) => i)` the idiom it is.
-        let index = Value::Number(at as f64);
-        built.push(vm.call_value(mapper, receiver, &[value, index], heap)?);
+        let mut at = 0_u64;
+        // **The write is inside the walk**, which is step 6.e and not a tidiness: steps 6.e.vii and
+        // 6.e.ix both close the iterator when they throw, and an iterator drained to `done` first
+        // has nothing left to close. So a mapper that throws, or a target that refuses the index,
+        // tells the iterator the walk stopped — which is what `closeCount` measures.
+        while let Some(value) = walk.step(vm, heap)? {
+            let mapped = match mapper {
+                // Step 6.e.vii — the index goes with the value, which is what makes
+                // `Array.from({length: 3}, (_, i) => i)` the idiom it is.
+                Some(mapper) => {
+                    match vm.call_value(mapper, receiver, &[value, Value::Number(at as f64)], heap)
+                    {
+                        Ok(mapped) => mapped,
+                        Err(error) => {
+                            walk.close(vm, heap);
+                            return Err(error);
+                        }
+                    }
+                }
+                None => value,
+            };
+            if let Err(error) = super::array_methods::create_index(heap, object, at, mapped) {
+                walk.close(vm, heap);
+                return Err(error);
+            }
+            at += 1;
+            // DR-0013 — an iterator that never says it is done would otherwise grow the target
+            // until the process died, and every step allocates the object §7.4.13 wraps its answer
+            // in. The same budget the Array methods watch is what notices.
+            super::array_methods::within_budget(heap)?;
+        }
+        set_final_length(vm, heap, target, at)?;
+        return Ok(target);
     }
-    from_values(vm, heap, &built)
+    let taken = spread_array_like(vm, heap, items)?;
+    let length = taken.len() as u64;
+    let target = collect_into(vm, heap, call.this_value, &[Value::Number(length as f64)])?;
+    let Value::Object(object) = target else {
+        return Err(Abrupt::type_error("a constructor must answer an object"));
+    };
+    for (at, value) in taken.into_iter().enumerate() {
+        let mapped = match mapper {
+            Some(mapper) => {
+                let index = Value::Number(at as f64);
+                vm.call_value(mapper, receiver, &[value, index], heap)?
+            }
+            None => value,
+        };
+        super::array_methods::create_index(heap, object, at as u64, mapped)?;
+    }
+    set_final_length(vm, heap, target, length)?;
+    Ok(target)
 }
 
 /// The iterator `items` hands out, or `None` if it has none — §7.4.2 with `GetMethod`.
@@ -231,6 +279,23 @@ fn from(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
 /// §23.1.2.1 step 4 asks for, by way of the `ToObject` it would otherwise reach. A guard here
 /// would answer the same thing one step earlier.
 pub(super) fn iterator_of(vm: &mut Vm, heap: &mut Heap, items: Value) -> Completion<Option<Value>> {
+    let Some(method) = iterator_method_of(vm, heap, items)? else {
+        return Ok(None);
+    };
+    let iterator = vm.call_value(method, items, &[], heap)?;
+    match iterator {
+        Value::Object(_) => Ok(Some(iterator)),
+        _ => Err(Abrupt::type_error("an iterator must be an object")),
+    }
+}
+
+/// The `@@iterator` method itself, before it is called — §7.3.10 `GetMethod`.
+///
+/// The half [`iterator_of`] does first, kept apart because §23.1.2.1 needs the *method* rather than
+/// the iterator: §7.4.4 `GetIteratorFromMethod` reads `next` off what the call answered and keeps
+/// the pair as a record, and a walk that can be closed needs both halves. Calling the method here
+/// and reading `next` again there would be the pair-of-lookups mistake §27.1.4.1 already records.
+fn iterator_method_of(vm: &mut Vm, heap: &mut Heap, items: Value) -> Completion<Option<Value>> {
     let Some(symbol) = heap.well_known(super::well_known_at("iterator")) else {
         return Ok(None);
     };
@@ -244,34 +309,7 @@ pub(super) fn iterator_of(vm: &mut Vm, heap: &mut Heap, items: Value) -> Complet
     // No callability check of its own: calling something that is not a function is already the
     // TypeError §7.3.10 asks for, raised one step later and by the machinery that knows what a
     // callable is. A guard here would be a second way to say the same thing.
-    let iterator = vm.call_value(method, items, &[], heap)?;
-    match iterator {
-        Value::Object(_) => Ok(Some(iterator)),
-        _ => Err(Abrupt::type_error("an iterator must be an object")),
-    }
-}
-
-/// Every value an iterator has left, in order.
-fn drain(vm: &mut Vm, heap: &mut Heap, iterator: Value) -> Completion<Vec<Value>> {
-    let next = key(heap, "next");
-    let next = vm.get_property_key(iterator, next, heap)?;
-    let done = key(heap, "done");
-    let value = key(heap, "value");
-    let mut taken = Vec::new();
-    loop {
-        let step = vm.call_value(next, iterator, &[], heap)?;
-        let Value::Object(_) = step else {
-            return Err(Abrupt::type_error("an iterator must answer an object"));
-        };
-        if vm.get_property_key(step, done, heap)?.to_boolean(heap) {
-            return Ok(taken);
-        }
-        taken.push(vm.get_property_key(step, value, heap)?);
-        // DR-0013 — an iterator that never says it is done would otherwise grow this list until
-        // the process died. Every step allocates the object §7.4.13 wraps its answer in, so the
-        // heap's budget is what notices, and it is the same one the Array methods watch.
-        super::array_methods::within_budget(heap)?;
-    }
+    Ok(Some(method))
 }
 
 /// §23.1.2.1 steps 7 and 8 — reading something that is not iterable by its `length`.
@@ -289,12 +327,68 @@ fn spread_array_like(vm: &mut Vm, heap: &mut Heap, items: Value) -> Completion<V
     Ok(taken)
 }
 
+/// §23.1.2.1 step 5 and §23.1.2.3 step 4 — the object the values are collected into.
+///
+/// `this` is the constructor when it is one, which is the whole of why these two are `Array`'s
+/// *static* methods and not free functions: `Array.of.call(MyArray, 1)` builds a `MyArray`, and a
+/// subclass inherits both and gets itself. A `this` that is not a constructor — including the
+/// `undefined` a plain call passes — falls back to `ArrayCreate`, so `Array.of(1)` is an ordinary
+/// array and nothing about the common case changes.
+///
+/// `arguments` is what the two clauses differ by: §23.1.2.3 and §23.1.2.1's array-like path pass
+/// the length, its iterator path passes nothing. That is not a detail — a constructor is free to
+/// read its argument, and `Array.from(iterable)` must not tell it a length nobody has counted yet.
+fn collect_into(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    this_value: Value,
+    arguments: &[Value],
+) -> Completion<Value> {
+    let constructor = matches!(this_value, Value::Object(id)
+        if heap.object(id).is_some_and(crate::heap::Object::is_constructor));
+    if constructor {
+        return vm.construct_value(this_value, arguments, heap);
+    }
+    Ok(Value::Object(
+        heap.new_array(vm.realm().array_prototype(), 0),
+    ))
+}
+
+/// §23.1.2.1 step 6.e.x and §23.1.2.3 step 8 — `Set(A, "length", len, true)`.
+///
+/// The `true` is `Throw`, and it is what the whole step is for: the target may be anything a
+/// constructor answered with, so the write can be refused by a `length` that is not writable and
+/// can throw outright from a setter. Discarding the answer — which is what a plain write does —
+/// leaves a half-filled object being handed back as though it had worked.
+fn set_final_length(vm: &mut Vm, heap: &mut Heap, target: Value, length: u64) -> Completion<()> {
+    let name = key(heap, "length");
+    let accepted = vm.set_property_key(target, name, Value::Number(length as f64), heap)?;
+    match accepted.to_boolean(heap) {
+        true => Ok(()),
+        false => Err(Abrupt::type_error(
+            "the length of what this was collected into could not be set",
+        )),
+    }
+}
+
 /// §23.1.2.3 `Array.of(...items)`.
 ///
 /// The difference from the constructor, and the only reason it exists: `Array(3)` is three holes
 /// and `Array.of(3)` is one element. One argument means one element here, whatever it is.
 fn of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    from_values(vm, heap, call.arguments)
+    let length = call.arguments.len() as u64;
+    let target = collect_into(vm, heap, call.this_value, &[Value::Number(length as f64)])?;
+    for (at, value) in call.arguments.iter().enumerate() {
+        // Step 7.c is `CreateDataPropertyOrThrow` and not a plain define: a target that is
+        // non-extensible, or that already has a non-configurable property at this index, refuses —
+        // and the clause says to stop rather than to carry on writing into something not listening.
+        let Value::Object(object) = target else {
+            return Err(Abrupt::type_error("a constructor must answer an object"));
+        };
+        super::array_methods::create_index(heap, object, at as u64, *value)?;
+    }
+    set_final_length(vm, heap, target, length)?;
+    Ok(target)
 }
 
 /// Whether a value is something a call may reach — §7.2.3 `IsCallable`.

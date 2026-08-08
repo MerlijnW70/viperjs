@@ -429,3 +429,84 @@ fn the_unscopables_property_and_its_entries_carry_different_attributes() {
         "true,true,true,true"
     );
 }
+
+#[test]
+fn array_of_and_from_collect_into_their_this_when_it_is_a_constructor() {
+    // §23.1.2.3 step 4 and §23.1.2.1 step 5 — `this` is the constructor when it is one, which is
+    // the whole reason these two are `Array`'s *static* methods rather than free functions. A
+    // subclass inherits both and gets itself.
+    assert_eq!(
+        run("class C extends Array {} var made = C.of(1, 2); made instanceof C"),
+        "true"
+    );
+    assert_eq!(
+        run("class C extends Array {} C.from([7, 8]).join(',')"),
+        "7,8"
+    );
+    // It need not be an Array at all: the clause says `Construct(C, «len»)` and then writes the
+    // indices, so anything constructible collects.
+    assert_eq!(
+        run(
+            "function C(n) { this.told = n; } var made = Array.of.call(C, 'a', 'b');\
+             made.told + ':' + made[0] + made[1] + ':' + made.length"
+        ),
+        "2:ab:2"
+    );
+
+    // …and a `this` that is **not** a constructor falls back to `ArrayCreate`, which is every
+    // ordinary call: `Array.of(1)` is a plain array and nothing about the common case changes.
+    assert_eq!(
+        run("var a = Array.of(1, 2); Array.isArray(a) + ':' + a.length"),
+        "true:2"
+    );
+    assert_eq!(
+        run("Array.from([1, 2, 3], function (x) { return x * 2 }).join(',')"),
+        "2,4,6"
+    );
+    assert_eq!(run("var of = Array.of; Array.isArray(of(9))"), "true");
+
+    // Step 7.c is `CreateDataPropertyOrThrow`: a target that refuses the index stops the whole
+    // thing rather than answering something half-filled.
+    assert_eq!(
+        run("function C() { Object.preventExtensions(this); }\
+             try { Array.of.call(C, 'x') } catch (e) { e.name }"),
+        "TypeError"
+    );
+    // …and step 8's `Set(A, 'length', len, true)` is a throwing write, so a setter that refuses is
+    // reported rather than discarded.
+    assert_eq!(
+        run(
+            "function C() { Object.defineProperty(this, 'length', { set: function () { throw new RangeError() } }); }\
+             try { Array.of.call(C, 'x') } catch (e) { e.name }"
+        ),
+        "RangeError"
+    );
+}
+
+#[test]
+fn array_from_closes_the_iterator_when_a_step_of_its_own_throws() {
+    // §23.1.2.1 steps 6.e.vii and 6.e.ix both close the iterator on an abrupt completion, which is
+    // only possible because the write happens **inside** the walk. Draining to `done` first and
+    // writing afterwards leaves nothing to close — the iterator is already spent — and that is the
+    // shape this asserts against.
+    let closes = "var closed = 0;\
+        var iterable = { [Symbol.iterator]: function () { return {\
+            next: function () { return { value: 1, done: false } },\
+            return: function () { closed++; return {} } } } };";
+    // A mapper that throws.
+    assert_eq!(
+        run(&format!(
+            "{closes} try {{ Array.from(iterable, function () {{ throw new RangeError() }}) }}\
+             catch (e) {{}} closed"
+        )),
+        "1"
+    );
+    // …and a target that refuses the index, which is the other of the two.
+    assert_eq!(
+        run(&format!(
+            "{closes} function C() {{ Object.preventExtensions(this); }}\
+             try {{ Array.from.call(C, iterable) }} catch (e) {{}} closed"
+        )),
+        "1"
+    );
+}
