@@ -99,7 +99,7 @@ fn flatten(
         }
         let (reading, index) = (level.source, level.at);
         level.at += 1;
-        within_budget(heap)?;
+        within_budget(vm, heap)?;
         // Step 3.b — a hole contributes nothing at all, and is not flattened into an `undefined`.
         if !has_index(vm, heap, reading, index)? {
             continue;
@@ -232,7 +232,7 @@ pub fn to_locale_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> 
         let text = vm.call_value(method, element, &[], heap)?;
         let id = vm.to_string(text, heap)?;
         joined.push_str(&String::from_utf16_lossy(heap.string(id).unwrap_or(&[])));
-        within_budget(heap)?;
+        within_budget(vm, heap)?;
     }
     Ok(super::text(heap, &joined))
 }

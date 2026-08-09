@@ -191,7 +191,7 @@ fn union(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
     let walk = other.keys(vm, heap)?;
     while let Some(value) = walk.step(vm, heap)? {
         push_new(heap, &mut result, canonical(value));
-        super::array_methods::within_budget(heap)?;
+        super::array_methods::within_budget(vm, heap)?;
     }
     Ok(set_of(vm, heap, result))
 }
@@ -209,7 +209,7 @@ fn intersection(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completi
                 if other.has(vm, heap, value)? {
                     push_new(heap, &mut result, canonical(value));
                 }
-                super::array_methods::within_budget(heap)?;
+                super::array_methods::within_budget(vm, heap)?;
             }
         }
         // …and the other way about, which keeps the *argument's* order. Two orders from one
@@ -221,7 +221,7 @@ fn intersection(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completi
                 if holds(heap, object, value) {
                     push_new(heap, &mut result, value);
                 }
-                super::array_methods::within_budget(heap)?;
+                super::array_methods::within_budget(vm, heap)?;
             }
         }
     }
@@ -239,7 +239,7 @@ fn difference(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
                 if other.has(vm, heap, value)? {
                     result.retain(|held| !held.same_value_zero(&value, heap));
                 }
-                super::array_methods::within_budget(heap)?;
+                super::array_methods::within_budget(vm, heap)?;
             }
         }
         false => {
@@ -247,7 +247,7 @@ fn difference(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
             while let Some(value) = walk.step(vm, heap)? {
                 let value = canonical(value);
                 result.retain(|held| !held.same_value_zero(&value, heap));
-                super::array_methods::within_budget(heap)?;
+                super::array_methods::within_budget(vm, heap)?;
             }
         }
     }
@@ -270,7 +270,7 @@ fn symmetric_difference(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> 
             true => result.retain(|held| !held.same_value_zero(&value, heap)),
             false => push_new(heap, &mut result, value),
         }
-        super::array_methods::within_budget(heap)?;
+        super::array_methods::within_budget(vm, heap)?;
     }
     Ok(set_of(vm, heap, result))
 }
@@ -288,7 +288,7 @@ fn is_subset_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completi
         if !other.has(vm, heap, value)? {
             return Ok(Value::Boolean(false));
         }
-        super::array_methods::within_budget(heap)?;
+        super::array_methods::within_budget(vm, heap)?;
     }
     Ok(Value::Boolean(true))
 }
@@ -311,7 +311,7 @@ fn is_superset_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comple
             walk.close(vm, heap);
             return Ok(Value::Boolean(false));
         }
-        super::array_methods::within_budget(heap)?;
+        super::array_methods::within_budget(vm, heap)?;
     }
     Ok(Value::Boolean(true))
 }
@@ -326,7 +326,7 @@ fn is_disjoint_from(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comp
                 if other.has(vm, heap, value)? {
                     return Ok(Value::Boolean(false));
                 }
-                super::array_methods::within_budget(heap)?;
+                super::array_methods::within_budget(vm, heap)?;
             }
         }
         false => {
@@ -336,7 +336,7 @@ fn is_disjoint_from(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comp
                     walk.close(vm, heap);
                     return Ok(Value::Boolean(false));
                 }
-                super::array_methods::within_budget(heap)?;
+                super::array_methods::within_budget(vm, heap)?;
             }
         }
     }

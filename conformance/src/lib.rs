@@ -28,6 +28,7 @@ pub mod agent;
 pub mod drive;
 pub mod expectations;
 pub mod frontmatter;
+pub mod fuzz;
 pub mod runner;
 pub mod wire;
 

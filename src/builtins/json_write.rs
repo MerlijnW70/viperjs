@@ -254,7 +254,7 @@ impl Writer {
                 .property(vm, heap, object, index)?
                 .unwrap_or_else(|| "null".encode_utf16().collect());
             parts.push(part);
-            super::array_methods::within_budget(heap)?;
+            super::array_methods::within_budget(vm, heap)?;
         }
         Ok(self.join(parts, 0x5B, 0x5D))
     }

@@ -184,7 +184,7 @@ fn merge_sort(
         }
         std::mem::swap(&mut items, &mut buffer);
         width *= 2;
-        within_budget(heap)?;
+        within_budget(vm, heap)?;
     }
 
     Ok(items)
@@ -221,7 +221,7 @@ fn sorted_list(
         if read {
             items.push(get_index(vm, heap, object, index)?);
         }
-        within_budget(heap)?;
+        within_budget(vm, heap)?;
     }
     merge_sort(vm, heap, items, comparator)
 }

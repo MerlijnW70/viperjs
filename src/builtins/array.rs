@@ -248,7 +248,7 @@ fn from(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
             // DR-0013 — an iterator that never says it is done would otherwise grow the target
             // until the process died, and every step allocates the object §7.4.13 wraps its answer
             // in. The same budget the Array methods watch is what notices.
-            super::array_methods::within_budget(heap)?;
+            super::array_methods::within_budget(vm, heap)?;
         }
         set_final_length(vm, heap, target, at)?;
         return Ok(target);
@@ -326,7 +326,7 @@ fn spread_array_like(vm: &mut Vm, heap: &mut Heap, items: Value) -> Completion<V
     for at in 0..length {
         let index = super::array_methods::index_key(heap, at);
         taken.push(vm.get_property_key(object, index, heap)?);
-        super::array_methods::within_budget(heap)?;
+        super::array_methods::within_budget(vm, heap)?;
     }
     Ok(taken)
 }

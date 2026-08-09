@@ -184,7 +184,7 @@ fn allocate(
     // DR-0013 — the budget is what refuses an absurd length rather than a limit written here, and
     // a buffer is the easiest thing in the language to ask too much of. Checked *before* the
     // allocation, because the point is not to make it.
-    super::array_methods::within_budget(heap)?;
+    super::array_methods::heap_within_budget(heap)?;
     // `checked_sub` rather than a comparison, because the boundary of a comparison here is a number
     // no test can reach: the allowance depends on what the heap already holds. Subtracting says the
     // same thing with nothing to be off by one about.

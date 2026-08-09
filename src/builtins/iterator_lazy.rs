@@ -240,7 +240,7 @@ fn helper_next(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completio
                     return Ok(result(vm, heap, Value::Undefined, true));
                 }
             }
-            super::array_methods::within_budget(heap)?;
+            super::array_methods::within_budget(vm, heap)?;
         }
         counter = count;
     }
@@ -325,7 +325,7 @@ fn helper_next(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completio
             Step::Take(_) | Step::Drop(_) => unreachable!(),
         }
         store(heap, object, counter, inner);
-        super::array_methods::within_budget(heap)?;
+        super::array_methods::within_budget(vm, heap)?;
     }
 }
 

@@ -391,3 +391,41 @@ fn a_threshold_the_program_never_reaches_collects_nothing() {
         "a threshold nothing reaches must behave exactly as no threshold at all"
     );
 }
+
+#[test]
+fn a_natives_deadline_check_is_amortised_and_stops_asking_once_it_has_stopped() {
+    // The counter is a **cost** decision and not a semantic one: asking the clock on every turn of
+    // a native's loop answers the same thing and answers it more slowly, so nothing a program can
+    // run tells the two apart. This is the structural row that can — see
+    // `viperjs-transparent-optimisation-ratchet`'s shape: a transparent optimisation is invisible
+    // to behavioural coverage and has to be pinned against the field it turns on.
+    let mut heap = Heap::new();
+    let mut vm = Vm::new(&mut heap);
+    // With no budget at all the clock is never asked, and the countdown still runs: a machine that
+    // decided it had nothing to check would fall back to asking every time the moment one is set.
+    assert_eq!(vm.until_native_check, super::NATIVE_CHECK_INTERVAL);
+    assert!(!vm.interrupted());
+    assert_eq!(vm.until_native_check, super::NATIVE_CHECK_INTERVAL - 1);
+    // Spend the allowance and the counter comes back to the top, which is what makes the clock a
+    // once-per-interval cost rather than a per-turn one. The call that finds it at zero is the one
+    // that looks and resets, so afterwards it is at the top exactly.
+    for _ in 0..super::NATIVE_CHECK_INTERVAL {
+        assert!(!vm.interrupted());
+    }
+    assert_eq!(vm.until_native_check, super::NATIVE_CHECK_INTERVAL);
+    // A deadline already in the past is noticed at the *next* look and not before it, which is the
+    // whole of what the interval buys and costs.
+    vm.expires_at = Some(std::time::Instant::now());
+    vm.until_native_check = 2;
+    assert!(!vm.interrupted());
+    assert!(!vm.interrupted());
+    assert!(vm.interrupted());
+    assert!(vm.stopped);
+    // …and once it has stopped it answers at once, without waiting for another interval. That is
+    // not a saving: a native's loop calls back into the interpreter, so a machine that kept
+    // answering `false` would run the program's callback thousands more times after the run was
+    // supposed to be over.
+    vm.until_native_check = super::NATIVE_CHECK_INTERVAL;
+    assert!(vm.interrupted());
+    assert_eq!(vm.until_native_check, super::NATIVE_CHECK_INTERVAL);
+}

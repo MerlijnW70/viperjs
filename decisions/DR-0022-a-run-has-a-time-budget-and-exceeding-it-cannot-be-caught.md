@@ -80,6 +80,31 @@ the interpreter's — the counter that is free here may not be free there.
 runs inside one instruction. DR-0013's heap budget bounds the ones that allocate, which is most of
 them, and nothing bounds the rest.
 
+> **Amended 2026-08-10: the ones that *walk* are bounded now, and this paragraph was hiding a hole
+> rather than describing a limit.** "Nothing bounds the rest" was true and read as a small residue.
+> What it covered was every method in §23.1.3 and its neighbours: they are written against an
+> array-like's `length`, so `Array.prototype.join.call({length: 2 ** 32 - 1})` is four billion turns
+> inside Rust with no instruction boundary in it, and a host that set fifty milliseconds waited out
+> all of them. Measured before the fix: thirty seconds for a walk of two hundred million, whatever
+> the budget said. After it: under one.
+>
+> `Vm::interrupted` asks the deadline from inside those loops, on a counter of its own —
+> `NATIVE_CHECK_INTERVAL`, ten thousand turns, larger than the interpreter's thousand because a turn
+> there is cheaper than an instruction. Every such walk already passed through one function,
+> `builtins::array_methods::within_budget`, which is what made this a single change rather than
+> thirty-seven — and that function's own doc had named this budget as the answer to a program that
+> will not stop, above a check that asked only about the heap.
+>
+> The stop is still uncatchable: `interrupted` sets the flag, and a `try` around the walk sees
+> nothing because the loop's next pass returns before the handler it unwound to can run.
+>
+> **Found by the fuzzer on its first real run**, and as an *abort* rather than a hang — a mutated
+> file asked the allocator for 64 GiB in one go and the process died where `catch_unwind` could not
+> see it. The same seed completes now, because the allocation was inside a walk the deadline
+> reaches. What is still unbounded is a built-in that takes a long time **without** walking a
+> length: a sort's comparator loop, a single enormous string build. Those are bounded by the heap
+> budget when they allocate and by nothing when they do not.
+
 **A host function.** A `Native` that blocks is the host's own code and the host's own problem; the
 engine cannot interrupt Rust it did not write.
 

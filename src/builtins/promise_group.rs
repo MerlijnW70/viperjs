@@ -233,7 +233,7 @@ fn subscribe(
     // DR-0013 — an iterator that never says it is done would otherwise grow the list until the
     // process died, and each element allocates. The heap's budget is what notices, and it counts
     // as abandoning the walk: the iterator is owed the news like any other early exit.
-    super::array_methods::within_budget(heap)
+    super::array_methods::within_budget(vm, heap)
 }
 
 /// The two functions this element is subscribed with.
@@ -450,6 +450,6 @@ pub(super) fn iterable_to_list_with(
         }
         taken.push(vm.get_property_key(step, value_key, heap)?);
         // DR-0013 — an iterator that never says it is done would grow this until the process died.
-        super::array_methods::within_budget(heap)?;
+        super::array_methods::within_budget(vm, heap)?;
     }
 }

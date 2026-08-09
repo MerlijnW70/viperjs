@@ -201,7 +201,7 @@ fn revive(
             // The walk visits as many elements as `length` said, and a document is not bounded by
             // anything else — DR-0013's budget is what stops `{length: 2 ** 53}` from being a hang
             // rather than a refusal.
-            super::array_methods::within_budget(heap)?;
+            super::array_methods::within_budget(vm, heap)?;
         }
     }
     let name = Value::String(name.spelling(heap).unwrap_or_else(|| heap.intern(&[])));

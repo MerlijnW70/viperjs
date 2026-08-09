@@ -92,7 +92,7 @@ pub(super) fn has_index(
     object: ObjectId,
     index: u64,
 ) -> Completion<bool> {
-    within_budget(heap)?;
+    within_budget(vm, heap)?;
     let name = index_key(heap, index);
     let found = vm.has_property_key(Value::Object(object), name, heap)?;
     Ok(found)
@@ -105,7 +105,7 @@ pub(super) fn get_index(
     object: ObjectId,
     index: u64,
 ) -> Completion<Value> {
-    within_budget(heap)?;
+    within_budget(vm, heap)?;
     let name = index_key(heap, index);
     vm.get_property_key(Value::Object(object), name, heap)
 }
@@ -131,7 +131,36 @@ pub(super) fn get_index(
 /// where §23.1.3.25 step 8 asks for `count`, so the RangeError that clause owes never came — and
 /// the walk ran into the heap budget instead, which threw a RangeError of its own that
 /// `assert.throws(RangeError, …)` could not tell apart.
-pub(super) fn within_budget(heap: &Heap) -> Completion<()> {
+/// # …and DR-0022's, which the paragraph above named and did not ask
+///
+/// That paragraph ends "the engine's answer to a program that will not stop is DR-0022's time
+/// budget, which is the host's to set" — and the check underneath it asked only about the heap. The
+/// time budget is read between *instructions*, and a native walking a length never reaches one: a
+/// host that set fifty milliseconds waited out all four billion turns of
+/// `Array.prototype.join.call({length: 2 ** 32 - 1})`. Found by the fuzzer on its first real run,
+/// 2026-08-10; see [`Vm::interrupted`], which is where the deadline is now asked and where the
+/// amortisation lives.
+///
+/// The stop is an `Err` here for the shape of the call site and **not** because it can be caught:
+/// `interrupted` has already set the machine's flag, so `unwind` moves the program counter to a
+/// handler and the loop's next pass returns before that handler runs. A `try` around a walk that
+/// ran out of time catches nothing, which is what DR-0022 requires.
+pub(super) fn within_budget(vm: &mut Vm, heap: &Heap) -> Completion<()> {
+    if vm.interrupted() {
+        return Err(Abrupt::range_error(
+            "the run was stopped: it spent its time budget",
+        ));
+    }
+    heap_within_budget(heap)
+}
+
+/// The heap half on its own, for a check that is **not** inside a loop.
+///
+/// A one-shot guard in front of a single large allocation — a buffer's bytes, an array's backing —
+/// has nothing to do with DR-0022: there is no walk for a deadline to interrupt, and asking the
+/// clock there would be asking it once per `new ArrayBuffer`. Split out rather than given the
+/// machine it does not need, so that the two questions stay two questions.
+pub(super) fn heap_within_budget(heap: &Heap) -> Completion<()> {
     if heap.is_exhausted() {
         return Err(Abrupt::range_error(
             "the heap has grown past what this engine will allocate",

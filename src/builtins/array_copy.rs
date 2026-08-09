@@ -41,7 +41,7 @@ fn fill_from(
     for index in range {
         let element = get_index(vm, heap, object, source(index))?;
         set_index(heap, copy, index, element);
-        within_budget(heap)?;
+        within_budget(vm, heap)?;
     }
     Ok(())
 }
@@ -79,7 +79,7 @@ pub fn with(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
             false => get_index(vm, heap, object, index)?,
         };
         set_index(heap, copy, index, element);
-        within_budget(heap)?;
+        within_budget(vm, heap)?;
     }
     Ok(Value::Object(copy))
 }

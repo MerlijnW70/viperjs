@@ -71,6 +71,10 @@ fn main() -> ExitCode {
     let mut worker = false;
     let mut workers = default_workers();
     let mut budget = BUDGET;
+    let mut fuzz_attempts: Option<usize> = None;
+    // The default seed is a constant rather than a clock: a run nobody can reproduce is a run whose
+    // findings cannot be handed to anybody, and `--seed` is how a second one differs.
+    let mut seed: u64 = 1;
     let mut arguments = std::env::args().skip(1);
     while let Some(argument) = arguments.next() {
         match argument.as_str() {
@@ -98,6 +102,16 @@ fn main() -> ExitCode {
                 Some(0) | None => return complain("--budget needs a positive number of seconds"),
                 Some(seconds) => budget = Duration::from_secs(seconds),
             },
+            // DR-0002's ratchet, which is a different question from the expectations file's and
+            // shares only the corpus — see [`conformance::fuzz`] for why the suite is the corpus.
+            "--fuzz" => match arguments.next().and_then(|text| text.parse().ok()) {
+                Some(0) | None => return complain("--fuzz needs a positive number of attempts"),
+                Some(count) => fuzz_attempts = Some(count),
+            },
+            "--seed" => match arguments.next().and_then(|text| text.parse().ok()) {
+                None => return complain("--seed needs a number"),
+                Some(chosen) => seed = chosen,
+            },
             "--help" => {
                 println!("{USAGE}");
                 return ExitCode::SUCCESS;
@@ -117,6 +131,13 @@ fn main() -> ExitCode {
         return ExitCode::SUCCESS;
     }
 
+    // The third ratchet, before the suite is gathered: it wants the same checkout and nothing else
+    // this function does. It answers on its own and does not run the suite, because a fuzzing run
+    // and a conformance run are two different questions and combining them would mean neither
+    // number could be read on its own.
+    if let Some(attempts) = fuzz_attempts {
+        return fuzz(&root, seed, attempts);
+    }
     let mut files = find_tests(&root);
     if files.is_empty() {
         return complain(&format!("no tests under {}/test", root.display()));
@@ -264,6 +285,36 @@ fn announce(report: &Report) {
     }
 }
 
+/// DR-0002's ratchet — mutations of the suite, checked for panics.
+///
+/// Red on the first one, because a panic is a P0 and a count of them is not a thing to get used to.
+/// The seed is printed whatever happens, since it and the attempt count are the whole of what
+/// reproducing a finding needs.
+fn fuzz(root: &std::path::Path, seed: u64, attempts: usize) -> ExitCode {
+    println!(
+        "fuzzing {attempts} mutations of {} from seed {seed}",
+        root.display()
+    );
+    let report = conformance::fuzz::run(root, seed, attempts);
+    if report.attempts == 0 {
+        return complain(&format!("no .js files under {}", root.display()));
+    }
+    if report.panics.is_empty() {
+        println!("\n{} attempts, no panics", report.attempts);
+        return ExitCode::SUCCESS;
+    }
+    println!(
+        "\n{} PANIC(S) in {} attempts:",
+        report.panics.len(),
+        report.attempts
+    );
+    for (from, said) in &report.panics {
+        println!("  mutated from {}\n    {said}", from.display());
+    }
+    println!("\nreproduce with --fuzz {attempts} --seed {seed}");
+    ExitCode::FAILURE
+}
+
 /// Every failure of a narrowed run, with the reason the worker gave.
 ///
 /// Only for a filtered run. A full one has twelve thousand of these and the expectations file is
@@ -346,4 +397,6 @@ usage: cargo run -p conformance -- [options]
                          under the same pair
   --bless                rewrite the expectations file from this run
   --summary <path>       also write the headline number as shields.io endpoint JSON
+  --fuzz <attempts>      DR-0002 instead of the suite: mutate the corpus and look for panics
+  --seed <number>        which fuzzing run to reproduce (default 1)
   --help                 this";

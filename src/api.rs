@@ -1815,4 +1815,69 @@ mod tests {
             Err(err) => println!("read gave Err: {err:?}"),
         }
     }
+
+    #[test]
+    fn the_time_budget_reaches_a_built_ins_own_loop() {
+        // DR-0022 is checked between *instructions*, and a built-in walking an array-like's `length`
+        // never reaches one — `Array.prototype.join.call({length: 2 ** 32 - 1})` is four billion turns
+        // inside Rust. So a host that set a budget waited out all of them, which is the promise of the
+        // budget failing rather than a slow engine.
+        //
+        // Measured on the machine this was written on: the walk below takes about thirty seconds
+        // unbounded and finishes in well under one with a budget. The row asserts the *outcome* rather
+        // than a duration, because a duration is a property of the machine — but the guard after it
+        // fails if the budget stopped nothing at all.
+        let mut engine = Engine::new();
+        engine.set_time_budget(Some(BUDGET));
+        let started = std::time::Instant::now();
+        assert_eq!(
+            engine
+                .eval("var a = []; a.length = 200000000; a.join('')")
+                .unwrap_err(),
+            Error::Interrupted
+        );
+        assert!(
+            started.elapsed() < std::time::Duration::from_secs(5),
+            "the walk ran for {:?}, so the budget did not reach it",
+            started.elapsed()
+        );
+        // Every method that walks a length goes through the same check, which is what makes one row
+        // stand for the family — but the family is what a host is exposed to, so three more of it.
+        for source in [
+            "var a = []; a.length = 200000000; a.indexOf(1)",
+            "var a = []; a.length = 200000000; a.lastIndexOf(1)",
+            "Array.prototype.forEach.call({ length: 200000000 }, function () {})",
+        ] {
+            let mut engine = Engine::new();
+            engine.set_time_budget(Some(BUDGET));
+            assert_eq!(
+                engine.eval(source).unwrap_err(),
+                Error::Interrupted,
+                "{source}"
+            );
+        }
+        // …and it cannot be caught, which is the whole of DR-0022. A `try` around the walk sees
+        // nothing: the machine's flag is already set, so the handler the throw unwinds to never runs.
+        let mut engine = Engine::new();
+        engine.set_time_budget(Some(BUDGET));
+        engine.eval("var caught = 'no'").expect("it runs");
+        assert_eq!(
+            engine
+                .eval(
+                    "try { var a = []; a.length = 200000000; a.join('') } catch (e) { caught = 'yes' }"
+                )
+                .unwrap_err(),
+            Error::Interrupted
+        );
+        let answer = engine.eval("caught").expect("it runs");
+        assert_eq!(engine.text(answer).as_deref(), Ok("no"));
+        // A walk that finishes inside the budget still answers, which is the row that stops this
+        // passing by interrupting everything.
+        let mut engine = Engine::new();
+        engine.set_time_budget(Some(BUDGET));
+        let answer = engine
+            .eval("[1, 2, 3].join('-')")
+            .expect("a short walk finishes");
+        assert_eq!(engine.text(answer).as_deref(), Ok("1-2-3"));
+    }
 }

@@ -225,7 +225,7 @@ fn allocate(
     count: usize,
 ) -> Completion<Value> {
     let bytes = count.saturating_mul(element.width());
-    super::array_methods::within_budget(heap)?;
+    super::array_methods::within_budget(vm, heap)?;
     if heap.allowance().checked_sub(bytes).is_none() {
         return Err(Abrupt::range_error(
             "this TypedArray is larger than this engine will allocate",
@@ -452,7 +452,7 @@ fn array_like(vm: &mut Vm, heap: &mut Heap, source: ObjectId) -> Completion<Vec<
     for at in 0..count {
         let index = super::array_methods::index_key(heap, at);
         taken.push(vm.get_property_key(Value::Object(source), index, heap)?);
-        super::array_methods::within_budget(heap)?;
+        super::array_methods::within_budget(vm, heap)?;
     }
     Ok(taken)
 }

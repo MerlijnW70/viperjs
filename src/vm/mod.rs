@@ -308,6 +308,12 @@ pub struct Vm {
     /// is read after the drain rather than reported when it happens, and DR-0029 for why it exists
     /// at all: it is the engine's one signal that a job drain stopped early.
     unhandled: Vec<crate::heap::ObjectId>,
+    /// How many more times a native's loop may go round before [`Vm::interrupted`] asks the clock.
+    ///
+    /// Its own counter rather than the interpreter's: the two are asked from different places at
+    /// different rates, and sharing one would let a long native walk postpone the interpreter's
+    /// next check.
+    until_native_check: u32,
     /// Every module this execution has linked, by chunk identity — §16.2.1's records.
     ///
     /// On the machine rather than in a local of the link, because §16.2.1.6's "each body once" is a
@@ -457,6 +463,14 @@ pub struct Vm {
 /// of the instructions around it.
 pub(super) const HEAP_CHECK_INTERVAL: usize = 1_000;
 
+/// How many turns of a **native's** loop pass between two looks at DR-0022's deadline.
+///
+/// Larger than the interpreter's thousand, because a turn here is far cheaper than an instruction —
+/// often a single `Get` of an index that is not there — so the clock would otherwise be a
+/// noticeable share of the walk. Ten thousand absent reads take microseconds, which is well inside
+/// any budget a host would set and far short of a wait that reads as a hang.
+const NATIVE_CHECK_INTERVAL: u32 = 10_000;
+
 /// Where a nested execution stops, and how far a throw inside it may travel.
 ///
 /// §7.1.1's `ToPrimitive` calls a method, and that method may throw. The throw has to come back
@@ -486,6 +500,7 @@ impl Vm {
         Self {
             waiters: Vec::new(),
             unhandled: Vec::new(),
+            until_native_check: NATIVE_CHECK_INTERVAL,
             modules: std::collections::BTreeMap::new(),
             resolved: Graph::new(),
             edges: std::collections::BTreeMap::new(),
@@ -1311,6 +1326,59 @@ impl Vm {
             // input. A deadline the clock cannot name is the wait that never ends.
             deadline: timeout.and_then(|timeout| std::time::Instant::now().checked_add(timeout)),
         });
+    }
+
+    /// DR-0022's deadline, asked from inside a **native's own loop** — and whether it has passed.
+    ///
+    /// # The hole this closes
+    ///
+    /// The interpreter checks the budget between instructions, which reaches every execution there
+    /// is *except* the one that never comes back to it: a built-in walking an array-like's `length`
+    /// is a loop inside Rust with no instruction boundary in it. `Array.prototype.join` on an object
+    /// whose `length` is `2 ** 32 - 1` runs for four billion turns and a host that set a
+    /// fifty-millisecond budget waits for all of them.
+    ///
+    /// [`crate::builtins::array_methods::within_budget`]'s own doc named DR-0022 as the answer to
+    /// exactly that program — "the engine's answer to a program that will not stop is DR-0022's time
+    /// budget, which is the host's to set" — above a check that asked only about the heap. Found by
+    /// the fuzzer on its first real run, 2026-08-10.
+    ///
+    /// # Why this sets a flag rather than throwing
+    ///
+    /// DR-0022's whole point is that exceeding the budget cannot be caught. So this does what the
+    /// interpreter's own check does: sets `stopped`, and leaves the caller to return. A native that
+    /// returns an `Err` afterwards is still safe — `unwind` moves the program counter to the handler
+    /// and the loop's next pass reads `stopped` and returns before the handler runs — but the flag
+    /// is what makes it stop, not the error.
+    ///
+    /// # Amortised, for the interpreter's reason
+    ///
+    /// `Instant::now()` is tens of nanoseconds, which is nothing once in a while and is a great deal
+    /// four billion times. So it rides a countdown of its own, separate from the interpreter's:
+    /// the two are asked from different places at different rates, and one counter shared between
+    /// them would let a long native walk postpone the *interpreter's* next check.
+    pub(crate) fn interrupted(&mut self) -> bool {
+        if self.stopped {
+            return true;
+        }
+        if self.until_native_check > 0 {
+            self.until_native_check -= 1;
+            return false;
+        }
+        self.until_native_check = NATIVE_CHECK_INTERVAL;
+        // `saturating_duration_since` for the reason `execute` gives: it asks "has the deadline
+        // passed" with no comparison of its own, so there is no second spelling to get wrong.
+        //
+        // Assigned and then answered rather than answered inside a branch: written as an `if` that
+        // sets the flag and returns `true`, the `true` is a second spelling of the flag it has just
+        // set, and the early return above makes the difference between them invisible — two guards
+        // that hide each other, which mutation coverage reported as two survivors.
+        self.stopped = self.expires_at.is_some_and(|deadline| {
+            deadline
+                .saturating_duration_since(std::time::Instant::now())
+                .is_zero()
+        });
+        self.stopped
     }
 
     /// §9.13 `HostPromiseRejectionTracker` — a promise was rejected with nothing waiting on it.

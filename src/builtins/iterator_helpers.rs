@@ -117,7 +117,7 @@ fn consume(
             return Ok(answer);
         }
         counter += 1;
-        super::array_methods::within_budget(heap)?;
+        super::array_methods::within_budget(vm, heap)?;
     }
     // Nothing stopped it, so each says what an exhausted walk means for it. `every` over nothing is
     // `true` and `some` over nothing is `false` — vacuously, and for the same reason as the Array
@@ -175,7 +175,7 @@ fn reduce(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Val
             }
         };
         counter += 1;
-        super::array_methods::within_budget(heap)?;
+        super::array_methods::within_budget(vm, heap)?;
     }
     Ok(accumulator)
 }
@@ -192,7 +192,7 @@ fn to_array(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
     while let Some(value) = walk.step(vm, heap)? {
         super::array_methods::set_index(heap, array, at, value);
         at += 1;
-        super::array_methods::within_budget(heap)?;
+        super::array_methods::within_budget(vm, heap)?;
     }
     let name = key(heap, "length");
     super::set_or_throw(vm, heap, array, name, Value::Number(at as f64))?;

@@ -509,7 +509,7 @@ fn array_like(vm: &mut Vm, heap: &mut Heap, source: Value) -> Completion<Vec<Val
     for index in 0..count {
         let at = super::array_methods::index_key(heap, index);
         taken.push(vm.get_property_key(Value::Object(object), at, heap)?);
-        super::array_methods::within_budget(heap)?;
+        super::array_methods::within_budget(vm, heap)?;
     }
     Ok(taken)
 }
@@ -649,7 +649,7 @@ fn sorted_by(
             at += 1;
         }
         sorted.insert(at, value);
-        super::array_methods::within_budget(heap)?;
+        super::array_methods::within_budget(vm, heap)?;
     }
     Ok(sorted)
 }
@@ -1008,7 +1008,7 @@ fn walk(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, how: Walk) -> Compl
             Walk::Filter if truthy => kept.push(element),
             _ => {}
         }
-        super::array_methods::within_budget(heap)?;
+        super::array_methods::within_budget(vm, heap)?;
     }
     match how {
         Walk::Every => Ok(Value::Boolean(true)),
@@ -1075,7 +1075,7 @@ fn fold(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, backwards: bool) ->
             &[total, current, Value::Number(index as f64), call.this_value],
             heap,
         )?;
-        super::array_methods::within_budget(heap)?;
+        super::array_methods::within_budget(vm, heap)?;
     }
     Ok(total)
 }

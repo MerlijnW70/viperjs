@@ -104,7 +104,7 @@ fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
             "this SharedArrayBuffer is longer than its maxByteLength allows",
         ));
     }
-    super::array_methods::within_budget(heap)?;
+    super::array_methods::within_budget(vm, heap)?;
     // DR-0013 — asked before the bytes are taken rather than noticed afterwards, because the
     // length is a number the program chose. `checked_sub` rather than a comparison for the reason
     // §25.1.3.1's version gives: the boundary of a comparison here is a number no test can reach,
