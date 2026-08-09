@@ -372,6 +372,36 @@ impl Engine {
         self.vm.run(&chunk, &mut self.heap).map_err(Error::Engine)
     }
 
+    /// §9.13 — every rejection of the last run that nothing ever asked for, oldest first.
+    ///
+    /// The reasons rather than the promises, because the reason is what a host reports and the
+    /// promise is an identity it has no use for. Empty in a program that handles what it rejects.
+    ///
+    /// Two quite different things put entries here, and a host should say so differently:
+    ///
+    /// - **A program's own bug.** `Promise.reject(x)` with no `catch`, an `async` function whose
+    ///   caller ignored it. Node prints a warning; a browser fires `unhandledrejection`. This is the
+    ///   common case and it is not the engine's business to do more than report it.
+    /// - **The engine giving up inside a job.** DR-0013's heap RangeError is thrown wherever the
+    ///   allocation happened, and if that is inside a `then` handler then §9.5 step 3 discards the
+    ///   completion — so [`Engine::eval`] answers `Ok`, the exit status is zero, and a program that
+    ///   should have kept running has stopped. **This list is the only sign.** See DR-0029.
+    ///
+    /// Read it after a run and before the next one, which clears it: a rejection is unhandled only
+    /// once the queue has drained and nothing can still attach a handler.
+    #[must_use]
+    pub fn unhandled_rejections(&self) -> Vec<Value> {
+        self.vm
+            .unhandled_rejections()
+            .iter()
+            .map(|promise| {
+                self.heap
+                    .promise(*promise)
+                    .map_or(Value::Undefined, |found| found.result)
+            })
+            .collect()
+    }
+
     /// `String(value)` — §7.1.17, so an object's `toString` runs and may itself throw.
     ///
     /// # Errors

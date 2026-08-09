@@ -301,6 +301,13 @@ pub struct Vm {
     /// made it, and the promise it is holding is reachable from nothing else the collector walks
     /// until a notify or a `then` finds it.
     waiters: Vec<Waiter>,
+    /// §9.13's rejections nothing has asked for, in the order they were rejected.
+    ///
+    /// A list rather than a count, because what a host needs is the *reason* — and the reason is a
+    /// Value the promise is holding, so this is a root. See [`Vm::unhandled_rejections`] for why it
+    /// is read after the drain rather than reported when it happens, and DR-0029 for why it exists
+    /// at all: it is the engine's one signal that a job drain stopped early.
+    unhandled: Vec<crate::heap::ObjectId>,
     /// Every module this execution has linked, by chunk identity — §16.2.1's records.
     ///
     /// On the machine rather than in a local of the link, because §16.2.1.6's "each body once" is a
@@ -478,6 +485,7 @@ impl Vm {
         let first = Realm::new(heap, crate::heap::RealmId(0));
         Self {
             waiters: Vec::new(),
+            unhandled: Vec::new(),
             modules: std::collections::BTreeMap::new(),
             resolved: Graph::new(),
             edges: std::collections::BTreeMap::new(),
@@ -838,6 +846,10 @@ impl Vm {
         // execution above, and the only moment it is certainly finished doing that is the next
         // time a run begins.
         self.stopped = false;
+        // …and §9.13's list for the same reason: it describes a run, and a host reads it after the
+        // one that produced it. Cleared here rather than at the end of the previous run so that
+        // reading it is not a race with whatever the machine is asked to do next.
+        self.unhandled.clear();
         self.expires_at = self
             .time_budget
             .map(|budget| std::time::Instant::now() + budget);
@@ -1301,6 +1313,44 @@ impl Vm {
         });
     }
 
+    /// §9.13 `HostPromiseRejectionTracker` — a promise was rejected with nothing waiting on it.
+    ///
+    /// Recorded rather than reported, because *now* is too early to say. A program may attach a
+    /// handler later in the same turn — `var p = Promise.reject(1); p.catch(f);` is two statements
+    /// and the rejection happens on the first — so a host told at this moment would report a
+    /// rejection that is about to be handled. §9.13's answer is the `"handle"` operation below,
+    /// which takes it back; ViperJS keeps the list and lets the host read it when the queue has
+    /// drained, which is the point at which nothing can still attach one.
+    pub(crate) fn rejection_unhandled(&mut self, promise: crate::heap::ObjectId) {
+        self.unhandled.push(promise);
+    }
+
+    /// The same clause's `"handle"` operation — something has now asked, so take the report back.
+    ///
+    /// Linear, and deliberately: the list holds *unhandled* rejections, which is a number that is
+    /// zero in every program anybody would want to run. A map keyed by promise would be a
+    /// permanent cost for a case whose whole point is that it should not happen.
+    pub(crate) fn rejection_handled(&mut self, promise: crate::heap::ObjectId) {
+        self.unhandled.retain(|listed| *listed != promise);
+    }
+
+    /// Every rejection this machine has seen that nothing ever asked for, oldest first.
+    ///
+    /// **The point of the list is what it catches, which is not what a reader expects.** An
+    /// unhandled rejection is usually a program's own bug and a host reports it as a warning. It is
+    /// also the only sign the *engine* gives when a job drain has stopped early: a promise chain
+    /// that runs out of heap throws its RangeError inside a job, where §9.5 step 3 discards the
+    /// completion — so the queue empties, `run` answers normally and the exit status is zero. What
+    /// is left behind is one rejected promise nobody claimed. See DR-0029.
+    ///
+    /// Read after a run, when the queue has drained: a rejection is only unhandled once nothing can
+    /// still attach a handler to it. Cleared when the next run begins, for `stopped`'s reason —
+    /// what it describes is a run, and a machine is reusable afterwards.
+    #[must_use]
+    pub fn unhandled_rejections(&self) -> &[crate::heap::ObjectId] {
+        &self.unhandled
+    }
+
     /// §25.4.1.6 `TriggerTimeout` — settle every waiter whose timeout has elapsed, and say whether
     /// any had.
     ///
@@ -1461,6 +1511,10 @@ impl Vm {
         for job in &self.jobs {
             job.names(&mut values);
         }
+        // §9.13's unhandled rejections. A promise nothing asked for is a promise nothing *names* —
+        // that is the definition of the list — so without this it is swept between the rejection
+        // and the host reading it, and the host is handed an id addressing whatever took the slot.
+        values.extend(self.unhandled.iter().copied().map(Value::Object));
         // §16.2.1's *chunks*, which is a different claim from its records below and the one a
         // script never has to make. A graph is a set of compiled bodies the machine is holding, and
         // evaluating it runs them one after another — so while the first is executing, the ones

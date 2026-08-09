@@ -469,8 +469,40 @@ enum Show {
     Nothing,
 }
 
+/// Every rejection of the run just finished that nothing asked for, on standard error.
+///
+/// §9.13's tracker reaching a person, which is the whole reason it exists. Node prints a warning
+/// for these and so does this — a **warning** and not a failure, because an unhandled rejection is
+/// ordinary in a program that fires and forgets, and turning it into an exit status would make
+/// `viper` refuse scripts every other engine runs.
+///
+/// The case worth the noise is the other one. DR-0013's heap error thrown inside a `then` handler
+/// is discarded by §9.5 step 3, so a program that ran out of memory finishes with status zero and
+/// nothing printed. This line is what says so. See DR-0029.
+///
+/// Standard error rather than out, for `console_err`'s reason: a script piped somewhere must not
+/// have the host's opinions mixed into its output.
+fn report_rejections(engine: &mut Engine) {
+    for reason in engine.unhandled_rejections() {
+        // `text` can itself throw — the reason may be an object with a hostile `toString`, and a
+        // program that rejected with one is exactly the sort that would. Then the *kind* is still
+        // worth printing, which is all a reader needs to go looking.
+        let said = engine
+            .text(reason)
+            .unwrap_or_else(|_| "a reason that cannot be described".to_string());
+        let _ = writeln!(std::io::stderr(), "viper: unhandled rejection: {said}");
+    }
+}
+
 /// Run `source`, report whatever went wrong, and answer the process's exit status.
 fn run(engine: &mut Engine, source: &str, show: Show) -> ExitCode {
+    let answer = run_quietly(engine, source, show);
+    report_rejections(engine);
+    answer
+}
+
+/// The same, before §9.13's warnings are printed — which have to come after the answer.
+fn run_quietly(engine: &mut Engine, source: &str, show: Show) -> ExitCode {
     match engine.eval(source) {
         Ok(value) if show == Show::Answer => match engine.text(value) {
             Ok(text) => {

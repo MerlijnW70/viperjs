@@ -12,13 +12,18 @@
 //! which is how `p.then(undefined, f)` propagates a fulfilment to the promise `then` answered with
 //! rather than dropping it. A list of plain callbacks cannot say that.
 //!
-//! # `[[PromiseIsHandled]]` is not here
+//! # `[[PromiseIsHandled]]` is here now, and what brought it back
 //!
-//! §27.2.6 lists it and nothing in the language reads it. Its one use is §27.2.1.7 step 7's
-//! `HostPromiseRejectionTracker`, which is how a host reports a rejection nothing was waiting for
-//! — and ViperJS has no such host hook, so the slot would be written and never read. It comes back
-//! with the tracker, and until then leaving it out is the difference between six slots and five
-//! honest ones.
+//! This section used to say the slot was left out: §27.2.6 lists it, nothing in the language reads
+//! it, its one use is §27.2.1.7 step 7's `HostPromiseRejectionTracker`, and ViperJS had no such
+//! hook — so it would have been written and never read. That was right, and it ended with "it comes
+//! back with the tracker".
+//!
+//! The tracker is built (§9.13, `Vm::unhandled_rejections`), and what asked for it was a **silent
+//! stop**: a promise chain that re-armed itself ran out of heap, the RangeError was thrown inside a
+//! job where §9.5 step 3 discards it, and the queue emptied with an exit status of zero. Nothing in
+//! the engine was in a position to notice, because the only record that a rejection had gone
+//! unclaimed was this slot and it did not exist. See DR-0029.
 //!
 //! # `[[AlreadyResolved]]` belongs to the pair, and not to the promise
 //!
@@ -107,7 +112,7 @@ pub struct Reaction {
     pub handler: Option<Value>,
 }
 
-/// The slots §27.2.6 gives a Promise, less the one nothing reads — see the module documentation.
+/// §27.2.6's slots, all six of them.
 #[derive(Debug)]
 pub struct Promise {
     /// `[[PromiseState]]`.
@@ -122,6 +127,15 @@ pub struct Promise {
     pub fulfil: Vec<Reaction>,
     /// `[[PromiseRejectReactions]]`.
     pub reject: Vec<Reaction>,
+    /// `[[PromiseIsHandled]]` — whether anything has ever asked this promise for its answer.
+    ///
+    /// Set by §27.2.5.4.1 step 12, and by nothing else: it is `then` that handles a promise, so a
+    /// promise reaches `true` the first time one is registered and never goes back. **Not the same
+    /// as "somebody wanted the fulfilment"** — `p.then(f)` with no rejection handler still sets it,
+    /// because the rejection then travels to the promise `then` answered with and *that* one is
+    /// what is unhandled. Reading it as "has a rejection handler" would report every `.then(f)`
+    /// chain as unhandled at every link.
+    pub handled: bool,
 }
 
 /// The two things a resolving function carries — §27.2.1.3's `[[Promise]]` and
@@ -293,6 +307,7 @@ impl Promise {
             result: Value::Undefined,
             fulfil: Vec::new(),
             reject: Vec::new(),
+            handled: false,
         }
     }
 }

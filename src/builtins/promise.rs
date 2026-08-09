@@ -318,6 +318,11 @@ fn settle(
         ReactionKind::Fulfil => PromiseState::Fulfilled,
         ReactionKind::Reject => PromiseState::Rejected,
     };
+    // §27.2.1.7 step 7 — a rejection nothing has ever asked for is reported to the host. Asked of
+    // `[[PromiseIsHandled]]` and *not* of whether the reaction list was empty, and the difference is
+    // the whole reason the slot exists: `p.then(f)` registers a fulfil reaction and a pass-through
+    // reject one, so a promise with a handler and a promise without one both have a non-empty list.
+    let unhandled = matches!(kind, ReactionKind::Reject) && !state.handled;
     // §27.2.1.8 `TriggerPromiseReactions` — a job each, in list order, which is what makes two
     // `then`s on one promise run in the order they were written.
     for reaction in reactions {
@@ -325,6 +330,9 @@ fn settle(
             reaction,
             argument: value,
         });
+    }
+    if unhandled {
+        vm.rejection_unhandled(promise);
     }
     Ok(Value::Undefined)
 }
@@ -402,8 +410,20 @@ pub(crate) fn perform_then(
             argument: result,
         }),
     }
-    // Step 12 sets `[[PromiseIsHandled]]`, which this engine does not keep: nothing reads it
-    // without `HostPromiseRejectionTracker`, and ViperJS has no such hook. See `heap::promise`.
+    // Step 12 — `[[PromiseIsHandled]]` is set whichever state the promise is in, and step 11.b is
+    // §9.13's `"handle"`: a rejection already reported to the host has now been asked for, so the
+    // report is taken back. Both are why the slot is not the same question as "is the reject list
+    // empty" — this is the *only* place either is written.
+    let Some(state) = heap.promise_mut(promise) else {
+        return Ok(Value::Undefined);
+    };
+    state.handled = true;
+    // Asked of every promise rather than only of one that was rejected while unrecorded, because
+    // the two answer the same: taking back a report that was never made is `retain` not finding
+    // what it was told to remove. A guard in front would be a claim about *cost* over a list that
+    // is empty in every program which handles what it rejects — and one no test could distinguish
+    // from its absence, which is this repository's own definition of a guard to delete.
+    vm.rejection_handled(promise);
     Ok(Value::Undefined)
 }
 

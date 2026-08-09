@@ -890,6 +890,98 @@ per-attempt constant, rather than the interpreter's, is what that bucket is spen
 
 ---
 
+## regexp-bucket-cost — is the slowest directory in the suite slow because of the matcher?
+
+**Date:** 2026-08-09
+**Question:** `RegExp/CharacterClassEscapes` runs 24 tests in 57 s — 2.4 s each, against 2.7 ms for
+an average `Array/prototype` run. AGENTS.md has pointed at this family as M8's job since M5. Is it
+the matcher, and if so which part?
+
+**Setup:** `lab/scratch/bench-find-scan.js` and `lab/scratch/bench-array-growth.js`, each timing the
+halves separately, run on `viper --release` and on node with a `print` shim.
+
+### It is not the matcher, and it is not close
+
+These tests do two things: `buildString` assembles a subject holding every code point in a set —
+often a million of them — and then one `regExp.test(subject)` runs over it. Timed apart, on a
+400,000-unit subject:
+
+| | ViperJS |
+| --- | --- |
+| build the subject | **722 ms** |
+| scan all 400,000 positions for `/\d/` (no match) | **1 ms** |
+| anchored match consuming the whole subject | 1 ms |
+
+**The search is a thousandth of the run.** I had a prefilter half-designed for `Matcher::find`'s
+position loop — the same first-character trick `alternation-width` put on a disjunction — and this
+killed it before a line was written. A pattern that fails at every position over 400,000 positions
+costs one millisecond; there is nothing there to win.
+
+### Where the 722 ms goes, bisected
+
+Three variants of the build, each adding one thing to the one above:
+
+| | ViperJS | node |
+| --- | --- | --- |
+| the loop and `chunk.push(n)` alone, no strings | **726 ms** | 3 ms |
+| …and `String.fromCodePoint.apply` per 10,000-chunk | 763 ms | 4 ms |
+| …and accumulating with `+=` | 768 ms | 5 ms |
+
+**All of it is in the first row**, and `fromCodePoint` and the concatenation together add 6%. So the
+slowest directory in the conformance suite is slow because of `Array.prototype.push`, and the regular
+expression it exists to test is free.
+
+### The element-store ladder
+
+`bench-array-growth.js`, 200,000 turns each, ViperJS against node:
+
+| | ViperJS ns/turn | node | over the empty loop |
+| --- | --- | --- | --- |
+| empty loop | 185 | 5 | — |
+| `o.p = i` — a named property, no array | 245 | 0 | **+60** |
+| `a[i % 64] = i` — an array that never grows | 505 | 5 | **+320** |
+| `a[i] = i` into `new Array(N)` — pre-sized | 675 | 5 | +490 |
+| `a[i] = i` — growing | 775 | 10 | +590 |
+| `a[a.length] = i` | 850 | 10 | +665 |
+| `a.push(i)` | 1,595 | 10 | **+1,410** |
+
+Three things this says that the earlier `interpreter-speed` table could not:
+
+- **Growth is not the cost.** Pre-sizing with `new Array(N)` saves 100 ns of 590, and an array that
+  never grows past 64 elements still costs 320 ns. So it is not reallocation and it is not the
+  index map crossing `INDEXED_ABOVE`.
+- **An indexed store costs five times a named one** — 320 ns against 60 — for the *same* work in a
+  smaller key space. Every element is a `(PropertyKey, Property)` in the object's own property
+  vector, so `a[7] = x` is the whole of §10.1.9's `[[Set]]` into a general property table, plus
+  §10.4.2's `length` maintenance on top.
+- **`push` is 2.4× a plain indexed store**, and reading §23.1.3.23 says why without any guessing:
+  it is a native call, a `Get` of `length` with `ToLength`, the element `Set`, and a second `Set` of
+  `length` — three property operations where `a[i] =` is one. Nothing in the implementation is
+  wasteful; there is simply more of it. This answers `interpreter-speed`'s open item 5 —
+  "`push`/`pop` at 2.4 µs wants its own look before anyone guesses at it" — and the answer is that
+  it is the element store underneath it, times three.
+
+### The verdict
+
+**M8's array work is a dense element store, and it is the lever with the widest reach.** Not the
+matcher, not `property-escapes`, and not `push` on its own. An array whose keys are a contiguous
+run of integers should hold its elements in a `Vec<Value>` beside the property table rather than
+inside it, with the property table used only for the sparse and the exotic.
+
+**Not started here, deliberately.** It touches §10.4.2's `[[DefineOwnProperty]]`, every internal
+method that can see an element, §10.1.11's key order, holes and `length` truncation, and the
+collector — which is a decision record and several commits, not the tail of an afternoon. What this
+experiment establishes is that it is the right one to spend them on, and that two other candidates
+are not.
+
+**And one stale claim is now retired.** AGENTS.md said what remained of `RegExp/property-escapes`
+was "genuinely slow and M8 is genuinely its answer". Measured the same day: the directory passes
+**1,206 of 1,226 runs**, the expectations file lists **six**, and all six are `Script=Unknown` — a
+UCD default the table generator never emitted. It is a data gap of six runs. That paragraph has now
+been corrected three times, every time downwards.
+
+**Cost:** about forty minutes, most of it in the two conformance directory timings.
+
 ## interpreter-speed — how far is ViperJS from node, and what would close it?
 
 **Date:** 2026-08-08

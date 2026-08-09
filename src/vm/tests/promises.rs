@@ -11,6 +11,119 @@
 
 use super::*;
 
+/// Run `source`, let §9.5's jobs run, and describe every rejection nothing asked for.
+///
+/// The reasons rather than the promises, because a promise id is not something a row can read —
+/// and the reason is the part a host reports. Joined with `|`, so a test can say both *how many*
+/// and *which*, which are different claims and both are wrong in different ways.
+fn unhandled(source: &str) -> String {
+    let mut heap = Heap::new();
+    let mut vm = Vm::new(&mut heap);
+    let script = parse_script(source).expect("the source parses"); // the test is what is left over
+    let chunk = compile_script(&script, &mut heap).expect("the source compiles"); // same
+    vm.run(&chunk, &mut heap).expect("the chunk is well formed"); // same
+    let reasons: Vec<String> = vm
+        .unhandled_rejections()
+        .iter()
+        .map(|promise| {
+            let reason = heap
+                .promise(*promise)
+                .map_or(Value::Undefined, |found| found.result);
+            describe(Outcome::Value(reason), &mut heap)
+        })
+        .collect();
+    reasons.join("|")
+}
+
+#[test]
+fn a_rejection_nothing_ever_asked_for_is_reported_to_the_host() {
+    // §9.13 `HostPromiseRejectionTracker`, which ViperJS did not have and which is the only signal
+    // the engine gives that a job drain stopped early — see DR-0029. A host reports these; the row
+    // that matters to the engine is the last one here.
+    assert_eq!(
+        unhandled("Promise.reject('nobody wanted this');"),
+        "nobody wanted this"
+    );
+    // A handler attached in a *later statement* takes the report back — §9.13's `"handle"`
+    // operation. Without that every `var p = Promise.reject(1); p.catch(f)` would be reported,
+    // which is two lines of ordinary JavaScript and would make the list worthless.
+    assert_eq!(
+        unhandled("var p = Promise.reject(1); p.catch(function () {});"),
+        ""
+    );
+    // …and one attached *before* the rejection, which is the same claim from the other side: what
+    // is asked is `[[PromiseIsHandled]]`, so the order of the two statements changes nothing.
+    assert_eq!(
+        unhandled("var d = Promise.withResolvers(); d.promise.catch(function () {}); d.reject(1);"),
+        ""
+    );
+    // **`then` with no rejection handler still handles the promise**, and the rejection moves to
+    // the promise `then` answered with — so the count stays one and does not become two. Reading
+    // the slot as "has a rejection handler" would report every link of every chain.
+    assert_eq!(
+        unhandled("Promise.reject('moved').then(function () {});"),
+        "moved"
+    );
+    // A fulfilment is never reported, whatever nothing is waiting for it.
+    assert_eq!(unhandled("Promise.resolve('fine');"), "");
+    // Two of them, in the order they were rejected, because a host printing them prints a program's
+    // own order back to it.
+    assert_eq!(
+        unhandled("Promise.reject('first'); Promise.reject('second');"),
+        "first|second"
+    );
+}
+
+#[test]
+fn a_job_that_runs_out_of_heap_leaves_the_rejection_that_says_so() {
+    // The row DR-0029 exists for, and the shape that was silent: a promise chain re-arming itself
+    // reaches DR-0013's budget, the RangeError is thrown *inside a job*, and §9.5 step 3 discards
+    // the completion. The queue empties, `run` answers normally, and the exit status is zero.
+    //
+    // What is left behind is exactly one rejected promise nobody claimed — the last link, whose
+    // handler threw before it could arm the next. So a host that reads this list finds out; before
+    // it existed there was nothing in the engine that could have told anyone.
+    let mut heap = Heap::new();
+    heap.set_budget(3 << 20);
+    let mut vm = Vm::new(&mut heap);
+    // No schedule, so the budget is reached rather than collected away — this is about what the
+    // engine *says* when it runs out, not about whether it runs out.
+    vm.set_collection_growth(None);
+    let script = parse_script(
+        "var p = Promise.resolve(); var n = 0; \
+         function step() { n++; if (n < 2000000) { p.then(step) } } \
+         p.then(step);",
+    )
+    .expect("the setup parses"); // the test is what is left over
+    let chunk = compile_script(&script, &mut heap).expect("the setup compiles"); // same
+    let outcome = vm.run(&chunk, &mut heap).expect("the chunk is well formed"); // same
+    // The run itself is a success, which is the whole problem: nothing about the answer says the
+    // program stopped two million turns short of what it asked for.
+    assert!(matches!(outcome, Outcome::Value(_)));
+    let left = vm.unhandled_rejections().to_vec();
+    assert_eq!(left.len(), 1, "one link should have been left rejected");
+    // …and it carries the reason, which is what makes the list worth reading rather than a count
+    // of something odd having happened. Read as a property because a thrown Error object has no
+    // `toString` a test can call — see `describe`, which answers `[object]` for exactly that reason.
+    let Value::Object(error) = heap
+        .promise(left[0])
+        .map_or(Value::Undefined, |found| found.result)
+    else {
+        panic!("the reason should be the Error the engine refused with");
+    };
+    let message = match own(&mut heap, error, "message").map(|found| found.kind) {
+        Some(PropertyKind::Data { value, .. }) => value,
+        _ => Value::Undefined,
+    };
+    let Value::String(text) = message else {
+        panic!("an Error's message is a String");
+    };
+    assert_eq!(
+        heap.string(text).map(String::from_utf16_lossy),
+        Some("the heap has grown past what this engine will allocate".to_string())
+    );
+}
+
 #[test]
 fn a_then_handler_runs_after_the_script_and_not_during_it() {
     // The one guarantee a promise makes about time. `Promise.resolve(1)` is *already* fulfilled and

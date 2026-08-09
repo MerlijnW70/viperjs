@@ -10,6 +10,7 @@ in.
 
 ## Index
 
+- [An engine can fail by succeeding — §9.13, and the ratchets that cannot see it — DR-0029](#an-engine-can-fail-by-succeeding--913-and-the-ratchets-that-cannot-see-it--dr-0029)
 - [The job queue never collected, and it took a timeout to find it — +46](#the-job-queue-never-collected-and-it-took-a-timeout-to-find-it--46)
 - [§20.1.3's `ToObject`s are conversions, and four of them were checks](#2013s-toobjects-are-conversions-and-four-of-them-were-checks)
 - [`Function.prototype.caller` — 23 runs, costed, refused, and then built — DR-0028](#functionprototypecaller--23-runs-costed-refused-and-then-built--dr-0028)
@@ -43,6 +44,50 @@ in.
 - [What is left, in the order the numbers put it](#what-is-left-in-the-order-the-numbers-put-it)
 
 ---
+
+### An engine can fail by succeeding — §9.13, and the ratchets that cannot see it — DR-0029
+
+Worth zero conformance runs and built anyway, which is the whole point of it.
+
+The entry below found a program that stopped at 38,174 of 200,000 turns with `Outcome::Value`, exit
+status zero and nothing printed. That failure mode has a name now — a **silent stop** — and this is
+the instrument for it. The route in is short: §9.5 step 3 tells a host to discard a job's
+completion, so a refusal thrown inside a job has exactly one way out, and it is the promise it
+rejects. ViperJS was not keeping the slot that says whether anything claimed one.
+
+**`[[PromiseIsHandled]]` had been left out on a correct argument that expired.** `heap::promise`
+said the slot would be "written and never read", because its only consumer is §27.2.1.7 step 7's
+`HostPromiseRejectionTracker` and there was no such hook. True, and it ended "it comes back with the
+tracker" — so the note knew what would bring it back and simply did not know what would want it.
+It was not a program's own bugs. It was the engine's.
+
+**Three things that were easy to get wrong and one that was not obvious at all:**
+
+- **Ask the slot, not the reject list.** `p.then(f)` registers a fulfil reaction *and* a
+  pass-through reject one, so a promise with a handler and a promise without one both have a
+  non-empty `[[PromiseRejectReactions]]`. A tracker keyed on the list reports every link of every
+  chain; one keyed on the slot reports the chain's *end*, which is the link that actually lost the
+  value. `Promise.reject('x').then(f)` must report once, not twice and not never.
+- **§9.13's `"handle"` operation is not optional.** Without it `var p = Promise.reject(1);
+  p.catch(f);` is reported — two statements of ordinary JavaScript — and the list is noise.
+- **Record, do not report.** The question "did anything ask for this" has no answer until the queue
+  has drained, so the host reads a list afterwards rather than being told at the moment of
+  rejection.
+- **The list is a GC root, and this is the one that bites.** A rejection nothing has asked for is by
+  definition a promise nothing *names* — that is what the list means — so without adding it to
+  `Vm::roots` the promise is swept between the rejection and the host reading it, and the host is
+  handed an id addressing whatever took the slot. The same class of fault `vm::tests::collecting`'s
+  header warns about, arriving through a field added for the opposite reason.
+
+**A warning and never an exit status.** `viper` prints each to standard error and still exits zero.
+An unhandled rejection is ordinary in a program that fires and forgets, and an engine that failed on
+those would refuse scripts every other engine runs.
+
+**The reusable part.** All three ratchets are blind to this. Mutation coverage asks whether a branch is
+tested; the expectations file asks whether a test that passed still passes; the no-panic invariant
+asks whether an input crashes. **A run that returns the right kind of answer having done a fraction
+of the work satisfies every one of them.** So the question to ask of any new refusal path is: *if
+this fires inside a job, what says so?*
 
 ### The job queue never collected, and it took a timeout to find it — +46
 

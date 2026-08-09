@@ -248,10 +248,22 @@ back.
   alone the directory passes **814 of its 1,226 runs**, and 890 of them stabilised the moment the
   worker count was halved. So most of the bucket needed a flag, not a milestone — and the reason
   string in the expectations file, which said `the heap has grown past…`, was simply the wrong
-  failure. **Read a reason as a claim somebody made, not as a measurement.** What is left of the
-  bucket is genuinely slow and M8 is genuinely its answer, but it is hundreds of runs rather than
-  878. The experiment's two real findings — a throwaway heap String per computed property key, and
-  a timed-out run landing in no column — are both **fixed**; do not go looking for them again.
+  failure. **Read a reason as a claim somebody made, not as a measurement.** The experiment's two
+  real findings — a throwaway heap String per computed property key, and a timed-out run landing in
+  no column — are both **fixed**; do not go looking for them again.
+
+  **…and the sentence that used to end this paragraph was wrong too, in the same direction.** It
+  said "what is left of the bucket is genuinely slow and M8 is genuinely its answer, but it is
+  hundreds of runs rather than 878". Measured 2026-08-09, the directory alone: **1,206 of 1,226 runs
+  pass**, 14 are the `\p{RGI_Emoji}` skips, and the expectations file lists **six**. All six are
+  `Script=Unknown` and `Script_Extensions=Unknown` — a UCD default the table generator never
+  emitted, because `Scripts.txt` states `Unknown` only in an `@missing` line and the set is the
+  *complement* of every other script. That is a data gap of six runs, not a performance bucket, and
+  **`property-escapes` is no longer on M8's list at all**. The whole directory is 143 s of wall
+  clock, which is a real cost and a separate question from whether anything fails.
+
+  Three corrections to one paragraph, each in the direction of "the bucket is smaller than the note
+  says". Re-measure this row before quoting any part of it.
 - **`Temporal` is a Stage 3 proposal with a surface larger than `Date`, `Intl` and `RegExp`
   combined.** Building it would raise the number while making the engine no more of a JavaScript
   engine, and it will sit at the top of that list for as long as this file is worth reading.
