@@ -491,6 +491,25 @@ pub(super) enum Body<'a> {
     Statements(&'a [Stmt]),
     /// An arrow's `a => b`, whose value is what the call answers.
     Expression(&'a Expr),
+    /// A class field's initialiser, whose value is what the call answers and which **names** what it
+    /// evaluates to — §15.7.10's `[[ClassFieldInitializerName]]`.
+    ///
+    /// Separate from [`Body::Expression`] rather than folded into it with an `Option`, because the
+    /// two differ in the one thing that matters: `var f = x => y` names the *arrow* `f` and must not
+    /// name `y`, where `class C { x = () => {} }` names the arrow `x` and never the wrapper. Passing
+    /// the naming through `Naming` would reach the wrong one of the two.
+    ///
+    /// Only for a **written** name. A computed key is not known until the class runs, so §15.7.10
+    /// step 2.g carries it on the function instead — see [`super::class::Compiler::instance_fields`],
+    /// where the evaluated key is on the stack and `NameFunction` reads it.
+    FieldInitializer {
+        /// What the field was assigned.
+        expression: &'a Expr,
+        /// The name to give an anonymous definition, with a private field's `#` kept — or `None`
+        /// for a **computed** key, which is not known until the class runs and is named by the
+        /// prologue instead.
+        named: Option<&'a str>,
+    },
     /// A constructor's body, preceded by the instance fields §15.7.14 initialises before it.
     ///
     /// The fields are carried here rather than compiled by the caller because they belong *inside*
@@ -780,8 +799,14 @@ fn compile_body_once(
     };
     // §15.7.9's `Contains` stops at a function boundary and not at an arrow, so
     // `x = () => eval('arguments')` is refused where `x = function () { eval('arguments') }` is not.
+    //
+    // Set **here**, from the shape of the body, and not by the caller afterwards — which is what it
+    // used to be and which is too late by exactly one thing: an arrow *inside* the initialiser
+    // inherits this from the enclosing chunk while that arrow is being compiled, so a flag written
+    // after `compile_nested` returns has already been read as `false`. `x = () => eval('arguments')`
+    // was accepted for that reason, in a static field as much as in an instance one.
     compiler.chunk.field_initializer = match lexical {
-        Lexical::No => false,
+        Lexical::No => matches!(body, Body::FieldInitializer { .. }),
         Lexical::Yes => nesting.field_initializer,
     };
     compiler.chunk.simple_parameters = parameters.is_simple();
@@ -1031,6 +1056,13 @@ fn compile_body_once(
         // is no `undefined` to fall through to and no hoisting to do: an expression declares
         // nothing.
         Body::Expression(expression) => compiler.expression(expression)?,
+        // §10.2.1.3's `EvaluateBody` for a ClassFieldInitializer: the value is a `NamedEvaluation`
+        // when the initialiser is an anonymous definition, and an ordinary evaluation otherwise —
+        // which is exactly what `named_evaluation` decides.
+        Body::FieldInitializer { expression, named } => match named {
+            Some(name) => compiler.named_evaluation(name, expression)?,
+            None => compiler.expression(expression)?,
+        },
         // §15.7.14 — the fields first, then the body. `InitializeInstanceElements` runs before the
         // constructor's first statement, so a field is already there when the body looks.
         Body::Constructor {

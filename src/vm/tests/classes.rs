@@ -865,3 +865,175 @@ fn a_field_that_lands_on_a_sealed_object_throws_rather_than_vanishing() {
         "2,3"
     );
 }
+
+#[test]
+fn an_instance_field_initialiser_is_a_function_of_its_own_and_not_part_of_the_constructor() {
+    // §15.7.10 makes each initialiser a function whose environment is the **class**'s, called once
+    // per construction with the new object as its receiver. ViperJS compiled the expression inline
+    // in the constructor's prologue, which is the same thing only if nothing can tell them apart.
+    //
+    // §9.4.4 — a field initialiser is entered by a *call*, so it has no `new.target`. Inline it read
+    // the constructor's, and `class C { x = new.target }` answered with `C`.
+    assert_eq!(
+        run("class C { x = new.target } String(new C().x)"),
+        "undefined"
+    );
+    // The constructor's parameters are not in scope. Inline code closed over the constructor's
+    // environment and could read an argument no clause puts there.
+    assert_eq!(
+        run("class C { x = typeof p; constructor(p) {} } new C(1).x"),
+        "undefined"
+    );
+    assert_eq!(
+        run("var p = 'outer'; class C { x = p; constructor(p) {} } new C(42).x"),
+        "outer"
+    );
+    // §15.7.1 forbids `arguments`, and a direct `eval` is the spelling the parser cannot see — so
+    // the fact has to travel on a compiled body, and inline there was none to carry it.
+    assert_eq!(
+        run("var kind = 'none'; \
+             try { eval(\"class C { x = eval('arguments') }; new C()\") } \
+             catch (e) { kind = e.constructor.name } kind"),
+        "SyntaxError"
+    );
+    // …including through an arrow, because §15.7.9's `Contains` stops at a function boundary and
+    // not at an arrow.
+    assert_eq!(
+        run("var kind = 'none'; \
+             try { eval(\"class C { x = () => eval('arguments') }; new C().x()\") } \
+             catch (e) { kind = e.constructor.name } kind"),
+        "SyntaxError"
+    );
+    // §11.2.2 — every part of a class body is strict, said outright rather than inherited from
+    // whatever encloses the class. A sloppy script left the initialiser sloppy, and a direct `eval`
+    // there took the sloppy `var` path into a refusal the engine has not built.
+    assert_eq!(
+        run("class C { x = eval('var v = 1; 2') } new C().x + ',' + (typeof v)"),
+        "2,undefined"
+    );
+    assert_eq!(
+        run("class S { static y = eval('var s = 1; 3') } S.y + ',' + (typeof s)"),
+        "3,undefined"
+    );
+}
+
+#[test]
+fn moving_the_initialiser_out_keeps_everything_that_already_worked() {
+    // The rows that would break if the initialiser were merely *lifted* rather than given the
+    // scope §15.7.10 gives it.
+    //
+    // `this` is the object being built, bound by the call rather than inherited.
+    assert_eq!(
+        run("class C { x = this } var c = new C(); c.x === c"),
+        "true"
+    );
+    // The home object is the **prototype**, so `super.m()` reaches the parent's prototype and not
+    // the parent class.
+    assert_eq!(
+        run("class B { m() { return 'B' } } class D extends B { x = super.m() } new D().x"),
+        "B"
+    );
+    // Source order, and before the constructor's body.
+    assert_eq!(
+        run(
+            "var log = ''; class C { a = (log += 'a'); b = (log += 'b'); constructor() { log += 'c' } } \
+             new C(); log"
+        ),
+        "abc"
+    );
+    // A field with no initialiser is `undefined` and still an own property, which is a different
+    // thing from being absent.
+    assert_eq!(
+        run("class C { x } var c = new C(); c.hasOwnProperty('x') + ',' + String(c.x)"),
+        "true,undefined"
+    );
+    // §8.6.3's naming, all three ways a field's name can be spelled — and a private one keeps `#`.
+    assert_eq!(
+        run(
+            "class C { y = () => {}; [String('c')] = function () {}; #p = () => {}; \
+             reach() { return this.#p } } \
+             var c = new C(); [c.y.name, c.c.name, c.reach().name].join(',')"
+        ),
+        "y,c,#p"
+    );
+    // One function per field, made once where the class is defined and shared by every instance —
+    // which is what `[[Fields]]` holds. Two instances get *different* arrows because the initialiser
+    // runs twice, and that is the row that says it is called rather than copied.
+    assert_eq!(
+        run("class C { f = () => {} } new C().f === new C().f"),
+        "false"
+    );
+    // The class's own scope is reachable, including a private name minted for the definition.
+    assert_eq!(run("class C { #n = 7; m = this.#n } new C().m"), "7");
+    // A computed key is evaluated once, at class-definition time, and in source order with the
+    // methods — which moving the initialiser must not disturb.
+    assert_eq!(
+        run("var log = ''; function k(n) { log += n; return n } \
+             class C { [k('a')] = 1; [k('b')] = 2 } log + ',' + new C().a + new C().b"),
+        "ab,12"
+    );
+    // …and an initialiser that throws reaches the caller of `new`, rather than being swallowed by
+    // the extra call frame.
+    assert_eq!(
+        run("class C { x = (function () { throw 'from field' })() } \
+             var said = 'none'; try { new C() } catch (e) { said = e } said"),
+        "from field"
+    );
+}
+
+#[test]
+fn a_field_initialiser_names_what_it_evaluates_to_however_the_field_is_spelled() {
+    // §8.6.3 and §15.7.10 step 2.g. Five spellings, and before this slice two of them were silently
+    // unnamed: a `static` field's initialiser reached no `named_evaluation` at all, because the
+    // static side has always been a wrapper function and the naming was never put inside it.
+    let source = "class A { static x = () => {}; static [String('c')] = function () {}; \
+                  y = () => {}; [String('d')] = function () {}; \
+                  static #q = () => {}; static getQ() { return A.#q } } ";
+    assert_eq!(run(&format!("{source} A.x.name")), "x");
+    assert_eq!(run(&format!("{source} A.c.name")), "c");
+    assert_eq!(run(&format!("{source} new A().y.name")), "y");
+    assert_eq!(run(&format!("{source} new A().d.name")), "d");
+    // A private field keeps its `#`, which is why the written name is baked into the body rather
+    // than read off the stack: the key there is a Private Name and renders as `[q]`.
+    assert_eq!(run(&format!("{source} A.getQ().name")), "#q");
+    // …and a definition that is not anonymous keeps the name it was given.
+    assert_eq!(
+        run("class C { x = function written() {} } new C().x.name"),
+        "written"
+    );
+    assert_eq!(
+        run("class C { static x = function written() {} } C.x.name"),
+        "written"
+    );
+}
+
+#[test]
+fn an_arrow_inside_a_field_initialiser_inherits_the_refusal_of_arguments() {
+    // §15.7.9's `Contains` stops at a function boundary and **not** at an arrow, so the fact that a
+    // body is a field initialiser has to reach an arrow written inside it.
+    //
+    // It is set from the shape of the body now rather than by the caller afterwards, and the
+    // difference is exactly one thing: an arrow inside reads the flag off the enclosing chunk while
+    // that arrow is being compiled, so a flag written after the body was compiled had already been
+    // read as `false`. Both the instance side and the static side accepted these.
+    for source in [
+        "class C { x = () => eval('arguments') }; new C().x()",
+        "class C { x = () => () => eval('arguments') }; new C().x()()",
+        "class C { static x = () => eval('arguments') }; C.x()",
+        "class C { #x = () => eval('arguments'); reach() { return this.#x } }; new C().reach()()",
+    ] {
+        assert_eq!(
+            run(&format!(
+                "var kind = 'none'; try {{ eval({source:?}) }} catch (e) {{ kind = e.constructor.name }} kind"
+            )),
+            "SyntaxError",
+            "{source}"
+        );
+    }
+    // …and an ordinary `function` written inside is **exempt**, because `Contains` does stop there.
+    // The row that stops the loop above passing by refusing `arguments` everywhere.
+    assert_eq!(
+        run("class C { x = function () { return typeof arguments } } new C().x()"),
+        "object"
+    );
+}

@@ -100,8 +100,14 @@ impl Compiler<'_> {
         // branch no test could pin: with the condition inverted a missing slot does not fail loudly,
         // it falls back to a *global* of the same name and keeps working. One slot per field costs
         // nothing measurable and there is nothing left to get wrong.
+        // …and one for each field's **initialiser function**, on the same terms and for the same
+        // reason. Reserved unconditionally rather than only where an initialiser was written: the
+        // fallback the paragraph above describes is what happens when one is missing, and it cost a
+        // measured 844 conformance runs to meet it — every regression a `(strict)` one, because a
+        // sloppy store to an undeclared global succeeds silently and a strict one throws.
         for at in 0..fields.len() {
             self.declare_shadowing(&field_name_slot(at));
+            self.declare_shadowing(&field_initializer_slot(at));
         }
 
         // §9.2 — a `PrivateEnvironment` holding one Private Name per `#x` the body binds, created
@@ -164,22 +170,24 @@ impl Compiler<'_> {
             if let ClassElement::Field(field) = element
                 && !field.is_static
             {
-                // A private field has no `PropertyName` to evaluate — §15.7's `ClassElementName` is
-                // one *or* a `PrivateIdentifier`, not both — and its Private Name was minted above.
-                // So there is nothing to do here, and its `%class field name` slot stays unused.
-                if matches!(field.key, crate::ast::PropertyKey::Private(_)) {
-                    continue;
-                }
-                // Its name, now, where the specification evaluates it — every field's, not only a
-                // computed one's, for the reason the slots are reserved unconditionally. A plain
-                // name is a constant either way, so storing it changes nothing but removes a branch.
                 let at = fields
                     .iter()
                     .position(|other| std::ptr::eq(*other, field))
                     .unwrap_or_default();
-                self.property_key(&field.key)?;
-                self.store_name(&field_name_slot(at))?;
-                self.chunk.emit(Instruction::Pop);
+                // A private field has no `PropertyName` to evaluate — §15.7's `ClassElementName` is
+                // one *or* a `PrivateIdentifier`, not both — and its Private Name was minted above.
+                // So its `%class field name` slot stays unused; its **initialiser** is made here all
+                // the same, which is the line this `continue` used to skip.
+                if !matches!(field.key, crate::ast::PropertyKey::Private(_)) {
+                    // Its name, now, where the specification evaluates it — every field's, not only
+                    // a computed one's, for the reason the slots are reserved unconditionally. A
+                    // plain name is a constant either way, so storing it changes nothing but removes
+                    // a branch.
+                    self.property_key(&field.key)?;
+                    self.store_name(&field_name_slot(at))?;
+                    self.chunk.emit(Instruction::Pop);
+                }
+                self.instance_field_initializer(field, at, span)?;
                 continue;
             }
             if let ClassElement::Field(field) = element
@@ -265,6 +273,94 @@ impl Compiler<'_> {
         Ok(())
     }
 
+    /// §15.7.10's `ClassFieldDefinitionEvaluation` for an **instance** field — the initialiser as a
+    /// function of its own, made where the class is defined.
+    ///
+    /// # Why this is not compiled into the constructor
+    ///
+    /// It used to be, and that was wrong in three ways a program can see. The clause makes each
+    /// initialiser a function whose `[[Environment]]` is the **class**'s, called once per
+    /// construction with the new object as its receiver; ViperJS emitted the expression inline in
+    /// the constructor's prologue, which is the same thing only if nothing can tell the two apart.
+    /// Three things can:
+    ///
+    /// - **`new.target`.** A field initialiser is entered by a *call*, so §9.4.4 gives it
+    ///   `undefined`. Inline, it read the constructor's — so `class C { x = new.target }` answered
+    ///   with `C` rather than `undefined`.
+    /// - **The constructor's parameters.** Inline code closes over the constructor's environment,
+    ///   so `class C { x = p; constructor(p) {} }` read the argument. A function made here closes
+    ///   over the class scope, where no parameter exists.
+    /// - **`arguments` in a direct `eval`.** §15.7.1 forbids the word, and the parser refuses every
+    ///   spelling it can see; a direct `eval` is the one it cannot, and the fact travels on the
+    ///   compiled body. Inline there was no body to carry it and the running frame was the
+    ///   constructor's, which may legitimately have `arguments`.
+    ///
+    /// Made **once**, where the class is defined, and shared by every instance — which is what
+    /// `[[Fields]]` holds in the specification. The home object is the class **prototype**, so
+    /// `super.x` in an initialiser reads the parent's prototype and not the parent class.
+    ///
+    /// A field with no initialiser makes no function: §15.7.14 gives it `undefined`, and there is
+    /// nothing to call.
+    fn instance_field_initializer(
+        &mut self,
+        field: &crate::ast::ClassField,
+        at: usize,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        let Some(expression) = &field.initializer else {
+            return Ok(());
+        };
+        // The prototype, as the home object §15.7.14's `MakeMethod` gives an instance element. The
+        // constructor is on the stack throughout the walk, which is the only place it exists yet.
+        self.chunk.emit(Instruction::Duplicate);
+        self.chunk.emit(Instruction::ClassPrototype);
+        let parameters = FormalParameters {
+            items: Box::new([]),
+            rest: None,
+            span,
+        };
+        // `Body::Expression` is evaluated and returned, which is what an initialiser is;
+        // `Lexical::No` gives the body a `this` of its own for the call to bind, and a `new.target`
+        // of its own for the call to leave `undefined`.
+        //
+        // The wrapper stays **anonymous**: §8.6.3 names whatever the initialiser evaluates to, not
+        // the function this engine wrapped it in, and no program can reach the wrapper to ask. So
+        // the naming goes *inside* — `Body::FieldInitializer` for a written name, which keeps a
+        // private field's `#`, and the prologue's `NameFunction` for a computed key, which is not
+        // known until the class runs.
+        let written = field_naming(field);
+        let body = self.compile_nested(
+            &parameters,
+            Body::FieldInitializer {
+                expression,
+                named: written.as_deref(),
+            },
+            Naming::default(),
+            // §11.2.2 — **all** parts of a ClassBody are strict code, and an initialiser has no
+            // directive of its own to say so.
+            //
+            // Said outright rather than inherited, which is what every one of these three used to
+            // be and which is wrong for a class written in a **sloppy** script: the enclosing
+            // compiler is sloppy there, so a direct `eval` in an initialiser took the sloppy `var`
+            // path and met a refusal the engine has not built. Reachable today as
+            // `class C { static x = eval("var v = 1") }`, and it is what moving an instance field
+            // out of the constructor uncovered — the constructor says `Strict::Yes` outright, so
+            // inline code was strict by borrowing it.
+            Strict::Yes,
+            Lexical::No,
+            Asynchrony::No,
+            span,
+        )?;
+        self.emit_function(body, span)?;
+        self.chunk.emit(Instruction::MakeMethod(1));
+        self.store_name(&field_initializer_slot(at))?;
+        // The function, then the prototype: the slot holds the one and the walk expects the
+        // constructor back on top.
+        self.chunk.emit(Instruction::Pop);
+        self.chunk.emit(Instruction::Pop);
+        Ok(())
+    }
+
     /// §15.7.14's `ClassStaticBlockDefinitionEvaluation` — a `static { … }` body, run once.
     ///
     /// The same shape as a static field's initialiser and for the same reason: it is compiled as a
@@ -287,9 +383,9 @@ impl Compiler<'_> {
             &parameters,
             Body::Statements(&block.body),
             Naming::default(),
-            // §15.7.1 — every part of a class definition is strict code, and a static block has no
-            // directive of its own to say so. Inherited, and the class scope is where it comes from.
-            Strict::Inherited,
+            // §11.2.2 — said outright; see [`Compiler::instance_field_initializer`] for what
+            // inheriting it cost.
+            Strict::Yes,
             Lexical::No,
             Asynchrony::No,
             span,
@@ -331,17 +427,25 @@ impl Compiler<'_> {
                     rest: None,
                     span,
                 };
-                // `Body::Expression` is evaluated and returned, which is what an initialiser is;
-                // `Lexical::No` gives the body a `this` of its own for the call to bind.
+                // `Body::FieldInitializer` is evaluated and returned, which is what an initialiser
+                // is; `Lexical::No` gives the body a `this` of its own for the call to bind.
                 //
                 // The naming goes to the *expression* inside, not to this wrapper: the wrapper is
-                // ViperJS's own and no program can see it, while §8.6.3 names whatever the initialiser
-                // evaluates to. So the wrapper stays anonymous and `named_evaluation` runs inside it.
-                let mut body = self.compile_nested(
+                // ViperJS's own and no program can see it, while §8.6.3 names whatever the
+                // initialiser evaluates to. That is what the variant carries, and it used to carry
+                // nothing — `class C { static x = () => {} }` left the arrow **unnamed**, where the
+                // instance side named it because the instance side was compiled inline and reached
+                // `named_evaluation` on the way past.
+                let written = field_naming(field);
+                let body = self.compile_nested(
                     &parameters,
-                    Body::Expression(expression),
+                    Body::FieldInitializer {
+                        expression,
+                        named: written.as_deref(),
+                    },
                     Naming::default(),
-                    Strict::Inherited,
+                    // §11.2.2 — said outright; see [`Compiler::instance_field_initializer`].
+                    Strict::Yes,
                     Lexical::No,
                     Asynchrony::No,
                     span,
@@ -358,7 +462,6 @@ impl Compiler<'_> {
                 // legitimately read `arguments`. Closing the other half means giving each instance
                 // initialiser its own body; the twenty runs it is worth do not pay for that on their
                 // own, and it wants measuring against what else that shape would fix.
-                body.field_initializer = true;
                 self.emit_function(body, span)?;
                 // A static field's initialiser is a method of the constructor too, for the same
                 // reason and with the constructor in the same place.
@@ -377,6 +480,20 @@ impl Compiler<'_> {
             _ => self.chunk.emit(Instruction::LoadVariable(0, slot)),
         }
         self.chunk.emit(Instruction::Bury(1));
+        // §15.7.10 step 2.g's `[[ClassFieldInitializerName]]` for a **computed** key, which is not
+        // known until the class runs — so it cannot be baked into the body the way a written name
+        // is. `Bury` has just left the stack as key-then-value, which is the shape `NameFunction`
+        // reads, and this is the one point in a static field's sequence where that is true.
+        //
+        // A written name is named inside the body; a private one has no computed spelling. Both
+        // leave this alone, which is what the guard says.
+        if let Some(expression) = &field.initializer
+            && field_naming(field).is_none()
+            && super::expression::is_anonymous_definition(expression)
+        {
+            self.chunk
+                .emit(Instruction::NameFunction(crate::compile::NamePrefix::Plain));
+        }
         self.chunk.emit(match field.key {
             crate::ast::PropertyKey::Private(_) => Instruction::DefinePrivateField,
             _ => Instruction::DefineField,
@@ -504,22 +621,32 @@ impl Compiler<'_> {
                 _ => self.load_name(&field_name_slot(at))?,
             }
             match &field.initializer {
-                // §8.6.3 — `FieldDefinition : ClassElementName Initializer` is a named position, so
-                // `class C { x = () => {} }` calls the arrow `x`. A private field's name keeps its `#`.
-                Some(expression) => match field_naming(field) {
-                    Some(name) => self.named_evaluation(&name, expression)?,
-                    // §15.7.10 step 2.g carries the evaluated `ClassElementName` to the initialiser
-                    // as `[[ClassFieldInitializerName]]`, so a computed key names an anonymous
-                    // definition here exactly as a written one does. The key is already on the stack
-                    // — it was loaded a few lines up — which is the shape `NameFunction` reads.
-                    None => {
-                        self.expression(expression)?;
-                        if super::expression::is_anonymous_definition(expression) {
-                            self.chunk
-                                .emit(Instruction::NameFunction(crate::compile::NamePrefix::Plain));
-                        }
+                // §15.7.10's `DefineField` step 3.a — `Call(initializer, receiver)`. The function
+                // was made where the class was defined (see
+                // [`Compiler::instance_field_initializer`]) and is called once per construction with
+                // the object being built as its receiver, which is what binds `this` inside it.
+                Some(expression) => {
+                    self.load_this();
+                    self.load_name(&field_initializer_slot(at))?;
+                    self.chunk.emit(Instruction::CallMethod(0));
+                    // §8.6.3 — `FieldDefinition : ClassElementName Initializer` is a named position,
+                    // so `class C { x = () => {} }` calls the arrow `x`, and §15.7.10 step 2.g
+                    // carries a *computed* key to the initialiser as `[[ClassFieldInitializerName]]`
+                    // so that one names an anonymous definition exactly as a written name does.
+                    //
+                    // A **written** name is baked into the initialiser's body, where the clause puts
+                    // it and where a private field's `#` survives — see
+                    // [`Compiler::instance_field_initializer`]. What is left for here is the
+                    // computed key, which is not known until the class runs and is on the stack
+                    // already: it was loaded a few lines up, which is the shape `NameFunction`
+                    // reads.
+                    if field_naming(field).is_none()
+                        && super::expression::is_anonymous_definition(expression)
+                    {
+                        self.chunk
+                            .emit(Instruction::NameFunction(crate::compile::NamePrefix::Plain));
                     }
-                },
+                }
                 // §15.7.14 — a field written without one is `undefined`, which is not the same as
                 // the field being absent: `x;` makes an own property and `for...in` finds it.
                 None => self.constant(crate::value::Value::Undefined)?,
@@ -847,6 +974,19 @@ pub(super) fn private_name_slot(name: &str) -> String {
 /// mean, without either having to be told.
 fn field_name_slot(at: usize) -> String {
     format!("%class field name {at}")
+}
+
+/// The name of the compiler temporary holding the `at`th instance field's **initialiser function**.
+///
+/// The same trick as [`field_name_slot`] and for the same reason: it is filled by the class
+/// definition and read from inside the nested compiler that builds the constructor, so the name has
+/// to be derivable from the position by both.
+///
+/// §15.7.10 makes each initialiser a function of its own, made **once** where the class is defined
+/// and called once per construction — so this slot holds one function object however many instances
+/// are built, which is what `[[Fields]]` holds in the specification.
+fn field_initializer_slot(at: usize) -> String {
+    format!("%class field init {at}")
 }
 
 /// One `static` element of a class body, in the order it was written.
