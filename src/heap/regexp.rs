@@ -19,8 +19,19 @@ use crate::regexp::{Flags, Pattern};
 /// §22.2.3's `[[OriginalSource]]`, `[[OriginalFlags]]` and `[[RegExpMatcher]]`.
 #[derive(Debug, Clone)]
 pub struct RegExp {
-    /// The pattern, parsed. Boxed with the rest because a `Pattern` owns a tree.
-    pattern: Pattern,
+    /// The pattern, parsed and **shared**.
+    ///
+    /// §22.2.3's `[[RegExpMatcher]]` is built once when the object is made and never changes, so
+    /// nothing needs a copy of it — and a copy is expensive in exactly the way a tree is. Every
+    /// match operation used to `clone()` this whole structure, which made the cost of *one* call
+    /// proportional to the size of the pattern: `he.decode`'s two-thousand-branch alternation cost
+    /// 138 µs to decide that an eight-character string held none of them, and the alternation was
+    /// never even entered. See `lab/NOTES.md`'s `alternation-width`.
+    ///
+    /// An `Rc` rather than a borrow because of what the call site is doing: it reads the pattern out
+    /// of the heap and then hands the heap to the matcher's caller, so a reference would hold the
+    /// heap borrowed across the match. A refcount bump costs nothing and releases the borrow.
+    pattern: std::rc::Rc<Pattern>,
     /// The source as `source` must spell it — §22.2.6.13's escaped form.
     escaped: Vec<u16>,
     /// The flags as written, which `flags` re-spells in its own order.
@@ -37,7 +48,7 @@ impl RegExp {
     #[must_use]
     pub fn new(pattern: Pattern, source: Vec<u16>, escaped: Vec<u16>, flags: Flags) -> Self {
         Self {
-            pattern,
+            pattern: std::rc::Rc::new(pattern),
             escaped,
             flags,
             source,
@@ -50,10 +61,20 @@ impl RegExp {
         &self.source
     }
 
-    /// The parsed pattern, for the matcher.
+    /// The parsed pattern, for a caller that can hold the heap borrowed while it reads.
     #[must_use]
     pub fn pattern(&self) -> &Pattern {
         &self.pattern
+    }
+
+    /// The same, as a handle that outlives the borrow.
+    ///
+    /// What a match operation wants: it has to let go of the heap before running, and this is how
+    /// it takes the pattern with it for the price of a refcount. Cloning the `Pattern` is what this
+    /// exists instead of — see the field.
+    #[must_use]
+    pub fn shared(&self) -> std::rc::Rc<Pattern> {
+        std::rc::Rc::clone(&self.pattern)
     }
 
     /// What `RegExp.prototype.source` answers.

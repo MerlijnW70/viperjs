@@ -831,6 +831,45 @@ there, usually as a first-code-point set per alternative and a bitmap test befor
 Semantically it is pure pruning — an alternative whose first-set excludes the current character
 cannot match — so "none may cost a single conformance test" is checkable rather than hoped for.
 
+### The diagnosis above was wrong, and the table was right — 2026-08-09, same day
+
+**Built the prefilter and it changed nothing: 5.20 ns/branch/char before, 5.42 after.** The
+measurement was sound and the reading of it was not, and the benchmark said so if it had been read
+properly — every alternative in it begins with `q`, and they sit behind a literal `&` that the
+subject `zzzzzzzz` never matches. **The disjunction was never entered.** A cost that scales with
+branch count in a pattern whose branches are never reached is not a matching cost at all.
+
+It was `builtins/regexp.rs` doing `found.pattern().clone()` — a **deep copy of the whole parsed
+tree, on every match operation**. That is why cost tracked pattern size rather than the work done,
+why an eight-character subject cost 138 µs, and why `he.decode` of a string with no entities in it
+was expensive. `[[RegExpMatcher]]` never changes after the object is built, so nothing needed a
+copy; the field is an `Rc<Pattern>` now and the call site takes a handle.
+
+| | µs/call at 2,000 branches |
+| --- | --- |
+| before | 86.8 |
+| the `Rc` alone | 2.5 |
+
+`he` end to end: **776 ms → 114 ms** against node's 97, from that one line.
+
+**And the prefilter still earns its place, measured on a benchmark that can see it** — branches with
+distinct first characters, behind a `&` the subject *does* match, so the disjunction is entered and
+every branch attempted:
+
+| branches | with prefilter | without |
+| --- | --- | --- |
+| 500 | 3.00 µs | 4.50 µs |
+| 2,000 | **4.70 µs** | **10.60 µs** |
+
+and `he` goes 114 → 97 ms, which is parity with node. So both land, and the order they were found in
+is the wrong way round: **the cheap structural fix was worth 6.8× and the clever one 1.2×.**
+
+**The transferable part is the benchmark, not the fix.** A ladder that varies one thing is only
+evidence if the thing it varies is on the path being measured; this one varied branch count in a
+pattern whose branches were unreachable, and it produced a beautifully linear table of the cost of
+*cloning* them. **Check that the work you think you are timing actually runs** — the cheapest way
+here would have been to make the subject match and watch the number move.
+
 **Two things it is worth being careful about before building it**, both of which decide how much of
 the table it actually recovers:
 

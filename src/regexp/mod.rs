@@ -40,4 +40,6 @@ mod syntax;
 
 pub use self::matcher::{Capture, Match, Matcher};
 pub use self::parser::parse;
-pub use self::syntax::{Assertion, ClassEscape, ClassItem, Error, Flags, GroupKind, Node, Pattern};
+pub use self::syntax::{
+    Assertion, ClassEscape, ClassItem, Error, First, Flags, GroupKind, Node, Pattern,
+};

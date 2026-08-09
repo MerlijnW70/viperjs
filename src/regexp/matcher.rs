@@ -44,7 +44,9 @@
 //! `a_pattern_that_backtracks_is_not_stopped_by_the_time_budget` pins as a *known* limit rather
 //! than an accident.
 
-use super::syntax::{Assertion, ClassEscape, ClassItem, ClassOperation, GroupKind, Node, Pattern};
+use super::syntax::{
+    Assertion, ClassEscape, ClassItem, ClassOperation, First, GroupKind, Node, Pattern, fold,
+};
 
 /// How much work one match attempt may cost before it is abandoned.
 ///
@@ -249,8 +251,22 @@ impl<'a> Matcher<'a> {
             // §22.2.2.3 — the first branch that matches *and whose continuation matches* wins.
             // Each is tried with the same continuation, so a branch that matches but leaves the
             // rest unmatchable does not stop the next branch being tried.
-            Node::Alternation(branches) => {
-                for branch in branches {
+            Node::Alternation { branches, firsts } => {
+                // The character sitting here, read **once** for the whole disjunction rather than
+                // once per branch. `None` is the end of the input, where only a branch that can
+                // match empty has anything to say — and those are exactly the `First::Any` ones.
+                let here = self.read(at).map(|(found, _)| found);
+                for (branch, first) in branches.iter().zip(firsts) {
+                    // §22.2.2.3 unchanged: the branches are still tried in order and the first that
+                    // matches still wins. This only declines to try one that cannot — see [`First`]
+                    // for why that is a filter and never a decision.
+                    let possible = match here {
+                        Some(found) => first.may_start(found),
+                        None => matches!(first, First::Any),
+                    };
+                    if !possible {
+                        continue;
+                    }
                     if let Outcome::Matched(end) = self.node(branch, at, cont) {
                         return Outcome::Matched(end);
                     }
@@ -571,9 +587,14 @@ impl<'a> Matcher<'a> {
                 }
                 self.forget(body);
             }
-            Node::Sequence(terms) | Node::Alternation(terms) => {
+            Node::Sequence(terms) => {
                 for term in terms {
                     self.forget(term);
+                }
+            }
+            Node::Alternation { branches, .. } => {
+                for branch in branches {
+                    self.forget(branch);
                 }
             }
             Node::Repeat { node, .. } => self.forget(node),
@@ -830,15 +851,11 @@ impl<'a> Matcher<'a> {
     }
 }
 
-/// ASCII case folding — §22.2.2.9's `Canonicalize` for what this engine can decide.
-fn fold(code: u32) -> u32 {
-    match code {
-        0x61..=0x7A => code - 32,
-        _ => code,
-    }
-}
-
-/// The other direction, for testing a range against both cases of a character.
+/// The other direction from [`fold`], for testing a range against both cases of a character.
+///
+/// Its partner moved to `syntax.rs` when the alternation prefilter arrived: [`First`] has to fold
+/// exactly as `same` does, and two definitions of one rule is how a prefilter comes to skip a branch
+/// that matches.
 fn unfold(code: u32) -> u32 {
     match code {
         0x41..=0x5A => code + 32,
@@ -886,6 +903,79 @@ mod tests {
         let pattern = parse(source, flags).expect("pattern should parse");
         let units: Vec<u16> = subject.encode_utf16().collect();
         Matcher::new(&pattern, &units).find(start)
+    }
+
+    #[test]
+    fn the_alternation_prefilter_never_skips_a_branch_that_could_match() {
+        // §22.2.2.3's answers, on the shapes where a first-set that was one step too narrow would
+        // quietly stop trying the branch that matches. Every row here matched before the prefilter
+        // existed and must go on matching: a filter is allowed to be too wide and never too narrow.
+        //
+        // A branch that can match **empty** has no first character, so nothing about the character
+        // sitting here excuses not trying it.
+        assert_eq!(matched("(?:|a)b", "b"), Some("b".to_string()));
+        assert_eq!(matched("(?:a*|q)b", "b"), Some("b".to_string()));
+        // Nor does one that opens with something the summary does not read — a class, an escape, a
+        // lookaround, a backreference.
+        assert_eq!(matched("(?:[0-9]|q)", "5"), Some("5".to_string()));
+        assert_eq!(matched("(?:\\d|q)", "5"), Some("5".to_string()));
+        assert_eq!(matched("(?:(?=x)x|q)", "x"), Some("x".to_string()));
+        assert_eq!(matched("(?:^a|q)", "a"), Some("a".to_string()));
+        // Case, in both directions: the set holds each literal *and* its fold, and the input is
+        // tested as itself *and* as its fold, so one summary serves `i` and its absence.
+        assert_eq!(all("(?:A|Z)", "i", "a"), Some("a".to_string()));
+        assert_eq!(all("(?:a|z)", "i", "A"), Some("A".to_string()));
+        assert_eq!(all("(?:A|Z)", "", "a"), None, "and `i` is still required");
+        // A non-ASCII literal lives above the bitmap and is admitted by `wide` alone, including
+        // through the union a nested disjunction takes.
+        assert_eq!(matched("(?:\u{e9}|q)", "\u{e9}"), Some("é".to_string()));
+        assert_eq!(
+            matched("(?:(?:\u{e9}|q)|z)", "\u{e9}"),
+            Some("é".to_string())
+        );
+        // A quantifier that must run at least once is summarised by what it repeats, which is only
+        // sound because `min >= 1` means it cannot match empty.
+        assert_eq!(matched("(?:a+|q)b", "aab"), Some("aab".to_string()));
+        assert_eq!(matched("(?:a+|q)b", "qb"), Some("qb".to_string()));
+        // At the end of input only a branch that can match empty has anything to say, and it still
+        // has to be asked.
+        assert_eq!(matched("a(?:|b)", "a"), Some("a".to_string()));
+    }
+
+    #[test]
+    fn a_skipped_branch_is_a_step_not_spent() {
+        // The prefilter is otherwise **transparent** — every answer is the same and only the time
+        // differs — so no assertion about a match can tell it from its own absence. The budget can:
+        // work is charged one step per node entered, so a branch that is skipped is a step that is
+        // not spent, and a ceiling between the two costs separates them.
+        //
+        // Twenty-six branches, of which the subject's character can start exactly one.
+        let source = "(?:a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z)";
+        let pattern = parse(source, Flags::parse("").expect("flags")).expect("pattern");
+        let units: Vec<u16> = "z".encode_utf16().collect();
+        // Enough for the disjunction, the one branch worth trying, and its character.
+        assert!(
+            Matcher::with_budget(&pattern, &units, 8).find(0).is_some(),
+            "the branches that cannot match are not tried, so the budget is not spent on them"
+        );
+        // …and the control, which is what makes the row above evidence rather than a coincidence
+        // about a small number: the same count of branches, the same budget, and a first character
+        // every one of them *can* start — so none is skipped, all are tried, and the eight steps go.
+        let admitted =
+            "(?:ab|ac|ad|ae|af|ag|ah|ai|aj|ak|al|am|an|ao|ap|aq|ar|as|at|au|av|aw|ax|ay|az)";
+        let pattern = parse(admitted, Flags::parse("").expect("flags")).expect("pattern");
+        let units: Vec<u16> = "az".encode_utf16().collect();
+        assert!(
+            Matcher::with_budget(&pattern, &units, 8).find(0).is_none(),
+            "the prefilter admits every branch here, so the budget is spent reaching the last"
+        );
+        // The same pattern finishes when the budget is large enough, so the row above is about the
+        // *cost* and not about the pattern being unmatchable.
+        assert!(
+            Matcher::with_budget(&pattern, &units, 10_000)
+                .find(0)
+                .is_some()
+        );
     }
 
     /// The matched text, or `None`.

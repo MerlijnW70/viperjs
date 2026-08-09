@@ -246,7 +246,9 @@ pub(super) fn builtin_exec(
     let pattern = heap
         .object(object)
         .and_then(crate::heap::Object::regexp)
-        .map(|found| found.pattern().clone());
+        // The handle and not a copy: §22.2.3's matcher never changes after the object is made, and
+        // cloning the tree made one call cost what the whole pattern cost to build.
+        .map(|found| found.shared());
     let Some(pattern) = pattern else {
         return Err(Abrupt::type_error("this is not a regular expression"));
     };

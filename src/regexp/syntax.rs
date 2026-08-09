@@ -241,6 +241,144 @@ pub enum GroupKind {
     Lookbehind(bool),
 }
 
+/// §22.2.2.9's `Canonicalize`, in the part this engine implements — ASCII case folding.
+///
+/// Here rather than in the matcher because [`First`] has to agree with it exactly: a prefilter that
+/// folded differently from the comparison it is filtering for would skip a branch that matches.
+pub(crate) fn fold(code: u32) -> u32 {
+    match code {
+        0x61..=0x7A => code - 32,
+        _ => code,
+    }
+}
+
+/// What an alternative can *begin* with, as much of it as is worth knowing.
+///
+/// §22.2.2.3 tries every alternative of a disjunction at every position, and the matcher did
+/// exactly that: measured, the cost was `branches × positions × 5.2 ns` with no attention paid to
+/// the character actually sitting there. An alternation of two thousand entity names — which is
+/// what `he.decode` is, and it is under `htmlparser2` and `cheerio` — spent 138 µs deciding that an
+/// eight-character string containing none of them contained none of them. See `lab/NOTES.md`'s
+/// `alternation-width`.
+///
+/// This is a **prefilter and never a decision**: it may say yes to a branch that cannot match, and
+/// the branch is then tried and fails as before. What it may never do is say no to one that can, so
+/// every case that is not obviously analysable is [`First::Any`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum First {
+    /// Try this branch at every position. Either it can match **empty** — so no character it might
+    /// consume says anything about whether it matches — or it opens with something that consumes
+    /// nothing (an assertion, a lookaround), or with something this does not summarise (a class, a
+    /// backreference, a property escape).
+    Any,
+    /// The branch consumes at least one character, and that character is one of these.
+    Only {
+        /// Which of the first 128 code points may begin it. A bitmap, because the alternatives
+        /// worth filtering are overwhelmingly ASCII — entity names, keywords, operators.
+        ascii: u128,
+        /// Whether anything at or above 128 may. Not a set: one bit that admits every non-ASCII
+        /// code point, which keeps surrogate pairs and the two Unicode modes out of this entirely.
+        /// A pattern that is mostly non-ASCII loses the filter and loses nothing else.
+        wide: bool,
+    },
+}
+
+impl First {
+    /// Whether a branch summarised by this may begin with `code`.
+    ///
+    /// Folded on **both** sides: the set holds each literal and its fold, and the input is tested as
+    /// itself and as its fold. That makes one summary right for `i` and for its absence, which is
+    /// what lets [`First::of`] run at parse time without being told the flags — and it is sound in
+    /// the only direction that matters, since a wider set skips fewer branches.
+    #[must_use]
+    pub fn may_start(self, code: u32) -> bool {
+        match self {
+            Self::Any => true,
+            Self::Only { ascii, wide } => {
+                Self::holds(ascii, wide, code) || Self::holds(ascii, wide, fold(code))
+            }
+        }
+    }
+
+    /// One membership test, of a code point that has already been folded or not.
+    fn holds(ascii: u128, wide: bool, code: u32) -> bool {
+        match code < 128 {
+            true => ascii & (1u128 << code) != 0,
+            false => wide,
+        }
+    }
+
+    /// The empty set — the identity [`First::union`] folds from, and never stored: an alternative
+    /// that can begin with nothing at all cannot match, and there is no such alternative.
+    fn none() -> Self {
+        Self::Only {
+            ascii: 0,
+            wide: false,
+        }
+    }
+
+    /// The set holding `code` and its fold, which is what one literal character contributes.
+    fn only(code: u32) -> Self {
+        let mut ascii = 0u128;
+        let mut wide = false;
+        for member in [code, fold(code)] {
+            match member < 128 {
+                true => ascii |= 1u128 << member,
+                false => wide = true,
+            }
+        }
+        Self::Only { ascii, wide }
+    }
+
+    /// Both, for a disjunction whose branches are themselves alternatives.
+    fn union(self, other: Self) -> Self {
+        match (self, other) {
+            (Self::Any, _) | (_, Self::Any) => Self::Any,
+            (
+                Self::Only { ascii, wide },
+                Self::Only {
+                    ascii: other,
+                    wide: other_wide,
+                },
+            ) => Self::Only {
+                ascii: ascii | other,
+                wide: wide || other_wide,
+            },
+        }
+    }
+
+    /// What `node` can begin with.
+    ///
+    /// Descends only the **leftmost** spine — the first term of a sequence, the body of a group,
+    /// the repeated node of a quantifier that must run at least once — so it cannot recurse deeper
+    /// than the tree it is handed. That tree was built by a parser recursing at least as deep with
+    /// fatter frames, so a pattern this could overflow on is one that never parsed (DR-0002).
+    #[must_use]
+    pub fn of(node: &Node) -> Self {
+        match node {
+            Node::Character(code) => Self::only(*code),
+            // The first term decides, and an `Alternative` with no terms matches empty.
+            Node::Sequence(terms) => terms.first().map_or(Self::Any, Self::of),
+            // Already computed, one level down, when that alternation was built.
+            Node::Alternation { firsts, .. } => {
+                firsts.iter().copied().fold(Self::none(), Self::union)
+            }
+            Node::Group { kind, body } => match kind {
+                // A lookaround consumes nothing, so what it can begin with says nothing about what
+                // the alternative consumes — and a *negative* one says the opposite of it.
+                GroupKind::Lookahead(_) | GroupKind::Lookbehind(_) => Self::Any,
+                GroupKind::Capturing(_) | GroupKind::NonCapturing | GroupKind::Named(_, _) => {
+                    Self::of(body)
+                }
+            },
+            // A quantifier that may run zero times matches empty; one that must run does not, and
+            // then the first character it consumes is the first character of what it repeats.
+            Node::Repeat { node, min, .. } if *min >= 1 => Self::of(node),
+            _ => Self::Any,
+        }
+    }
+}
+
 /// A parsed pattern.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Node {
@@ -248,7 +386,15 @@ pub enum Node {
     Empty,
     /// `a|b|c` — tried left to right, and the **first** that matches wins even if a later one
     /// would match more. §22.2.2.3 is explicit about that, and it is why `/a|ab/` matches `a`.
-    Alternation(Vec<Node>),
+    ///
+    /// Built with [`Node::alternation`], which is what computes `firsts`; the two fields have to
+    /// agree, and a constructor is the only place that can be guaranteed.
+    Alternation {
+        /// The alternatives, in the order written.
+        branches: Vec<Node>,
+        /// What each of them can begin with — one entry per branch, same order. See [`First`].
+        firsts: Vec<First>,
+    },
     /// `abc` — every term in order.
     Sequence(Vec<Node>),
     /// One code point, matched as itself.
@@ -305,6 +451,19 @@ pub enum Node {
     },
 }
 
+impl Node {
+    /// §22.2.1's `Disjunction`, with each alternative's [`First`] worked out as it is built.
+    ///
+    /// The only way to make a [`Node::Alternation`], so the summary cannot drift from the branches
+    /// it summarises — the failure that would produce is a branch silently never tried, which is a
+    /// wrong answer rather than a slow one.
+    #[must_use]
+    pub fn alternation(branches: Vec<Node>) -> Self {
+        let firsts = branches.iter().map(First::of).collect();
+        Self::Alternation { branches, firsts }
+    }
+}
+
 /// A pattern and everything about it a matcher needs that is not the tree.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Pattern {
@@ -320,7 +479,167 @@ pub struct Pattern {
 
 #[cfg(test)]
 mod tests {
-    use super::Flags;
+    use super::{First, Flags, GroupKind, Node};
+
+    /// The bitmap holding exactly these code points.
+    fn bits(codes: &[u32]) -> u128 {
+        codes.iter().fold(0u128, |set, code| set | (1u128 << code))
+    }
+
+    #[test]
+    fn a_first_set_holds_each_literal_and_its_fold() {
+        // Asserted as the **exact** set rather than through `may_start`, and that is the point: a
+        // prefilter that is too *wide* answers every question correctly and only runs slower, so
+        // nothing behavioural can tell it from a right one. This is the structural row that can.
+        assert_eq!(
+            First::of(&Node::Character(97)),
+            First::Only {
+                ascii: bits(&[65, 97]),
+                wide: false
+            },
+            "a lower-case letter brings its upper-case fold with it"
+        );
+        // §22.2.2.9's `Canonicalize` here folds *towards* upper case and only over a-z, so an
+        // upper-case literal is alone in its set — and `may_start` is what makes that enough.
+        assert_eq!(
+            First::of(&Node::Character(65)),
+            First::Only {
+                ascii: bits(&[65]),
+                wide: false
+            }
+        );
+        // Exactly 128 is the boundary of the bitmap, and the one code point that tells `<` from
+        // `<=`. A set that tried to index it would be shifting a `u128` by its own width.
+        assert_eq!(
+            First::of(&Node::Character(128)),
+            First::Only {
+                ascii: 0,
+                wide: true
+            }
+        );
+        assert_eq!(
+            First::of(&Node::Character(0x1F600)),
+            First::Only {
+                ascii: 0,
+                wide: true
+            }
+        );
+    }
+
+    #[test]
+    fn only_the_shapes_that_must_consume_get_a_set() {
+        let a = First::Only {
+            ascii: bits(&[65, 97]),
+            wide: false,
+        };
+        // A sequence is decided by its first term, and a group by its body.
+        assert_eq!(
+            First::of(&Node::Sequence(vec![
+                Node::Character(97),
+                Node::Character(98)
+            ])),
+            a
+        );
+        assert_eq!(
+            First::of(&Node::Group {
+                kind: GroupKind::NonCapturing,
+                body: Box::new(Node::Character(97)),
+            }),
+            a
+        );
+        // A lookaround consumes nothing, so what is inside it says nothing about what the
+        // alternative consumes — and a negated one says the opposite.
+        assert_eq!(
+            First::of(&Node::Group {
+                kind: GroupKind::Lookahead(false),
+                body: Box::new(Node::Character(97)),
+            }),
+            First::Any
+        );
+        // A quantifier that must run at least once consumes what it repeats; one that may run zero
+        // times matches empty, and then no character says anything about whether it matches. The
+        // boundary is exactly `min >= 1`.
+        assert_eq!(
+            First::of(&Node::Repeat {
+                node: Box::new(Node::Character(97)),
+                min: 1,
+                max: None,
+                greedy: true,
+            }),
+            a
+        );
+        assert_eq!(
+            First::of(&Node::Repeat {
+                node: Box::new(Node::Character(97)),
+                min: 0,
+                max: None,
+                greedy: true,
+            }),
+            First::Any
+        );
+        // Everything not summarised is `Any`, which is the safe answer and never a wrong one.
+        assert_eq!(First::of(&Node::Empty), First::Any);
+        assert_eq!(First::of(&Node::Any), First::Any);
+        assert_eq!(First::of(&Node::Backreference(1)), First::Any);
+        assert_eq!(First::of(&Node::Sequence(Vec::new())), First::Any);
+    }
+
+    #[test]
+    fn a_nested_alternation_contributes_every_branch() {
+        // The union, and it has to keep `wide` from *either* side: a disjunction one of whose
+        // branches begins with a non-ASCII character can begin with one.
+        let inner = Node::alternation(vec![Node::Character(97), Node::Character(0xE9)]);
+        assert_eq!(
+            First::of(&inner),
+            First::Only {
+                ascii: bits(&[65, 97]),
+                wide: true
+            }
+        );
+        // And a union of ASCII branches stays ASCII — which is a claim about the *identity* the
+        // fold starts from as much as about the branches. An empty set whose `wide` were set would
+        // make every alternation in the engine admit every non-ASCII character, and nothing
+        // behavioural could see it: the filter would still never skip a branch that could match.
+        let ascii_only = Node::alternation(vec![Node::Character(97), Node::Character(98)]);
+        assert_eq!(
+            First::of(&ascii_only),
+            First::Only {
+                ascii: bits(&[65, 97, 66, 98]),
+                wide: false
+            }
+        );
+        // And a branch that cannot be summarised makes the whole union unsummarisable.
+        let mixed = Node::alternation(vec![Node::Character(97), Node::Empty]);
+        assert_eq!(First::of(&mixed), First::Any);
+    }
+
+    #[test]
+    fn may_start_admits_a_character_and_its_fold_in_both_directions() {
+        let a = First::of(&Node::Character(97));
+        assert!(a.may_start(97), "the literal itself");
+        assert!(a.may_start(65), "its fold, for a pattern carrying `i`");
+        assert!(!a.may_start(98));
+        assert!(!a.may_start(0xE9));
+        // An upper-case literal is alone in its set, so admitting the lower case is what the *input*
+        // being folded does — which is why the test is on both sides and not on one.
+        let upper = First::of(&Node::Character(65));
+        assert!(upper.may_start(65));
+        assert!(upper.may_start(97), "folded on the way in");
+        // 128 is above the bitmap, so it is admitted only by `wide` — and a set with no wide member
+        // must refuse it rather than indexing past the end.
+        assert!(!a.may_start(128));
+        let wide = First::of(&Node::Character(200));
+        assert!(wide.may_start(200));
+        assert!(
+            wide.may_start(128),
+            "any non-ASCII, which is all `wide` claims"
+        );
+        assert!(!wide.may_start(97));
+        // And `Any` admits everything, including the end-of-input case the matcher asks about
+        // separately.
+        assert!(First::Any.may_start(0));
+        assert!(First::Any.may_start(0x10FFFF));
+    }
 
     #[test]
     fn flags_are_a_set_and_a_repeat_is_an_error() {

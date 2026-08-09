@@ -241,7 +241,7 @@ impl Reader<'_> {
         }
         Ok(match branches.len() {
             1 => branches.remove(0),
-            _ => Node::Alternation(branches),
+            _ => Node::alternation(branches),
         })
     }
 
@@ -1357,7 +1357,7 @@ mod tests {
         assert_eq!(plain(""), Node::Empty);
         assert_eq!(
             plain("a|"),
-            Node::Alternation(vec![Node::Character(97), Node::Empty])
+            Node::alternation(vec![Node::Character(97), Node::Empty])
         );
     }
 
@@ -1376,7 +1376,7 @@ mod tests {
     fn alternation_binds_looser_than_sequence() {
         assert_eq!(
             plain("ab|c"),
-            Node::Alternation(vec![
+            Node::alternation(vec![
                 Node::Sequence(vec![Node::Character(97), Node::Character(98)]),
                 Node::Character(99),
             ])
