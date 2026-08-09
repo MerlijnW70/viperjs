@@ -43,9 +43,11 @@
 //! and each checks its own work against the engine rather than trusting itself.
 //!
 //! - A syntax error is repaired by **asking the engine whether the repair parses**. The parser
-//!   names what it wanted, but [`Error::Syntax`] carries no span — the sentence says `expected )`
-//!   and not *where* — so appending it is a guess until something confirms it. A scratch engine is
-//!   what confirms it.
+//!   names what it wanted, and since 2026-08-09 [`Error::Syntax`] also carries a `span` saying
+//!   where — this line used to complain that it did not, and that complaint is what got the field
+//!   added. Knowing the position narrows the guess and does not settle it: `expected )` at a known
+//!   offset still does not say whether the paren belongs there or three tokens earlier. A scratch
+//!   engine is what confirms it, which is why this rule is shaped the way it is either way.
 //! - A `TypeError` is repaired by **asking the data**, not by guessing at the code: the rule finds
 //!   the links the script reads *through*, and asks the sandbox which of them no order actually
 //!   has. That is the engine acting as the oracle for its own failure.
@@ -234,7 +236,7 @@ fn attempt(source: &str) -> Result<String, Rejection> {
 /// Which kind of failure this is — the one place the API's four cases become the loop's five.
 fn classify(error: Error) -> Rejection {
     match error {
-        Error::Syntax(said) => Rejection::Unparsed(said),
+        Error::Syntax { message, .. } => Rejection::Unparsed(message),
         Error::Thrown(said) => Rejection::Threw(said),
         Error::Interrupted => Rejection::Ranaway,
         Error::Collected => {
@@ -356,7 +358,7 @@ fn advance_the_counter(source: &str) -> Option<Patch> {
 fn parses(source: &str) -> bool {
     let mut engine = Engine::new();
     engine.set_time_budget(Some(Duration::from_millis(5)));
-    !matches!(engine.eval(source), Err(Error::Syntax(_)))
+    !matches!(engine.eval(source), Err(Error::Syntax { .. }))
 }
 
 /// Put a yes/no question to the data, in JavaScript, in a sandbox of its own.

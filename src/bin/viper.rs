@@ -488,7 +488,7 @@ fn run(engine: &mut Engine, source: &str, show: Show) -> ExitCode {
         // A Script parse that fails on text which *is* a Module deserves to say so. Without this
         // the message is about the token the parser tripped on — "expected an expression, found
         // `export`" — which is true and tells a person nothing about why their file will not run.
-        Err(Error::Syntax(said)) if is_module(source) => {
+        Err(Error::Syntax { message: said, .. }) if is_module(source) => {
             eprintln!("viper: this is Module code — it parses under §11.2's Module goal but not");
             eprintln!("       as a Script, which is what viper runs. A Module's imports need a");
             eprintln!("       resolver, and GOAL.md §3 leaves that to the host: see");
@@ -496,11 +496,55 @@ fn run(engine: &mut Engine, source: &str, show: Show) -> ExitCode {
             eprintln!("       as a Script it said: {said}");
             ExitCode::FAILURE
         }
+        // A syntax error says *where*, which the one-line `describe` cannot: it has no source text
+        // to resolve a span against, and every other kind of failure has no span to resolve.
+        Err(Error::Syntax { message, span }) => {
+            eprintln!("viper: SyntaxError: {message}");
+            for line in point_at(source, span) {
+                eprintln!("{line}");
+            }
+            ExitCode::FAILURE
+        }
         Err(error) => {
             eprintln!("viper: {}", describe(&error));
             ExitCode::FAILURE
         }
     }
+}
+
+/// The line and column a span starts at, and the source line under a caret.
+///
+/// The same shape `examples/parse` prints, because a person reading one has already read the other
+/// and two spellings of one idea is one too many. Written here rather than shared: the example is an
+/// example, and a binary that depended on it would make it load-bearing.
+///
+/// Answers **nothing** when the span points past the last line, which the end of input does — there
+/// is no line to underline, and a caret under empty space is worse than none. The position itself is
+/// always on the first line of the answer, so a span at the end of input still says where.
+fn point_at(source: &str, span: viperjs::span::Span) -> Vec<String> {
+    let at = viperjs::span::line_col(source, span.start);
+    let mut said = vec![format!("  at line {}, column {}", at.line, at.column)];
+    // `lines` and `line_col` agree about CRLF. The filter is the end-of-input case: a column one
+    // past the last character is a legal position and not a place a caret can go.
+    let Some(text) = source
+        .lines()
+        .nth(at.line as usize - 1)
+        .filter(|line| (at.column as usize) <= line.chars().count() + 1)
+    else {
+        return said;
+    };
+    said.push(format!("    {text}"));
+    // Tabs are one character to `line_col` and eight columns to a terminal, so the padding copies
+    // the line's own leading whitespace rather than counting spaces — which is what keeps the caret
+    // under the token in a file indented with tabs.
+    let pad: String = text
+        .chars()
+        .take(at.column as usize - 1)
+        .map(|found| if found == '\t' { '\t' } else { ' ' })
+        .collect();
+    let width = usize::max(span.len() as usize, 1);
+    said.push(format!("    {pad}{}", "^".repeat(width)));
+    said
 }
 
 /// Whether this is Module code, asked only once a Script parse has already failed.
@@ -523,7 +567,9 @@ fn is_module(source: &str) -> bool {
 /// What went wrong, in one line, for a person reading a terminal.
 fn describe(error: &Error) -> String {
     match error {
-        Error::Syntax(said) => format!("SyntaxError: {said}"),
+        // Reached only where there is no source to point into — `describe` is the one-line form,
+        // and the caller that *has* the program prints the position and the caret itself.
+        Error::Syntax { message, .. } => format!("SyntaxError: {message}"),
         Error::Thrown(said) => said.clone(),
         Error::Interrupted => "the run was stopped: it spent its time budget".to_string(),
         Error::Collected => "a value was read after the collector had freed it".to_string(),
@@ -586,6 +632,72 @@ fn prompt(engine: &mut Engine) -> ExitCode {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// `point_at`, asserted on its exact output rather than through the binary.
+    ///
+    /// **Here rather than in `tests/cli.rs` deliberately.** An integration test runs `viper` as a
+    /// subprocess, so mutation coverage cannot see a decision that only the subprocess would
+    /// notice — this function produced six survivors in one run, every one of them arithmetic that
+    /// puts a caret in the wrong place. A caret under the wrong token is worse than no caret,
+    /// because it is believed. The integration test's job is to prove the *binding*: that a syntax
+    /// error reaches this at all.
+    #[test]
+    fn a_caret_lands_under_the_token_the_span_names() {
+        let source = "var a = 1;\nvar b = ;\nvar c = 3;";
+        // The `;` on line 2 is at offset 19. Picking the wrong line, or the right line off by one,
+        // shows a row of the program that parsed perfectly well.
+        let said = point_at(source, viperjs::span::Span::new(19, 20));
+        assert_eq!(
+            said,
+            vec![
+                "  at line 2, column 9".to_string(),
+                "    var b = ;".to_string(),
+                "            ^".to_string(),
+            ]
+        );
+
+        // A span at the very end of input: the column is one *past* the last character, which is a
+        // legal position and the place a missing `}` is missing from. The line is still worth
+        // showing, and the boundary is exactly where an off-by-one stops showing it.
+        let source = "function f() {";
+        let said = point_at(source, viperjs::span::Span::new(14, 14));
+        assert_eq!(said.len(), 3, "the line is shown at the end of input");
+        assert_eq!(said[0], "  at line 1, column 15");
+        assert_eq!(said[2], "                  ^");
+
+        // Past the end of the last line there is nothing to underline, so the position is given
+        // alone rather than with a caret under empty space. An offset beyond the source resolves to
+        // the position *after* the final line terminator — line 2 of a one-line file — and
+        // `str::lines` does not yield a line there, which is what the absent caret is.
+        let said = point_at("ab\n", viperjs::span::Span::new(90, 91));
+        assert_eq!(said, vec!["  at line 2, column 1".to_string()]);
+
+        // Tabs are one character to a column count and eight to a terminal, so the padding copies
+        // the line's own whitespace. Counting spaces instead puts the caret seven columns left of
+        // the token on a file indented with tabs, which is most files that use them.
+        let source = "function f() {\n\tconst x = [1, 2;\n}";
+        let semicolon = source.find(';').expect("the source has one") as u32;
+        let said = point_at(source, viperjs::span::Span::new(semicolon, semicolon + 1));
+        assert_eq!(said[0], "  at line 2, column 17");
+        assert_eq!(said[1], "    \tconst x = [1, 2;");
+        // Written as a repeat rather than as a run of literal spaces, because counting them by eye
+        // is how the first version of this row was wrong — and a caret test that is off by one is
+        // exactly the defect it exists to catch.
+        assert_eq!(
+            said[2],
+            format!("    \t{}^", " ".repeat(15)),
+            "the padding is a tab followed by spaces, not eight spaces"
+        );
+
+        // A span wider than one character underlines all of it, and a zero-width one still gets a
+        // caret rather than nothing.
+        let source = "let value = notdefined;";
+        assert_eq!(
+            point_at(source, viperjs::span::Span::new(12, 22))[2],
+            "                ^^^^^^^^^^"
+        );
+        assert_eq!(point_at("abc", viperjs::span::Span::new(1, 1))[2], "     ^");
+    }
 
     #[test]
     fn base64_encodes_every_group_length_and_pads_each_the_way_the_standard_says() {

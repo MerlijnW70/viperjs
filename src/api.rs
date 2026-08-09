@@ -250,8 +250,26 @@ impl<'a> Host<'a> {
 /// [`Fault`] is a bug in *this engine* — DR-0002 says a script cannot cause one.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Error {
-    /// The source did not parse or did not compile. The text is what a `SyntaxError` would say.
-    Syntax(String),
+    /// The source did not parse or did not compile.
+    ///
+    /// **Carries where, and it did not until 2026-08-09.** The variant was a bare `String`, so
+    /// every host built on this surface — `viper` included — could say `expected an expression,
+    /// found ';'` and not which line, while the parser had known the answer all along and
+    /// `examples/parse` was already printing it with a caret. That is the house rule about errors
+    /// carrying spans stopping at the one boundary where it is most useful, and it made a syntax
+    /// error in a 286 KB bundle nearly unactionable.
+    Syntax {
+        /// What a `SyntaxError` would say.
+        message: String,
+        /// Where it went wrong. For an unexpected token this is the span of *that token* rather
+        /// than of the construct it interrupted, because a caret under the surprise beats one
+        /// under its context — the same choice [`crate::parser::ParseError`] makes.
+        ///
+        /// Turn it into a line and a column with [`crate::span::line_col`], which needs the source
+        /// text: a span is a byte range and this type deliberately does not hold a copy of the
+        /// program to resolve it against.
+        span: crate::span::Span,
+    },
     /// The script threw and nothing caught it, with the value spelled as `String(e)` would spell
     /// it.
     ///
@@ -337,9 +355,18 @@ impl Engine {
     /// [`Error::Syntax`] and [`Error::Engine`] as above. A throw is an `Ok(Outcome::Thrown)` here
     /// rather than an `Err`, which is the whole difference.
     pub fn eval_value(&mut self, source: &str) -> Result<Outcome, Error> {
-        let script = parse_script(source).map_err(|error| Error::Syntax(error.kind.to_string()))?;
-        let chunk = compile_script(&script, &mut self.heap)
-            .map_err(|error| Error::Syntax(error.message()))?;
+        // Both failures already carry a span — see `parser::ParseError` and `compile::CompileError`
+        // — and both are kept. §16's early errors reach here as the *compiler's*, because §22.2.1's
+        // patterns are decided there, so a host that only carried the parser's would lose the
+        // position of every bad regular expression.
+        let script = parse_script(source).map_err(|error| Error::Syntax {
+            message: error.kind.to_string(),
+            span: error.span,
+        })?;
+        let chunk = compile_script(&script, &mut self.heap).map_err(|error| Error::Syntax {
+            message: error.message(),
+            span: error.span,
+        })?;
         self.last = Rc::new(chunk);
         let chunk = Rc::clone(&self.last);
         self.vm.run(&chunk, &mut self.heap).map_err(Error::Engine)
@@ -799,10 +826,44 @@ mod tests {
     }
 
     #[test]
+    fn a_syntax_error_says_where_and_not_only_what() {
+        // The span is the point of the variant, so it is asserted as a *position* rather than as
+        // "some span": a message carrying the wrong offset is worse than one carrying none, because
+        // a host will print a caret under the wrong token and be believed.
+        let mut engine = Engine::new();
+        let source = "var a = 1;\nvar b = ;\nvar c = 3;";
+        let Err(Error::Syntax { message, span }) = engine.eval(source) else {
+            panic!("that does not parse");
+        };
+        let at = crate::span::line_col(source, span.start);
+        assert_eq!((at.line, at.column), (2, 9), "{message}");
+        assert_eq!(&source[span.start as usize..span.end as usize], ";");
+
+        // §16's early errors are the compiler's rather than the parser's — §22.2.1's patterns are
+        // read after the literal's shape — so this is the other construction site, and it would be
+        // the one to lose its span if only the parser's were carried.
+        let source = "var re = /(?<a>x)(?<a>y)/;";
+        let Err(Error::Syntax { span, .. }) = engine.eval(source) else {
+            panic!("a duplicate group name is an early error");
+        };
+        let at = crate::span::line_col(source, span.start);
+        assert_eq!(at.line, 1);
+        assert!(at.column > 1, "the pattern is not at the start of the line");
+
+        // A failure at the very end of input still has a position — the one *past* the last
+        // character, which is a legal column and the place a missing `}` is missing from.
+        let source = "function f() {";
+        let Err(Error::Syntax { span, .. }) = engine.eval(source) else {
+            panic!("an unclosed body does not parse");
+        };
+        assert!(span.start as usize >= source.len() - 1);
+    }
+
+    #[test]
     fn the_three_failures_are_told_apart_because_a_host_answers_them_differently() {
         let mut engine = Engine::new();
         // Source that cannot be read is the host's own bug — it gave the engine nonsense.
-        assert!(matches!(engine.eval("1 +"), Err(Error::Syntax(_))));
+        assert!(matches!(engine.eval("1 +"), Err(Error::Syntax { .. })));
         // A throw is the script's answer and is often the expected one, so it is a different case
         // and carries what a `catch` would have seen.
         assert_eq!(
