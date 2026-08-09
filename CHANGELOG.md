@@ -7,8 +7,33 @@ public API is not stable and may change in any release.
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-08-09
+
+**86.01% of test262** — 80,126 of 93,161 runs, measured three times on an idle machine against the
+suite revision the expectations file names.
+
 ### Added
 
+- **More than one agent — §9.7, `SharedArrayBuffer` and the blocking `Atomics`.** A shared buffer's
+  bytes are a `heap::Block` now: one allocation behind an `Arc` that any number of heaps may hold,
+  with §25.4.1's waiter list under the same lock, so a blocking `Atomics.wait` compares the slot and
+  joins the list in one step rather than in two a notify could land between. §9.7's `[[CanBlock]]` is
+  a property of the *agent* and is the host's to answer — `Engine::set_can_block`, `false` by default
+  for an engine embedded on its own. `Engine::shared_block` and `Engine::new_shared_buffer` are what
+  a host hands the same memory to a second engine with, and `Engine::realm` names the realm to build
+  it in.
+- **§9.13 `HostPromiseRejectionTracker`, and §27.2.6's `[[PromiseIsHandled]]` with it.**
+  `Engine::unhandled_rejections` answers every rejection of the last run that nothing ever asked
+  for, and `viper` prints each to standard error as a warning. Usually that is a program's own bug.
+  It is also the **only** signal the engine gives when a job drain has stopped early: a refusal
+  thrown inside a job is discarded by §9.5 step 3, so the queue empties, the run answers normally and
+  the exit status is zero. See DR-0029.
+- **`Function.prototype.caller` and `arguments` on a sloppy function**, which ECMA-262 does not
+  describe and which the web depends on. Deliberately outside the specification, built on request,
+  and bounded: a strict function, an arrow, a method and a class body are untouched, and DR-0028 says
+  exactly where it stops and how a program gets the standard behaviour back.
+- **A syntax error from `viper` puts a caret under the token it means**, with the line and column.
+- `Engine::set_heap_budget`, `Engine::eval_script`, `Engine::bind_namespace` and `Host::number`.
 - **A second ECMAScript realm.** `Vm::create_realm` builds a whole new set of §9.3 intrinsics on the
   same heap — its own global, its own `Object.prototype`, its own constructors — and a function now
   records the realm it was made in. §10.1.14 `GetFunctionRealm` answers for a bound function and a
@@ -31,6 +56,33 @@ public API is not stable and may change in any release.
   loop honestly gives up on.
 
 ### Fixed
+
+- **The collector never ran during a job drain, so a promise-driven program leaked everything it
+  allocated.** A job runs its handler through a nested execution, and the schedule in the
+  interpreter loop is guarded on there being no native re-entry — a correct guard, written for
+  `Array.prototype.sort`, which silently covered the whole of §9.5's queue. For a program whose work
+  is promises that is the entire run. A chain that re-arms itself — `p.then(step)` from inside
+  `step`, which is what every polling loop in JavaScript is — reached the heap budget at 38,174
+  turns and threw a `RangeError` **inside a job**, where §9.5 step 3 discards the completion: the
+  queue emptied, the run answered normally and the exit status was zero. The check now also happens
+  at the boundary between two jobs, which owns every live value for the same reason the guard was
+  asking about. See DR-0023's amendment.
+- **`Atomics.add`, `and`, `or`, `sub`, `xor`, `exchange` and `compareExchange` were not atomic.**
+  Each read, released the lock and wrote back, so two agents could interleave between the two
+  halves. Measured on a two-agent CAS-increment loop, 407 of 40,000 increments were lost. They go
+  through one read-modify-write under a single lock now. No single-agent test could ever have said
+  so, and the symptom was a suite that **hung** rather than a number that was wrong.
+- **`Atomics.waitAsync` with a finite timeout settles `"timed-out"`.** DR-0024 recorded this as
+  needing a timer the engine does not have and refused three ways to fake one; the question was
+  wrong. §25.4.1.6's `TriggerTimeout` only has to run before anything can observe that it has not,
+  and a job boundary is such a point. Nothing settles early, nothing spins, and nothing blocks a
+  queue that has work in it — measured at 200.29 ms for a 200 ms wait.
+- **A strict assignment to an unqualified name the global object refuses now throws.** §9.1.1.4.5
+  ends in a `Set` whose `false` a strict store has to turn into a `TypeError`, and the store
+  discarded it — so `"use strict"; undefined = 1` succeeded silently against a non-writable
+  property.
+- **Five of §20.1.3's `ToObject`s were being read as type checks**, so `Object.prototype.valueOf`
+  and its neighbours refused a primitive receiver instead of converting it.
 
 - **A TypedArray built from an object no longer swallows the object's own error.** §23.2.5.1 step
   6.b, §23.2.2.1 step 4 and §23.2.3.26 decide between an iterable reading and an array-like one by
@@ -89,6 +141,21 @@ public API is not stable and may change in any release.
   `?:`, `&&`, `||`, `??` and a comma.
 
 ### Changed
+
+- **Breaking: `api::Error::Syntax` is a struct variant carrying a span.** It was
+  `Syntax(String)` and is now `Syntax { message: String, span: Span }`, because a host that is
+  handed a syntax error almost always wants to point at it — `viper` prints a caret under the
+  token, and it could not before. A `match Error::Syntax(said)` becomes
+  `match Error::Syntax { message: said, .. }`.
+- **A `RegExp` shares its compiled pattern instead of copying it.** Every operation — `exec`,
+  `test`, and each of the four `Symbol` methods — deep-copied the whole pattern tree before reading
+  a single character. `he.decode`, the HTML entity table under `htmlparser2` and `cheerio`, went
+  **776 ms → 97 ms**, which is node to the millisecond.
+- **An alternation skips branches the character at hand cannot start.** Each branch carries the
+  ASCII code points it may begin with as a bitmap plus one bit for "anything non-ASCII", computed
+  when the pattern is parsed and folded on both sides so one summary is right with `i` and without.
+  It is a prefilter and never a decision: it may admit a branch that cannot match, never refuse one
+  that can. Measured on an alternation the matcher enters, 2,000 branches go 10.60 → 4.70 µs.
 
 - **The conformance suite runs in CI, and the badge is measured rather than typed.** A new
   `conformance` workflow checks out the **exact** test262 revision the expectations file names — a
@@ -214,7 +281,8 @@ needing multiple agents.
 - No input panics. Nesting is bounded by an explicit count rather than by hitting the OS stack
   guard, and a full-depth parse is asserted to survive one mebibyte of stack.
 
-[Unreleased]: https://github.com/MerlijnW70/viperjs/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/MerlijnW70/viperjs/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/MerlijnW70/viperjs/releases/tag/v0.3.0
 [0.2.2]: https://github.com/MerlijnW70/viperjs/releases/tag/v0.2.2
 [0.2.1]: https://github.com/MerlijnW70/viperjs/releases/tag/v0.2.1
 [0.2.0]: https://github.com/MerlijnW70/viperjs/releases/tag/v0.2.0
