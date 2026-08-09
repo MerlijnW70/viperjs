@@ -205,7 +205,8 @@ argument — which crosses as its **source text**, because a `Value` is a handle
 names something else in another. The `n` on a BigInt is the whole of what tells the two apart, and
 dropping it would hand the agent a Number in silence.
 
-**`conformance/src/agent.rs` is out of the mutation-coverage source list on purpose**, beside `drive.rs`: every
+**`conformance/src/agent.rs` is out of the mutation-coverage source list on purpose**, beside
+`drive.rs`: every
 branch in it is decided by whether another operating-system thread has got somewhere yet, so a mutant
 is killed by a *timeout* or by nothing depending on scheduling, which is a coverage number that means
 less than no number. What checks it is the 109 files.

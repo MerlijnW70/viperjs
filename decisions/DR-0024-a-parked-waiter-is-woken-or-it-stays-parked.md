@@ -18,7 +18,8 @@ When this was written the engine had one agent, so §25.4.3.14's blocking `Atomi
 outright and `waitAsync` was the only waiting there was. A host can start agents now — each its own
 thread with its own heap, sharing a `heap::Block` — and for an agent whose `[[CanBlock]]` is true a
 blocking wait **does** time out, because a parked thread is a thread a condition variable can wake at
-a deadline. That is where `std::time::Instant` earns its third confined path in the constraints.
+a deadline. That is where `std::time::Instant` earns its third path in the architectural constraints
+that confine the monotonic clock to the machine's own deadline.
 
 None of the reasoning below changes, because none of it was ever about the blocking form. What a
 blocking waiter holds is a thread, and a thread can be woken at a moment. What an asynchronous waiter
