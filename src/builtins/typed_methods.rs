@@ -671,20 +671,47 @@ fn to_locale_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comp
 ///
 /// The difference shows on two of the eleven kinds: `String(1n)` is `"1"` and `ToString` of a
 /// BigInt is §21.2.3.3's digits, where a Number's rendering knows nothing about them.
-fn join(_: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let (_, view) = validate(heap, call.this_value)?;
+/// # The length is taken before the separator and the elements after it
+///
+/// Steps 3 and 5 in that order, and the gap between them is where a program runs: `ToString` of the
+/// separator may call a `toString` that resizes or detaches the buffer. The count stays what it was
+/// — step 3 already read it — and the elements are read *afterwards*, so an index that no longer
+/// exists contributes the empty string rather than being dropped.
+///
+/// That is what makes `new Int8Array(rab3).join(shrinksToZero)` answer `"--"`: three elements'
+/// worth of separators with nothing between them. Reading the elements from the view captured
+/// before the conversion answered `""` instead, and dropping them from the count answered `""` too
+/// — two ways to lose the same thing.
+fn join(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let (object, view) = validate(heap, call.this_value)?;
+    // Step 3, before anything a program controls can run.
+    let count = view.count();
     let separator = match call.argument(0) {
         Value::Undefined => ",".to_string(),
         given => {
-            let id = given.to_string(heap)?;
+            // Through the machine: §23.2.3.16 step 5 is `ToString`, and a separator is the one
+            // argument here a program controls — `join({ toString() { … } })` refused before this.
+            // The element loop below is the opposite case and stays heap-only, deliberately.
+            let id = vm.to_string(given, heap)?;
             let units = heap.string(id).unwrap_or(&[]).to_vec();
             char::decode_utf16(units)
                 .map(|found| found.unwrap_or(char::REPLACEMENT_CHARACTER))
                 .collect()
         }
     };
-    let mut joined: Vec<String> = Vec::with_capacity(view.count());
-    for value in elements(heap, view) {
+    // Read again: the conversion may have left a different buffer behind the same object, and the
+    // window captured above describes one that is gone.
+    let now = heap
+        .typed_view(object)
+        .filter(|_| !heap.view_out_of_bounds(object));
+    let mut joined: Vec<String> = Vec::with_capacity(count);
+    for at in 0..count {
+        // §23.2.3.16 step 6.b — an element that is no longer there is `undefined`, and step 6.c
+        // makes `undefined` the empty string rather than the word.
+        let Some(value) = now.and_then(|view| heap.element_at(view, at)) else {
+            joined.push(String::new());
+            continue;
+        };
         // Neither a Number nor a BigInt can throw here, and neither can call a program: `?` is the
         // shape `to_string` has for the types that can, not a case this one reaches.
         let id = value.to_string(heap)?;

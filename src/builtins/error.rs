@@ -68,13 +68,53 @@ pub fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
     // string. Nothing observes the difference through `toString`; `hasOwnProperty` does.
     let message = call.argument(0);
     if !matches!(message, Value::Undefined) {
-        let text = message.to_string(heap)?;
+        // Through the machine — §20.5.1.1 step 3 is `ToString`, and `ToString` of an **object**
+        // calls its `toString` or `valueOf`, which needs the interpreter. `Value::to_string` takes
+        // only a heap and refused every object, so `new Error(somethingWithAToString)` threw a
+        // TypeError where every other engine builds the message. Same shape as `builtins::math`.
+        let text = vm.to_string(message, heap)?;
         // §20.5.1.1 step 4 uses `CreateNonEnumerableDataPropertyOrThrow`, so a message is
         // writable and configurable and hidden from enumeration — an error does not list its own
         // message in a `for...in`, which is what makes errors safe to log wholesale.
         define_value(heap, error, "message", Value::String(text));
     }
+    // §20.5.1.1 step 4 — `InstallErrorCause(O, options)`, the second argument.
+    install_cause(vm, heap, error, call.argument(1))?;
     Ok(Value::Object(error))
+}
+
+/// §20.5.8.1 `InstallErrorCause` — the `cause` an options bag carries, if it carries one.
+///
+/// Three things this is not, each of which the shorter spelling gets wrong:
+///
+/// - **`HasProperty`, not a truthiness test.** `new Error("m", { cause: undefined })` has an own
+///   `cause` of `undefined`, and `new Error("m", {})` has none at all. Only `hasOwnProperty` can
+///   tell those apart, and a program checking whether a cause was *given* uses exactly that.
+/// - **`HasProperty`, not `HasOwnProperty`.** The bag's prototype counts, so an options object made
+///   from a shared default with `cause` on it works.
+/// - **Two reads, in order.** `HasProperty` may run a `has` trap and `Get` may run a getter, and a
+///   Proxy sees both.
+///
+/// An `options` that is not an object is simply absent — no refusal — which is why
+/// `new Error("m")` and `new Error("m", null)` behave alike.
+fn install_cause(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    error: ObjectId,
+    options: Value,
+) -> Completion<Value> {
+    if !matches!(options, Value::Object(_)) {
+        return Ok(Value::Undefined);
+    }
+    let name = key(heap, "cause");
+    if !vm.has_property_key(options, name, heap)? {
+        return Ok(Value::Undefined);
+    }
+    let cause = vm.get_property_key(options, name, heap)?;
+    // `CreateNonEnumerableDataPropertyOrThrow`, exactly as the message above: writable,
+    // configurable and hidden from enumeration, so logging an error whole does not spill it.
+    define_value(heap, error, "cause", cause);
+    Ok(Value::Undefined)
 }
 
 /// §20.5.7.1 — `new AggregateError(errors, message)`.
@@ -93,9 +133,17 @@ fn aggregate_construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> C
     // Step 3 — the message, on the same terms as any other error's: `undefined` is *absent*.
     let message = call.argument(1);
     if !matches!(message, Value::Undefined) {
-        let text = message.to_string(heap)?;
+        // Through the machine, for [`construct`]'s reason.
+        let text = vm.to_string(message, heap)?;
         define_value(heap, error, "message", Value::String(text));
     }
+    // Step 5 — `IterableToList`, and then step 6 defines `errors` as writable, **not enumerable**
+    // and configurable. Not enumerable because an error is a thing programs log wholesale, and a
+    // list of causes in every `for...in` over one would be a surprise.
+    // §20.5.7.1.1 step 4 — the cause, **before** the errors list is built, because the clause puts
+    // `InstallErrorCause` at step 4 and `IterableToList` at step 5. Both can run a program, and a
+    // test that counts the order sees which came first.
+    install_cause(vm, heap, error, call.argument(2))?;
     // Step 5 — `IterableToList`, and then step 6 defines `errors` as writable, **not enumerable**
     // and configurable. Not enumerable because an error is a thing programs log wholesale, and a
     // list of causes in every `for...in` over one would be a surprise.

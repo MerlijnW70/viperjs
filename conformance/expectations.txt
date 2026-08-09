@@ -207,14 +207,6 @@ built-ins/AbstractModuleSource/prototype/Symbol.toStringTag.js :: it threw an ob
 built-ins/AbstractModuleSource/prototype/constructor.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/AbstractModuleSource/prototype/proto.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/AbstractModuleSource/throw-from-constructor.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/AggregateError/cause-property.js :: it threw an object with no name: cause should be an own property
-built-ins/AggregateError/cause-property.js (strict) :: it threw an object with no name: cause should be an own property
-built-ins/AggregateError/message-method-prop-cast.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/AggregateError/message-method-prop-cast.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/AggregateError/message-tostring-abrupt.js :: it threw an object with no name: toPrimitive Expected a Test262Error but got a TypeError
-built-ins/AggregateError/message-tostring-abrupt.js (strict) :: it threw an object with no name: toPrimitive Expected a Test262Error but got a TypeError
-built-ins/AggregateError/order-of-args-evaluation.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/AggregateError/order-of-args-evaluation.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Array/from/iter-cstm-ctor-err.js :: it threw an object with no name: Array.from.call(C, items) throws a Test262Error exception Expected a Test262Error but got a TypeError
 built-ins/Array/from/iter-cstm-ctor-err.js (strict) :: it threw an object with no name: Array.from.call(C, items) throws a Test262Error exception Expected a Test262Error but got a TypeError
 built-ins/Array/from/proto-from-ctor-realm.js :: it threw an object with no name: Object.getPrototypeOf(Array.from.call(C, [])) returns other.Object.prototype Expected SameValue(«[object Object]», «[object Object]») to be true
@@ -1131,12 +1123,6 @@ built-ins/DisposableStack/prototype/use/throws-if-value-not-object.js :: it thre
 built-ins/DisposableStack/prototype/use/throws-if-value-not-object.js (strict) :: it threw ReferenceError: DisposableStack is not defined
 built-ins/DisposableStack/undefined-newtarget-throws.js :: it threw an object with no name: Expected a TypeError but got a ReferenceError
 built-ins/DisposableStack/undefined-newtarget-throws.js (strict) :: it threw an object with no name: Expected a TypeError but got a ReferenceError
-built-ins/Error/cause_abrupt.js :: it threw an object with no name: HasProperty Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Error/cause_abrupt.js (strict) :: it threw an object with no name: HasProperty Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Error/cause_property.js :: it threw an object with no name: cause should be an own property
-built-ins/Error/cause_property.js (strict) :: it threw an object with no name: cause should be an own property
-built-ins/Error/constructor.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Error/constructor.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Error/prototype/stack/getter-cross-realm.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Error/prototype/stack/getter-cross-realm.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Error/prototype/stack/getter-data-property-shadows.js :: it threw TypeError: cannot read a property of something that is not an object
@@ -1662,16 +1648,6 @@ built-ins/Math/f16round/prop-desc.js :: it threw an object with no name: f16roun
 built-ins/Math/f16round/prop-desc.js (strict) :: it threw an object with no name: f16round should be an own property
 built-ins/Math/f16round/value-conversion.js :: it threw TypeError: what was called is not a function
 built-ins/Math/f16round/value-conversion.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Math/hypot/Math.hypot_ToNumberErr.js :: it threw an object with no name: Math.hypot propagates an abrupt completion from coercing an argument to Number Expected a Test262Error but got a TypeError
-built-ins/Math/hypot/Math.hypot_ToNumberErr.js (strict) :: it threw an object with no name: Math.hypot propagates an abrupt completion from coercing an argument to Number Expected a Test262Error but got a TypeError
-built-ins/Math/max/15.8.2.11-1.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Math/max/15.8.2.11-1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Math/max/Math.max_each-element-coerced.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Math/max/Math.max_each-element-coerced.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Math/min/15.8.2.12-1.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Math/min/15.8.2.12-1.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Math/min/Math.min_each-element-coerced.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/Math/min/Math.min_each-element-coerced.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/Math/sumPrecise/length.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Math/sumPrecise/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Math/sumPrecise/name.js :: it threw TypeError: undefined and null cannot be converted to an object
@@ -1704,8 +1680,6 @@ built-ins/NativeErrors/TypeError/prototype/message.js :: it threw an object with
 built-ins/NativeErrors/TypeError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/URIError/prototype/message.js :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/URIError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/cause_property_native_error.js :: it threw an object with no name: cause should be an own property
-built-ins/NativeErrors/cause_property_native_error.js (strict) :: it threw an object with no name: cause should be an own property
 built-ins/Number/prototype/toString/numeric-literal-tostring-radix-poisoned.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Number/prototype/toString/numeric-literal-tostring-radix-poisoned.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Object/freeze/typedarray-backed-by-resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -11446,26 +11420,6 @@ built-ins/TypedArray/prototype/indexOf/BigInt/length-zero-returns-minus-one.js :
 built-ins/TypedArray/prototype/indexOf/BigInt/length-zero-returns-minus-one.js (strict) :: it threw an object with no name:  (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/indexOf/length-zero-returns-minus-one.js :: it threw an object with no name:  (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/indexOf/length-zero-returns-minus-one.js (strict) :: it threw an object with no name:  (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/join/BigInt/custom-separator-result-from-tostring-on-each-simple-value.js :: it threw TypeError: cannot convert an object to a primitive value (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/join/BigInt/custom-separator-result-from-tostring-on-each-simple-value.js (strict) :: it threw TypeError: cannot convert an object to a primitive value (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/join/BigInt/detached-buffer-during-fromIndex-returns-single-comma.js :: it threw TypeError: cannot convert an object to a primitive value (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/join/BigInt/detached-buffer-during-fromIndex-returns-single-comma.js (strict) :: it threw TypeError: cannot convert an object to a primitive value (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/join/BigInt/return-abrupt-from-separator.js :: it threw an object with no name: Expected a Test262Error but got a TypeError (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/join/BigInt/return-abrupt-from-separator.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError (Testing with BigInt64Array and makePassthrough.)
-built-ins/TypedArray/prototype/join/coerced-separator-grow.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/TypedArray/prototype/join/coerced-separator-grow.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/TypedArray/prototype/join/coerced-separator-shrink.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/TypedArray/prototype/join/coerced-separator-shrink.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/TypedArray/prototype/join/custom-separator-result-from-tostring-on-each-simple-value.js :: it threw TypeError: cannot convert an object to a primitive value (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/join/custom-separator-result-from-tostring-on-each-simple-value.js (strict) :: it threw TypeError: cannot convert an object to a primitive value (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/join/custom-separator-result-from-tostring-on-each-value.js :: it threw TypeError: cannot convert an object to a primitive value (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/join/custom-separator-result-from-tostring-on-each-value.js (strict) :: it threw TypeError: cannot convert an object to a primitive value (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/join/detached-buffer-during-fromIndex-returns-single-comma.js :: it threw TypeError: cannot convert an object to a primitive value (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/join/detached-buffer-during-fromIndex-returns-single-comma.js (strict) :: it threw TypeError: cannot convert an object to a primitive value (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/join/return-abrupt-from-separator.js :: it threw an object with no name: Expected a Test262Error but got a TypeError (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/join/return-abrupt-from-separator.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/join/separator-tostring-once-after-resized.js :: it threw TypeError: cannot convert an object to a primitive value
-built-ins/TypedArray/prototype/join/separator-tostring-once-after-resized.js (strict) :: it threw TypeError: cannot convert an object to a primitive value
 built-ins/TypedArray/prototype/lastIndexOf/BigInt/length-zero-returns-minus-one.js :: it threw an object with no name:  (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/lastIndexOf/BigInt/length-zero-returns-minus-one.js (strict) :: it threw an object with no name:  (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/lastIndexOf/length-zero-returns-minus-one.js :: it threw an object with no name:  (Testing with Float64Array and makePassthrough.)

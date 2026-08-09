@@ -110,16 +110,25 @@ fn seed_random() {
 /// Every function in §21.3.2 that takes one argument starts with "Let n be ? ToNumber(x)", and a
 /// missing argument is `undefined`, whose `ToNumber` is `NaN`. So `Math.abs()` is `NaN` rather
 /// than an error, and that falls out of this rather than being a case anywhere.
-fn number(call: &NativeCall<'_>, heap: &Heap) -> Completion<f64> {
-    call.argument(0).to_number(heap)
+///
+/// **Through the machine, and that is the whole of what this doc is for.** §7.1.4's `ToNumber` of an
+/// **object** is `ToPrimitive` first, which calls the object's `valueOf` or `toString` — and calling
+/// a JavaScript function needs the interpreter. `Value::to_number` takes only a heap, so it cannot;
+/// it answered a TypeError for every object, and every function in this file used it. `Math.floor`
+/// of a `new Number(3)` threw, and so did `Math.max` of anything a program had boxed. Found
+/// 2026-08-09 by probing the clause rather than by reading the code, which said the right thing:
+/// [`atan2`]'s comment already named "an object with a `valueOf` that runs code" as the reason its
+/// two conversions are ordered, above two conversions that could not run one.
+fn number(vm: &mut Vm, call: &NativeCall<'_>, heap: &mut Heap) -> Completion<f64> {
+    vm.to_number(call.argument(0), heap)
 }
 
 /// One `f64 -> f64` function of §21.3.2, given the operation Rust already has.
 macro_rules! unary {
     ($name:ident, $operation:expr) => {
-        fn $name(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+        fn $name(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
             let operation: fn(f64) -> f64 = $operation;
-            Ok(Value::Number(operation(number(call, heap)?)))
+            Ok(Value::Number(operation(number(vm, call, heap)?)))
         }
     };
 }
@@ -150,23 +159,25 @@ unary!(tanh, f64::tanh);
 unary!(trunc, f64::trunc);
 
 /// §21.3.2.8 `Math.atan2`.
-fn atan2(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+fn atan2(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     // Both are converted, and in this order — §21.3.2.8 steps 1 and 2, which matters because
     // either may be an object with a `valueOf` that runs code.
-    let y = call.argument(0).to_number(heap)?;
-    let x = call.argument(1).to_number(heap)?;
+    let y = vm.to_number(call.argument(0), heap)?;
+    let x = vm.to_number(call.argument(1), heap)?;
     Ok(Value::Number(y.atan2(x)))
 }
 
 /// §21.3.2.11 `Math.clz32` — how many leading zero bits `ToUint32(x)` has.
-fn clz32(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let value = call.argument(0).to_uint32(heap)?;
+fn clz32(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    // Coerced through the machine first, then narrowed: after `ToNumber` the value is a
+    // primitive, so the heap-only `ToUint32` is exactly right for it. See [`number`].
+    let value = Value::Number(vm.to_number(call.argument(0), heap)?).to_uint32(heap)?;
     Ok(Value::Number(f64::from(value.leading_zeros())))
 }
 
 /// §21.3.2.16 `Math.fround` — the nearest value a 32-bit float can hold.
-fn fround(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let value = number(call, heap)?;
+fn fround(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let value = number(vm, call, heap)?;
     // Round-trip through `f32`, which is the operation the clause describes. `NaN` and the
     // infinities survive it, and a value too large for `f32` becomes an infinity, which is what
     // step 5 asks for rather than an error.
@@ -174,13 +185,13 @@ fn fround(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Va
 }
 
 /// §21.3.2.18 `Math.hypot` — the square root of the sum of the squares, over any number of them.
-fn hypot(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+fn hypot(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     // Every argument is converted first, in order, before any is looked at — step 2. An infinity
     // then wins over a `NaN` (step 4 before step 5), which is why this cannot short-circuit on the
     // first `NaN` it meets.
     let mut coerced = Vec::with_capacity(call.arguments.len());
     for argument in call.arguments {
-        coerced.push(argument.to_number(heap)?);
+        coerced.push(vm.to_number(*argument, heap)?);
     }
     if coerced.iter().any(|value| value.is_infinite()) {
         return Ok(Value::Number(f64::INFINITY));
@@ -201,9 +212,11 @@ fn hypot(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Val
 }
 
 /// §21.3.2.19 `Math.imul` — a 32-bit integer multiply that wraps.
-fn imul(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let left = call.argument(0).to_int32(heap)?;
-    let right = call.argument(1).to_int32(heap)?;
+fn imul(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    // Both coerced through the machine, in order, then narrowed — see [`number`] and
+    // [`clz32`]. The order is observable: either may run a `valueOf`.
+    let left = Value::Number(vm.to_number(call.argument(0), heap)?).to_int32(heap)?;
+    let right = Value::Number(vm.to_number(call.argument(1), heap)?).to_int32(heap)?;
     Ok(Value::Number(f64::from(left.wrapping_mul(right))))
 }
 
@@ -212,10 +225,15 @@ fn imul(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
 /// Neither is `f64::max`. Two rules the IEEE operation does not have: a single `NaN` anywhere
 /// makes the answer `NaN`, and `+0` is *larger* than `-0` — so `Math.max(0, -0)` is `+0` and
 /// `Math.min(0, -0)` is `-0`, which no `<` can tell apart.
-fn extremum(heap: &mut Heap, call: &NativeCall<'_>, want_largest: bool) -> Completion<Value> {
+fn extremum(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    call: &NativeCall<'_>,
+    want_largest: bool,
+) -> Completion<Value> {
     let mut coerced = Vec::with_capacity(call.arguments.len());
     for argument in call.arguments {
-        coerced.push(argument.to_number(heap)?);
+        coerced.push(vm.to_number(*argument, heap)?);
     }
     if coerced.iter().any(|value| value.is_nan()) {
         return Ok(Value::Number(f64::NAN));
@@ -247,28 +265,28 @@ fn extremum(heap: &mut Heap, call: &NativeCall<'_>, want_largest: bool) -> Compl
 }
 
 /// §21.3.2.24 `Math.max`.
-fn max(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    extremum(heap, call, true)
+fn max(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    extremum(vm, heap, call, true)
 }
 
 /// §21.3.2.25 `Math.min`.
-fn min(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    extremum(heap, call, false)
+fn min(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    extremum(vm, heap, call, false)
 }
 
 /// §21.3.2.26 `Math.pow` — which the clause defines as `Number::exponentiate`.
 ///
 /// So it is the engine's own, shared with the `**` operator rather than written again. The two
 /// cannot drift apart about `1 ** NaN`, which is the case they would drift apart about.
-fn pow(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let base = call.argument(0).to_number(heap)?;
-    let exponent = call.argument(1).to_number(heap)?;
+fn pow(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let base = vm.to_number(call.argument(0), heap)?;
+    let exponent = vm.to_number(call.argument(1), heap)?;
     Ok(Value::Number(crate::value::exponentiate(base, exponent)))
 }
 
 /// §21.3.2.28 `Math.round` — half rounds *upwards*, not away from zero.
-fn round(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let value = number(call, heap)?;
+fn round(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let value = number(vm, call, heap)?;
     // Steps 3 to 6 written out. The two zero-signed cases are not decoration: `Math.round(-0.4)`
     // is `-0` and not `+0`, and `floor(x + 0.5)` alone would answer `+0` for it.
     // Only the zeros are named. A `NaN` and the infinities reach the last arm and come back
@@ -295,8 +313,8 @@ fn round(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Val
 }
 
 /// §21.3.2.29 `Math.sign`.
-fn sign(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let value = number(call, heap)?;
+fn sign(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let value = number(vm, call, heap)?;
     // `NaN`, `+0` and `-0` are answered with *themselves* — steps 3 and 4 — which is the whole
     // difference from `f64::signum`. Past those three, `signum` is right and is used rather than a
     // comparison of its own: `value > 0.0` and `value.is_sign_positive()` agree on everything that

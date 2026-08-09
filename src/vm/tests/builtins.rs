@@ -239,3 +239,83 @@ fn is_error_asks_about_the_slot_and_nothing_else() {
         "1,isError"
     );
 }
+
+#[test]
+fn an_error_message_and_a_typed_array_separator_coerce_through_the_machine() {
+    // The same fault as `builtins::math`'s, in the two other places a heap-only conversion was
+    // reachable from a value a program controls. §20.5.1.1 step 3 and §23.2.3.16 step 3 are both
+    // `ToString`, which for an object calls its `toString` and therefore needs the interpreter.
+    assert_eq!(
+        run("new Error({ toString: function () { return 'said' } }).message"),
+        "said"
+    );
+    assert_eq!(run("new TypeError(new String('boxed')).message"), "boxed");
+    // §20.5.7.1 — `AggregateError` takes its message second, and had the same conversion.
+    assert_eq!(
+        run("new AggregateError([], { toString: function () { return 'agg' } }).message"),
+        "agg"
+    );
+    // …and `undefined` is still *absent* rather than the text "undefined", which is the row that
+    // fails if the conversion is moved in front of the check.
+    assert_eq!(run("new Error().hasOwnProperty('message')"), "false");
+    // §23.2.3.16's separator, which is the one argument to `join` a program controls.
+    assert_eq!(
+        run("new Int8Array([1, 2, 3]).join({ toString: function () { return '-' } })"),
+        "1-2-3"
+    );
+    // A `toString` that throws reaches the program, so the conversion is really happening.
+    assert_eq!(
+        run("var said = 'none'; \
+             try { new Error({ toString: function () { throw 'from toString' } }) } \
+             catch (e) { said = e } said"),
+        "from toString"
+    );
+}
+
+#[test]
+fn an_error_takes_a_cause_from_its_options_bag() {
+    // §20.5.8.1 `InstallErrorCause`, which ViperJS did not have at all: `new Error('m', { cause })`
+    // built an error with no `cause` and no complaint. ES2022, and shipped everywhere.
+    assert_eq!(run("new Error('m', { cause: 42 }).cause"), "42");
+    assert_eq!(run("new TypeError('m', { cause: 'why' }).cause"), "why");
+    // §20.5.7.1.1 — `AggregateError` takes it third, after the errors and the message.
+    assert_eq!(run("new AggregateError([], 'm', { cause: 7 }).cause"), "7");
+    // `HasProperty` and not a truthiness test, which is the whole reason the clause is two steps:
+    // a `cause` of `undefined` was *given*, and an absent one was not. Nothing but
+    // `hasOwnProperty` can tell those apart, and a program asking whether a cause was supplied
+    // uses exactly that.
+    assert_eq!(
+        run("new Error('m', { cause: undefined }).hasOwnProperty('cause')"),
+        "true"
+    );
+    assert_eq!(run("new Error('m', {}).hasOwnProperty('cause')"), "false");
+    assert_eq!(run("new Error('m').hasOwnProperty('cause')"), "false");
+    // …and `HasProperty` rather than `HasOwnProperty`, so a bag made from a shared default works.
+    assert_eq!(
+        run("var base = { cause: 'inherited' }; \
+             new Error('m', Object.create(base)).cause"),
+        "inherited"
+    );
+    // An options argument that is not an object is absent rather than an error.
+    assert_eq!(run("new Error('m', null).hasOwnProperty('cause')"), "false");
+    assert_eq!(run("new Error('m', 1).hasOwnProperty('cause')"), "false");
+    // Non-enumerable, like `message`, so logging an error whole does not spill it.
+    assert_eq!(
+        run("JSON.stringify(Object.keys(new Error('m', { cause: 1 })))"),
+        "[]"
+    );
+    // The getter runs, and once — which is what says this is a `Get` and not a slot read.
+    assert_eq!(
+        run("var calls = 0; \
+             var bag = { get cause() { calls++; return 'c' } }; \
+             new Error('m', bag).cause + ',' + calls"),
+        "c,1"
+    );
+    // …and a getter that throws reaches the program, after the message is already in place.
+    assert_eq!(
+        run("var said = 'none'; \
+             try { new Error('m', { get cause() { throw 'from cause' } }) } \
+             catch (e) { said = e } said"),
+        "from cause"
+    );
+}

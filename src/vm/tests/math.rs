@@ -213,3 +213,77 @@ fn a_missing_argument_is_not_an_error_and_random_stays_in_its_interval() {
         "true"
     );
 }
+
+#[test]
+fn every_math_function_coerces_an_object_through_its_own_value_of() {
+    // §7.1.4's `ToNumber` of an object is `ToPrimitive` first, which calls the object's `valueOf`
+    // or `toString` — so it needs the interpreter, and a conversion that has only a heap cannot do
+    // it. Every function in §21.3.2 used one, and every one of them threw a TypeError for an
+    // argument a program had boxed: `Math.floor(new Number(3))` was an error.
+    //
+    // Written across the three shapes rather than once, because the file reaches `ToNumber` three
+    // ways: the shared one-argument helper, the two-argument functions that convert in order, and
+    // the two that narrow to an integer afterwards.
+    assert_eq!(
+        run("Math.floor({ valueOf: function () { return 3.7 } })"),
+        "3"
+    );
+    assert_eq!(run("Math.abs(new Number(-4))"), "4");
+    // `toString` when there is no `valueOf` — §7.1.1's `OrdinaryToPrimitive` tries both, in that
+    // order, and a `Math` function must reach the second.
+    assert_eq!(
+        run("Math.sqrt({ toString: function () { return '9' } })"),
+        "3"
+    );
+    // The two-argument ones, and their order, which is observable because either side may run code.
+    assert_eq!(
+        run(
+            "var log = ''; var a = { valueOf: function () { log += 'a'; return 1 } }; \
+             var b = { valueOf: function () { log += 'b'; return 2 } }; \
+             Math.pow(b, a); log"
+        ),
+        "ba"
+    );
+    assert_eq!(
+        run("Math.atan2({ valueOf: function () { return 0 } }, 1)"),
+        "0"
+    );
+    assert_eq!(
+        run("Math.hypot({ valueOf: function () { return 3 } }, 4)"),
+        "5"
+    );
+    // …the variadic pair, which fold rather than convert a fixed count.
+    assert_eq!(
+        run("Math.max({ valueOf: function () { return 3 } }, 2)"),
+        "3"
+    );
+    assert_eq!(
+        run("Math.min({ valueOf: function () { return 1 } }, 2)"),
+        "1"
+    );
+    // …and the two that narrow to an integer after converting, which is the shape that would be
+    // got wrong by narrowing first.
+    assert_eq!(
+        run("Math.imul({ valueOf: function () { return 3 } }, 4)"),
+        "12"
+    );
+    assert_eq!(
+        run("Math.clz32({ valueOf: function () { return 1 } })"),
+        "31"
+    );
+    // A `valueOf` that throws still throws, which is what says the conversion happens at all
+    // rather than being skipped for objects.
+    assert_eq!(
+        run("var said = 'none'; \
+             try { Math.floor({ valueOf: function () { throw 'from valueOf' } }) } \
+             catch (e) { said = e } said"),
+        "from valueOf"
+    );
+    // …and an object with neither is still a TypeError, which is the row that stops this passing
+    // by having made `ToNumber` answer something for everything.
+    assert_eq!(
+        run("var kind = 'none'; \
+             try { Math.floor(Object.create(null)) } catch (e) { kind = e.constructor.name } kind"),
+        "TypeError"
+    );
+}

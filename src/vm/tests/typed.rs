@@ -2228,3 +2228,38 @@ fn from_branches_the_same_way_the_constructor_does_and_set_does_not_branch_at_al
         "4,5,0"
     );
 }
+
+#[test]
+fn join_takes_its_length_before_the_separator_and_its_elements_after() {
+    // §23.2.3.16 steps 3 and 5, and the gap between them. Converting the separator may run a
+    // `toString` that resizes the buffer; the count was already read, and the elements are read
+    // afterwards — so the answer is that many separators with nothing between them.
+    assert_eq!(
+        run("var rab = new ArrayBuffer(3, { maxByteLength: 5 }); \
+             var ta = new Int8Array(rab); var calls = 0; \
+             var sep = { toString: function () { calls++; rab.resize(0); return '-' } }; \
+             ta.join(sep) + '|' + calls"),
+        "--|1"
+    );
+    // …and the ordinary case is unchanged, which is what says the rewrite did not make every
+    // element empty.
+    assert_eq!(run("new Int8Array([1, 2, 3]).join('-')"), "1-2-3");
+    // A separator that *detaches* rather than shrinking reaches the same place by the other route:
+    // §23.2.3.16 validates once, at step 2, so a buffer detached afterwards is not a TypeError —
+    // it is three elements that are no longer there.
+    assert_eq!(
+        run("var ab = new ArrayBuffer(3); var ta = new Int8Array(ab); \
+             var sep = { toString: function () { ab.transfer(); return '+' } }; \
+             ta.join(sep)"),
+        "++"
+    );
+    // …and a buffer already detached *before* the call still refuses, which is the step 2 half and
+    // the row that stops the one above reading as "detaching is always fine".
+    assert_eq!(
+        run(
+            "var ab = new ArrayBuffer(3); var ta = new Int8Array(ab); ab.transfer(); \
+             var kind = 'none'; try { ta.join('-') } catch (e) { kind = e.constructor.name } kind"
+        ),
+        "TypeError"
+    );
+}
