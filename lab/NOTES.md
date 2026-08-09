@@ -793,6 +793,64 @@ opinion.
 
 ---
 
+## alternation-width — does the matcher try every alternative at every position?
+
+**Date:** 2026-08-09
+**Question:** `he` — the HTML entity library under `htmlparser2` and `cheerio` — runs 7.8× slower
+than node on a real workload, where every other library measured this session runs at parity or
+faster. `interpreter-speed` says the general gap on *bundle* work is about 2.2×, so 7.8× wants its
+own explanation. Is this the interpreter, or is it §22.2's matcher specifically?
+**Setup:** `lab/scratch/bench-alternation.js`. `he.decode` matches against an alternation of roughly
+two thousand named entities, so the first instrument split `he`'s own cost
+(`H:/tmp/ghsweep/probes/he-split.mjs`) and the second varies **branch count alone** against a fixed
+eight-character subject that shares no first character with any alternative — so every attempt fails
+at its first byte and the number is the cost of *reaching* the branches rather than of matching
+inside them. A length ladder on a single alternative is the control for the other axis.
+
+**Result.** `he`'s cost is almost entirely `decode`: 697 ms of 776. The row that says why is
+`decode` of a string containing **no entities at all** — 138 µs for eight characters, where 20,000
+bare alternation tests cost 2 µs each.
+
+| branches | µs/call | ns per branch per character |
+| --- | --- | --- |
+| 1 | 2.8 | 344 |
+| 10 | 3.0 | 37.5 |
+| 100 | 6.8 | 8.44 |
+| 500 | 22.5 | 5.63 |
+| 1000 | 41.3 | 5.16 |
+| 2000 | 83.3 | 5.20 |
+
+**The last column is flat from 500 upwards.** Cost is `branches × positions × 5.2 ns`, exactly. The
+length control is linear in the other axis. Node on the same table is **0.03 ns** per branch per
+character — about 170× less — because Irregexp discriminates on the first character before it tries
+an alternative.
+
+**Verdict: PROMOTE to M8, and it is not the JIT gap.** This is a missing *prefilter*, not a missing
+compiler: every backtracking engine narrows the alternatives at a position by the character sitting
+there, usually as a first-code-point set per alternative and a bitmap test before the attempt.
+Semantically it is pure pruning — an alternative whose first-set excludes the current character
+cannot match — so "none may cost a single conformance test" is checkable rather than hoped for.
+
+**Two things it is worth being careful about before building it**, both of which decide how much of
+the table it actually recovers:
+
+- A first-set is only sound where an alternative *must* consume a character to match. An alternative
+  that can match empty, or that opens with a lookaround or a backreference, has no first-set and
+  must always be tried.
+- The `i` flag, and `u`/`v`'s case folding, make the first-set a set of *folded* code points. Getting
+  that wrong turns a pruning step into a wrong answer, which is the one failure mode that matters
+  here.
+
+**And it may reach further than `he`.** `gc-pressure` established that
+`RegExp/property-escapes` is time-bound rather than memory-bound and left M8 as its answer without
+saying which part of M8. A property escape compiles to a large class rather than a large
+alternation, so this table does not measure it — but it is the first evidence that the matcher's
+per-attempt constant, rather than the interpreter's, is what that bucket is spending.
+
+**Cost:** about half an hour, most of it writing the two instruments.
+
+---
+
 ## interpreter-speed — how far is ViperJS from node, and what would close it?
 
 **Date:** 2026-08-08
