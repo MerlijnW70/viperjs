@@ -319,3 +319,78 @@ fn an_error_takes_a_cause_from_its_options_bag() {
         "from cause"
     );
 }
+
+#[test]
+fn error_to_string_reads_name_and_message_with_a_real_get() {
+    // §20.5.3.4 steps 3 to 6 are two `Get`s and two `ToString`s, and what was here was neither: it
+    // read the property table directly and converted with a heap-only `ToString`.
+    //
+    // An accessor was read as *absent*, which is a wrong answer rather than a missing one — and the
+    // comment that allowed it said "nothing on these prototypes is one", which is true of the
+    // prototypes the engine builds and says nothing about the object in hand.
+    assert_eq!(
+        run("var e = new Error('m'); \
+             Object.defineProperty(e, 'name', { get: function () { return 'Custom' } }); \
+             e.toString()"),
+        "Custom: m"
+    );
+    assert_eq!(
+        run("var e = new Error('m'); \
+             Object.defineProperty(e, 'message', { get: function () { return 'said' } }); \
+             e.toString()"),
+        "Error: said"
+    );
+    // …and a `name` that is an object is converted rather than refused.
+    assert_eq!(
+        run(
+            "var e = new Error('m'); e.name = { toString: function () { return 'Obj' } }; \
+             e.toString()"
+        ),
+        "Obj: m"
+    );
+    // A getter that throws reaches the program, which is what says the `Get` really happens.
+    assert_eq!(
+        run("var e = new Error('m'); \
+             Object.defineProperty(e, 'name', { get: function () { throw 'from name' } }); \
+             var said = 'none'; try { e.toString() } catch (x) { said = x } said"),
+        "from name"
+    );
+    // The ordinary answers are unchanged, including the two defaults and the inheritance that
+    // makes an error print its *constructor's* name.
+    assert_eq!(run("new Error('m').toString()"), "Error: m");
+    assert_eq!(run("new TypeError('m').toString()"), "TypeError: m");
+    assert_eq!(run("new Error().toString()"), "Error");
+    assert_eq!(run("Object.create(Error.prototype).toString()"), "Error");
+    // §20.5.3.4's two empty cases, which decide where the colon goes.
+    assert_eq!(
+        run("var e = new Error('m'); e.name = ''; e.toString()"),
+        "m"
+    );
+    assert_eq!(
+        run("var e = new Error(); e.name = ''; e.message = ''; JSON.stringify(e.toString())"),
+        "\"\""
+    );
+}
+
+#[test]
+fn number_to_string_coerces_its_radix_through_the_machine() {
+    // §21.1.3.6 step 2's `ToIntegerOrInfinity` begins with `ToNumber`, which for an object calls a
+    // `valueOf` and therefore needs the interpreter. The heap-only conversion refused every one.
+    assert_eq!(
+        run("(255).toString({ valueOf: function () { return 16 } })"),
+        "ff"
+    );
+    assert_eq!(run("(255).toString(new Number(16))"), "ff");
+    // A fractional radix is still flattened by the conversion rather than being a RangeError of its
+    // own, and one outside the range is still refused — the two rows the coercion sits between.
+    assert_eq!(run("(255).toString(16.9)"), "ff");
+    assert_eq!(
+        run(
+            "var kind = 'none'; try { (255).toString(1) } catch (e) { kind = e.constructor.name } kind"
+        ),
+        "RangeError"
+    );
+    // …and `undefined` is ten rather than being converted, which is why the argument is asked
+    // about instead of converted blindly.
+    assert_eq!(run("(255).toString(undefined)"), "255");
+}

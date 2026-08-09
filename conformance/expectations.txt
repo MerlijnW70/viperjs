@@ -1191,8 +1191,6 @@ built-ins/Error/prototype/stack/setter-this-not-object.js :: it threw TypeError:
 built-ins/Error/prototype/stack/setter-this-not-object.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Error/prototype/stack/setter-via-assignment.js :: it threw TypeError: cannot read a property of something that is not an object
 built-ins/Error/prototype/stack/setter-via-assignment.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
-built-ins/Error/prototype/toString/tostring-get-throws.js :: it threw an object with no name: name field getter should throw to cover abrupt completion return case in step 3 Expected a Test262Error to be thrown but no exception was thrown at all
-built-ins/Error/prototype/toString/tostring-get-throws.js (strict) :: it threw an object with no name: name field getter should throw to cover abrupt completion return case in step 3 Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Function/call-bind-this-realm-undef.js :: it threw an object with no name: implicit undefined Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Function/call-bind-this-realm-undef.js (strict) :: it threw an object with no name: implicit undefined Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Function/internals/Call/class-ctor-realm.js :: it threw an object with no name: Expected a TypeError but got a different error constructor with the same name
@@ -1680,8 +1678,6 @@ built-ins/NativeErrors/TypeError/prototype/message.js :: it threw an object with
 built-ins/NativeErrors/TypeError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/URIError/prototype/message.js :: it threw an object with no name: message should be an own property
 built-ins/NativeErrors/URIError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/Number/prototype/toString/numeric-literal-tostring-radix-poisoned.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Number/prototype/toString/numeric-literal-tostring-radix-poisoned.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Object/freeze/typedarray-backed-by-resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/freeze/typedarray-backed-by-resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/keys/proxy-keys.js :: it threw an object with no name: Expected SameValue(«12», «10») to be true

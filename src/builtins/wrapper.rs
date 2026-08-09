@@ -263,7 +263,7 @@ fn number_to_locale_string(
 
 /// §21.1.3.6 `Number.prototype.toString([radix])`.
 fn number_to_string_method(
-    _vm: &mut Vm,
+    vm: &mut Vm,
     heap: &mut Heap,
     call: &NativeCall<'_>,
 ) -> Completion<Value> {
@@ -282,7 +282,11 @@ fn number_to_string_method(
     // asked about rather than converted blindly.
     let radix = match call.argument(0) {
         Value::Undefined => 10.0,
-        given => given.to_integer_or_infinity(heap)?,
+        // Through the machine — `ToIntegerOrInfinity` begins with `ToNumber`, and `ToNumber` of an
+        // object calls its `valueOf`. The heap-only conversion refused every object, so
+        // `(255).toString(new Number(16))` threw where every other engine answers `"ff"`. Same
+        // fault as `builtins::math`'s, and the last one of its kind in the engine.
+        given => super::string::to_integer_or_infinity(vm.to_number(given, heap)?),
     };
     // Step 3 — anything outside 2 to 36 is a RangeError, including a fractional radix, which the
     // conversion above has already flattened.

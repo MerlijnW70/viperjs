@@ -162,7 +162,7 @@ fn aggregate_construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> C
 /// It reads `name` and `message` off `this` through the prototype chain rather than off the
 /// error itself, which is why an error made by `Object.create(Error.prototype)` prints as
 /// `"Error"` and why assigning `e.name` changes what it prints.
-pub fn to_string(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+pub fn to_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let Value::Object(object) = call.this_value else {
         // §20.5.3.4 step 2. Reachable as `Error.prototype.toString.call(1)`, and the reason
         // §10.3.1 must not substitute a receiver: with the global object put here instead, this
@@ -173,8 +173,8 @@ pub fn to_string(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comple
     };
     // §20.5.3.4 steps 3 and 5 — absent is `"Error"` for the name and `""` for the message, which
     // is what makes an object with neither print as `"Error"`.
-    let name = inherited_string(heap, object, "name", "Error")?;
-    let message = inherited_string(heap, object, "message", "")?;
+    let name = inherited_string(vm, heap, object, "name", "Error")?;
+    let message = inherited_string(vm, heap, object, "message", "")?;
     let joined = match (name.is_empty(), message.is_empty()) {
         (true, true) => String::new(),
         (true, false) => message,
@@ -185,24 +185,34 @@ pub fn to_string(_vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comple
 }
 
 /// A property of `object` or its prototypes, as Rust text, with a default when it is `undefined`.
+///
+/// **A real `Get` and a real `ToString`, and both halves were once neither.** §20.5.3.4 steps 3 and
+/// 5 are `Get(O, "name")` and `Get(O, "message")`, and step 4 and 6 are `ToString` of each. What was
+/// here read the property table directly and converted with a heap-only `ToString`, which cost two
+/// things a program can see and one comment said outright was safe:
+///
+/// - **An accessor was read as absent.** The comment said "nothing on these prototypes is one",
+///   which is true of the prototypes ViperJS builds and says nothing about the object in hand —
+///   `Object.defineProperty(e, 'name', { get() { … } })` is two lines, and `e.toString()` silently
+///   answered `"Error"`. A *wrong* answer, not a missing one.
+/// - **A `name` or `message` that is an object threw.** `ToString` of one calls its `toString`,
+///   which needs the interpreter; see [`super::math`] for the same fault across thirty-eight
+///   built-ins.
+///
+/// A Proxy's `get` trap now runs here too, which is the same clause read once more.
 fn inherited_string(
+    vm: &mut Vm,
     heap: &mut Heap,
     object: ObjectId,
     name: &str,
     default: &str,
 ) -> Completion<String> {
     let key = key(heap, name);
-    let found = heap.find_own(object, key).map(|(_, property)| property);
-    let value = match found.map(|property| property.kind) {
-        Some(crate::heap::PropertyKind::Data { value, .. }) => value,
-        // An accessor would need its getter called, and nothing on these prototypes is one.
-        // Reading it as absent is the same answer the default gives, and is not a guess.
-        _ => Value::Undefined,
-    };
+    let value = vm.get_property_key(Value::Object(object), key, heap)?;
     if matches!(value, Value::Undefined) {
         return Ok(default.to_string());
     }
-    let id = value.to_string(heap)?;
+    let id = vm.to_string(value, heap)?;
     Ok(String::from_utf16_lossy(heap.string(id).unwrap_or(&[])))
 }
 
