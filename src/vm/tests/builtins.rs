@@ -394,3 +394,100 @@ fn number_to_string_coerces_its_radix_through_the_machine() {
     // about instead of converted blindly.
     assert_eq!(run("(255).toString(undefined)"), "255");
 }
+
+#[test]
+fn the_native_function_string_is_always_something_that_parses() {
+    // §20.2.3.5's production makes both the accessor and the name optional, and the name used to be
+    // spliced in as the `name` property spells it — which for three shapes produced text that does
+    // not parse. test262 parses this string against the grammar, so each was a failure, and a
+    // program re-parsing `String(f)` met the same thing.
+    //
+    // A private method's name is a PrivateIdentifier and never a PropertyName.
+    assert_eq!(
+        run("class C { #m() {} reach() { return this.#m } } String(new C().reach())"),
+        "function () { [native code] }"
+    );
+    // …and a static one, which reaches the same place by the other route.
+    assert_eq!(
+        run("class C { static #m() {} static reach() { return C.#m } } String(C.reach())"),
+        "function () { [native code] }"
+    );
+    // A bound function's is two identifiers with a space between them.
+    assert_eq!(
+        run("String(function f() {}.bind(null))"),
+        "function () { [native code] }"
+    );
+    // …and the two that *are* legal keep their name, which is what stops this passing by dropping
+    // every name there is. An ordinary one, and an accessor whose `get` is the production's own
+    // `NativeFunctionAccessor`.
+    assert_eq!(
+        run("String(({ m() {} }).m)"),
+        "function m() { [native code] }"
+    );
+    assert_eq!(
+        run("String(Object.getOwnPropertyDescriptor({ get x() {} }, 'x').get)"),
+        "function get x() { [native code] }"
+    );
+    // A Symbol-keyed method spells itself as a ComputedPropertyName, which the grammar takes.
+    assert_eq!(
+        run("var s = Symbol('tag'); var o = { [s]() {} }; String(o[s])"),
+        "function [tag]() { [native code] }"
+    );
+    // …and one whose description cannot be an expression is refused rather than spliced in.
+    assert_eq!(
+        run("var s = Symbol('two words'); var o = { [s]() {} }; String(o[s])"),
+        "function () { [native code] }"
+    );
+    // A reserved word is an IdentifierName and is kept: an object literal really can hold `if`.
+    assert_eq!(
+        run("String(({ if() {} }).if)"),
+        "function if() { [native code] }"
+    );
+    // An anonymous function has no name to hold, which is the production with both parts absent.
+    assert_eq!(
+        run("String(function () {}.bind)"),
+        "function bind() { [native code] }"
+    );
+}
+
+#[test]
+fn a_name_that_would_not_parse_is_left_out_of_the_native_function_form() {
+    // The other half of [`the_native_function_string_is_always_something_that_parses`]: what the
+    // check must never do is *accept* something the grammar cannot hold, and each row here is one
+    // way of being too generous.
+    //
+    // An accessor whose property name is the empty string has a `name` of `"get "`, and the
+    // production allows a `NativeFunctionAccessor` with no `PropertyName` after it — so the `get`
+    // is kept rather than the whole thing being dropped.
+    assert_eq!(
+        run("String(Object.getOwnPropertyDescriptor({ get ''() {} }, '').get)"),
+        "function get () { [native code] }"
+    );
+    // A name that *opens* like a computed one and does not close is not one. Accepting it on the
+    // opening bracket alone emits `function [abc() { … }`, which does not parse.
+    assert_eq!(
+        run("var o = { ['[abc']() {} }; String(o['[abc'])"),
+        "function () { [native code] }"
+    );
+    // …and one that closes without opening, which is the same mistake mirrored.
+    assert_eq!(
+        run("var o = { ['abc]']() {} }; String(o['abc]'])"),
+        "function () { [native code] }"
+    );
+    // A computed name whose contents are not a dotted run of identifiers — here a trailing dot,
+    // which leaves an empty part. `function [a.]() { … }` does not parse.
+    assert_eq!(
+        run("var o = { ['[a.]']() {} }; String(o['[a.]'])"),
+        "function () { [native code] }"
+    );
+    // …and empty brackets, which is `[ ]` with no expression in it.
+    assert_eq!(
+        run("var o = { ['[]']() {} }; String(o['[]'])"),
+        "function () { [native code] }"
+    );
+    // The dotted run that *is* legal, which is how a well-known Symbol spells itself.
+    assert_eq!(
+        run("var o = { [Symbol.iterator]() {} }; String(o[Symbol.iterator])"),
+        "function [Symbol.iterator]() { [native code] }"
+    );
+}

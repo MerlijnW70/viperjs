@@ -1213,30 +1213,16 @@ built-ins/Function/length/S15.3.5.1_A3_T3.js :: it threw an object with no name:
 built-ins/Function/length/S15.3.5.1_A3_T3.js (strict) :: it threw an object with no name: #4: the length property has the attributes { ReadOnly }
 built-ins/Function/proto-from-ctor-realm-prototype.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Function/proto-from-ctor-realm-prototype.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
-built-ins/Function/prototype/bind/instance-construct-newtarget-boundtarget-bound.js :: it threw an object with no name: Expected SameValue(«function bound A() { [native code] }», «function A() { [native code] }») to be true
-built-ins/Function/prototype/bind/instance-construct-newtarget-boundtarget-bound.js (strict) :: it threw an object with no name: Expected SameValue(«function bound A() { [native code] }», «function A() { [native code] }») to be true
-built-ins/Function/prototype/bind/instance-construct-newtarget-self-reflect.js :: it threw an object with no name: Expected SameValue(«function bound bound A() { [native code] }», «function A() { [native code] }») to be true
-built-ins/Function/prototype/bind/instance-construct-newtarget-self-reflect.js (strict) :: it threw an object with no name: Expected SameValue(«function bound bound A() { [native code] }», «function A() { [native code] }») to be true
 built-ins/Function/prototype/bind/instance-length-tointeger.js :: it threw an object with no name: Expected SameValue(«3.66», «3») to be true
 built-ins/Function/prototype/bind/instance-length-tointeger.js (strict) :: it threw an object with no name: Expected SameValue(«3.66», «3») to be true
 built-ins/Function/prototype/bind/instance-name-error.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Function/prototype/bind/instance-name-error.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 built-ins/Function/prototype/bind/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Function/prototype/bind/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
-built-ins/Function/prototype/toString/built-in-function-object.js :: it threw an object with no name: Conforms to NativeFunction Syntax: "function get Iterator.prototype.constructor() { [native code] }" (%Iterator%.prototype.constructor)
-built-ins/Function/prototype/toString/built-in-function-object.js (strict) :: it threw an object with no name: Conforms to NativeFunction Syntax: "function get Iterator.prototype.constructor() { [native code] }" (%Iterator%.prototype.constructor)
 built-ins/Function/prototype/toString/line-terminator-normalisation-CR.js :: it threw ReferenceError: assertToStringOrNativeFunction is not defined
 built-ins/Function/prototype/toString/line-terminator-normalisation-CR.js (strict) :: it threw ReferenceError: assertToStringOrNativeFunction is not defined
 built-ins/Function/prototype/toString/method-computed-property-name.js :: it threw an object with no name: Conforms to NativeFunction Syntax: "undefined" ([ { a(){} }.a ](){ })
 built-ins/Function/prototype/toString/method-computed-property-name.js (strict) :: it threw an object with no name: Conforms to NativeFunction Syntax: "undefined" ([ { a(){} }.a ](){ })
-built-ins/Function/prototype/toString/private-method-class-expression.js :: it threw an object with no name: Conforms to NativeFunction Syntax: "function #f() { [native code] }" (#f /* a */ ( /* b */ ) /* c */ { /* d */ })
-built-ins/Function/prototype/toString/private-method-class-expression.js (strict) :: it threw an object with no name: Conforms to NativeFunction Syntax: "function #f() { [native code] }" (#f /* a */ ( /* b */ ) /* c */ { /* d */ })
-built-ins/Function/prototype/toString/private-method-class-statement.js :: it threw an object with no name: Conforms to NativeFunction Syntax: "function #f() { [native code] }" (#f /* a */ ( /* b */ ) /* c */ { /* d */ })
-built-ins/Function/prototype/toString/private-method-class-statement.js (strict) :: it threw an object with no name: Conforms to NativeFunction Syntax: "function #f() { [native code] }" (#f /* a */ ( /* b */ ) /* c */ { /* d */ })
-built-ins/Function/prototype/toString/private-static-method-class-expression.js :: it threw an object with no name: Conforms to NativeFunction Syntax: "function #f() { [native code] }" (#f /* a */ ( /* b */ ) /* c */ { /* d */ })
-built-ins/Function/prototype/toString/private-static-method-class-expression.js (strict) :: it threw an object with no name: Conforms to NativeFunction Syntax: "function #f() { [native code] }" (#f /* a */ ( /* b */ ) /* c */ { /* d */ })
-built-ins/Function/prototype/toString/private-static-method-class-statement.js :: it threw an object with no name: Conforms to NativeFunction Syntax: "function #f() { [native code] }" (#f /* a */ ( /* b */ ) /* c */ { /* d */ })
-built-ins/Function/prototype/toString/private-static-method-class-statement.js (strict) :: it threw an object with no name: Conforms to NativeFunction Syntax: "function #f() { [native code] }" (#f /* a */ ( /* b */ ) /* c */ { /* d */ })
 built-ins/GeneratorFunction/instance-length.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 built-ins/GeneratorFunction/instance-length.js (strict) :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 built-ins/GeneratorFunction/proto-from-ctor-realm-prototype.js :: it threw an object with no name: Expected SameValue(«[object Generator]», «[object Generator]») to be true

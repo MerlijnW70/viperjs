@@ -42,9 +42,23 @@ pub fn call(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
 /// plausible-looking reconstruction — would be worse, and because keeping the source is a change
 /// to the compiler rather than to this function.
 ///
-/// The name goes in as the `name` *property* reads it, so an accessor's `"get x"` produces
-/// `function get x() { [native code] }` — which is what §20.2.3.5's grammar calls a
-/// `NativeFunctionAccessor`, and is why the two spellings need no case of their own.
+/// # The name goes in only when the grammar can hold it
+///
+/// §20.2.3.5's production is
+/// `function NativeFunctionAccessor_opt PropertyName_opt ( FormalParameters ) { [ native code ] }`,
+/// and **both** optional parts are optional. The name used to be spliced in as the `name` property
+/// spells it, which is right for `x` and for an accessor's `get x` — that prefix is the
+/// `NativeFunctionAccessor` — and produced text that does not parse for three shapes a program can
+/// reach:
+///
+/// - `#f` for a private method. `#f` is a PrivateIdentifier and never a PropertyName.
+/// - `bound f` for a bound function. Two identifiers with a space between them are not one name.
+/// - `get Iterator.prototype.constructor` for an intrinsic accessor whose `name` carries dots.
+///
+/// test262 parses this string against that grammar — `nativeFunctionMatcher.js` — so all three were
+/// failures, and a program re-parsing `String(f)` would have met the same thing. So the name is
+/// included when [`spellable_as_property_name`] agrees and omitted whole when it does not, which is
+/// always legal because the production says so.
 fn to_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     // Step 5 — anything that is not callable is a TypeError. `Function.prototype.toString.call({})`
     // has nothing to answer about, and answering `"[object Object]"` would be a lie about what it
@@ -64,9 +78,75 @@ fn to_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
         }
     };
     let mut text: Vec<u16> = "function ".encode_utf16().collect();
-    text.extend_from_slice(&spelled);
+    if spellable_as_property_name(&spelled) {
+        text.extend_from_slice(&spelled);
+    }
     text.extend("() { [native code] }".encode_utf16());
     Ok(Value::String(heap.intern(&text)))
+}
+
+/// Whether `spelled` can stand where §20.2.3.5 allows a `NativeFunctionAccessor` and a
+/// `PropertyName`, so that the text [`to_string`] builds around it parses.
+///
+/// Deliberately **narrower than the grammar**, and that is the safe direction: a name this refuses
+/// is left out, and a production whose optional part is absent is still a production. Accepting one
+/// the grammar does not is the failure that has no floor — it makes `String(f)` unparseable.
+///
+/// What is accepted, after an optional `get ` or `set `:
+///
+/// - an `IdentifierName` — §12.7's rule, which is what an ordinary method's name is;
+/// - a `ComputedPropertyName` of the one shape this engine produces, `[` a dotted run of identifier
+///   names `]`, which is how a Symbol-keyed method spells itself (`[Symbol.iterator]`);
+/// - nothing at all, for an anonymous function.
+///
+/// A reserved word is accepted, because `IdentifierName` includes them: `function if()` is legal
+/// here where `var if` is not, and an object literal really can hold a method called `if`.
+fn spellable_as_property_name(spelled: &[u16]) -> bool {
+    // The accessor prefix, which is part of the production rather than part of the name.
+    let name = ["get ", "set "]
+        .iter()
+        .find_map(|prefix| {
+            let units: Vec<u16> = prefix.encode_utf16().collect();
+            spelled.strip_prefix(units.as_slice())
+        })
+        .unwrap_or(spelled);
+    // §20.2.3.2 names a bound function `"bound "` followed by its target's name, so an **anonymous**
+    // target leaves a trailing space and nothing after it. `function bound () { … }` parses — the
+    // space before the parenthesis is whitespace like any other — so the space is not what makes a
+    // name unusable and is trimmed rather than counted against it. `bound f` still fails, because
+    // what is left is two names.
+    let name = match name.split_last() {
+        Some((&last, rest)) if last == u16::from(b' ') => rest,
+        _ => name,
+    };
+    if name.is_empty() {
+        return true;
+    }
+    // A computed name, which is the only bracketed shape the engine spells — and the contents are
+    // checked rather than trusted, so a Symbol whose description holds a space is refused.
+    if name.first() == Some(&u16::from(b'[')) && name.last() == Some(&u16::from(b']')) {
+        let inside = &name[1..name.len() - 1];
+        return !inside.is_empty()
+            && inside
+                .split(|unit| *unit == u16::from(b'.'))
+                .all(is_identifier_name);
+    }
+    is_identifier_name(name)
+}
+
+/// Whether these code units are §12.7's `IdentifierName` — one `IdentifierStart` and the rest
+/// `IdentifierPart`.
+///
+/// Read by code point rather than by code unit, so a name outside the Basic Multilingual Plane is
+/// judged by the character it is rather than by the two halves it is stored as.
+fn is_identifier_name(units: &[u16]) -> bool {
+    let mut points = char::decode_utf16(units.iter().copied());
+    let Some(Ok(first)) = points.next() else {
+        return false;
+    };
+    crate::unicode_id::is_id_start(first as u32)
+        && points
+            .all(|found| found.is_ok_and(|part| crate::unicode_id::is_id_continue(part as u32)))
 }
 
 /// §20.2.3.1 `Function.prototype.apply`.

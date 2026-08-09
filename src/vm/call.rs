@@ -512,6 +512,22 @@ impl Vm {
         let mut prefix: Vec<Value> = Vec::new();
         let mut receiver = Value::Undefined;
         let mut target = bound;
+        // §10.4.1.2 step 5 — "if SameValue(F, newTarget) is true, set newTarget to target", which
+        // is a rule *per binding* and so belongs in this walk rather than after it.
+        //
+        // `new C()` needs no help: the callee becomes the flattened target and a construction takes
+        // its `new.target` from the callee, so the two agree by construction. `Reflect.construct` is
+        // where the rule is visible, because it is the only way to name a `new.target` that is not
+        // the callee — and `Reflect.construct(C, [], C)` on a doubly-bound `C` has to walk *both*
+        // hops, C to B and then B to A. Applied at each level, never at the end.
+        let mut new_target = match how {
+            Entry::Named => self
+                .stack
+                .get(receiver_at)
+                .copied()
+                .unwrap_or(Value::Undefined),
+            _ => Value::Undefined,
+        };
         // Bounded because a hand-built heap could point a bound function at itself; no `bind` can
         // make such a cycle, since it binds a function that already exists.
         for _ in 0..MAX_CALL_DEPTH {
@@ -526,12 +542,19 @@ impl Vm {
                     &arguments,
                     how,
                     receiver_at,
+                    new_target,
                     heap,
                     chunk,
                     current,
                     at,
                 );
             };
+            // Step 5, against the binding being unwrapped *now* — so a `new.target` naming an outer
+            // binding is carried inward one hop at a time and one naming something else is not
+            // touched at all.
+            if matches!(new_target, Value::Object(named) if named == target) {
+                new_target = Value::Object(binding.target);
+            }
             let mut ahead = binding.arguments;
             ahead.extend_from_slice(&prefix);
             prefix = ahead;
@@ -554,6 +577,7 @@ impl Vm {
         arguments: &[Value],
         how: Entry,
         receiver_at: usize,
+        new_target: Value,
         heap: &mut Heap,
         chunk: &Chunk,
         current: &mut Option<Rc<Chunk>>,
@@ -570,10 +594,18 @@ impl Vm {
         // §10.4.1.2 — `new` on a bound function constructs the *target*, and the bound `this` is
         // not consulted at all: `new` makes its own receiver, so there is nothing for it to say.
         let how = match how {
-            // A named `new.target` survives the bind, because §10.4.1.2 step 5 passes it through:
-            // `Reflect.construct(f.bind(x), [], G)` makes an object from `G.prototype`, and the
-            // bound receiver is no more consulted than it is for a plain `new`.
-            Entry::Construct | Entry::Named => how,
+            // §28.1.2's named `new.target` is put back **explicitly**, in the slot [`Vm::enter_at`]
+            // reads it from. It used to be left to whatever the truncation above happened to leave
+            // there, which was right by accident for the shapes anybody had tried and is not a
+            // claim this code should be making. What goes back is the value §10.4.1.2 step 5
+            // settled on, which for a chain is not the value that came in.
+            Entry::Named => {
+                self.stack.push(new_target);
+                how
+            }
+            // A plain `new` needs nothing: a construction takes its `new.target` from the callee,
+            // and the callee is now the flattened target — which is exactly what step 5 asks for.
+            Entry::Construct => how,
             _ => {
                 self.stack.push(receiver);
                 Entry::Method

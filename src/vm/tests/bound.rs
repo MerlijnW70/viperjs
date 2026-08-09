@@ -555,3 +555,46 @@ fn a_function_cannot_be_given_a_has_instance_by_assignment() {
         "true"
     );
 }
+
+#[test]
+fn a_bound_function_carries_new_target_inward_one_binding_at_a_time() {
+    // §10.4.1.2 step 5 — "if SameValue(F, newTarget) is true, set newTarget to target" — which is a
+    // rule per binding and was applied at none of them. A plain `new` was right by accident: a
+    // construction takes its `new.target` from the callee, and flattening had already replaced the
+    // callee with the target.
+    let setup = "var seen; function A() { seen = new.target } function G() {} \
+                 var B = A.bind(); var C = B.bind(); ";
+    // `Reflect.construct` is the only way to name a `new.target` that is not the callee, and a
+    // doubly-bound function has to walk *both* hops: C to B, then B to A.
+    assert_eq!(
+        run(&format!("{setup} Reflect.construct(C, [], C); seen === A")),
+        "true"
+    );
+    // …and one naming the *inner* binding walks the remaining hop only.
+    assert_eq!(
+        run(&format!("{setup} Reflect.construct(C, [], B); seen === A")),
+        "true"
+    );
+    // A `new.target` that names something else is not touched at all, which is the row that stops
+    // this passing by always answering the target.
+    assert_eq!(
+        run(&format!("{setup} Reflect.construct(C, [], G); seen === G")),
+        "true"
+    );
+    // The prototype follows the same value, which is what a program actually sees.
+    assert_eq!(
+        run(&format!(
+            "{setup} Object.getPrototypeOf(Reflect.construct(C, [], C)) === A.prototype"
+        )),
+        "true"
+    );
+    assert_eq!(
+        run(&format!(
+            "{setup} Object.getPrototypeOf(Reflect.construct(B, [], G)) === G.prototype"
+        )),
+        "true"
+    );
+    // …and the plain `new` cases, unchanged.
+    assert_eq!(run(&format!("{setup} new B(); seen === A")), "true");
+    assert_eq!(run(&format!("{setup} new C(); seen === A")), "true");
+}
