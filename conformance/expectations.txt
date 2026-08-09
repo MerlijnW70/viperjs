@@ -11777,8 +11777,6 @@ built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-
 built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-symbol-key.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/WeakSet/iterator-close-after-add-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
 built-ins/WeakSet/iterator-close-after-add-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/global/10.2.1.1.3-4-16-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/global/10.2.1.1.3-4-18-s.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/arguments-object/mapped/mapped-arguments-nonconfigurable-delete-2.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 language/arguments-object/mapped/mapped-arguments-nonconfigurable-delete-3.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 language/arguments-object/mapped/mapped-arguments-nonconfigurable-delete-4.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true

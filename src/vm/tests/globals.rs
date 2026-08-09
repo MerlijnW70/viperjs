@@ -27,6 +27,50 @@ fn the_two_predicates_ask_about_what_the_argument_becomes() {
 }
 
 #[test]
+fn the_three_value_properties_are_fixed_in_place_and_global_this_is_not() {
+    // §19.1.2–4 — `undefined`, `NaN` and `Infinity` are each `{ [[Writable]]: false,
+    // [[Enumerable]]: false, [[Configurable]]: false }`. The test above says they are "fixed in
+    // place" and then reads only their **values**, which is not the same claim: a full mutation
+    // sweep of `realm.rs` reported `writable` and `configurable` as survivors, because nothing
+    // anywhere read a descriptor of these three. That is the recurring shape — *when a slice
+    // defines properties, assert `getOwnPropertyDescriptor` and not only the value.*
+    for name in ["undefined", "NaN", "Infinity"] {
+        assert_eq!(
+            run(&format!(
+                "var d = Object.getOwnPropertyDescriptor(globalThis, '{name}'); \
+                 [d.writable, d.enumerable, d.configurable].join(',')"
+            )),
+            "false,false,false",
+            "{name} is fixed in place"
+        );
+    }
+    // What that means to a program, which the descriptor row does not show. §6.2.5.6: a sloppy
+    // write is discarded in silence and a strict one throws, and neither of them changes anything.
+    assert_eq!(run("NaN = 1; isNaN(NaN)"), "true");
+    assert_eq!(run("Infinity = 1; Infinity"), "Infinity");
+    assert_eq!(
+        run("'use strict'; try { NaN = 1 } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // Not configurable, so a delete answers `false` rather than removing it.
+    assert_eq!(run("delete globalThis.NaN"), "false");
+    assert_eq!(run("delete globalThis.undefined"), "false");
+    // …and `var undefined = 1` is legal and does nothing, which is the sentence `realm.rs`'s own
+    // comment uses to say why this is a read-only *property* rather than a keyword.
+    assert_eq!(run("var undefined = 1; typeof undefined"), "undefined");
+    // §19.1.1's `globalThis` is the contrast that makes the three above a decision rather than how
+    // every global property happens to be made: it is writable and configurable, and only its
+    // enumerability is shared with them.
+    assert_eq!(
+        run(
+            "var d = Object.getOwnPropertyDescriptor(globalThis, 'globalThis'); \
+             [d.writable, d.enumerable, d.configurable].join(',')"
+        ),
+        "true,false,true"
+    );
+}
+
+#[test]
 fn parse_int_reads_as_far_as_it_can_where_number_asks_about_the_whole_string() {
     // The distinction the function exists for. A program that reaches for the wrong one is wrong
     // on odd input only, which is the worst place to be wrong.

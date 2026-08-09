@@ -435,9 +435,39 @@ impl Vm {
                         continue;
                     }
                     let stored = self.set_property_key(Value::Object(global), key, value, heap);
-                    // No `continue`: this is the end of the arm either way, so a handled throw
-                    // and an ordinary store leave the loop in the same place.
-                    self.settle(stored, heap, root, current, at)?;
+                    match self.settle(stored, heap, root, current, at)? {
+                        // §9.1.1.2.5 step 6 hands the strictness on as `Set(bindingObject, N, V,
+                        // S)`, and §7.3.4 makes a `[[Set]]` that answered `false` a TypeError when
+                        // `S` is true. **This arm was missing it**, so `'use strict'; NaN = 1` was
+                        // discarded in silence while `globalThis.NaN = 1` threw — the same write,
+                        // told apart only by how the name was spelled. It is the rule
+                        // `Instruction::DeleteProperty` applies from the other side and the one
+                        // `SetProperty` applies to a *qualified* name, and this arm is the only
+                        // place an **unqualified** one reaches the global object.
+                        //
+                        // Found by a mutation sweep of `realm.rs` reporting the global value
+                        // properties' `writable: false` as untested; the unit test written to kill
+                        // that survivor failed on *this* instead. **And the suite had been saying
+                        // so the whole time** — `built-ins/global/10.2.1.1.3-4-16-s.js` and
+                        // `-4-18-s.js` are `NaN = 12` and `undefined = 12` under `onlyStrict`, and
+                        // both were sitting in the expectations file. Looking under
+                        // `built-ins/NaN/` found only `flags: [noStrict]` rows and suggested
+                        // nothing covered it, which was wrong: the tests for a *binding* write live
+                        // with the clause that performs it, not with the property it lands on.
+                        Some(Value::Boolean(false)) if strict => {
+                            self.raise(
+                                Abrupt::type_error("this property will not take a value"),
+                                heap,
+                                root,
+                                current,
+                                at,
+                            )?;
+                            continue;
+                        }
+                        // No `continue`: this is the end of the arm either way, so a handled throw
+                        // and an ordinary store leave the loop in the same place.
+                        _ => {}
+                    }
                 }
                 Instruction::TypeofGlobal(index) => {
                     self.typeof_global(index, heap, root, current, at)?;
