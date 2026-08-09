@@ -559,13 +559,39 @@ fn wait_async_parks_a_promise_that_this_agents_own_notify_wakes() {
         ),
         "ok"
     );
-    // …and a waiter nothing notifies stays parked rather than settling, because there is no timer
-    // to time it out. This is the recorded divergence, pinned here so that building a timer has to
-    // change this row deliberately rather than quietly.
+    // …and a waiter nothing notifies settles `"timed-out"` once its timeout has passed. **This row
+    // said `"nothing"` until 2026-08-09**, which was DR-0024's recorded divergence pinned so that
+    // building a timer had to change it deliberately; it is the amendment, and it is deliberate.
+    // The queue is empty the instant the script ends, so this is the sleeping half of the drain.
     assert_eq!(
         run_settled(
             "var a = new Int32Array(new SharedArrayBuffer(32)); var said = 'nothing'; \
              Atomics.waitAsync(a, 0, 0, 1).value.then(function (o) { said = o; });",
+            "said"
+        ),
+        "timed-out"
+    );
+    // The other half: a program that keeps the queue busy for the whole timeout reaches the answer
+    // through the *per-job* check rather than the sleep, which is the path test262's `setTimeout`
+    // — a `Promise.resolve().then` chain against the clock — takes for every asynchronous Atomics
+    // test there is. Written the same way here so the two are not one row wearing two hats.
+    assert_eq!(
+        run_settled(
+            "var a = new Int32Array(new SharedArrayBuffer(32)); var said = 'nothing'; \
+             Atomics.waitAsync(a, 0, 0, 1).value.then(function (o) { said = o; }); \
+             var end = Date.now() + 20; \
+             (function spin() { if (Date.now() < end) Promise.resolve().then(spin); })();",
+            "said"
+        ),
+        "timed-out"
+    );
+    // An infinite timeout is still infinite, which is what makes the two rows above a *timeout* and
+    // not a drain that settles whatever it finds. Nothing notifies this one and nothing times it
+    // out, so the queue empties with it parked and `run_settled` returns rather than sleeping.
+    assert_eq!(
+        run_settled(
+            "var a = new Int32Array(new SharedArrayBuffer(32)); var said = 'nothing'; \
+             Atomics.waitAsync(a, 0, 0).value.then(function (o) { said = o; });",
             "said"
         ),
         "nothing"

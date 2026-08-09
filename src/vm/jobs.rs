@@ -108,11 +108,54 @@ impl Vm {
     /// exactly as `while (true) {}` never stops. DR-0002 is about panics, not about halting, and a
     /// cap here would be a made-up limit that no specification mentions and that a correct program
     /// could reach.
-    pub(crate) fn drain_jobs(&mut self, heap: &mut Heap) {
-        while let Some(job) = self.jobs.pop_front() {
-            // The completion is discarded, which is §9.5 step 3. Everything a promise was waiting
-            // for has already been settled by the job itself before it could throw.
-            let _ = self.run_job(job, heap);
+    ///
+    /// # Why a queue drain asks the time
+    ///
+    /// §9.5's queue holds jobs that are runnable *now*, and this loop would once have been the
+    /// `while` alone. §25.4.1.5's asynchronous waiter is the one thing that becomes runnable at a
+    /// **moment** rather than because something enqueued it, so the drain is not finished when the
+    /// queue is empty — it is finished when the queue is empty and no waiter is owed an answer.
+    ///
+    /// The two halves are asked in different places for a reason. After each job, because a program
+    /// polling with promise jobs — which is exactly what test262's `atomicsHelper.js` builds its
+    /// `setTimeout` out of — keeps the queue non-empty for the whole timeout and would otherwise
+    /// never reach the second half. Once the queue empties, because an agent that simply awaits its
+    /// `waitAsync` has nothing to poll with, and returning there would leave a promise that nothing
+    /// in the world could ever settle.
+    ///
+    /// # Why the collector is called from here
+    ///
+    /// A job runs through [`Vm::call_value`], which is a *nested* execution — so `reentries` is one
+    /// for the whole of it, and `execute`'s schedule is guarded on `reentries == 0` for the
+    /// excellent reason that a native holding values in Rust locals must not be collected
+    /// underneath. The consequence nobody had noticed is that **the loop never collects during a
+    /// job drain at all**, whatever the host set the growth threshold to.
+    ///
+    /// For a program whose work is jobs that is the whole run. `p.then(step)` re-armed from inside
+    /// `step` allocates a capability's three objects per turn and frees none of them, so the arena
+    /// climbs to DR-0013's budget and the RangeError lands *in a job* — where §9.5 step 3 discards
+    /// it. The queue empties, `run` returns, the exit status is zero, and the program has simply
+    /// stopped. Measured 2026-08-09: exactly 38,174 turns, deterministic, with the schedule on and
+    /// with it off, which is what said the schedule was not running rather than not working.
+    ///
+    /// The boundary between two jobs is the safe point the guard was really asking for: the job has
+    /// returned, no native holds anything, and the frames are as empty as they are between two
+    /// `run`s. So the check moves here, unchanged, and `root` is threaded in for its constants.
+    pub(crate) fn drain_jobs(&mut self, root: &crate::vm::Chunk, heap: &mut Heap) {
+        loop {
+            while let Some(job) = self.jobs.pop_front() {
+                // The completion is discarded, which is §9.5 step 3. Everything a promise was
+                // waiting for has already been settled by the job itself before it could throw.
+                let _ = self.run_job(job, heap);
+                self.expire_waiters(heap);
+                if self.collection_is_due(heap) {
+                    self.collect(root, heap);
+                    self.settle_collection_window(heap);
+                }
+            }
+            if !self.wait_for_a_deadline(heap) {
+                return;
+            }
         }
     }
 

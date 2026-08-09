@@ -239,6 +239,16 @@ pub(crate) struct Waiter {
     pub(crate) byte: usize,
     /// The promise `waitAsync` answered with, settled with `"ok"` when a notify reaches it.
     pub(crate) capability: crate::heap::Capability,
+    /// When it settles `"timed-out"` if nothing has notified it — §25.4.1.5 step 6's *in parallel*
+    /// wait, as the moment it ends rather than as the duration it lasts.
+    ///
+    /// `None` for the infinite timeout, which is every `waitAsync` that passes no fourth argument,
+    /// and also for a finite one too large for the clock to name: a wait longer than the machine can
+    /// express is the one that never ends, which is the same answer arrived at honestly.
+    ///
+    /// An `Instant` rather than a `Duration` because what has to be compared is *this* waiter's end
+    /// against the others', and the waits did not begin together. See [`Vm::expire_waiters`].
+    pub(crate) deadline: Option<std::time::Instant>,
 }
 
 /// The interpreter.
@@ -880,7 +890,7 @@ impl Vm {
         // the queue: a `then` registered before the throw is still waiting, and a host reports the
         // error and carries on. Nothing a job does can change the answer below, which is already
         // decided.
-        self.drain_jobs(heap);
+        self.drain_jobs(chunk, heap);
         // §9.5 step 3 — a job's completion is discarded, and so is a throw that escaped one. There
         // is nowhere for it to go: the script that would have caught it has finished.
         self.escaped = None;
@@ -1136,6 +1146,47 @@ impl Vm {
         heap.collect(&roots)
     }
 
+    /// Whether the arena has grown past what the schedule allows since the last collection.
+    ///
+    /// Half of the condition and not all of it: the caller must also be somewhere that owns every
+    /// live value, which inside the interpreter means `reentries == 0` and at a job boundary means
+    /// the job has returned. Split out because there are two such places and one of them —
+    /// [`Vm::drain_jobs`] — is unreachable from the other's check, which is the whole of the bug
+    /// this pair was factored out to fix.
+    ///
+    /// Written as "is there any allowance left" rather than as a comparison, for DR-0022's reason
+    /// about its own deadline: `>=` and `>` differ only where the growth lands exactly on the
+    /// threshold, which is one byte value a script cannot aim at. The subtraction cannot underflow
+    /// — `collected_at` is a footprint this run already saw and the arena only ever grows — and is
+    /// saturating anyway, because the alternative to a wrong answer is a panic (DR-0002).
+    fn collection_is_due(&self, heap: &Heap) -> bool {
+        self.collect_after_growth.is_some()
+            && self
+                .collect_next
+                .saturating_sub(heap.footprint().saturating_sub(self.collected_at))
+                == 0
+    }
+
+    /// Set the allowance the *next* collection waits for, having just done one.
+    ///
+    /// **Proportional to what survived, and never below the base.** The walk just done costs what
+    /// is *live*, so a program holding a great deal would otherwise pay that walk once per fixed
+    /// step of growth. Measured on a loop holding 150,000 objects: a mebibyte step ran 3.56 s
+    /// against 0.61 s for a sixteen-mebibyte one — six times the work for the same program, and all
+    /// of it re-walking the same live set.
+    ///
+    /// So the next allowance is the live set itself, floored at the base a host asked for. A
+    /// program with nothing live collects every `growth` bytes and stays small; one holding 30 MiB
+    /// is allowed to grow by 30 MiB before being walked again, which is the standard proportional
+    /// rule and is what stops the schedule turning a large heap into a quadratic one.
+    fn settle_collection_window(&mut self, heap: &Heap) {
+        self.collected_at = heap.footprint();
+        self.collect_next = self
+            .collect_after_growth
+            .unwrap_or(0)
+            .max(heap.live_footprint());
+    }
+
     /// The same, from inside the loop, where one more chunk is live than `roots` can find.
     ///
     /// `running` is the body the machine is **currently** executing, and it is in none of the
@@ -1228,17 +1279,117 @@ impl Vm {
     }
 
     /// §25.4.1.5 `AddWaiter` — park a `waitAsync`'s promise on a position for a later notify.
+    ///
+    /// `timeout` is what the program asked for, already reduced to a duration by the clause's
+    /// coercions; `None` is the infinite wait. It becomes a deadline **here**, at the moment of
+    /// parking, which is what step 6 means by waiting that many milliseconds.
     pub(crate) fn park_waiter(
         &mut self,
         block: crate::heap::Block,
         byte: usize,
         capability: crate::heap::Capability,
+        timeout: Option<std::time::Duration>,
     ) {
         self.waiters.push(Waiter {
             block,
             byte,
             capability,
+            // `checked_add` and not `+`: a timeout of a few hundred years is a legal argument and
+            // adding one to the clock is a panic, which DR-0002 does not allow however absurd the
+            // input. A deadline the clock cannot name is the wait that never ends.
+            deadline: timeout.and_then(|timeout| std::time::Instant::now().checked_add(timeout)),
         });
+    }
+
+    /// §25.4.1.6 `TriggerTimeout` — settle every waiter whose timeout has elapsed, and say whether
+    /// any had.
+    ///
+    /// The clause has this happen *in parallel* with the agent, at the instant the timeout runs out.
+    /// There is no parallel here and no timer, so it happens at the next **job boundary** instead:
+    /// [`Vm::drain_jobs`] asks after each job it runs, and again when it has none left. The answer
+    /// is late by however long one job took, and it is never early — which is the direction that
+    /// matters, since `no-spurious-wakeup-*` asserts the elapsed time is *at least* the timeout.
+    ///
+    /// This is what DR-0024 recorded as missing, and it is none of the three fakes that record
+    /// refused: nothing settles ahead of time, nothing spins, and nothing blocks a queue that has
+    /// work in it. The engine does not manufacture the passage of time — it notices it.
+    /// # Two shapes deliberately avoided here
+    ///
+    /// **Nothing is allocated before there is something to settle.** The obvious spelling makes the
+    /// `"timed-out"` String first and hands it to a loop that is almost always empty — a throwaway
+    /// heap String per job, which is a cost this repository has already paid once (`lab/NOTES.md`,
+    /// `gc-pressure`, a String per computed property key). Collecting the expired capabilities
+    /// first costs nothing on an empty list, so the early return needs no guard in front of it and
+    /// there is no fast path here that only a benchmark could tell from a slow one.
+    ///
+    /// **"Has this deadline passed" is asked a way that has no second spelling.** `<=` and `<`
+    /// differ only at the nanosecond the clock reads a deadline exactly, which is a case no test can
+    /// arrange and mutation coverage is right to report as uncovered — DR-0022's own deadline check
+    /// is written this way for the same reason.
+    pub(crate) fn expire_waiters(&mut self, heap: &mut Heap) -> bool {
+        let now = std::time::Instant::now();
+        let mut expired = Vec::new();
+        self.waiters.retain(|waiter| {
+            let passed = waiter
+                .deadline
+                .is_some_and(|deadline| deadline.saturating_duration_since(now).is_zero());
+            if passed {
+                expired.push(waiter.capability);
+            }
+            !passed
+        });
+        if expired.is_empty() {
+            return false;
+        }
+        let timed_out = crate::builtins::text(heap, "timed-out");
+        for capability in expired {
+            // Discarded for §9.5 step 3's reason, and this is on that path: a job's completion has
+            // nowhere to go, and settling a capability the engine made itself cannot throw anyway.
+            let _ = self.settle_capability(
+                capability,
+                crate::heap::ReactionKind::Fulfil,
+                timed_out,
+                heap,
+            );
+        }
+        true
+    }
+
+    /// The earliest moment a parked waiter is owed an answer, if any is.
+    fn next_deadline(&self) -> Option<std::time::Instant> {
+        self.waiters
+            .iter()
+            .filter_map(|waiter| waiter.deadline)
+            .min()
+    }
+
+    /// Nothing is runnable and a waiter is owed an answer: wait for it, settle it, and say whether
+    /// there is anything to run now.
+    ///
+    /// The one place this engine sleeps. It is reached only where the job queue is **empty** — so
+    /// there is no work being delayed, and the alternative is returning to the host with a promise
+    /// that provably can never settle — and it lasts exactly as long as the timeout the program
+    /// itself passed to `waitAsync`. An agent doing this is an agent with nothing else to do.
+    ///
+    /// **DR-0022's budget outranks the program's timeout.** A run with a deadline sleeps no further
+    /// than that deadline, and then stops with the waiter still parked: a host that said a run may
+    /// take fifty milliseconds does not get a five-second one back because the script asked for it.
+    /// A run with no budget waits as long as it was told to, which is what an embedder who set no
+    /// limit asked for.
+    fn wait_for_a_deadline(&mut self, heap: &mut Heap) -> bool {
+        let Some(deadline) = self.next_deadline() else {
+            return false;
+        };
+        // Whichever comes first, written as `min` rather than as a comparison for the reason
+        // [`Vm::expire_waiters`] gives: `<` and `<=` differ only where the two instants are exactly
+        // equal, and then they choose the same moment anyway. `min` has no second spelling.
+        let until = self.expires_at.map_or(deadline, |expires| {
+            std::cmp::min::<std::time::Instant>(expires, deadline)
+        });
+        std::thread::sleep(until.saturating_duration_since(std::time::Instant::now()));
+        // False when the sleep ended at the run's deadline rather than the waiter's, which is what
+        // ends the drain: nothing was settled, so nothing new can be runnable.
+        self.expire_waiters(heap)
     }
 
     /// §25.4.1.7 `RemoveWaiters` — take up to `count` of the waiters on a position, oldest first.

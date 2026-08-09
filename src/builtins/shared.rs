@@ -628,10 +628,12 @@ fn count_of(count: f64) -> usize {
 /// zero — because there is nothing left to wait for and a promise would only delay a known answer
 /// by a turn. The third parks and answers `async: true` with the promise.
 ///
-/// **What this engine cannot do is time one out.** A waiter with a finite timeout that nothing
-/// notifies should settle `"timed-out"` when the timeout elapses, and there is no timer to elapse
-/// it — so it stays parked. The divergence is bounded to that case: a timeout of zero is answered
-/// immediately, and a notify settles a waiter whatever its timeout was.
+/// **A finite timeout does elapse**, which it did not when DR-0024 was written. The deadline goes
+/// on the waiter and [`Vm::expire_waiters`] settles it `"timed-out"` at the next job boundary after
+/// it passes — see that method and [`Vm::drain_jobs`] for why a job boundary is where a clause that
+/// says *in parallel* lands in an engine that has no parallel. What is still missing is a notify
+/// from **another** agent reaching a promise parked here; that one is not a timer and DR-0024's
+/// second seam still names it.
 fn wait_async(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let (view, element, at) = target(vm, heap, call, Kinds::SharedWaitable)?;
     let expected = vm.to_numeric(element.holds_big(), call.argument(2), heap)?;
@@ -669,7 +671,12 @@ fn wait_async(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion
             };
             let capability = vm.intrinsic_capability(heap);
             let promise = capability.promise;
-            vm.park_waiter(block, view.offset + at * element.width(), capability);
+            vm.park_waiter(
+                block,
+                view.offset + at * element.width(),
+                capability,
+                duration_of(timeout),
+            );
             (true, promise)
         }
     };

@@ -793,28 +793,6 @@ built-ins/Atomics/sub/immutable-buffer.js :: it threw an object with no name: no
 built-ins/Atomics/sub/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/waitAsync/bigint/nan-for-timeout-agent.js :: the test called $DONE with Test262Error: Atomics.notify(new BigInt64Array(new SharedArrayBuffer(BigInt64Array.BYTES_PER_ELEMENT * 4)), 0) must return 1 Expected SameValue(«0», «1») to be true
 built-ins/Atomics/waitAsync/bigint/nan-for-timeout-agent.js (strict) :: the test called $DONE with Test262Error: Atomics.notify(new BigInt64Array(new SharedArrayBuffer(BigInt64Array.BYTES_PER_ELEMENT * 4)), 0) must return 1 Expected SameValue(«0», «1») to be true
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-no-operation.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-no-operation.js (strict) :: the test never called $DONE
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-add.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-add.js (strict) :: the test never called $DONE
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-and.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-and.js (strict) :: the test never called $DONE
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-compareExchange.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-compareExchange.js (strict) :: the test never called $DONE
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-exchange.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-exchange.js (strict) :: the test never called $DONE
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-or.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-or.js (strict) :: the test never called $DONE
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-store.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-store.js (strict) :: the test never called $DONE
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-sub.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-sub.js (strict) :: the test never called $DONE
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-xor.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/bigint/no-spurious-wakeup-on-xor.js (strict) :: the test never called $DONE
-built-ins/Atomics/waitAsync/bigint/true-for-timeout-agent.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/bigint/true-for-timeout-agent.js (strict) :: the test never called $DONE
-built-ins/Atomics/waitAsync/bigint/true-for-timeout.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/bigint/true-for-timeout.js (strict) :: the test never called $DONE
 built-ins/Atomics/waitAsync/bigint/undefined-for-timeout-agent.js :: the test called $DONE with Test262Error: Atomics.notify(new BigInt64Array(new SharedArrayBuffer(BigInt64Array.BYTES_PER_ELEMENT * 4)), 0, 2) must return the value of NOTIFYCOUNT Expected SameValue(«0», «2») to be true
 built-ins/Atomics/waitAsync/bigint/undefined-for-timeout-agent.js (strict) :: the test called $DONE with Test262Error: Atomics.notify(new BigInt64Array(new SharedArrayBuffer(BigInt64Array.BYTES_PER_ELEMENT * 4)), 0, 2) must return the value of NOTIFYCOUNT Expected SameValue(«0», «2») to be true
 built-ins/Atomics/waitAsync/bigint/undefined-index-defaults-to-zero-agent.js :: the test called $DONE with Test262Error: Atomics.notify(new BigInt64Array(new SharedArrayBuffer(BigInt64Array.BYTES_PER_ELEMENT * 4)), 0, 2) must return the value of NOTIFYCOUNT Expected SameValue(«0», «2») to be true
@@ -825,30 +803,6 @@ built-ins/Atomics/waitAsync/bigint/was-woken-before-timeout.js :: the test calle
 built-ins/Atomics/waitAsync/bigint/was-woken-before-timeout.js (strict) :: the test called $DONE with Test262Error: Atomics.notify(new BigInt64Array(new SharedArrayBuffer(BigInt64Array.BYTES_PER_ELEMENT * 4)), 0) must return 1 Expected SameValue(«0», «1») to be true
 built-ins/Atomics/waitAsync/nan-for-timeout-agent.js :: the test called $DONE with Test262Error: Atomics.notify(new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4)), 0) must return 1 Expected SameValue(«0», «1») to be true
 built-ins/Atomics/waitAsync/nan-for-timeout-agent.js (strict) :: the test called $DONE with Test262Error: Atomics.notify(new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4)), 0) must return 1 Expected SameValue(«0», «1») to be true
-built-ins/Atomics/waitAsync/no-spurious-wakeup-no-operation.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/no-spurious-wakeup-no-operation.js (strict) :: the test never called $DONE
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-add.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-add.js (strict) :: the test never called $DONE
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-and.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-and.js (strict) :: the test never called $DONE
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-compareExchange.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-compareExchange.js (strict) :: the test never called $DONE
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-exchange.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-exchange.js (strict) :: the test never called $DONE
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-or.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-or.js (strict) :: the test never called $DONE
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-store.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-store.js (strict) :: the test never called $DONE
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-sub.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-sub.js (strict) :: the test never called $DONE
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-xor.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/no-spurious-wakeup-on-xor.js (strict) :: the test never called $DONE
-built-ins/Atomics/waitAsync/returns-result-object-value-is-promise-resolves-to-timed-out.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/returns-result-object-value-is-promise-resolves-to-timed-out.js (strict) :: the test never called $DONE
-built-ins/Atomics/waitAsync/true-for-timeout-agent.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/true-for-timeout-agent.js (strict) :: the test never called $DONE
-built-ins/Atomics/waitAsync/true-for-timeout.js :: the test never called $DONE
-built-ins/Atomics/waitAsync/true-for-timeout.js (strict) :: the test never called $DONE
 built-ins/Atomics/waitAsync/undefined-for-timeout-agent.js :: the test called $DONE with Test262Error: Atomics.notify(new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4)), 0, 2) must return the value of NOTIFYCOUNT Expected SameValue(«0», «2») to be true
 built-ins/Atomics/waitAsync/undefined-for-timeout-agent.js (strict) :: the test called $DONE with Test262Error: Atomics.notify(new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4)), 0, 2) must return the value of NOTIFYCOUNT Expected SameValue(«0», «2») to be true
 built-ins/Atomics/waitAsync/undefined-index-defaults-to-zero-agent.js :: the test called $DONE with Test262Error: Atomics.notify(new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4)), 0, 2) must return the value of NOTIFYCOUNT Expected SameValue(«0», «2») to be true

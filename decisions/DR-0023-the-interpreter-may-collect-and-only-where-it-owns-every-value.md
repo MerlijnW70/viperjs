@@ -67,6 +67,34 @@ not collect until it comes back out. Removing that restriction means rooting the
 sets, which is a shadow stack, which is the same thing DR-0019 refused for compaction and for the
 same reason.
 
+### …and the cost was larger than that sentence says: it covered §9.5's whole queue
+
+**Amended 2026-08-09.** A job runs its handler through `Vm::call_value`, which is a nested
+execution, so `reentries` is one for the *whole of every job* — and therefore **the loop never
+collected during a job drain at all**, whatever a host set the threshold to. The paragraph above
+described that as "a long `sort`", which reads as an exceptional case. For a program whose work is
+promises it is the entire run.
+
+What it looked like, because it looks like nothing: a `p.then(step)` re-armed from inside `step`
+allocates a capability's three objects a turn and frees none, so the arena climbs to DR-0013's budget
+and the RangeError is thrown **inside a job**, where §9.5 step 3 discards it. The queue empties, the
+run returns, the exit status is zero, and the program has stopped in silence at exactly 38,174 turns
+— the same figure with the schedule on and with it off, which is what said the schedule was not
+*running* rather than not working. Found through test262's `atomicsHelper.js`, whose `setTimeout` is
+precisely that shape.
+
+The fix is not a weakening of the rule, it is the rule applied at a second place that satisfies it.
+**The boundary between two jobs owns every live value**: the job has returned, no native holds
+anything in a Rust local, and the frames are as empty as they are between two `run`s — which is the
+very situation `Vm::collect` is documented as being for. So `Vm::drain_jobs` asks
+`collection_is_due` itself, and `execute`'s check keeps its `reentries == 0` guard unchanged. The
+condition and the window-settling are shared methods rather than two copies, because two copies of a
+schedule is how the two come to disagree.
+
+`vm::tests::collecting`'s `a_job_drain_collects_between_jobs_or_a_polling_loop_runs_out_of_heap` is
+the row, and it asserts both directions: with a schedule the chain finishes, and with none it does
+not — otherwise it would pass on any engine thrifty enough by accident.
+
 ## The default is on, and two bugs had to be found first
 
 Turning it on failed exactly one test — a module with a top-level `await` — and that turned out to be

@@ -196,7 +196,17 @@ which is what swaps the `CanBlockIsFalse`/`CanBlockIsTrue` flags over. **Read
 single-agent test could ever have said so, and the shape of the failure was a suite that hung rather
 than a number that was wrong.
 
-Conformance as of this commit is **85.93% of test262** — 80,055 of 93,161 runs, the same figure on
+**And §9.5's drain knows what time it is, and collects.** DR-0024's `waitAsync` timeout is built —
+`+46` — and it needed no timer: `TriggerTimeout` has only to run before anything can observe that it
+has not, and a job boundary is such a point. What that slice *found* is the part to read
+`notes/FINDINGS.md` for. A job runs its handler through a nested execution, so `reentries` is one for
+the whole of it, and `execute`'s collection check is guarded on `reentries == 0` — so **the loop had
+never collected during a job drain at all**, for any threshold any host could set. A promise chain
+that re-arms itself reached DR-0013's budget at 38,174 turns and threw a RangeError *inside a job*,
+where §9.5 step 3 discards it: the queue emptied, `run` returned, and the exit status was zero. A
+silent stop is a failure mode this engine can produce and nothing was watching for it.
+
+Conformance as of this commit is **86.01% of test262** — 80,126 of 93,161 runs, the same figure on
 three consecutive runs alone. Treat that number as perishable and re-measure rather than quoting it;
 the point of the figure is the work list under it. Only 306 runs are now *stopped* before anything
 executes. **One of them was misfiled here for a long time and it matters:** `(?i:…)` 170 is the
@@ -223,6 +233,7 @@ and mostly are not, which is worth doing once and writing down rather than re-de
 | 178 + 144 | `DisposableStack`, `AsyncDisposableStack` | the same proposal's library half |
 | 118 | `ShadowRealm is not defined` | a proposal, and **not** DR-0025's realm: that one shares a heap and passes objects freely, where this puts a membrane between the two sides |
 | 34 | `it did not parse: unexpected character` | **decorators**, a proposal — and the one row here whose reason says nothing at all about what it is. Its paths do |
+| 2 | `the test never called $DONE` | **was 48, and 46 of them were one bug that had nothing to do with the reason string.** The row read as an asynchronous test giving up; what it was is a job queue that emptied because a promise chain had silently run out of heap. See `notes/FINDINGS.md`. The two left are `top-level-await`'s ordering pair |
 
 **Two buckets have been costed and must not be re-costed.** A third — `Function.prototype.caller`,
 23 runs — was costed, refused as *not in the language*, put to the user as DR-0008's shape, and then

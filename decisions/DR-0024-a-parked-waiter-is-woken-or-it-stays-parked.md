@@ -1,8 +1,47 @@
 ---
 id: DR-0024
-title: A parked waiter is woken by a notify, or it stays parked — there is no timer to time it out
+title: A parked waiter is woken by a notify, by its timeout, or it stays parked
 status: prose-only
 ---
+
+## Amended again, 2026-08-09: the timeout elapses, and it is not one of the three fakes
+
+**Everything below the next two sections is the record as it stood, and its conclusion is now
+wrong.** `Atomics.waitAsync` with a finite timeout settles `"timed-out"`. Worth **+46 runs**, the
+whole of test262's `waitAsync` timeout family.
+
+The mistake was in the question. "What is missing is a clock the job queue can wait on" framed this
+as needing a *timer* — something that fires while no JavaScript is running — and the three fakes
+below are all attempts to build one. None is needed. §25.4.1.6's `TriggerTimeout` does not have to
+run at the instant the timeout expires; it has to run before anything can observe that it has not.
+The observation point is a **job boundary**, and there are two of them:
+
+- **After each job**, because a program polling with promise jobs keeps the queue non-empty for the
+  whole timeout. That is exactly what test262's `atomicsHelper.js` does — its `setTimeout` is a
+  `Promise.resolve()` re-`then`ed until `Date.now()` passes — so for every asynchronous Atomics test
+  in the suite the engine is already running when the deadline arrives. It only had to look.
+- **When the queue empties**, because an agent that simply `await`s its own `waitAsync` has nothing
+  to poll with. There the engine sleeps until the earliest deadline, which is neither a busy wait nor
+  a delayed job: nothing is runnable, and the alternative is handing the host back a promise that
+  provably can never settle. `Vm::wait_for_a_deadline`, and DR-0022's budget bounds it — a run with
+  a deadline sleeps no further than that deadline and leaves the waiter parked.
+
+So none of the three fakes applies. Nothing settles early, so no program can measure a lie with
+`Date.now()`; nothing spins, so no core burns; and nothing blocks a queue that has work in it. What
+the engine gained is not a clock but the habit of asking what time it is at a point where the answer
+can change what runs next. The answer is late by at most one job and never early, which is the
+direction that matters: `no-spurious-wakeup-*` asserts the elapsed time is *at least* the timeout,
+and it measures 200.29 ms for a 200 ms wait.
+
+`vm::tests::shared` is where this is enforceable, and the row that used to say `"nothing"` for a
+1 ms timeout now says `"timed-out"` — deliberately, which is what the old record asked for. Beside it
+are the polling path and an infinite timeout that still never settles, so the three are not one row
+wearing three hats.
+
+**What is still true**: a notify from *another* agent does not reach a promise parked here. That is
+the second seam below and it is not a timer, so building this did not build it.
+
+## The record as it stood
 
 §25.4.3.15's `Atomics.waitAsync` answers one of three things: `"not-equal"` if the value has already
 changed, `"timed-out"` if the timeout is zero, or a promise that settles when a notify arrives or

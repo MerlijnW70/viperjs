@@ -278,7 +278,7 @@ impl Vm {
                 .map_or(crate::heap::PromiseState::Rejected, |found| found.state);
             match state {
                 crate::heap::PromiseState::Pending if !self.jobs.is_empty() => {
-                    self.drain_jobs(heap);
+                    self.drain_jobs(chunk, heap);
                 }
                 // §16.2.1.5.3's `AsyncModuleExecutionRejected` — the module failed, and every
                 // importer sees the same value. `link_and_evaluate` records it on the record.
@@ -303,7 +303,7 @@ impl Vm {
                     // does after a synchronous module's. An asynchronous one reaches neither, so a
                     // `then` registered by the body was still waiting when the host was told the
                     // module had finished.
-                    self.drain_jobs(heap);
+                    self.drain_jobs(chunk, heap);
                     self.escaped = None;
                     return Ok(Outcome::Value(answer));
                 }

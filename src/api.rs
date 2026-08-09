@@ -1160,6 +1160,36 @@ mod tests {
     }
 
     #[test]
+    fn a_waiters_timeout_never_outlasts_the_runs_budget() {
+        // The one place the engine sleeps is the end of a drain with a `waitAsync` still owed an
+        // answer, and it is the one place a *program* could otherwise decide how long the host waits
+        // for control back. It cannot: the sleep ends at the earlier of the two deadlines, and the
+        // waiter stays parked.
+        //
+        // Written as an elapsed time rather than as a settled value because the value is the same
+        // either way — a waiter that has not timed out and one the run gave up on both leave the
+        // promise pending. What tells them apart is the clock.
+        let mut engine = Engine::new();
+        engine.set_time_budget(Some(BUDGET));
+        let started = std::time::Instant::now();
+        engine
+            .eval(
+                "var a = new Int32Array(new SharedArrayBuffer(32)); \
+                 Atomics.waitAsync(a, 0, 0, 5000);",
+            )
+            .expect("parking is not itself a runaway");
+        // Five seconds asked for, a budget of milliseconds, and a second between them. Two orders of
+        // magnitude either side, so the row says which of the two bounded the wait without being a
+        // race — and five rather than sixty because a mutant that inverts the choice makes every
+        // sandboxed run of this test wait out the whole of it.
+        assert!(
+            started.elapsed() < std::time::Duration::from_secs(1),
+            "the run came back in {:?}, so it waited on the script's timeout",
+            started.elapsed()
+        );
+    }
+
+    #[test]
     fn a_loop_inside_a_coercion_or_a_callback_is_stopped_too() {
         // The reason the flag is read before an instruction rather than checked once per run: a
         // coercion re-enters the interpreter from the *middle* of an instruction, and a callback

@@ -131,28 +131,13 @@ impl Vm {
                 // aim at, and mutation coverage is right to call that untestable. A saturating
                 // subtraction asks the same question and has no second spelling — flipping the
                 // `== 0` inverts the schedule and every test here says so.
-                if let Some(growth) = self.collect_after_growth
-                    && self.reentries == 0
-                    && self
-                        .collect_next
-                        .saturating_sub(heap.footprint().saturating_sub(self.collected_at))
-                        == 0
-                {
+                //
+                // The condition and what follows a collection are [`Vm::collection_is_due`] and
+                // [`Vm::settle_collection_window`], because §9.5's job drain needs the same pair —
+                // and the `reentries == 0` half is why it does. See [`Vm::drain_jobs`].
+                if self.collection_is_due(heap) && self.reentries == 0 {
                     self.collect_running(root, current.as_deref(), heap);
-                    self.collected_at = heap.footprint();
-                    // **Proportional to what survived, and never below the base.** The walk this
-                    // just did costs what is *live*, so a program holding a great deal would
-                    // otherwise pay that walk once per fixed step of growth. Measured on a loop
-                    // holding 150,000 objects: a mebibyte step ran 3.56 s against 0.61 s for a
-                    // sixteen-mebibyte one — six times the work for the same program, and all of it
-                    // re-walking the same live set.
-                    //
-                    // So the next allowance is the live set itself, floored at the base a host
-                    // asked for. A program with nothing live collects every `growth` bytes and
-                    // stays small; one holding 30 MiB is allowed to grow by 30 MiB before being
-                    // walked again, which is the standard proportional rule and is what stops the
-                    // schedule turning a large heap into a quadratic one.
-                    self.collect_next = growth.max(heap.live_footprint());
+                    self.settle_collection_window(heap);
                 }
                 if heap.is_exhausted() {
                     let thrown = self.realm.error(

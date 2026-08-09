@@ -10,6 +10,7 @@ in.
 
 ## Index
 
+- [The job queue never collected, and it took a timeout to find it — +46](#the-job-queue-never-collected-and-it-took-a-timeout-to-find-it--46)
 - [§20.1.3's `ToObject`s are conversions, and four of them were checks](#2013s-toobjects-are-conversions-and-four-of-them-were-checks)
 - [`Function.prototype.caller` — 23 runs, costed, refused, and then built — DR-0028](#functionprototypecaller--23-runs-costed-refused-and-then-built--dr-0028)
 - [An agent is a thread, and the two bugs only a second one can find — `$262.agent`](#an-agent-is-a-thread-and-the-two-bugs-only-a-second-one-can-find--262agent)
@@ -42,6 +43,68 @@ in.
 - [What is left, in the order the numbers put it](#what-is-left-in-the-order-the-numbers-put-it)
 
 ---
+
+### The job queue never collected, and it took a timeout to find it — +46
+
+The slice began as DR-0024's gap: `Atomics.waitAsync` with a finite timeout never settled, worth 46
+runs. It finished as a garbage collector bug that had been costing every promise-driven program in
+the engine, and the route between the two is the part worth reading.
+
+**The clause was easier than the record made it sound.** DR-0024 asked for "a clock the job queue can
+wait on" and rejected three ways to fake one. All three are attempts to build a *timer* — something
+that fires while no JavaScript is running — and none is needed, because §25.4.1.6's `TriggerTimeout`
+only has to run before anything can observe that it has not. That point is a **job boundary**.
+`Vm::expire_waiters` settles at one, `drain_jobs` asks after every job and again when the queue
+empties, and where the queue empties with a deadline still owed the machine sleeps to it — bounded
+by DR-0022's budget, which is the one place in the engine that sleeps. Measured: 200.29 ms for a
+200 ms wait. Nothing settles early, nothing spins, nothing blocks a queue with work in it.
+
+**Then it was still 10 runs, not 46, and the other 36 were not the engine's `waitAsync` at all.** The
+first three fixed files were the ones whose main agent polls with `$262.agent.sleep`; every
+`no-spurious-wakeup-*` still reported *the test never called $DONE*, quickly, with no error. Cutting
+the test down by hand showed the engine half was exact — an agent thread parked, timed out at
+200.29 ms and reported it — so the failure was in the main agent, and reducing further reached this:
+
+```js
+let p = Promise.resolve(); let n = 0;
+function check() { n++; if (n < 200000) p.then(check); else $DONE("spun " + n); }
+p.then(check);
+```
+
+which is `atomicsHelper.js`'s own `setTimeout`, and which **stops at 38,174 turns**. No throw, no
+stopped machine, exit status zero.
+
+**The number was identical with the collection schedule on and with it off, and that is the whole
+diagnosis.** A schedule that changes nothing is not a schedule that is working badly. `execute`'s
+check is guarded on `reentries == 0`, correctly — a native holding values in Rust locals must not be
+collected underneath — and a job runs its handler through `Vm::call_value`, which is a *nested*
+execution. So `reentries` is one for the whole of every job and **the loop had never collected during
+a job drain, for any threshold any host could set**. DR-0023 described that cost as "a long `sort`, a
+`JSON.parse` with a reviver", which reads as an exceptional case; for a program whose work is
+promises it is the entire run.
+
+The rest follows: three objects a turn with nothing freed, DR-0013's budget reached, and the
+RangeError thrown *inside a job* — where §9.5 step 3 discards it. A resource failure became a program
+that simply stopped.
+
+The fix is the same rule at a second place that satisfies it. The boundary between two jobs owns
+every live value, so `drain_jobs` asks `collection_is_due` itself; `execute` keeps its guard
+unchanged; and the condition and the window-settling are shared methods rather than two copies.
+
+**Four things to carry:**
+
+- **A silent stop is a failure mode this engine can produce, and nothing was watching for it.** DR-0002
+  covers panics and DR-0022 covers hangs. A queue that empties early is neither: `run` returns
+  normally with a correct-looking answer. The only reason it was found is that a test262 test asserted
+  something about a program that had to keep running.
+- **"Identical under both settings" is a stronger signal than either number.** Two runs agreeing to the
+  test is what turned a suspected GC bug into a proven un-run GC.
+- **A guard's cost is what it covers, not what its comment names.** `reentries == 0` was written for
+  `sort`, and its doc named `sort` — so nobody read it as covering §9.5. Prefer stating what a guard
+  *excludes* over what it was written for.
+- **The harness has to be able to say why.** A filtered conformance run printed a count and nothing
+  else, so the only way to see a reason was a full run blessed into a scratch file — two and a half
+  minutes to read one sentence. `--only` now prints its failures; it should have from the start.
 
 ### §20.1.3's `ToObject`s are conversions, and four of them were checks
 

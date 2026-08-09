@@ -1,6 +1,6 @@
-//! The root set — what a running program can still name, checked against the collector.
+﻿//! The root set â€” what a running program can still name, checked against the collector.
 //!
-//! §9's execution contexts are what a collector has to be told about, and there is no way to work
+//! Â§9's execution contexts are what a collector has to be told about, and there is no way to work
 //! them out from the heap: the machine holds Values in a stack, in registers, in frames, in a job
 //! queue and in a table of template objects, and the chunks it is running hold Strings in their
 //! constant tables.
@@ -30,7 +30,7 @@ fn survives(setup: &str, after: &str) -> String {
     let chunk = compile_script(&script, &mut heap).expect("the setup compiles"); // same
     vm.run(&chunk, &mut heap).expect("the setup runs"); // same
 
-    // What an embedder asks for between two pieces of work, with the chunk that was running —
+    // What an embedder asks for between two pieces of work, with the chunk that was running â€”
     // whose constant table holds every String the setup mentioned.
     vm.collect(&chunk, &mut heap);
 
@@ -54,8 +54,8 @@ fn a_global_and_everything_it_reaches_survives_a_collection() {
 fn an_intrinsic_nothing_has_reached_yet_survives_a_collection() {
     // The case the realm's ceiling exists for, and the only one that shows it: most intrinsics are
     // properties of the global object and would survive through it, so a root set that forgot the
-    // realm entirely still passes every test above. `%GeneratorPrototype%` is different — nothing
-    // in a program that has never written `function*` reaches it — and the realm keeps its
+    // realm entirely still passes every test above. `%GeneratorPrototype%` is different â€” nothing
+    // in a program that has never written `function*` reaches it â€” and the realm keeps its
     // identity in a field it will hand to the *next* generator made. Swept, that field addresses
     // an empty slot and the generator is built on no prototype at all: `it.next` is `undefined`
     // rather than anything failing.
@@ -66,7 +66,7 @@ fn an_intrinsic_nothing_has_reached_yet_survives_a_collection() {
         ),
         "function"
     );
-    // …and it is the same generator prototype, not a fresh one — which is what `g().next` finding
+    // â€¦and it is the same generator prototype, not a fresh one â€” which is what `g().next` finding
     // its way to `%GeneratorPrototype%` two hops up actually means.
     assert_eq!(
         survives(
@@ -79,7 +79,7 @@ fn an_intrinsic_nothing_has_reached_yet_survives_a_collection() {
 
 #[test]
 fn a_closure_keeps_the_environment_it_was_written_in() {
-    // §10.2.11's environment is reachable from the function object and from nothing else once the
+    // Â§10.2.11's environment is reachable from the function object and from nothing else once the
     // call that made it has returned. A collector told about the stack but not about what the
     // objects on it point at would free the variable this closure is about to read.
     assert_eq!(
@@ -104,8 +104,8 @@ fn a_closure_keeps_the_environment_it_was_written_in() {
 
 #[test]
 fn a_bound_function_keeps_its_target_and_its_arguments() {
-    // §10.4.1's exotic object names three things nothing else does — the function it stands in
-    // front of, the receiver it was given and the arguments it holds — and the collector reaches
+    // Â§10.4.1's exotic object names three things nothing else does â€” the function it stands in
+    // front of, the receiver it was given and the arguments it holds â€” and the collector reaches
     // them through the *callable* rather than through any property.
     assert_eq!(
         survives(
@@ -130,7 +130,7 @@ fn a_suspended_generator_keeps_the_body_it_is_going_to_carry_on_in() {
         "the second one"
     );
     // An `async` function parks into a context object of its own, which is not a property of
-    // anything a script can name — the promise the caller holds is the only way back to it.
+    // anything a script can name â€” the promise the caller holds is the only way back to it.
     assert_eq!(
         survives(
             "var seen = 'pending'; async function f() { return 'settled'; } \
@@ -143,8 +143,8 @@ fn a_suspended_generator_keeps_the_body_it_is_going_to_carry_on_in() {
 
 #[test]
 fn a_queued_job_keeps_what_it_is_going_to_run_with() {
-    // §9.5's queue is emptied by `run`, so a job survives a collection only when the collection
-    // happens with jobs still on it — which is what a `then` registered on an already-settled
+    // Â§9.5's queue is emptied by `run`, so a job survives a collection only when the collection
+    // happens with jobs still on it â€” which is what a `then` registered on an already-settled
     // promise arranges. The handler is a function nothing else names by the time it runs.
     assert_eq!(
         survives(
@@ -157,14 +157,14 @@ fn a_queued_job_keeps_what_it_is_going_to_run_with() {
 
 #[test]
 fn a_bigint_is_kept_while_something_names_it_and_freed_when_nothing_does() {
-    // §6.1.6.2's magnitude is the program's to size, so a BigInt nothing names is worth reclaiming
-    // for the same reason a String is — and unlike a String it is never interned, so the collector
+    // Â§6.1.6.2's magnitude is the program's to size, so a BigInt nothing names is worth reclaiming
+    // for the same reason a String is â€” and unlike a String it is never interned, so the collector
     // is the only thing that can.
     assert_eq!(
         survives("var kept = 2n ** 200n;", "kept === 2n ** 200n"),
         "true"
     );
-    // …and the other direction, which is what makes the first one mean something: a value the
+    // â€¦and the other direction, which is what makes the first one mean something: a value the
     // program has let go of does come back.
     let mut heap = Heap::new();
     let mut vm = Vm::new(&mut heap);
@@ -202,7 +202,7 @@ fn what_nothing_names_any_more_is_freed() {
         "the dropped object should have gone: {freed:?}"
     );
     assert!(heap.object_count() < before);
-    // …and the one still named is still there.
+    // â€¦and the one still named is still there.
     let script = parse_script("kept.a").expect("the question parses"); // same
     let asked = compile_script(&script, &mut heap).expect("the question compiles"); // same
     assert_eq!(describe_run(&asked, &mut vm, &mut heap), "1");
@@ -233,13 +233,13 @@ fn with_and_without_a_schedule(source: &str) -> (String, String, usize, usize) {
 #[test]
 fn a_collection_at_every_check_changes_no_answer() {
     // The root set's contract, forced. `Some(0)` collects at **every** thousand-instruction check,
-    // so anything the root set forgot is freed while the program that names it is still running —
+    // so anything the root set forgot is freed while the program that names it is still running â€”
     // and the answer changes, or a later instruction reads a slot that has been handed to somebody
     // else. Each of these touches a different kind of thing the machine holds outside the heap.
     for source in [
         // Strings from a chunk's constant table, concatenated across an allocation storm.
         "var s = ''; for (var i = 0; i < 3000; i++) { s = 'ab' + 'cd'; } s",
-        // Closures over a per-iteration binding — the shape that retains most per pass.
+        // Closures over a per-iteration binding â€” the shape that retains most per pass.
         "var f; for (let i = 0; i < 3000; i++) { f = function () { return i } } f()",
         // Objects reachable only through another object's property.
         "var o = { deep: { n: 0 } }; \
@@ -264,11 +264,63 @@ fn a_collection_at_every_check_changes_no_answer() {
 }
 
 #[test]
+fn a_job_drain_collects_between_jobs_or_a_polling_loop_runs_out_of_heap() {
+    // The shape every polling loop in JavaScript has: a job whose only purpose is to enqueue its
+    // successor. Each turn allocates a capability's three objects and lets go of them, so a run made
+    // of these is a run made entirely of garbage — and until 2026-08-09 not one byte of it was ever
+    // collected.
+    //
+    // **The schedule in `execute` cannot fire during a drain.** A job runs through `call_value`,
+    // which is a nested execution, so `reentries` is one for the whole of it — and the schedule is
+    // guarded on `reentries == 0` because a native holding values in Rust locals must not be
+    // collected underneath. A correct guard that silently covers the entire job queue. So
+    // `drain_jobs` asks for itself at the one place the guard was really about: between two jobs,
+    // where the frames are as empty as they are between two `run`s.
+    //
+    // What it looked like: the chain died at exactly 38,174 turns, the same figure with the schedule
+    // on and with it off — which is what said the schedule was not *running* rather than not
+    // working. DR-0013's RangeError was thrown inside a job, where §9.5 step 3 discards it, so there
+    // was no throw, no stopped machine and an exit status of zero. Found through test262's
+    // `atomicsHelper.js`, whose `setTimeout` is a `Promise.resolve()` re-`then`ed against the clock.
+    //
+    // A small heap budget rather than the 200,000 turns it took to find, which is the same failure
+    // two orders of magnitude cheaper: what the bug does is reach the budget, so a lower budget
+    // reaches it sooner.
+    let source = "var p = Promise.resolve(); var n = 0; \
+                  function step() { n++; if (n < 20000) { p.then(step) } } \
+                  p.then(step);";
+    let question = parse_script("n").expect("the question parses"); // the test is how far it got
+    let mut reached = Vec::new();
+    for growth in [Some(1 << 20), None] {
+        let mut heap = Heap::new();
+        heap.set_budget(16 << 20);
+        let mut vm = Vm::new(&mut heap);
+        vm.set_collection_growth(growth);
+        let script = parse_script(source).expect("the setup parses"); // same
+        let chunk = compile_script(&script, &mut heap).expect("the setup compiles"); // same
+        vm.run(&chunk, &mut heap).expect("the setup runs"); // same
+        let asked = compile_script(&question, &mut heap).expect("the question compiles"); // same
+        reached.push(describe_run(&asked, &mut vm, &mut heap));
+    }
+    assert_eq!(
+        reached[0], "20000",
+        "the chain stopped early, so the drain collected nothing"
+    );
+    // …and the other direction, which is what stops the row above passing for the wrong reason: a
+    // machine told not to collect at all *does* run out, so what the first row measures is the
+    // collection and not some incidental thriftiness of the queue.
+    assert_ne!(
+        reached[1], "20000",
+        "with no schedule the chain should have run out of heap"
+    );
+}
+
+#[test]
 fn a_schedule_stops_the_arena_growing_which_is_the_whole_point_of_it() {
-    // DR-0019 makes a swept slot reusable, so a collection does not lower `footprint` — it stops
+    // DR-0019 makes a swept slot reusable, so a collection does not lower `footprint` â€” it stops
     // it *rising*. That is what this measures, and it is the difference between a program that
     // reaches DR-0013's budget and one that does not.
-    // A closure over a per-iteration binding, which is the shape that retains most per pass — a
+    // A closure over a per-iteration binding, which is the shape that retains most per pass â€” a
     // plain call retains too little for 20,000 of them to separate the two runs decisively, and
     // raising the count instead would make this the slowest test in the suite.
     let (scheduled, unscheduled, with, without) = with_and_without_a_schedule(
@@ -276,7 +328,7 @@ fn a_schedule_stops_the_arena_growing_which_is_the_whole_point_of_it() {
     );
     assert_eq!(scheduled, "19999");
     assert_eq!(unscheduled, "19999");
-    // Not a ratio anybody should read as a promise — what is being asserted is the *direction*,
+    // Not a ratio anybody should read as a promise â€” what is being asserted is the *direction*,
     // and that the gap is far outside anything noise could produce.
     //
     // A base of `Some(0)` is not "collect at every check for ever": after the first collection the
@@ -307,7 +359,7 @@ fn a_body_compiled_at_run_time_survives_the_same_schedule() {
 fn a_sort_with_a_comparator_survives_a_collection_in_the_middle_of_it() {
     // A built-in that re-enters the interpreter *and* holds a Rust-side working set while it does.
     // `Array.prototype.sort` reads the elements out, calls a comparator that runs a program, and
-    // writes them back — so anything it is holding between those two moments is reachable only from
+    // writes them back â€” so anything it is holding between those two moments is reachable only from
     // a Rust local, which is the one place a root set cannot look.
     let (scheduled, unscheduled, _, _) = with_and_without_a_schedule(
         "var a = []; for (var i = 0; i < 2048; i++) { a.push({ n: 'A' + i, r: i % 3 }) } \
@@ -321,7 +373,7 @@ fn a_sort_with_a_comparator_survives_a_collection_in_the_middle_of_it() {
 #[test]
 fn a_threshold_the_program_never_reaches_collects_nothing() {
     // The other side of the trigger's comparison. A base larger than everything the program
-    // allocates must leave the arena exactly as an unscheduled run does — which is what says the
+    // allocates must leave the arena exactly as an unscheduled run does â€” which is what says the
     // condition is a threshold rather than "collect whenever asked".
     let source = "var f; for (let i = 0; i < 2000; i++) { f = function () { return i } } f()";
     let mut footprints = Vec::new();

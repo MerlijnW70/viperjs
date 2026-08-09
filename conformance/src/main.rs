@@ -2,6 +2,7 @@
 
 use conformance::drive::{Report, WORKER_FLAG, find_tests, run_all, suite_revision, work};
 use conformance::expectations::{Expectations, Judgement};
+use conformance::runner::Verdict;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use std::time::Duration;
@@ -143,6 +144,13 @@ fn main() -> ExitCode {
     if filter.is_some() {
         // A filtered run cannot judge the ratchet: every test it did not run would read as one
         // that stopped failing, and blessing from it would delete most of the file.
+        //
+        // So it prints the failures instead, which is the whole reason to run one. Without this a
+        // narrowed run answered "56 failed" and nothing else, and the only way to see *why* one
+        // failed was a full run blessed into a scratch file — two and a half minutes to read a
+        // sentence the worker already knew. Bounded, because a filter matching a thousand tests is
+        // a filter, not a question.
+        report_failures(&report);
         println!("\nthis was a partial run, so the expectations file was not checked");
         return ExitCode::SUCCESS;
     }
@@ -255,6 +263,47 @@ fn announce(report: &Report) {
         }
     }
 }
+
+/// Every failure of a narrowed run, with the reason the worker gave.
+///
+/// Only for a filtered run. A full one has twelve thousand of these and the expectations file is
+/// where they belong; a run narrowed to one directory has a handful, and they are the answer to the
+/// question that made somebody narrow it.
+fn report_failures(report: &Report) {
+    let failures: Vec<_> = report
+        .outcomes
+        .iter()
+        .filter_map(|outcome| match &outcome.verdict {
+            Verdict::Failed(why) => Some((outcome, why)),
+            _ => None,
+        })
+        .collect();
+    if failures.is_empty() {
+        return;
+    }
+    println!("\nwhat failed:");
+    for (outcome, why) in failures.iter().take(FAILURES_SHOWN) {
+        let strict = match outcome.strict {
+            true => " (strict)",
+            false => "",
+        };
+        println!("  {}{strict}\n    {why}", outcome.name);
+    }
+    if failures.len() > FAILURES_SHOWN {
+        // Named rather than trailed off, for [`announce`]'s reason: a list that stopped silently
+        // would read as the whole story.
+        println!(
+            "  …and {} more — narrow the filter to see them",
+            failures.len() - FAILURES_SHOWN
+        );
+    }
+}
+
+/// How many failures a narrowed run prints before it says how many it did not.
+///
+/// A policy figure. Large enough for a directory's worth of one bug, small enough that a filter
+/// matching half the suite does not become the output.
+const FAILURES_SHOWN: usize = 40;
 
 /// What the ratchet has to say, and what to do about it.
 fn report_judgement(judgement: &Judgement) {
