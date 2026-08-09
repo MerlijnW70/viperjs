@@ -503,6 +503,21 @@ impl Vm {
             stopped: false,
             templates: std::collections::HashMap::new(),
             reentries: 0,
+            // **A full sweep of this file reports this line as a survivor, and it is an equivalent
+            // mutant** — recorded here so the next one does not spend an hour re-deriving it.
+            //
+            // The only reader is [`Instruction::ResumeMode`], which the compiler emits *only*
+            // immediately after a `Yield` or a `YieldDelegated`. Every resumption that reaches one
+            // writes this field first — `Next` sets `false` and a begun `Return` sets `true` — and
+            // the `Throw` path, which does not write it, unwinds **past** the read. So nothing ever
+            // observes whichever value this initialiser chose.
+            //
+            // Checked rather than argued, 2026-08-09, because a mutation score cannot tell an
+            // unreachable branch from an untested one and the reasoning above is exactly what a
+            // wrong equivalence claim also sounds like: `true` was hand-applied, the unit suite
+            // stayed green, and `generators`, `async-generator` and `GeneratorPrototype` answered
+            // identically across 3,333 test262 runs. `false` stays because it is §27.5.1.2's
+            // `next`, which is what a reader expects to see, and not because anything depends on it.
             resume_returns: false,
         }
     }
