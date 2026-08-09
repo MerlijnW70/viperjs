@@ -10,6 +10,8 @@ in.
 
 ## Index
 
+- [§20.1.3's `ToObject`s are conversions, and four of them were checks](#2013s-toobjects-are-conversions-and-four-of-them-were-checks)
+- [`Function.prototype.caller` — 23 runs, costed and **not built**](#functionprototypecaller--23-runs-costed-and-not-built-because-it-is-not-in-the-language)
 - [An agent is a thread, and the two bugs only a second one can find — `$262.agent`](#an-agent-is-a-thread-and-the-two-bugs-only-a-second-one-can-find--262agent)
 - [A second realm, and the five things that had never had to say *whose* intrinsics — DR-0025](#a-second-realm-and-the-five-things-that-had-never-had-to-say-whose-intrinsics--dr-0025)
 - [A fallback on *failure* where the clause has one on *absence* — §23.2, +36](#a-fallback-on-failure-where-the-clause-has-one-on-absence--232-36)
@@ -38,6 +40,85 @@ in.
 - [79.38% to 81.26% in sixteen slices, and what they have in common](#7938-to-8126-in-sixteen-slices-and-what-they-have-in-common)
 - [§B.3 is built, and what it actually cost is worth reading before touching that area](#b3-is-built-and-what-it-actually-cost-is-worth-reading-before-touching-that-area)
 - [What is left, in the order the numbers put it](#what-is-left-in-the-order-the-numbers-put-it)
+
+---
+
+### §20.1.3's `ToObject`s are conversions, and four of them were checks
+
++22 runs and the whole slice is five call sites. Four of §20.1.3's methods begin `Let O be ?
+ToObject(this value)` and ViperJS read every one of them as *if this is not an Object, throw*; the
+fifth is §20.1.2.3.1's `ToObject(Properties)`, read the same way. The difference is only ever visible
+with a **primitive receiver**, which nobody writes by hand and every generic helper produces — which
+is how five of them sat there together.
+
+`Object.prototype.valueOf` is the one worth reading twice: its doc comment already said
+"`ToObject(this)`, which for an object is itself", and the body underneath refused a primitive. **A
+comment that states the clause correctly is not evidence the code does** — this repository's
+recurring finding, and the first time it has been caught with the clause quoted directly above the
+contradiction.
+
+Three things fell out that were not in the clause:
+
+- **`isPrototypeOf` is about the *order* of two steps, and test262 says so in its own description**:
+  "The ordering of steps 1 and 2 preserves the behaviour specified by previous editions for the case
+  where V is not an object and the this value is undefined or null." So
+  `isPrototypeOf.call(null, 10)` is `false` and `isPrototypeOf.call(null, {})` is a TypeError — the
+  same receiver, told apart by the *argument*. Converting first answered TypeError to both.
+- **The target and the list disagree on purpose.** `Object.defineProperties(1, {})` still throws,
+  because defining a property on a throwaway wrapper would report success and change nothing;
+  `Object.create(proto, 1)` does not, because reading a Number object's own enumerable keys is a
+  question with an answer, and the answer is none. One argument refuses and the other converts, in
+  the same call.
+- **A test of mine was wrong and the run said so.** `Object.defineProperties({}, "ab")` does throw —
+  the wrapper's own `"0"` and `"1"` are read, and `ToPropertyDescriptor` refuses the character
+  `"a"`. That is a TypeError from three steps *further in* than the one being removed, so the row
+  that distinguishes converting from refusing has to use the **empty** string, and the non-empty one
+  is the row that proves the wrapper was read.
+
+**And `propertyIsEnumerable` moved no test at all.** No file in the suite calls it on a primitive.
+It is fixed anyway and pinned by a structural row, on the grounds a transparent change always needs
+one: a clause the tests do not reach is still the clause, and the four beside it prove that the
+reading was systematic rather than a slip.
+
+---
+
+### `Function.prototype.caller` — 23 runs, costed and **not built**, because it is not in the language
+
+Recorded so it is not re-costed. The bucket reads as an engine fault and is not one: 23 runs fail
+with **ViperJS's own message**, `this property may not be read or written`, which is §10.2.4.1's
+%ThrowTypeError% doing exactly what §10.2.4 says.
+
+**What the tests want.** All 23 carry `features: [caller]` and are ES5-era (`es5id: 15.3.5.4_2-*`,
+`10.6-13-a-*`). ES5 §15.3.5.4 gave Function objects a variant `[[Get]]`: reading `"caller"` threw
+only when the **value** was a strict function, so `gNonStrict.caller` answered with the caller.
+ES2015 deleted that and put a poisoned accessor pair on `Function.prototype` instead — which is what
+ViperJS implements, and it means `f.caller` throws for **every** `f`, sloppy or not, by inheritance.
+
+**Three things establish that this is an extension rather than a gap**, and they belong in one place
+because each on its own reads the other way:
+
+- `features.txt` files `caller` under *Standard language features*, which is why it looks normative.
+  It is there because the flag is old, not because ECMA-262 describes the behaviour.
+- **The test says so itself.** `language/arguments-object/10.6-13-a-2.js` contains
+  `if (arguments.callee.caller === undefined) { called = true; // Extension not supported - fake it }`
+  — test262 anticipates a host that lacks it and accepts `undefined`. What it does not accept is a
+  **throw**.
+- Nothing in the suite requires a *sloppy* function's `.caller` to throw.
+  `built-ins/Function/StrictFunction_restricted-properties.js` is the test that requires the throw
+  and it is `flags: [onlyStrict]`; `prototype/caller-arguments/accessor-properties.js` constrains
+  `Function.prototype`'s own descriptors and nothing else. So the 23 are winnable without breaking
+  anything.
+
+**What winning them would cost.** An own `caller` and `arguments` on every **non-strict** function,
+shadowing the inherited accessors. Answering `undefined` satisfies all 23 — the `15.3.5.4_2-*gs`
+files have no assertion at all and merely require no throw. But that is two extra properties on
+every sloppy function object in a heap with a budget (DR-0013), so it would want synthesising on
+read the way a String object's indices already are, rather than storing.
+
+**Why it is not built.** It is behaviour ECMA-262 does not describe, invented on every function
+object, to satisfy tests that say in their own source that they expect hosts to lack it. That is the
+shape of DR-0008's Annex B question and belongs to the same procedure: *put it to the user, do not
+decide it quietly.* The three facts above are what that decision needs.
 
 ---
 

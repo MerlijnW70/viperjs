@@ -239,6 +239,117 @@ fn the_three_questions_an_object_answers_about_its_own_properties() {
 }
 
 #[test]
+fn every_to_object_in_section_20_1_3_is_a_conversion_and_not_a_check() {
+    // Four of §20.1.3's methods begin `Let O be ? ToObject(this value)`, and ViperJS read all four
+    // as "if this is not an Object, throw". The difference is only ever visible with a **primitive**
+    // receiver, which is a shape nothing writes by hand and every generic helper produces — so it
+    // sat there. `undefined` and `null` are the only receivers with no object at all, and they are
+    // where the TypeError belongs.
+    //
+    // §20.1.3.7 — the answer is a *wrapper*, so `typeof` of it is "object". This is the row that
+    // says the conversion happened rather than being skipped over.
+    assert_eq!(run("typeof Object.prototype.valueOf.call(true)"), "object");
+    assert_eq!(
+        run(
+            "var v = Object.prototype.valueOf.call('ab'); typeof v + ',' + v.length + ',' + (v === 'ab')"
+        ),
+        "object,2,false"
+    );
+    assert_eq!(
+        run("try { Object.prototype.valueOf.call(null) } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    // §20.1.3.2 — asked of the wrapper, which has the index properties a String object has and
+    // none of the ones its prototype carries.
+    assert_eq!(
+        run("Object.prototype.hasOwnProperty.call('ab', 0) + ',' \
+             + Object.prototype.hasOwnProperty.call('ab', 'length') + ',' \
+             + Object.prototype.hasOwnProperty.call('ab', 'charAt')"),
+        "true,true,false"
+    );
+    // The one that found it: `description` lives on `Symbol.prototype`, so the object a Symbol
+    // stands for does not have it — an answer, where this used to be a TypeError.
+    assert_eq!(run("Symbol().hasOwnProperty('description')"), "false");
+    // §20.1.3.4, which no test262 file distinguishes — see the comment at the call site.
+    assert_eq!(
+        run("Object.prototype.propertyIsEnumerable.call('ab', 0) + ',' \
+             + Object.prototype.propertyIsEnumerable.call('ab', 'length')"),
+        "true,false"
+    );
+    // §20.1.3.3, and here the *order* is the whole point. Step 1 settles a primitive argument
+    // before step 2 can convert the receiver, so these two disagree about the same `null`.
+    assert_eq!(
+        run("Object.prototype.isPrototypeOf.call(null, 10) + ',' \
+             + Object.prototype.isPrototypeOf.call(undefined, '')"),
+        "false,false"
+    );
+    assert_eq!(
+        run(
+            "try { Object.prototype.isPrototypeOf.call(null, {}) } catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    // A primitive receiver that *does* convert answers by walking: the wrapper is a fresh object
+    // and no chain contains it, so `false` — arrived at rather than refused.
+    assert_eq!(
+        run("Object.prototype.isPrototypeOf.call('ab', {})"),
+        "false"
+    );
+}
+
+#[test]
+fn a_property_descriptor_list_is_converted_where_the_target_is_refused() {
+    // §20.1.2.3.1 `ObjectDefineProperties` begins `ToObject(Properties)`, so a primitive list is a
+    // list with no own enumerable keys rather than an error — `Object.create(proto, 1)` makes an
+    // object with the prototype and nothing on it. ViperJS refused, which is a TypeError where the
+    // clause has an answer.
+    assert_eq!(
+        run("var p = {}; var o = Object.create(p, 1); \
+             (Object.getPrototypeOf(o) === p) + ',' + Object.getOwnPropertyNames(o).length"),
+        "true,0"
+    );
+    for list in ["true", "false", "NaN", "''", "Symbol('s')"] {
+        assert_eq!(
+            run(&format!(
+                "Object.getOwnPropertyNames(Object.create({{}}, {list})).length"
+            )),
+            "0",
+            "a {list} list has no own enumerable keys"
+        );
+    }
+    // A *non-empty* String is the one that shows the conversion really happened rather than being
+    // skipped past: its wrapper has own enumerable `"0"` and `"1"`, so step 3.b reads them and
+    // `ToPropertyDescriptor` refuses the character `"a"` for not being an object. A TypeError
+    // again, and from three steps further in — which is why the empty string above is the row that
+    // distinguishes converting from refusing, and this one is the row that says it was *read*.
+    assert_eq!(
+        run("try { Object.defineProperties({}, 'ab') } catch (e) { e.message }"),
+        "a property descriptor must be an object"
+    );
+    assert_eq!(
+        run("var o = {}; Object.defineProperties(o, ''); Object.getOwnPropertyNames(o).length"),
+        "0"
+    );
+    // …and `undefined` and `null` still refuse, because they are the two values `ToObject` has no
+    // answer for. `Object.create(p)` with no second argument does **not** reach this at all —
+    // §20.1.2.2 step 3 asks whether `Properties` is present before converting anything.
+    assert_eq!(
+        run("try { Object.create({}, null) } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("Object.getOwnPropertyNames(Object.create({})).length"),
+        "0"
+    );
+    // The **target** is the argument that still refuses, and that asymmetry is the point: a define
+    // against a throwaway wrapper would report success and change nothing anybody can see.
+    assert_eq!(
+        run("try { Object.defineProperties(1, {}) } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+}
+
+#[test]
 fn object_prototype_to_string_is_the_type_test_that_answers_for_null() {
     // §20.1.3.6 steps 1 and 2 — it is the idiomatic type test precisely because it does not
     // throw on the two values that have no object to ask.

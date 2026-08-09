@@ -1775,32 +1775,14 @@ built-ins/NativeErrors/cause_property_native_error.js :: it threw an object with
 built-ins/NativeErrors/cause_property_native_error.js (strict) :: it threw an object with no name: cause should be an own property
 built-ins/Number/prototype/toString/numeric-literal-tostring-radix-poisoned.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
 built-ins/Number/prototype/toString/numeric-literal-tostring-radix-poisoned.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/Object/create/properties-arg-to-object-bigint.js :: it threw TypeError: a property-descriptor list must be an object
-built-ins/Object/create/properties-arg-to-object-bigint.js (strict) :: it threw TypeError: a property-descriptor list must be an object
-built-ins/Object/create/properties-arg-to-object.js :: it threw TypeError: a property-descriptor list must be an object
-built-ins/Object/create/properties-arg-to-object.js (strict) :: it threw TypeError: a property-descriptor list must be an object
-built-ins/Object/defineProperties/15.2.3.7-2-3.js :: it threw TypeError: a property-descriptor list must be an object
-built-ins/Object/defineProperties/15.2.3.7-2-3.js (strict) :: it threw TypeError: a property-descriptor list must be an object
-built-ins/Object/defineProperties/15.2.3.7-2-5.js :: it threw TypeError: a property-descriptor list must be an object
-built-ins/Object/defineProperties/15.2.3.7-2-5.js (strict) :: it threw TypeError: a property-descriptor list must be an object
-built-ins/Object/defineProperties/15.2.3.7-2-7.js :: it threw TypeError: a property-descriptor list must be an object
-built-ins/Object/defineProperties/15.2.3.7-2-7.js (strict) :: it threw TypeError: a property-descriptor list must be an object
 built-ins/Object/freeze/typedarray-backed-by-resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/freeze/typedarray-backed-by-resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/keys/proxy-keys.js :: it threw an object with no name: Expected SameValue(«12», «10») to be true
 built-ins/Object/keys/proxy-keys.js (strict) :: it threw an object with no name: Expected SameValue(«12», «10») to be true
-built-ins/Object/prototype/isPrototypeOf/null-this-and-primitive-arg-returns-false.js :: it threw TypeError: Object.prototype.isPrototypeOf requires an object
-built-ins/Object/prototype/isPrototypeOf/null-this-and-primitive-arg-returns-false.js (strict) :: it threw TypeError: Object.prototype.isPrototypeOf requires an object
-built-ins/Object/prototype/isPrototypeOf/undefined-this-and-primitive-arg-returns-false.js :: it threw TypeError: Object.prototype.isPrototypeOf requires an object
-built-ins/Object/prototype/isPrototypeOf/undefined-this-and-primitive-arg-returns-false.js (strict) :: it threw TypeError: Object.prototype.isPrototypeOf requires an object
 built-ins/Object/prototype/setPrototypeOf-with-non-circular-values-__proto__.js :: it threw an object with no name: Object.setPrototypeOf(ObjProto, { __proto__: null }) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/prototype/setPrototypeOf-with-non-circular-values-__proto__.js (strict) :: it threw an object with no name: Object.setPrototypeOf(ObjProto, { __proto__: null }) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/prototype/setPrototypeOf-with-non-circular-values.js :: it threw an object with no name: Object.setPrototypeOf(ObjProto, Object.create(null)) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/prototype/setPrototypeOf-with-non-circular-values.js (strict) :: it threw an object with no name: Object.setPrototypeOf(ObjProto, Object.create(null)) throws a TypeError Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Object/prototype/valueOf/15.2.4.4-1.js :: it threw TypeError: Object.prototype.valueOf requires an object
-built-ins/Object/prototype/valueOf/15.2.4.4-1.js (strict) :: it threw TypeError: Object.prototype.valueOf requires an object
-built-ins/Object/prototype/valueOf/15.2.4.4-2.js :: it threw TypeError: Object.prototype.valueOf requires an object
-built-ins/Object/prototype/valueOf/15.2.4.4-2.js (strict) :: it threw TypeError: Object.prototype.valueOf requires an object
 built-ins/Promise/allKeyed/arg-is-function.js :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allKeyed/arg-is-function.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Promise/allKeyed/arg-not-object-reject-bigint.js :: the test called $DONE with Test262Error: BigInt Expected a TypeError to be thrown asynchronously but the function threw synchronously
@@ -1991,8 +1973,6 @@ built-ins/Proxy/getOwnPropertyDescriptor/trap-is-undefined-target-is-proxy.js ::
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-undefined-target-is-proxy.js (strict) :: it threw an object with no name: 0 should be an own property
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-undefined.js :: it threw an object with no name: attr should be an own property
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-undefined.js (strict) :: it threw an object with no name: attr should be an own property
-built-ins/Reflect/set/receiver-is-not-object.js :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
-built-ins/Reflect/set/receiver-is-not-object.js (strict) :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
 built-ins/RegExp/lookBehind/back-references-to-captures.js :: it threw an object with no name: Actual [c, b] and expected [c, ab] should have the same contents. #3
 built-ins/RegExp/lookBehind/back-references-to-captures.js (strict) :: it threw an object with no name: Actual [c, b] and expected [c, ab] should have the same contents. #3
 built-ins/RegExp/lookBehind/captures.js :: it threw an object with no name: Actual [def, c] and expected [def, a] should have the same contents. #4
@@ -2295,8 +2275,6 @@ built-ins/Symbol/dispose/prop-desc.js :: it threw an object with no name: Expect
 built-ins/Symbol/dispose/prop-desc.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"symbol"») to be true
 built-ins/Symbol/is-constructor.js :: it threw an object with no name: Expected true but got false
 built-ins/Symbol/is-constructor.js (strict) :: it threw an object with no name: Expected true but got false
-built-ins/Symbol/prototype/description/is-not-own-property.js :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
-built-ins/Symbol/prototype/description/is-not-own-property.js (strict) :: it threw TypeError: Object.prototype.hasOwnProperty requires an object
 built-ins/Temporal/Duration/basic.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/basic.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/builtin.js :: it threw ReferenceError: Temporal is not defined

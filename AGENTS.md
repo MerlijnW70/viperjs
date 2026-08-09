@@ -196,7 +196,7 @@ which is what swaps the `CanBlockIsFalse`/`CanBlockIsTrue` flags over. **Read
 single-agent test could ever have said so, and the shape of the failure was a suite that hung rather
 than a number that was wrong.
 
-Conformance as of this commit is **85.91% of test262** — 80,033 of 93,161 runs, the same figure on
+Conformance as of this commit is **85.93% of test262** — 80,055 of 93,161 runs, the same figure on
 three consecutive runs alone. Treat that number as perishable and re-measure rather than quoting it;
 the point of the figure is the work list under it. Only 306 runs are now *stopped* before anything
 executes. **One of them was misfiled here for a long time and it matters:** `(?i:…)` 170 is the
@@ -224,7 +224,16 @@ and mostly are not, which is worth doing once and writing down rather than re-de
 | 118 | `ShadowRealm is not defined` | a proposal, and **not** DR-0025's realm: that one shares a heap and passes objects freely, where this puts a membrane between the two sides |
 | 34 | `it did not parse: unexpected character` | **decorators**, a proposal — and the one row here whose reason says nothing at all about what it is. Its paths do |
 
-**Two buckets have been costed and must not be re-costed.**
+**Three buckets have been costed and must not be re-costed.**
+
+- **`Function.prototype.caller` is 23 runs and is not in the language.** They fail with *ViperJS's
+  own* message, `this property may not be read or written`, which is §10.2.4's poisoned accessor
+  doing exactly what the clause says — so the row reads like an engine fault and is not one. The
+  tests are ES5-era and want ES5 §15.3.5.4's variant `[[Get]]`, which ES2015 deleted; one of them
+  contains the comment `// Extension not supported - fake it`. Winning them means own `caller` and
+  `arguments` on every non-strict function, which ECMA-262 does not describe. That is DR-0008's
+  shape and belongs to the same procedure — put it to the user. `notes/FINDINGS.md` has the three
+  facts the decision needs.
 
 - **`RegExp/property-escapes` is not what this file said it was, and the correction is instructive.**
   It read: "dead as a GC target … these need an interpreter several times faster, which is M8",

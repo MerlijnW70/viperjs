@@ -172,20 +172,29 @@ fn to_locale_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comp
     vm.call_value(method, call.this_value, &[], heap)
 }
 
-/// §20.1.3.7 `Object.prototype.valueOf` — `ToObject(this)`, which for an object is itself.
-pub fn value_of(_vm: &mut Vm, _heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    match call.this_value {
-        Value::Object(object) => Ok(Value::Object(object)),
-        _ => Err(Abrupt::type_error(
-            "Object.prototype.valueOf requires an object",
-        )),
-    }
+/// §20.1.3.7 `Object.prototype.valueOf` — the whole clause is `Return ? ToObject(this value)`.
+///
+/// **A conversion and not a check**, which this doc already said while the code refused a
+/// primitive: `Object.prototype.valueOf.call(true)` is a Boolean *object*, so `typeof` of it is
+/// `"object"` and not `"boolean"`. The only values with no object are `undefined` and `null`, and
+/// they are where the TypeError comes from.
+pub fn value_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let object = coerced(vm, heap, call.this_value)?;
+    Ok(Value::Object(object))
 }
 
 /// §20.1.3.2 `Object.prototype.hasOwnProperty`.
+///
+/// Step 2 is `ToObject(this value)`, so a primitive receiver is asked about *its wrapper* rather
+/// than refused: `Symbol().hasOwnProperty("description")` is `false`, because `description` is on
+/// `Symbol.prototype` and not on the object a Symbol stands for. Refusing it answered a TypeError
+/// to a question with a perfectly good answer.
+///
+/// The key is converted **first** — step 1 — so a key whose `toString` throws does so whatever the
+/// receiver is.
 pub fn has_own_property(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let key = vm.to_property_key(call.argument(0), heap)?;
-    let object = this_object(call, "Object.prototype.hasOwnProperty requires an object")?;
+    let object = coerced(vm, heap, call.this_value)?;
     Ok(Value::Boolean(own_property(heap, object, key)?.is_some()))
 }
 
@@ -203,10 +212,11 @@ pub fn property_is_enumerable(
     call: &NativeCall<'_>,
 ) -> Completion<Value> {
     let key = vm.to_property_key(call.argument(0), heap)?;
-    let object = this_object(
-        call,
-        "Object.prototype.propertyIsEnumerable requires an object",
-    )?;
+    // Step 2's `ToObject`, the same conversion its three neighbours make. No test in the suite
+    // tells this apart from the refusal it used to be — `"ab".propertyIsEnumerable(0)` is the
+    // program that would, and nothing asks it — so the row that pins it is a structural one beside
+    // the other four, written because a clause the tests do not reach is still the clause.
+    let object = coerced(vm, heap, call.this_value)?;
     // Own only, and `false` rather than an error when there is no such property — which is why
     // it cannot be used to ask whether a property exists at all.
     let answer = own_property(heap, object, key)?.is_some_and(|property| property.enumerable);
@@ -214,13 +224,23 @@ pub fn property_is_enumerable(
 }
 
 /// §20.1.3.3 `Object.prototype.isPrototypeOf`.
+///
+/// **The order of steps 1 and 2 is the whole of what this test asks**, and test262 says so in as
+/// many words: "The ordering of steps 1 and 2 preserves the behaviour specified by previous
+/// editions for the case where V is not an object and the this value is undefined or null."
+/// `Object.prototype.isPrototypeOf.call(null, 10)` is `false` — the argument settles it before the
+/// receiver is ever converted — where `call(null, {})` is a TypeError, because step 2 is reached
+/// and `null` has no object. Converting first answered TypeError to both.
 pub fn is_prototype_of(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let object = this_object(call, "Object.prototype.isPrototypeOf requires an object")?;
     // Step 1 — a primitive argument is `false` rather than an error, because the question is
     // about *its* chain and a primitive has none of its own.
     let Value::Object(mut walk) = call.argument(0) else {
         return Ok(Value::Boolean(false));
     };
+    // Step 2, and it is `ToObject` like its neighbours: a primitive receiver becomes a wrapper
+    // that no chain can contain, so the answer is `false` — arrived at by walking rather than by
+    // refusing, which is the difference a program sees.
+    let object = coerced(vm, heap, call.this_value)?;
     // Step 3's loop, iteratively: a chain is as long as a program makes it (DR-0002). Step 3.a is
     // `[[GetPrototypeOf]]`, so a proxy in the chain answers with its trap — and may throw, which is
     // why this walk returns a completion at all.
@@ -406,7 +426,12 @@ fn define_each(
     object: ObjectId,
     properties: Value,
 ) -> Completion<()> {
-    let source = to_object(properties, "a property-descriptor list must be an object")?;
+    // `ToObject(Properties)`, and it is a conversion like the rest of §20.1's — the *target* `O` is
+    // the argument that refuses, because defining a property on a throwaway wrapper would silently
+    // do nothing. A list has the opposite problem and no such risk: `Object.create(proto, 1)` reads
+    // the own enumerable keys of a Number object, finds none, and makes an object with the
+    // prototype and nothing else. Refusing it turned a clause with an answer into a TypeError.
+    let source = coerced(vm, heap, properties)?;
     let keys = vm.own_keys_through(source, heap)?;
     let mut pending = Vec::new();
     for key in keys {
