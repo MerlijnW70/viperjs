@@ -1167,6 +1167,37 @@ impl Vm {
     ///
     /// `root` is the chunk being run, which the machine does not hold: it is lent to `run` and its
     /// constants are the Strings the outermost code is about to use.
+    /// DR-0028's `caller` — the function that called the running invocation of `function`.
+    ///
+    /// `null` in three cases, and they are three different absences that a program cannot tell
+    /// apart and does not need to: `function` is not on the stack at all, the call came from a
+    /// script or a module body rather than from a function, or the caller is **strict**. The last
+    /// is ES5 §15.3.5.4's rule kept deliberately — it is the reason the property was ever thought a
+    /// hole, and handing a strict function's identity out through it is the thing that was closed.
+    ///
+    /// The *topmost* invocation, because that is the one running: a recursive function asked for
+    /// its own caller answers with itself at every level but the first.
+    pub(crate) fn legacy_caller_of(&self, function: crate::heap::ObjectId, heap: &Heap) -> Value {
+        let Some(at) = self
+            .frames
+            .iter()
+            .rposition(|frame| frame.function == Some(function))
+        else {
+            return Value::Null;
+        };
+        let below = match at.checked_sub(1) {
+            Some(below) => below,
+            // Frame zero is the outermost call, so what is underneath it is the script.
+            None => return Value::Null,
+        };
+        match self.frames[below].function {
+            Some(caller) if crate::builtins::function::sloppy_caller(heap, caller) => {
+                Value::Object(caller)
+            }
+            _ => Value::Null,
+        }
+    }
+
     /// §9.7's `[[CanBlock]]` for this agent — see the field for why it starts `false`.
     pub(crate) fn can_block(&self) -> bool {
         self.can_block

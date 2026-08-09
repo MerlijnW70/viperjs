@@ -264,28 +264,190 @@ fn each_call_has_its_own_and_an_arrow_has_none() {
 }
 
 #[test]
-fn caller_and_arguments_are_refused_through_any_function_rather_than_being_absent() {
+fn a_sloppy_function_names_the_one_that_called_it() {
+    // DR-0028 — ES5 §15.3.5.4's legacy reflection, which ES2015 deleted and every engine kept.
+    // The value is the function whose call is directly underneath this one on the stack.
+    assert_eq!(
+        run("function inner() { return inner.caller; } \
+             function outer() { return inner(); } \
+             outer() === outer"),
+        "true"
+    );
+    // Called from the script rather than from a function, there is nothing underneath: `null`,
+    // which is the extension's own answer and **not** `undefined` — the two are told apart by
+    // `10.6-13-a-2.js`, which reads `undefined` as "this host has not got the extension" and would
+    // then try to call whatever it did get.
+    assert_eq!(run("function f() { return f.caller; } f()"), "null");
+    // Not executing at all is the same absence.
+    assert_eq!(run("function f() {} f.caller"), "null");
+    // Recursion names the level below, so every frame but the outermost answers with the function
+    // itself. This is the row that says the *topmost* invocation is the one described.
+    assert_eq!(
+        run("var seen = []; \
+             function f(n) { seen.push(f.caller === f); if (n > 0) { f(n - 1); } } \
+             f(2); seen.join(',')"),
+        "false,true,true"
+    );
+    // §15.3.5.4's own rule, and the reason the property was ever thought a hole: a **strict**
+    // caller is not handed over. It is `null` rather than a throw, because a throw here would fail
+    // the very tests the extension exists for — `15.3.5.4_2-75gs.js` calls a sloppy function from a
+    // strict one and asserts nothing except that nothing was raised.
+    assert_eq!(
+        run("function inner() { return inner.caller; } \
+             function outer() { 'use strict'; return inner(); } \
+             outer()"),
+        "null"
+    );
+    // `arguments` is the other half of the pair and answers `null` always — see the getter's own
+    // documentation for why an activation cannot be named from outside the call. What matters here
+    // is that it is an *answer*: the inherited property throws, and a program feature-testing the
+    // pair must find both halves behaving alike.
+    assert_eq!(run("function f() { return f.arguments; } f(1, 2)"), "null");
+    // The pair is own, not enumerable, configurable, and getter-only — so a sloppy write is
+    // discarded and a strict one throws. Deleting it uncovers §10.2.4's, which is the escape hatch
+    // that keeps the standard behaviour reachable.
+    assert_eq!(
+        run("function f() {} \
+             var d = Object.getOwnPropertyDescriptor(f, 'caller'); \
+             [typeof d.get, typeof d.set, d.enumerable, d.configurable].join(',')"),
+        "function,undefined,false,true"
+    );
+    assert_eq!(
+        run("function f() {} f.caller = 1; typeof f.caller"),
+        "object",
+        "a sloppy write is discarded rather than replacing the accessor"
+    );
+    assert_eq!(
+        run("function f() {} delete f.caller; \
+             try { f.caller; 'read' } catch (e) { e.constructor.name }"),
+        "TypeError",
+        "and deleting it reaches the poisoned pair underneath"
+    );
+    // One getter per realm, shared by every function that has the pair — the same arrangement
+    // §10.2.4 makes for %ThrowTypeError%, and a program can see it.
+    assert_eq!(
+        run("function f() {} function g() {} \
+             Object.getOwnPropertyDescriptor(f, 'caller').get === \
+             Object.getOwnPropertyDescriptor(g, 'caller').get"),
+        "true"
+    );
+    // The getters are shared, so one can be taken off a function and applied to another. Applied
+    // to a kind that never had the pair it refuses, in the inherited pair's own words, so that a
+    // program cannot tell which route it reached.
+    assert_eq!(
+        run(
+            "function f() {} function g() { return g.caller; } function h() { return g(); } \
+             var get = Object.getOwnPropertyDescriptor(f, 'caller').get; \
+             (function () { return get.call(g); })() === null"
+        ),
+        "true"
+    );
+    assert_eq!(
+        run("function f() {} \
+             var get = Object.getOwnPropertyDescriptor(f, 'caller').get; \
+             try { get.call(() => {}); 'read' } catch (e) { e.message }"),
+        "this property may not be read or written"
+    );
+}
+
+#[test]
+fn only_a_sloppy_function_declaration_or_expression_gets_the_legacy_pair() {
+    // DR-0028's exclusions, each of which is a test262 file or a claim this repository already
+    // makes. A `hasOwnProperty` row rather than a `try`/`catch` one, because the two questions come
+    // apart: an excluded kind must not merely *throw*, it must have no own property at all —
+    // `GeneratorFunction/instance-restricted-properties.js` asks exactly that.
+    let has = "function own(f) { \
+                   return Object.prototype.hasOwnProperty.call(f, 'caller') + '' + \
+                          Object.prototype.hasOwnProperty.call(f, 'arguments'); }";
+    assert_eq!(run(&format!("{has} own(function () {{}})")), "truetrue");
+    assert_eq!(
+        run(&format!("{has} own(function () {{ 'use strict'; }})")),
+        "falsefalse"
+    );
+    assert_eq!(run(&format!("{has} own(() => {{}})")), "falsefalse");
+    assert_eq!(run(&format!("{has} own(function* () {{}})")), "falsefalse");
+    assert_eq!(
+        run(&format!("{has} own(async function () {{}})")),
+        "falsefalse"
+    );
+    assert_eq!(run(&format!("{has} own(({{ m() {{}} }}).m)")), "falsefalse");
+    assert_eq!(
+        run(&format!("{has} own(class {{}})")),
+        "falsefalse",
+        "a class body is strict by §11.2.2, so the constructor is excluded twice over"
+    );
+    assert_eq!(
+        run(&format!("{has} own((function () {{}}).bind(null))")),
+        "falsefalse",
+        "a bound function has no body of its own — S15.3.4.5_A2.js is what notices"
+    );
+    assert_eq!(
+        run(&format!("{has} own(Math.max)")),
+        "falsefalse",
+        "and neither has a built-in"
+    );
+    // `new Function()` is the site that makes strictness insufficient on its own: what it builds is
+    // **sloppy**, so a host asking only about that would give a dynamic generator the pair and fail
+    // `GeneratorFunction/instance-restricted-properties.js`.
+    assert_eq!(run(&format!("{has} own(new Function(''))")), "truetrue");
+    assert_eq!(
+        run(&format!(
+            "{has} var G = Object.getPrototypeOf(function* () {{}}).constructor; own(new G())"
+        )),
+        "falsefalse"
+    );
+}
+
+#[test]
+fn caller_and_arguments_are_refused_through_every_function_the_pair_is_not_shadowed_on() {
     // §10.2.4 `AddRestrictedFunctionProperties` — ES5's two ways of walking the call stack from
     // inside a function, closed off. What replaced them is not their *absence*: they are accessor
     // properties whose getter and setter both throw, so a program that asks gets a TypeError. The
     // difference is what a feature test can see — `undefined` would say this engine has not got
     // round to them.
+    //
+    // **This test said "through any function" and was renamed**, because DR-0028 gives a *sloppy*
+    // function a pair of its own that shadows this one. Everything below is a kind that gets no
+    // such pair, and the four rows that used to use a plain `function f() {}` say `'use strict'`
+    // now. That is the whole of what the extension changed here: the refusal is still the answer
+    // everywhere the extension does not reach, and there are more of those than there are of the
+    // other.
     assert_eq!(
-        run("function f() {} try { f.caller; 'read' } catch (e) { e.constructor.name }"),
+        run(
+            "function f() { 'use strict'; } try { f.caller; 'read' } catch (e) { e.constructor.name }"
+        ),
         "TypeError"
     );
     assert_eq!(
-        run("function f() {} try { f.arguments; 'read' } catch (e) { e.constructor.name }"),
+        run(
+            "function f() { 'use strict'; } try { f.arguments; 'read' } \
+             catch (e) { e.constructor.name }"
+        ),
         "TypeError"
     );
     assert_eq!(
-        run("function f() {} try { f.caller = 1; 'wrote' } catch (e) { e.constructor.name }"),
+        run(
+            "function f() { 'use strict'; } try { f.caller = 1; 'wrote' } \
+             catch (e) { e.constructor.name }"
+        ),
         "TypeError"
     );
     // Through an arrow, a method and a bound function too, since the pair is on the prototype they
-    // all share rather than on any of them.
+    // all share rather than on any of them — and none of the three is a kind DR-0028 reaches.
     assert_eq!(
         run("try { (() => {}).caller; 'read' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("var o = { m() {} }; try { o.m.caller; 'read' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("try { (function* () {}).caller; 'read' } catch (e) { e.constructor.name }"),
+        "TypeError"
+    );
+    assert_eq!(
+        run("try { (async function () {}).arguments; 'read' } catch (e) { e.constructor.name }"),
         "TypeError"
     );
     assert_eq!(

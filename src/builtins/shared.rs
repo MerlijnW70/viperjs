@@ -15,6 +15,19 @@
 //! arithmetic and coercion of their own, they refuse the wrong element kinds, and they read and
 //! write in ways `ta[i]` does not — but it did make the sharing notional, and it is not any more.
 //!
+//! # What makes the read-modify-writes atomic, which is not obvious from reading one
+//!
+//! [`Buffer::modify_bytes`](crate::heap::Buffer::modify_bytes), and nothing else. `add`, `and`,
+//! `or`, `sub`, `xor`, `exchange` and `compareExchange` all go through [`read_modify_write`], which
+//! reads the slot, decides the new value and writes it back **without letting the block's lock go**.
+//! Reading and then writing is indistinguishable from that with one agent and loses updates with
+//! two — and what it loses them to is not a wrong answer but a program that never finishes, because
+//! test262 waits for agents by spinning until an `Atomics.add` counter reaches them.
+//!
+//! Every conversion that can run a program's own code happens *before* the section, which is also
+//! the order §25.4.3.1's steps 1 to 3 put them in. Anything added here must keep both halves of
+//! that: no user code inside, and nothing that reaches the block a second time.
+//!
 //! # Why `Atomics` accepts an ordinary `ArrayBuffer`
 //!
 //! Since ES2020 every operation here works on an unshared buffer too — only `wait` requires a
@@ -737,9 +750,18 @@ fn duration_of(timeout: f64) -> Option<std::time::Duration> {
 
 /// §25.4.3.8 `Atomics.isLockFree`.
 ///
-/// Answers about a *width* rather than about a buffer. ViperJS has one agent, so every width it
-/// supports is lock-free in the only sense the question has — but the answer must still be the
-/// same for a given width every time it is asked, which §25.4.3.8's note requires.
+/// Answers about a *width* rather than about a buffer. Only `4` is settled by the clause — step 5
+/// says `true` outright — and 1, 2 and 8 are the Agent Record's `[[IsLockFree1]]`, `[[IsLockFree2]]`
+/// and `[[IsLockFree8]]`, which a host chooses. The one rule about those is that the answer may not
+/// *change*: once any agent has observed one, every agent sees the same for ever.
+///
+/// **This doc said "ViperJS has one agent, so every width it supports is lock-free in the only
+/// sense the question has", and that stopped being true when there was more than one agent.** A
+/// block's operations go through a mutex now, so nothing here is lock-free in the sense §25.4.3.8's
+/// note means by it — "as fast as ordinary memory access". The answer is unchanged all the same,
+/// and deliberately: this is an *optimisation* primitive, a program reads it to decide whether to
+/// use `Atomics` or build a lock of its own out of them, and `false` would send it round a longer
+/// way to reach the same mutex. `4` would have to be `true` regardless.
 fn is_lock_free(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let width = vm.to_number(call.argument(0), heap)?;
     Ok(Value::Boolean(matches!(width as i64, 1 | 2 | 4 | 8)))

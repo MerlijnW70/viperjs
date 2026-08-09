@@ -1,4 +1,4 @@
-//! `$262.agent` â€” INTERPRETING.md's concurrency API, and the threads underneath it.
+//! `$262.agent` — INTERPRETING.md's concurrency API, and the threads underneath it.
 //!
 //! # Why this is threads and not a scheduler
 //!
@@ -12,14 +12,14 @@
 //! that ends it is another agent writing to the block **while this one is running**, which means a
 //! second operating-system thread and no way around it. `$262.agent.start` therefore starts a
 //! thread with an [`Engine`] of its own: two heaps, two realms, two of every intrinsic, and exactly
-//! one thing in common â€” the [`Block`] a `SharedArrayBuffer`'s bytes are.
+//! one thing in common — the [`Block`] a `SharedArrayBuffer`'s bytes are.
 //!
 //! # Every agent here may block, which is a host decision with two flags' worth of consequence
 //!
-//! Â§9.7's `[[CanBlock]]` is the host's to answer and this host answers **true**, for the agent
+//! §9.7's `[[CanBlock]]` is the host's to answer and this host answers **true**, for the agent
 //! running the test file as much as for the ones it starts. That is what a shell host does and it
-//! is not a free choice: `atomicsHelper.js`'s `safeBroadcast` â€” which **106 of the 109** files that
-//! start an agent go through â€” checks that a TypedArray is shareable by calling `Atomics.wait` on a
+//! is not a free choice: `atomicsHelper.js`'s `safeBroadcast` — which **106 of the 109** files that
+//! start an agent go through — checks that a TypedArray is shareable by calling `Atomics.wait` on a
 //! throwaway one and treating *any* throw as "this kind cannot be waited on". On an agent that
 //! cannot block, that throw is `AgentCanSuspend()` refusing, and every one of those files fails
 //! before it broadcasts anything.
@@ -30,21 +30,21 @@
 //!
 //! **What that risks is a hang**, and it was measured rather than assumed: outside the tests that
 //! start agents there are nine `Atomics.wait` calls in the suite with no timeout argument, and every
-//! one of them throws first â€” a Symbol index, a `Float64Array`, an index out of range. Nothing waits
+//! one of them throws first — a Symbol index, a `Float64Array`, an index out of range. Nothing waits
 //! for ever with nobody left to notify it. A test that did would be stopped by the worker's
 //! per-test budget, because `wire.rs`'s workers are processes for exactly this kind of reason.
 //!
 //! # What crosses between agents, and what cannot
 //!
 //! Three things and nothing else: a [`Block`], a report (a String), and the second argument to
-//! `broadcast` â€” which INTERPRETING.md restricts to "an Int32 or BigInt" and which crosses **as its
+//! `broadcast` — which INTERPRETING.md restricts to "an Int32 or BigInt" and which crosses **as its
 //! source text**, to be evaluated on the far side. A [`Value`] is a handle into one heap and names
 //! something else entirely in another, so nothing that is one is ever sent.
 //!
 //! # The two things this host does not do
 //!
 //! **An agent parked in `Atomics.wait` for ever is a leaked thread.** Nothing here can interrupt
-//! one â€” that is what blocking means â€” so a test that starts an agent, has it wait, and then fails
+//! one — that is what blocking means — so a test that starts an agent, has it wait, and then fails
 //! before notifying leaves the thread parked until the worker process is killed at its budget. It
 //! costs a thread and not a hung suite, for the same reason as above.
 //!
@@ -65,8 +65,8 @@ use viperjs::vm::Vm;
 /// How long `$262.agent.start` waits for the agent it started to say it is running.
 ///
 /// INTERPRETING.md says the call blocks until then and gives it no way to fail. A bound turns an
-/// agent whose script does not finish â€” an infinite loop at its top level, which a test may
-/// perfectly well write â€” into a test that fails rather than a worker that never answers again.
+/// agent whose script does not finish — an infinite loop at its top level, which a test may
+/// perfectly well write — into a test that fails rather than a worker that never answers again.
 const STARTING: Duration = Duration::from_secs(10);
 
 /// How long `$262.agent.broadcast` waits for each agent to take the message.
@@ -80,7 +80,7 @@ thread_local! {
     /// What the agent that *started* others remembers about them.
     ///
     /// A thread local and not a field on anything, because a [`Native`] is a plain function pointer
-    /// with nowhere to hang state â€” and because the state genuinely is per-thread: an agent is a
+    /// with nowhere to hang state — and because the state genuinely is per-thread: an agent is a
     /// thread, so "this agent's agents" and "this agent's outbox" are exactly what one holds. A
     /// worker runs one test at a time, so there is never more than one parent here.
     static STARTED: RefCell<Parent> = RefCell::new(Parent::default());
@@ -92,7 +92,7 @@ thread_local! {
 /// The agent that started others, as it sees them.
 #[derive(Default)]
 struct Parent {
-    /// One per `$262.agent.start`, in the order they were started â€” which is the order `broadcast`
+    /// One per `$262.agent.start`, in the order they were started — which is the order `broadcast`
     /// hands the message over in.
     agents: Vec<Started>,
     /// Where `getReport` reads from. Every agent writes to the other end.
@@ -110,15 +110,15 @@ struct Parent {
 struct Started {
     /// How a broadcast reaches it.
     hand: Sender<Message>,
-    /// How it says it has taken one â€” INTERPRETING.md: `broadcast` blocks until every agent has.
+    /// How it says it has taken one — INTERPRETING.md: `broadcast` blocks until every agent has.
     taken: Receiver<()>,
 }
 
 /// What `$262.agent.broadcast` sends.
 struct Message {
-    /// Â§25.2's memory, which is the whole point of the exercise.
+    /// §25.2's memory, which is the whole point of the exercise.
     block: Block,
-    /// The second argument, as source text â€” see [`source_of`].
+    /// The second argument, as source text — see [`source_of`].
     id: String,
 }
 
@@ -136,7 +136,7 @@ struct Inside {
     since: Instant,
 }
 
-/// The five things the agent running the test file can do â€” INTERPRETING.md's parent half.
+/// The five things the agent running the test file can do — INTERPRETING.md's parent half.
 const OUTSIDE: [(&str, Native); 5] = [
     ("start", start as Native),
     ("broadcast", broadcast),
@@ -173,7 +173,7 @@ pub fn attach(heap: &mut Heap, realm: &Realm, host: ObjectId) {
     define(heap, host, "agent", Value::Object(agent));
 }
 
-/// One writable, enumerable, configurable property â€” which `atomicsHelper.js` requires.
+/// One writable, enumerable, configurable property — which `atomicsHelper.js` requires.
 ///
 /// It replaces `$262.agent.getReport` with a wrapper of its own on every host, saying so in a
 /// comment: "All runtimes currently have their own `$262.agent.getReport` which is wrong". A
@@ -184,7 +184,7 @@ fn define(heap: &mut Heap, object: ObjectId, name: &str, value: Value) {
     let _ = heap.define_own_property(object, key, &PropertyDescriptor::data(value));
 }
 
-/// Forget every agent this thread started â€” the boundary between one test and the next.
+/// Forget every agent this thread started — the boundary between one test and the next.
 ///
 /// A worker process runs test after test, so without this the second test to use agents would find
 /// the first one's still listed and broadcast to them. Forgetting an agent closes the channel this
@@ -200,7 +200,7 @@ pub fn forget() {
     });
 }
 
-/// `$262.agent.start(source)` â€” a thread, an engine of its own, and that script running in it.
+/// `$262.agent.start(source)` — a thread, an engine of its own, and that script running in it.
 fn start(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let source = Host::new(vm, heap).text(call.argument(0))?;
     let (hand, takes) = channel();
@@ -231,7 +231,7 @@ fn start(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
     if started.is_err() {
         return Err(Abrupt::type_error("this agent could not start another"));
     }
-    // "Will block until that agent is running", read as *has run its top level* â€” the stronger of
+    // "Will block until that agent is running", read as *has run its top level* — the stronger of
     // the two readings, on purpose. An agent script's whole job is to call `receiveBroadcast`, so
     // returning any earlier would let a broadcast reach an agent that has not yet said what to do
     // with one.
@@ -244,7 +244,7 @@ fn start(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
 /// callback, and stop.
 ///
 /// Nothing here reports a failure anywhere, and that is deliberate rather than lazy. An agent has no
-/// way to fail a test â€” no `assert`, and no channel for one â€” so what a broken agent script produces
+/// way to fail a test — no `assert`, and no channel for one — so what a broken agent script produces
 /// is a **missing report**, which the test's own `getReport` is already waiting for and will fail
 /// on. Inventing a second failure path would mean deciding what a test *meant* to assert.
 fn live(
@@ -282,7 +282,7 @@ fn live(
         return;
     }
     // A closed channel is the test having ended without ever broadcasting, which is what every
-    // negative case does â€” there is nothing left to take and nothing to do but stop.
+    // negative case does — there is nothing left to take and nothing to do but stop.
     let Ok(message) = takes.recv() else {
         return;
     };
@@ -291,7 +291,7 @@ fn live(
     if engine.set_global(BROADCAST, taken).is_err() {
         return;
     }
-    // Called through `eval` rather than through a host call, because that is what drains Â§9.5's job
+    // Called through `eval` rather than through a host call, because that is what drains §9.5's job
     // queue afterwards: a `receiveBroadcast` callback may be `async`, and what it queued has to be
     // delivered before this thread stops.
     let _ = engine.eval(&format!("{RECEIVE}({BROADCAST}, {})", message.id));
@@ -303,12 +303,12 @@ const BROADCAST: &str = "$__broadcast";
 /// Where `receiveBroadcast` keeps what it was given.
 ///
 /// On the global and not in a Rust local, because a `Value` a host is holding is **not** a
-/// collection root â€” `api`'s own documentation says so â€” and a collection between the registration
+/// collection root — `api`'s own documentation says so — and a collection between the registration
 /// and the broadcast would otherwise free the callback. The global is the one place a host can put
 /// a value that the program itself then keeps alive.
 const RECEIVE: &str = "$__receiveBroadcast";
 
-/// `$262.agent.broadcast(sab, id)` â€” hand the block to every agent and wait until each has it.
+/// `$262.agent.broadcast(sab, id)` — hand the block to every agent and wait until each has it.
 fn broadcast(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let block = match call.argument(0) {
         Value::Object(object) => heap
@@ -345,7 +345,7 @@ fn broadcast(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
 /// The second argument to `broadcast`, as text the receiving agent can evaluate.
 ///
 /// INTERPRETING.md restricts it to "an Int32 or BigInt", and both are written by the characters they
-/// are spelled with â€” so the source text *is* the value, exactly, where handing over a `f64` would
+/// are spelled with — so the source text *is* the value, exactly, where handing over a `f64` would
 /// lose a BigInt's magnitude. The `n` is what tells the two apart, and dropping it would turn a
 /// BigInt into a Number in silence: `broadcast(sab, 1n)` would hand the agent `1`, and the
 /// `BigInt64Array` tests are written to notice.
@@ -353,7 +353,7 @@ fn broadcast(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
 /// Absent is what all but a handful of tests pass, since `safeBroadcast` sends only the buffer, and
 /// it needs no case of its own: `ToString(undefined)` is the five letters that evaluate back to it.
 ///
-/// A String would not survive the trip â€” it would arrive as an identifier â€” and neither would an
+/// A String would not survive the trip — it would arrive as an identifier — and neither would an
 /// object. Nothing is done about either, because INTERPRETING.md says what may be sent and a host
 /// inventing a refusal the document does not describe is a host answering a question nobody asked.
 fn source_of(vm: &mut Vm, heap: &mut Heap, given: Value) -> Completion<String> {
@@ -365,7 +365,7 @@ fn source_of(vm: &mut Vm, heap: &mut Heap, given: Value) -> Completion<String> {
     })
 }
 
-/// `$262.agent.getReport()` â€” the oldest report any agent has sent, or `null`.
+/// `$262.agent.getReport()` — the oldest report any agent has sent, or `null`.
 fn get_report(vm: &mut Vm, heap: &mut Heap, _: &NativeCall<'_>) -> Completion<Value> {
     let taken = STARTED.with(|parent| {
         parent
@@ -380,7 +380,7 @@ fn get_report(vm: &mut Vm, heap: &mut Heap, _: &NativeCall<'_>) -> Completion<Va
     Ok(Host::new(vm, heap).string(&text))
 }
 
-/// `$262.agent.report(message)` â€” INTERPRETING.md's, whose conversion to a String is explicit in it.
+/// `$262.agent.report(message)` — INTERPRETING.md's, whose conversion to a String is explicit in it.
 fn report(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
     let said = Host::new(vm, heap).text(call.argument(0))?;
     INSIDE.with(|inside| {
@@ -393,7 +393,7 @@ fn report(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Val
     Ok(Value::Undefined)
 }
 
-/// `$262.agent.receiveBroadcast(f)` â€” remember `f` and return, which is what the document allows.
+/// `$262.agent.receiveBroadcast(f)` — remember `f` and return, which is what the document allows.
 ///
 /// "This function may return before a broadcast is received (eg to return to an event loop to await
 /// a message) and no code should follow the call to this function." So it does exactly that: the
@@ -405,7 +405,7 @@ fn receive_broadcast(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Com
     Ok(Value::Undefined)
 }
 
-/// `$262.agent.leaving()` â€” the script saying this agent may be terminated.
+/// `$262.agent.leaving()` — the script saying this agent may be terminated.
 ///
 /// Recorded rather than acted on. In almost every script it is the last statement of a
 /// `receiveBroadcast` callback, which is about to return and end the agent anyway; the one place
@@ -420,7 +420,7 @@ fn leaving(_: &mut Vm, _: &mut Heap, _: &NativeCall<'_>) -> Completion<Value> {
     Ok(Value::Undefined)
 }
 
-/// `$262.agent.sleep(ms)` â€” "sleeps the agent for approximately that duration".
+/// `$262.agent.sleep(ms)` — "sleeps the agent for approximately that duration".
 ///
 /// The same function on both sides, because it means the same thing on both: this thread stops. On
 /// the agent holding the test that is `atomicsHelper.js`'s `tryYield`, which is how it gives the
@@ -435,7 +435,7 @@ fn sleep(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Valu
     Ok(Value::Undefined)
 }
 
-/// `$262.agent.monotonicNow()` â€” milliseconds since an origin every agent here shares.
+/// `$262.agent.monotonicNow()` — milliseconds since an origin every agent here shares.
 ///
 /// Monotonic in the sense the document asks for, because it is `Instant` and not the wall clock:
 /// one of those cannot go backwards and the other can.

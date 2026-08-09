@@ -1381,6 +1381,10 @@ impl Vm {
                 ..PropertyDescriptor::EMPTY
             },
         );
+        // DR-0028 — a sloppy function shadows §10.2.4's restricted pair with its own, and every
+        // other kind does not. The check is inside, so this reads the same at all three sites that
+        // make an ordinary function and no site has to remember which kinds are excluded.
+        crate::builtins::function::reflect_legacy(heap, &self.realm, object);
         // §10.2.5's `MakeConstructor`: every ordinary function gets a `prototype`
         // object, and that object gets a `constructor` back. The pair is what makes
         // `new f() instanceof f` true, and it is made eagerly because a function may
@@ -1852,6 +1856,10 @@ impl Vm {
                 ..PropertyDescriptor::EMPTY
             },
         );
+        // DR-0028, and here it is always a no-op: §11.2.2 makes every class body strict, so a class
+        // constructor is never the kind that shadows the pair. Called anyway, so that all three
+        // sites read alike and a fourth cannot be added without meeting the question.
+        crate::builtins::function::reflect_legacy(heap, &self.realm, object);
         // §15.7.14 steps 12 to 14 — the prototype, and the pair of references that make
         // `new C() instanceof C` true. `prototype` is **not writable** here, which is the
         // difference from §10.2.5's `MakeConstructor` for an ordinary function: a class

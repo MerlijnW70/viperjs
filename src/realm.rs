@@ -206,6 +206,15 @@ pub struct Realm {
     /// function object poisons `callee` on every unmapped arguments object, so a script comparing
     /// two of them finds them equal.
     thrower: ObjectId,
+    /// The getter a sloppy function's own `caller` has — DR-0028's half of the legacy pair.
+    ///
+    /// Not an intrinsic: ECMA-262 has no name for it, because the property it belongs to is not in
+    /// ECMA-262. It is here for the reason [`Realm::thrower`] is — one per realm, shared by every
+    /// function that gets the pair, so that the descriptors compare equal.
+    legacy_caller: ObjectId,
+    /// The same for `arguments`. Two objects and not one, because a program can read both
+    /// descriptors and the two getters answer differently.
+    legacy_arguments: ObjectId,
     /// §20.5.5's six native error prototypes, in the order [`NATIVE_ERRORS`] names them.
     ///
     /// An array rather than six fields because nothing here treats one differently from another:
@@ -347,6 +356,22 @@ impl Realm {
         if let Some(object) = heap.object_mut(thrower) {
             object.prevent_extensions();
         }
+        // The legacy pair's getters — DR-0028, and see `builtins::function::reflect_legacy`. One of
+        // each per realm and shared by every sloppy function in it, for the reason %ThrowTypeError%
+        // is shared: a script comparing two functions' descriptors finds the same getter, which is
+        // what says this is one host facility rather than a property each function invented.
+        let legacy_caller = heap.new_native_function(
+            function_prototype,
+            crate::builtins::function::legacy_caller,
+            id,
+        );
+        crate::builtins::define_function_metadata(heap, legacy_caller, "get caller", 0);
+        let legacy_arguments = heap.new_native_function(
+            function_prototype,
+            crate::builtins::function::legacy_arguments,
+            id,
+        );
+        crate::builtins::define_function_metadata(heap, legacy_arguments, "get arguments", 0);
         // §6.1.5.1 — each is described as `Symbol.iterator` and so on, which is what makes
         // `String(Symbol.iterator)` answer `"Symbol(Symbol.iterator)"`. They live on the heap and
         // are built by whichever realm is built first, because the clause says they are shared by
@@ -470,6 +495,8 @@ impl Realm {
             array_iterator_prototype,
             string_iterator_prototype,
             thrower,
+            legacy_caller,
+            legacy_arguments,
             native_error_prototypes,
         };
         // The intrinsics are what a realm *is*, and §19 through §28 are intrinsics. Building them
@@ -608,6 +635,16 @@ impl Realm {
     /// %ThrowTypeError% — the function that throws whatever it is asked.
     pub fn thrower(&self) -> ObjectId {
         self.thrower
+    }
+
+    /// The getter a sloppy function's own `caller` has — DR-0028.
+    pub fn legacy_caller(&self) -> ObjectId {
+        self.legacy_caller
+    }
+
+    /// The getter its own `arguments` has.
+    pub fn legacy_arguments(&self) -> ObjectId {
+        self.legacy_arguments
     }
 
     /// %ArrayBuffer.prototype% — §25.1.5.

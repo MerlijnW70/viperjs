@@ -354,6 +354,10 @@ fn dynamic_function(
     // `"anonymous"` whatever the source says, and it is a constructor like any ordinary function.
     let length = u32::try_from(parameters.len()).unwrap_or(u32::MAX);
     super::define_function_metadata(heap, object, "anonymous", length);
+    // DR-0028 — the third site, and the one `GeneratorFunction/instance-restricted-properties.js`
+    // is about: `new GeneratorFunction()` is **sloppy**, so a host that asked only about strictness
+    // would give it the pair and fail that file. [`reflect_legacy`] asks about the kind too.
+    reflect_legacy(heap, &vm.realm(), object);
     // §20.2.1.1.1 step 27 — the `prototype` property, and this is where the four kinds differ.
     //
     // Only the ordinary kind is a **constructor**: §27.7.4, §27.3.4 and §27.4.4 all say an async
@@ -534,17 +538,155 @@ fn has_instance(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completi
 /// `caller` and `arguments` were ES5's way to walk the call stack from inside a function, and
 /// ES5's strict mode closed it off. What replaced them is not their absence: they are **accessor**
 /// properties on `Function.prototype` whose getter and setter are both §10.2.4.1's
-/// %ThrowTypeError%, so reaching for either through any function is a TypeError rather than
-/// `undefined`. The difference matters to a program that asks — `f.caller` throwing is what says
-/// the language refuses, where `undefined` would say this engine has not got round to it.
+/// %ThrowTypeError%, so reaching for either is a TypeError rather than `undefined`. The difference
+/// matters to a program that asks — `f.caller` throwing is what says the language refuses, where
+/// `undefined` would say this engine has not got round to it.
 ///
 /// On the *prototype* and on no individual function, which is where ES2015 moved them: ES5 put a
 /// pair on every strict function, and a test that asks
 /// `Object.prototype.hasOwnProperty.call(f, "caller")` can tell the two apart.
 ///
+/// **This doc said "reaching for either through any function", and DR-0028 made that false**: a
+/// sloppy function now has a pair of its own that shadows this one, so the inherited pair is what
+/// every *other* kind reaches and not what all of them do. What is written here is still exactly
+/// what §10.2.4 asks for and is still where the standard behaviour lives —
+/// [`reflect_legacy`] is the extension beside it, and `delete f.caller` comes back here.
+///
 /// One %ThrowTypeError% for the realm and not one per property. §10.2.4.1 makes it a single object,
 /// and a program can see that: both halves of both accessors are the same function, and it is the
 /// same one an unmapped arguments object's `callee` is poisoned with.
+/// Whether `function` is the kind that **shadows** §10.2.4's restricted pair — DR-0028.
+///
+/// A sloppy function written as a `function` declaration or expression, and nothing else. Every
+/// exclusion here is a test262 file rather than a preference:
+///
+/// - **strict** — `built-ins/Function/StrictFunction_restricted-properties.js` requires no own
+///   property and a throw from both names.
+/// - **a generator** — `built-ins/GeneratorFunction/instance-restricted-properties.js` requires the
+///   same, and requires it of `new GeneratorFunction()`, which is *sloppy*. So strictness is not
+///   the only question and a host that asked only about it would fail that file.
+/// - **a bound function, a built-in, a proxy** — none of them is a `Callable::Bytecode` at all, so
+///   they fall out here. `built-ins/Function/prototype/bind/S15.3.4.5_A2.js` is what would notice.
+/// - **an arrow, an `async` function, a `MethodDefinition`** — untested by test262 either way, and
+///   excluded because the extension is ES5's and none of the three existed to have it. This is not
+///   an idle argument: `src/vm/tests/names.rs` already asserts that a concise method's own property
+///   names are exactly `length` and `name`, and that row is §15.4.5's, so a method quietly growing
+///   two more would have been a claim about the *grammar* broken by an extension.
+#[must_use]
+pub(crate) fn legacy_reflectable(heap: &Heap, function: ObjectId) -> bool {
+    let Some(code) = sloppy_body(heap, function) else {
+        return false;
+    };
+    !code.is_generator() && !code.is_async() && !code.is_arrow() && !code.is_method()
+}
+
+/// Whether `function` may be **named** by somebody's `caller` — see [`sloppy_body`] for the rule.
+#[must_use]
+pub(crate) fn sloppy_caller(heap: &Heap, function: ObjectId) -> bool {
+    sloppy_body(heap, function).is_some()
+}
+
+/// The body of `function` when it is an ordinary **sloppy** one, which is the narrower question
+/// `caller` asks about whoever is being *named*.
+///
+/// ES5 §15.3.5.4 threw when the value would be a strict function, and that is the one part of the
+/// old rule worth keeping: it is why the property was ever considered a hole. So a strict caller is
+/// reported as `null` rather than handed over — but a sloppy *arrow* or generator, which does not
+/// get the pair itself, may still be named by one. Getting the pair and being nameable are two
+/// questions and this is the smaller of them.
+fn sloppy_body(heap: &Heap, function: ObjectId) -> Option<&std::rc::Rc<crate::compile::Chunk>> {
+    let crate::heap::Callable::Bytecode { code, .. } =
+        heap.object(function).and_then(crate::heap::Object::call)?
+    else {
+        return None;
+    };
+    match code.is_strict() {
+        true => None,
+        false => Some(code),
+    }
+}
+
+/// Give `function` its own `caller` and `arguments`, if it is the kind that has them — DR-0028.
+///
+/// Called at every site that makes an ordinary function object. Doing nothing for the kinds
+/// [`legacy_reflectable`] excludes is what leaves §10.2.4's poisoned pair reachable on
+/// `Function.prototype` for them, which is what the specification asks for and what four test262
+/// files check.
+pub(crate) fn reflect_legacy(heap: &mut Heap, realm: &Realm, function: ObjectId) {
+    if !legacy_reflectable(heap, function) {
+        return;
+    }
+    for (name, getter) in [
+        ("caller", realm.legacy_caller()),
+        ("arguments", realm.legacy_arguments()),
+    ] {
+        let key = key(heap, name);
+        let _ = heap.define_own_property(
+            function,
+            key,
+            &PropertyDescriptor {
+                getter: Some(Value::Object(getter)),
+                // **No setter**, which makes `f.caller = 1` a silent no-op in sloppy code and a
+                // TypeError in strict — the same answer the inherited pair gives for the second and
+                // a quieter one for the first. A setter that ignored its argument would be a
+                // property that accepts a write and discards it, which is worse than one that says
+                // it cannot be written.
+                enumerable: Some(false),
+                // Configurable, as §10.2.4's are: a program that wants the standard behaviour back
+                // can `delete f.caller` and reach the poisoned pair underneath.
+                configurable: Some(true),
+                ..PropertyDescriptor::EMPTY
+            },
+        );
+    }
+}
+
+/// The receiver both getters check first.
+///
+/// They are shared by every function that has the pair, so a program can take one off `f` and call
+/// it on `g`. Answering about `g` is right; answering about something that never had the pair is
+/// not, and the refusal is the inherited one's, word for word, so that a program cannot tell which
+/// route it reached.
+fn legacy_receiver(heap: &Heap, call: &NativeCall<'_>) -> Completion<ObjectId> {
+    match call.this_value {
+        Value::Object(function) if legacy_reflectable(heap, function) => Ok(function),
+        _ => Err(Abrupt::type_error(
+            "this property may not be read or written",
+        )),
+    }
+}
+
+/// `f.caller` — the function that called the invocation of `f` that is running, or `null`.
+pub(crate) fn legacy_caller(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    call: &NativeCall<'_>,
+) -> Completion<Value> {
+    let function = legacy_receiver(heap, call)?;
+    Ok(vm.legacy_caller_of(function, heap))
+}
+
+/// `f.arguments` — **`null`**, always, which is this extension's answer for a function that has no
+/// activation to describe.
+///
+/// ViperJS cannot describe one. The arguments object lives in a slot of the *callee's* function
+/// environment, and a frame records the environment to go **back** to rather than the one it
+/// entered — so from outside the call there is no way to name it. What can be reached is the
+/// environment that was current when the next call was made, which is a *block* environment as
+/// often as not, and reading a slot out of the wrong one would answer with some other variable.
+///
+/// Answering `null` uniformly is therefore the honest shape: it is what the extension says when
+/// there is nothing to hand over, and it is the same answer every time rather than right for the
+/// functions whose bodies happen to mention `arguments` and wrong for the rest. See DR-0028.
+pub(crate) fn legacy_arguments(
+    _: &mut Vm,
+    heap: &mut Heap,
+    call: &NativeCall<'_>,
+) -> Completion<Value> {
+    legacy_receiver(heap, call)?;
+    Ok(Value::Null)
+}
+
 fn restrict(heap: &mut Heap, realm: &Realm, prototype: ObjectId) {
     let thrower = realm.thrower();
     for name in ["caller", "arguments"] {

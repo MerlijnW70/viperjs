@@ -11,7 +11,7 @@ in.
 ## Index
 
 - [§20.1.3's `ToObject`s are conversions, and four of them were checks](#2013s-toobjects-are-conversions-and-four-of-them-were-checks)
-- [`Function.prototype.caller` — 23 runs, costed and **not built**](#functionprototypecaller--23-runs-costed-and-not-built-because-it-is-not-in-the-language)
+- [`Function.prototype.caller` — 23 runs, costed, refused, and then built — DR-0028](#functionprototypecaller--23-runs-costed-refused-and-then-built--dr-0028)
 - [An agent is a thread, and the two bugs only a second one can find — `$262.agent`](#an-agent-is-a-thread-and-the-two-bugs-only-a-second-one-can-find--262agent)
 - [A second realm, and the five things that had never had to say *whose* intrinsics — DR-0025](#a-second-realm-and-the-five-things-that-had-never-had-to-say-whose-intrinsics--dr-0025)
 - [A fallback on *failure* where the clause has one on *absence* — §23.2, +36](#a-fallback-on-failure-where-the-clause-has-one-on-absence--232-36)
@@ -82,7 +82,7 @@ reading was systematic rather than a slip.
 
 ---
 
-### `Function.prototype.caller` — 23 runs, costed and **not built**, because it is not in the language
+### `Function.prototype.caller` — 23 runs, costed, refused, and then **built** — DR-0028
 
 Recorded so it is not re-costed. The bucket reads as an engine fault and is not one: 23 runs fail
 with **ViperJS's own message**, `this property may not be read or written`, which is §10.2.4.1's
@@ -109,16 +109,35 @@ because each on its own reads the other way:
   `Function.prototype`'s own descriptors and nothing else. So the 23 are winnable without breaking
   anything.
 
-**What winning them would cost.** An own `caller` and `arguments` on every **non-strict** function,
-shadowing the inherited accessors. Answering `undefined` satisfies all 23 — the `15.3.5.4_2-*gs`
-files have no assertion at all and merely require no throw. But that is two extra properties on
-every sloppy function object in a heap with a budget (DR-0013), so it would want synthesising on
-read the way a String object's indices already are, rather than storing.
+**It was costed, declined, and then built on instruction** — the decision above went to the user
+because it is DR-0008's shape, and the answer was to build it. **DR-0028** is the record; what
+follows is what it cost beyond the clause, which is the part a record does not carry.
 
-**Why it is not built.** It is behaviour ECMA-262 does not describe, invented on every function
-object, to satisfy tests that say in their own source that they expect hosts to lack it. That is the
-shape of DR-0008's Annex B question and belongs to the same procedure: *put it to the user, do not
-decide it quietly.* The three facts above are what that decision needs.
+**Two existing tests failed the moment the refusal came off, and both were right to.** AGENTS.md
+predicts this of any slice that removes a refusal, and the interesting half is that they failed
+*differently*:
+
+- `vm::tests::arguments`'s row asserted the pair is refused "through **any** function". That claim
+  was true and is now too wide — it was renamed and its four plain `function f() {}` rows say
+  `'use strict'`, because everything it is about is still true of every kind the extension does not
+  reach, and there are more of those than there are of the other.
+- `vm::tests::names` asserted a concise method's own property names are exactly `length` and
+  `name` — a claim about **§15.4.5**, not about this extension at all. It broke because the first
+  cut included methods. **An extension that breaks a claim about the grammar has been drawn too
+  wide**, so methods came out, and that test passes unchanged. It is the better of the two signals:
+  the first said the doc needed updating, the second said the *code* was wrong.
+
+**The exclusion list is four test262 files and no preferences**, which is worth knowing before
+touching it: strict (`StrictFunction_restricted-properties.js`), generators
+(`GeneratorFunction/instance-restricted-properties.js` — and it asks about `new GeneratorFunction()`,
+which is **sloppy**, so strictness alone is not the question), bound functions
+(`bind/S15.3.4.5_A2.js`), and built-ins. Arrows, `async` functions and methods are excluded because
+the extension is ES5's and none of the three existed to have it.
+
+**`arguments` answers `null` always**, and that is a real boundary rather than laziness: the
+arguments object lives in a slot of the *callee's* environment and a frame records the environment
+to go **back** to. DR-0028 says what would close it and why eight bytes on every frame is a trade
+rather than an oversight.
 
 ---
 
