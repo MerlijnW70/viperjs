@@ -10,6 +10,7 @@ in.
 
 ## Index
 
+- [test262 runs ahead of the specification, and two "gaps" were unmerged PRs — costed, refused](#test262-runs-ahead-of-the-specification-and-two-gaps-were-unmerged-prs--costed-refused)
 - [A sloppy eval's `var` lands in a running scope, and two clauses had nowhere to be — +49](#a-sloppy-evals-var-lands-in-a-running-scope-and-two-clauses-had-nowhere-to-be--49)
 - [An engine can fail by succeeding — §9.13, and the ratchets that cannot see it — DR-0029](#an-engine-can-fail-by-succeeding--913-and-the-ratchets-that-cannot-see-it--dr-0029)
 - [The job queue never collected, and it took a timeout to find it — +46](#the-job-queue-never-collected-and-it-took-a-timeout-to-find-it--46)
@@ -45,6 +46,41 @@ in.
 - [What is left, in the order the numbers put it](#what-is-left-in-the-order-the-numbers-put-it)
 
 ---
+
+### test262 runs ahead of the specification, and two "gaps" were unmerged PRs — costed, refused
+
+**Do not re-cost these two, and read the method before costing anything else against upstream.**
+
+Measured 2026-08-10 by running the suite against test262's head (`440b64f1`) instead of the pinned
+revision. The pin was 11 commits behind; the run answered **80,313 passed against 80,283**, with
+230 newly failing. The percentage *falls* while the pass count *rises*, which is the first thing
+worth knowing about bumping a pin: 128 of the new files are `built-ins/Iterator` for proposals this
+engine does not implement, so they join the denominator and nothing else.
+
+Of the 230, 218 were that proposal noise and **12 looked like real spec drift**. They were not:
+
+| runs | what it looked like | what it is |
+| --- | --- | --- |
+| 8 | `Iterator.prototype.take`/`drop` missing a RangeError for a finite limit above 2^53-1 | [ecma262#3776](https://github.com/tc39/ecma262/pull/3776), **open** |
+| 4 | `Promise.try` wrapping a same-constructor promise instead of returning it | [ecma262#3883](https://github.com/tc39/ecma262/pull/3883), **open** |
+
+Both are *proposed* normative changes whose tests landed in test262 ahead of the specification —
+the test262 PR for the second says "proposed" in its own title — and neither is flagged as a
+feature, so both simply fail. ViperJS is not behind on either; it is correct against published
+ECMA-262, and both files pass at the pinned revision.
+
+**The method, which is the part to carry.** A test262 file failing is not evidence that the engine
+is wrong: the suite tracks the specification's *editorial* head and sometimes its *proposed* head.
+Before implementing anything a new test demands, find the ecma262 PR behind it and check whether it
+merged — `gh pr view <n> --repo tc39/ecma262 --json state,mergedAt` answers in one call, and the
+test262 PR body almost always links it. Building an unmerged PR puts the engine deliberately outside
+the specification, which is DR-0028's situation and needs a decision record and an instruction, not
+a green test.
+
+The second of the two is a live example of why: its own author notes the identity check "might
+change" pending a further PR, and the change reorders when the promise constructor runs relative to
+the callback — an effect `ctx-ctor.js` counts. Implementing it now would be pinning behaviour that
+is still moving.
 
 ### A sloppy eval's `var` lands in a running scope, and two clauses had nowhere to be — +49
 
