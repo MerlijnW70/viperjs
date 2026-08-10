@@ -101,8 +101,36 @@ fn seed_random() {
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(SEEDLESS, |since| since.as_nanos() as u64);
-    // `| 1` because zero is the one state a xorshift cannot leave.
-    SEED.with(|seed| seed.set(now | 1));
+    set_seed(now);
+}
+
+/// Start this thread's generator from `chosen` — the host's answer instead of the clock's.
+///
+/// §21.3.2.27 asks for "a Number value with positive sign, greater than or equal to +0𝔽 but
+/// strictly less than 1𝔽, chosen randomly or pseudo randomly with approximately uniform
+/// distribution over that range, using an implementation-defined algorithm or strategy". It asks
+/// for **nothing** about unpredictability, and says the choice may depend on any implementation
+/// state — so a host that fixes the sequence is inside the clause rather than bending it.
+///
+/// What wants it is a tool that has to run the same program twice and compare: the fuzzer's seed
+/// fixed its inputs and could not fix what the engine did with one, because this was the clock's to
+/// decide. A finding that appears once and not again is a finding nobody can act on.
+///
+/// **Not for anything that needs unpredictability.** A seeded generator is a *predicted* one, and
+/// GOAL.md §3 leaves anything cryptographic to the host, which has to bring its own.
+///
+/// Zero is mapped away because it is the one state a xorshift cannot leave — and **only** zero.
+/// This was `seed | 1`, which maps zero away and takes every even seed with it, so 42 and 43 named
+/// one sequence: half of all seeds, silently. Harmless while the only caller was the clock, whose
+/// nanoseconds nobody compares; not harmless the moment a host may pass a small number it chose.
+/// The same spelling was found in the fuzzer's own generator by a test asking whether two seeds
+/// disagree, and the test here that pinned `seeded & 1 == 1` was pinning the fault.
+pub(crate) fn set_seed(chosen: u64) {
+    let state = match chosen {
+        0 => SEEDLESS,
+        _ => chosen,
+    };
+    SEED.with(|seed| seed.set(state));
 }
 
 /// The one argument these all begin with — `ToNumber` of the first, or `NaN` if there is none.
@@ -412,8 +440,33 @@ mod tests {
         // things `seed_random` is for.
         SEED.with(|seed| seed.set(SEEDLESS));
         seed_random();
-        let seeded = SEED.with(Cell::get);
-        assert_ne!(seeded, 0);
-        assert_eq!(seeded & 1, 1);
+        assert_ne!(SEED.with(Cell::get), 0);
+    }
+
+    #[test]
+    fn only_zero_is_mapped_away_and_two_seeds_keep_their_difference() {
+        // **This row used to assert `seeded & 1 == 1`**, which pinned the consequence of writing
+        // the zero-guard as `seed | 1` — and that spelling maps every *even* seed onto its odd
+        // neighbour, so 42 and 43 named one sequence. Half of all seeds, silently, and a test that
+        // called it correct.
+        //
+        // The property that matters is the one the guard exists for: zero is the single state a
+        // xorshift cannot leave, and nothing else may be touched.
+        for (chosen, expected) in [
+            (0, SEEDLESS),
+            (1, 1),
+            (42, 42),
+            (43, 43),
+            (u64::MAX, u64::MAX),
+        ] {
+            set_seed(chosen);
+            assert_eq!(SEED.with(Cell::get), expected, "seed {chosen}");
+        }
+        // …said the other way round, which is what a caller actually depends on: two seeds that
+        // differ produce sequences that differ.
+        set_seed(42);
+        let first = next_state(SEED.with(Cell::get));
+        set_seed(43);
+        assert_ne!(next_state(SEED.with(Cell::get)), first);
     }
 }

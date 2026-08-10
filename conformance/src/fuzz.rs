@@ -51,6 +51,12 @@ const HEAP: usize = 8 << 20;
 /// pass here: what is being looked for is a panic, and a script that will not stop is not one.
 const BUDGET: std::time::Duration = std::time::Duration::from_millis(250);
 
+/// What `Math.random` is started from, so that one input answers the same way twice.
+///
+/// A constant and not the run's seed — see the call site. Its value means nothing beyond being a
+/// number that is not zero.
+const RANDOM: u64 = 0x5EED_5EED_5EED_5EED;
+
 /// What one attempt came to.
 #[derive(Debug, PartialEq, Eq)]
 enum Verdict {
@@ -169,6 +175,13 @@ fn attempt(source: &str) -> Verdict {
         let mut engine = viperjs::api::Engine::new();
         engine.set_heap_budget(HEAP);
         engine.set_time_budget(Some(BUDGET));
+        // The one source of variance this tool can remove. `Math.random` is otherwise seeded from
+        // the clock at every `Engine::new`, so an input branching on it took a different path each
+        // run — which is how a finding appeared once and never again, and why the seed's promise
+        // had to be written down as weaker than it read. Fixed at a constant rather than at the
+        // run's seed: what varies between attempts should be the *input*, and an engine that
+        // answered differently per attempt would put a second variable in the same experiment.
+        engine.set_random_seed(RANDOM);
         // The answer is discarded on purpose. Every `Err` here is the engine refusing, which is the
         // behaviour being protected rather than a failure of it.
         let _ = engine.eval(source);

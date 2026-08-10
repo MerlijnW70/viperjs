@@ -372,6 +372,28 @@ impl Engine {
         self.vm.run(&chunk, &mut self.heap).map_err(Error::Engine)
     }
 
+    /// Fix what `Math.random` will answer, instead of letting the clock decide.
+    ///
+    /// §21.3.2.27 requires an approximately uniform distribution over `[0, 1)` and **nothing** about
+    /// unpredictability, so a host that fixes the sequence is inside the clause. What wants it is a
+    /// tool that has to run the same program twice and compare — a fuzzer, a bisect, a bug report
+    /// somebody else has to reproduce. Without it the engine's answer to identical input differs
+    /// between runs, and a finding that appears once is a finding nobody can act on.
+    ///
+    /// **A seeded generator is a predicted one.** Nothing that needs unpredictability may use this,
+    /// and GOAL.md §3 leaves anything cryptographic to the host in any case.
+    ///
+    /// Per **thread**, because the generator is: a second `Engine` on this thread shares the
+    /// sequence, and one on another thread has its own. Setting it does not reach an agent a host
+    /// started, which has to set its own.
+    ///
+    /// It does not make a run reproducible on its own. `Date.now` still moves, and a program that
+    /// branches on the clock branches differently — see `conformance::fuzz`, which is where this
+    /// limit was found and which reproduces a finding by keeping the source rather than the seed.
+    pub fn set_random_seed(&mut self, seed: u64) {
+        crate::builtins::math::set_seed(seed);
+    }
+
     /// §9.13 — every rejection of the last run that nothing ever asked for, oldest first.
     ///
     /// The reasons rather than the promises, because the reason is what a host reports and the
@@ -1879,5 +1901,42 @@ mod tests {
             .eval("[1, 2, 3].join('-')")
             .expect("a short walk finishes");
         assert_eq!(engine.text(answer).as_deref(), Ok("1-2-3"));
+    }
+
+    #[test]
+    fn a_host_may_fix_what_math_random_answers() {
+        // §21.3.2.27 asks for an approximately uniform distribution over `[0, 1)` and **nothing** about
+        // unpredictability, so fixing the sequence is inside the clause. What wants it is a tool that
+        // runs the same program twice and compares — the fuzzer, whose seed fixed its inputs and could
+        // not fix what the engine did with one, which is how a finding appeared once and never again.
+        let taken = |seed: u64| {
+            let mut engine = Engine::new();
+            engine.set_random_seed(seed);
+            let answer = engine
+                .eval("var out = []; for (var i = 0; i < 8; i++) out.push(Math.random()); out.join(',')")
+                .expect("it runs");
+            engine.text(answer).expect("a String")
+        };
+        // The same seed answers the same sequence, which is the whole point.
+        assert_eq!(taken(12345), taken(12345));
+        // …and two seeds do not, which is what stops the row above passing on a generator that had
+        // stopped moving.
+        assert_ne!(taken(12345), taken(12346));
+        // Zero is the one state a xorshift cannot leave and is mapped away rather than refused — and
+        // **only** zero: `seed | 1` would map every even seed onto its odd neighbour, so these two
+        // would agree. That exact bug was found in the fuzzer's own generator.
+        assert_ne!(taken(0), taken(1));
+        assert_ne!(taken(42), taken(43));
+        // Whatever the seed, the answers are still §21.3.2.27's range.
+        let mut engine = Engine::new();
+        engine.set_random_seed(7);
+        let answer = engine
+            .eval(
+                "var ok = true; \
+                 for (var i = 0; i < 500; i++) { var r = Math.random(); if (!(r >= 0 && r < 1)) ok = false } \
+                 ok",
+            )
+            .expect("it runs");
+        assert_eq!(engine.text(answer).as_deref(), Ok("true"));
     }
 }

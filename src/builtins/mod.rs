@@ -40,7 +40,7 @@ mod iterator_helpers;
 mod iterator_lazy;
 mod json;
 mod json_write;
-mod math;
+pub(crate) mod math;
 mod number_format;
 pub(crate) mod object;
 mod object_state;
