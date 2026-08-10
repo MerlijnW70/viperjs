@@ -124,6 +124,32 @@ fn to_exponential_keeps_one_digit_before_the_point_and_says_how_far_it_moved() {
         run("[(77.1234).toExponential(), (123456).toExponential(), (1).toExponential()].join('|')"),
         "7.71234e+1|1.23456e+5|1e+0"
     );
+    // …and the exponent has to come from that same shortest spelling. A double spelled `1e-7` is
+    // 9.99999…e-8 exactly, so the *expanded* decimal puts the first significant digit one place
+    // lower than the spelling does — and reading the digits from one while keeping the exponent
+    // from the other answered `1e-8` here. Thirteen of the first thirty negative powers of ten
+    // were wrong this way; these are the two either side of a right one, so a fix that moved the
+    // boundary rather than removing it still fails.
+    assert_eq!(
+        run("[(1e-6).toExponential(), (1e-7).toExponential(), (1e-8).toExponential()].join('|')"),
+        "1e-6|1e-7|1e-8"
+    );
+    assert_eq!(
+        run("[(1e-21).toExponential(), (1e-11).toExponential()].join('|')"),
+        "1e-21|1e-11"
+    );
+    // The same spelling carrying its own exponent, which is the other half of the parse: `ToString`
+    // uses one above 1e21 and below 1e-6 and not between, so both shapes reach this.
+    assert_eq!(
+        run(
+            "[(1e21).toExponential(), (1.1e-32).toExponential(), (0.001).toExponential()].join('|')"
+        ),
+        "1e+21|1.1e-32|1e-3"
+    );
+    // test262 does not reach any of the rows above — `undefined-fractiondigits.js` asks about
+    // `123.456`, `1.1e-32` and `100`, and for none of those do the two derivations differ. Found
+    // by differential sweep against another engine instead.
+
     // Rounding may carry past the leading digit, and then the exponent moves — `99.9` to one
     // fractional digit is `1.0e+2` and not `10.0e+1`.
     assert_eq!(

@@ -250,10 +250,12 @@ fn to_exponential(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comple
             "the number of digits after the decimal point must be between 0 and 100",
         )?),
     };
-    let (digits, exponent) = significands(&expand(value));
     let (digits, exponent) = match places {
-        Some(places) => round_significant(&digits, exponent, places + 1),
-        None => shortest(value, exponent),
+        Some(places) => {
+            let (digits, exponent) = significands(&expand(value));
+            round_significant(&digits, exponent, places + 1)
+        }
+        None => shortest(value),
     };
     Ok(super::text(
         heap,
@@ -261,23 +263,44 @@ fn to_exponential(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comple
     ))
 }
 
-/// The fewest significant digits that still name this double — §21.1.3.2 step 10.b.
+/// The fewest significant digits that still name this double, **and where their point sits** —
+/// §21.1.3.2 step 10.b.
 ///
 /// Taken from the ordinary spelling rather than computed again: `number_to_string` already answers
 /// the shortest decimal that round-trips, which is exactly what "f as small as possible" asks for.
-fn shortest(value: f64, exponent: i32) -> (String, i32) {
+///
+/// **The exponent has to come from that same spelling**, and taking it from anywhere else is a bug
+/// this function had. It used to keep the digits from `number_to_string` and the exponent from
+/// [`significands`] of the *expanded* decimal, which are two independent derivations of where the
+/// first significant digit is — and they disagree whenever the double sits just under the power of
+/// ten it is spelled as. `1e-7` is such a value: it is 9.99999…e-8 exactly, so the expansion's
+/// first digit is at -8 while the shortest spelling's is at -7, and `(1e-7).toExponential()`
+/// answered `1e-8`. Thirteen of the first thirty negative powers of ten were wrong, and test262
+/// does not cover any of them — `undefined-fractiondigits.js` tests `123.456`, `1.1e-32` and `100`,
+/// none of which is a value whose two derivations differ.
+fn shortest(value: f64) -> (String, i32) {
     let ordinary = crate::value::number_to_string(value);
-    let digits: String = ordinary
-        .chars()
-        .take_while(|found| *found != 'e')
-        .filter(char::is_ascii_digit)
-        .collect();
-    let digits = digits.trim_start_matches('0');
-    let digits = digits.trim_end_matches('0');
-    match digits.is_empty() {
-        true => ("0".to_string(), 0),
-        false => (digits.to_string(), exponent),
-    }
+    // §6.1.6.1.20 uses an exponent for some values and not others — `0.001` and `1e-7` are both
+    // its work — so the two halves are separated before anything is counted.
+    let (mantissa, tenths) = match ordinary.split_once('e') {
+        // The exponent `ToString` wrote is a decimal integer with an optional sign, which is what
+        // `i32` parses; nothing this function is handed can produce anything else.
+        Some((mantissa, power)) => (mantissa, power.parse::<i32>().unwrap_or(0)), // ToString's own exponent
+        None => (ordinary.as_str(), 0),
+    };
+    // The sign is the caller's to write — `to_exponential` kept it before converting — so it is
+    // dropped rather than counted as a digit.
+    let mantissa = mantissa.trim_start_matches('-');
+    let (whole, fraction) = mantissa.split_once('.').unwrap_or((mantissa, ""));
+    let digits = format!("{whole}{fraction}");
+    let Some(first) = digits.find(|digit| digit != '0') else {
+        return ("0".to_string(), 0);
+    };
+    // The same arithmetic [`significands`] does, plus whatever exponent the spelling already
+    // carried: the point sits after `whole`, and `first` is how far past it the digits begin.
+    let exponent = tenths + whole.len() as i32 - 1 - first as i32;
+    // `first` found a digit that is not `0`, so what is left cannot be trimmed away to nothing.
+    (digits[first..].trim_end_matches('0').to_string(), exponent)
 }
 
 /// §21.1.3.5 `Number.prototype.toPrecision`.
