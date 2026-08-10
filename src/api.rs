@@ -1939,4 +1939,25 @@ mod tests {
             .expect("it runs");
         assert_eq!(engine.text(answer).as_deref(), Ok("true"));
     }
+
+    #[test]
+    fn reverse_reads_each_end_before_the_other() {
+        // §23.1.3.24 steps 6.c to 6.f interleave the reads — `HasProperty` then `Get` for the
+        // lower end, then the same for the upper — and a Proxy observes them as the order of its
+        // traps. Reading both ends before either `Get` answers a different order.
+        let mut engine = Engine::new();
+        assert_eq!(
+            answered(
+                &mut engine,
+                "var order = []; \
+                 var p = new Proxy({ length: 3, 0: 'a', 2: 'c' }, \
+                 { has(t, k) { order.push('has:' + k); return Reflect.has(t, k); }, \
+                   get(t, k) { order.push('get:' + k); return Reflect.get(t, k); } }); \
+                 Array.prototype.reverse.call(p); order.join(',')",
+            ),
+            // The leading `get:length` is §23.1.3.24 step 3 reading the length, which goes through
+            // the same traps.
+            "get:length,has:0,get:0,has:2,get:2",
+        );
+    }
 }
