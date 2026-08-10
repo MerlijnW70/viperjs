@@ -1,11 +1,5 @@
 /target
 
-# editor and OS droppings
-/.idea/
-/.vscode/
-.DS_Store
-Thumbs.db
-
 # the lab's throwaway corner — junk .js files, one-off dumps, whatever
 /lab/scratch/
 
