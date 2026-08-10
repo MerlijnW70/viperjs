@@ -144,22 +144,40 @@ pub fn reverse(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completio
     for lower in 0..length / 2 {
         let upper = length - lower - 1;
         // Both ends are read before either is written, and a hole on one side becomes a hole on
-        // the other — §23.1.3.24 steps 6.f to 6.i, which are four cases rather than a swap.
-        let (has_lower, has_upper) = (
-            has_index(vm, heap, object, lower)?,
-            has_index(vm, heap, object, upper)?,
-        );
-        let low = get_index(vm, heap, object, lower)?;
-        let high = get_index(vm, heap, object, upper)?;
+        // the other — §23.1.3.24 steps 6.g to 6.i, which are four cases rather than a swap.
+        // The reads themselves are interleaved per end — `HasProperty` then `Get` for the lower
+        // end, then the same for the upper (steps 6.c to 6.f) — which a Proxy observes as the
+        // order of its traps. The `Get` is conditional on the `HasProperty` that precedes it
+        // (steps 6.d and 6.f are `if` blocks), so an absent end is observed only as a `Has`,
+        // never as a `Get` of `undefined`.
+        let has_lower = has_index(vm, heap, object, lower)?;
+        let low = match has_lower {
+            true => Some(get_index(vm, heap, object, lower)?),
+            false => None,
+        };
+        let has_upper = has_index(vm, heap, object, upper)?;
+        let high = match has_upper {
+            true => Some(get_index(vm, heap, object, upper)?),
+            false => None,
+        };
         let (low_key, high_key) = (index_key(heap, lower), index_key(heap, upper));
-        match has_upper {
-            true => vm.set_property_key(Value::Object(object), low_key, high, heap)?,
-            false => vm.delete_property_key(Value::Object(object), low_key, heap)?,
-        };
-        match has_lower {
-            true => vm.set_property_key(Value::Object(object), high_key, low, heap)?,
-            false => vm.delete_property_key(Value::Object(object), high_key, heap)?,
-        };
+        match (low, high) {
+            (Some(low_value), Some(high_value)) => {
+                vm.set_property_key(Value::Object(object), low_key, high_value, heap)?;
+                vm.set_property_key(Value::Object(object), high_key, low_value, heap)?;
+            }
+            // A hole on one side moves to the other — steps 6.h and 6.i write the surviving
+            // end's value across, then delete the end that has become the hole.
+            (Some(low_value), None) => {
+                vm.delete_property_key(Value::Object(object), low_key, heap)?;
+                vm.set_property_key(Value::Object(object), high_key, low_value, heap)?;
+            }
+            (None, Some(high_value)) => {
+                vm.set_property_key(Value::Object(object), low_key, high_value, heap)?;
+                vm.delete_property_key(Value::Object(object), high_key, heap)?;
+            }
+            (None, None) => {}
+        }
     }
     Ok(Value::Object(object))
 }
