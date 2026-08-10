@@ -10,6 +10,7 @@ in.
 
 ## Index
 
+- [A sloppy eval's `var` lands in a running scope, and two clauses had nowhere to be — +49](#a-sloppy-evals-var-lands-in-a-running-scope-and-two-clauses-had-nowhere-to-be--49)
 - [An engine can fail by succeeding — §9.13, and the ratchets that cannot see it — DR-0029](#an-engine-can-fail-by-succeeding--913-and-the-ratchets-that-cannot-see-it--dr-0029)
 - [The job queue never collected, and it took a timeout to find it — +46](#the-job-queue-never-collected-and-it-took-a-timeout-to-find-it--46)
 - [§20.1.3's `ToObject`s are conversions, and four of them were checks](#2013s-toobjects-are-conversions-and-four-of-them-were-checks)
@@ -44,6 +45,93 @@ in.
 - [What is left, in the order the numbers put it](#what-is-left-in-the-order-the-numbers-put-it)
 
 ---
+
+### A sloppy eval's `var` lands in a running scope, and two clauses had nowhere to be — +49
+
+The largest refusal ViperJS still stated by name, and it had been costed twice from a note rather
+than from the code. Read this before touching `compile_direct_eval`, `Vm::var_environment` or
+`heap::Declared`.
+
+**The prerequisite that was recorded was the wrong one.** Two earlier sessions were sent at
+§10.2.11's *environment split* — the parameter/body separation — on the reading that ViperJS could
+not tell a parameter from a `var`. It does not need to: `scope-paramsbody-*` was already green,
+because separate **slots** answer every question about closures that separate environments do. What
+was actually missing was smaller and in a different place — nothing knew which level of the chain
+was the variable one — and one field fixed it.
+
+**§8.3.2 has two environments and ViperJS was tracking one.** `Vm::environment` moves on every
+`PushScope`; the VariableEnvironment does not. A flat chain records neither, so the answer has to be
+written down: `var_environment`, set by a call and a return and by nothing else. It has to travel
+everywhere the lexical one travels, and the two places that are easy to miss are the ones where the
+lexical one is restored *by hand* rather than by popping a frame — `run_script` and `nested`, both
+of which say in their own comments that an uncaught throw skips the frame-by-frame path. It also has
+to be on `Suspended`: a `yield` inside a block parks with the two different, and a generator revived
+without it takes the block for its variable scope.
+
+**Resolving the eval's names dynamically is the obvious design and it is wrong.** `DeclareVar`
+appends a slot whose index the compiler was told the length before, so the first attempt set
+`inside_eval` and let every name in the evaluated text resolve by walking the chain at run time.
+That is correct for finding a binding and is *not* correct for finding the right one: a walk
+compares **names**, and one environment can hold two slots with the same name when a block's has
+gone out of scope. `eval('let f = 123; { function f() {} } f')` answered with the function. Eight
+annexB runs, and the shape is general — any program that shadows a name in a block inside an eval.
+
+So the compiler predicts instead, in `predict_declared_slot`, and the prediction is exact because it
+is the *same arithmetic* the heap runs rather than a second guess at it. The part worth carrying:
+**a chunk's slot count and its name list are two numbers.** `Chunk::locals` is a high-water mark
+that includes slots a nested scope needed and gave up; `Chunk::bindings` is the top level alone. So
+`{ let a, b, c; } eval('var z = 7')` has three slots of slack, and a prediction made from the names
+reads `z` out of a slot the block left behind — `undefined`, silently. `Heap::declare_in` already
+filled that gap with `%gap`; the compiler had to be taught to fill the same one.
+
+**§19.2.1.1 step 5.f asks what a binding *was*, and the name lists only said what it holds.** The
+clause refuses a `var` whose walk out to the variable environment passes a binding of the same name.
+§10.2.11 step 30 is what makes that walk pass anything at all in an ordinary function: a **sloppy**
+body's top-level `let` and `const` get an environment of their own, and the clause's note says
+outright that this is so a direct eval can detect the conflict. Nothing else in the language can see
+that environment. ViperJS puts both kinds in one, so `function f() { let x; eval('var x') }` had no
+level to cross and answered nothing where nine tests want a SyntaxError.
+
+`heap::Declared` is that environment written down instead of built — one flag on a binding, asked
+instead of walked. Two things it must *not* be, both of which are clauses rather than taste:
+
+- **A parameter is `Var`.** §10.2.11 keeps parameters outside the body's variable environment, so
+  `function f(a) { eval('var a') }` is legal. The two parameter sites had been using
+  `declare_lexical` for its mutability, which is why `declare_shadowing_var` exists — a name that
+  shadows like a `let` and is not one.
+- **A simple catch parameter is `Var` too**, and that is §B.3.5 rather than an oversight. It exempts
+  the catch parameter by name so `try {} catch (e) { eval('var e') }` goes on working, which it has
+  to. Marking it lexical is a refusal no engine gives and no test here would have caught: the one
+  file that covers it is at global scope, where the clause never runs.
+
+**Step 15 is a *store* where step 16 is a leave-alone, and it applies to the top level only.**
+A function declaration in the evaluated text replaces whatever the name held; a `var` does not. Both
+go to the same place. The trap is that `hoist_functions` is called again for **every block**, so a
+depth left set for the whole compile sent §B.3.3.3's block-level declarations to the caller as well
+— which is the same eight annexB runs by a second route, found after the first was fixed.
+
+**What is still refused is narrower and the message says so.** A direct eval written in a *formal
+parameter list* gets §10.2.11 step 20's environment, which sits outside the parameters, and ViperJS
+has no level there. That refusal is load-bearing: the **192** `declare-arguments` runs assert
+exactly the SyntaxError it produces, and every one of them puts the eval in a parameter default —
+`ls | grep -c 'p = eval'` says 192 of 192, which is worth checking before assuming a family is split
+across positions. Lifting it without building step 20 is a net loss of about 160 runs, and that is
+what the earlier attempt measured.
+
+**Two gaps left, both in the expectations file under new reasons and neither a new path.** `delete`
+on an eval-created binding answers `false` where step 16.b.ii's `CreateMutableBinding(vn, true)`
+makes it deletable — which needs a way to *unbind* a slot without moving the indices around it, and
+the append-only rule is what makes that non-trivial.
+
+**On mutation coverage, two of seven survivors were choices no input could reach.** The `live` flag
+predicted `%gap` and the write-back of a slot count that the list's own length already carried. Both
+went rather than gaining a test; the fix for the first was to build the modelled bindings through
+`Local::from` — the path the rest of the compiler's model of a running scope already uses — so there
+was no second answer to give. The other five were hand-applied first to confirm the new tests fail
+the mutant, which is the discipline this file records because nothing automates it. The one that
+needed a *structural* test is `Compiler::in_parameters`' initial value: every path that could
+observe it sets it first, so conformance cannot see it and `compile::tests` asserts the emitted
+`EvalSite` instead.
 
 ### An engine can fail by succeeding — §9.13, and the ratchets that cannot see it — DR-0029
 

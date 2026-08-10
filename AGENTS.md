@@ -206,7 +206,17 @@ that re-arms itself reached DR-0013's budget at 38,174 turns and threw a RangeEr
 where §9.5 step 3 discards it: the queue emptied, `run` returned, and the exit status was zero. A
 silent stop is a failure mode this engine can produce and nothing was watching for it.
 
-Conformance as of this commit is **86.01% of test262** — 80,126 of 93,161 runs, the same figure on
+**And a sloppy direct `eval`'s `var` reaches the caller's scope**, which was the largest refusal
+this engine still stated by name — worth **+49**. `Vm::var_environment` is §8.3.2's other
+environment, tracked because a flat chain cannot say which level a call opened; `heap::Declared` is
+§10.2.11 step 30's separate lexical record written down rather than built, which is what step 5.f's
+SyntaxError needs. What is still refused is a call written in a **formal parameter list** — step 20
+puts that one outside the parameters — and refusing it is load-bearing: the 192 `declare-arguments`
+runs assert exactly that error. Read `notes/FINDINGS.md` before touching it; the recorded
+prerequisite for this slice was wrong twice, and the obvious design (resolve the eval's names
+dynamically) is wrong for a reason worth knowing.
+
+Conformance as of this commit is **86.18% of test262** — 80,283 of 93,161 runs, the same figure on
 three consecutive runs alone. Treat that number as perishable and re-measure rather than quoting it;
 the point of the figure is the work list under it. Only 306 runs are now *stopped* before anything
 executes. **One of them was misfiled here for a long time and it matters:** `(?i:…)` 170 is the
