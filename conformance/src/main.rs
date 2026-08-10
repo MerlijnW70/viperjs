@@ -404,7 +404,7 @@ usage: cargo run -p conformance -- [options]
   --test262 <path>       a checkout of tc39/test262 (or set TEST262)
   --expectations <path>  the ratchet file (default conformance/expectations.txt)
   --only <substring>     run just the matching files, and do not judge the ratchet
-  --workers <count>      how many tests run at once (default: one per hardware thread)
+  --workers <count>      how many tests run at once (default: half the hardware threads)
   --budget <seconds>     how long one test may take (default 30). Both of these decide what a
                          timing failure means, so a number is only comparable with one measured
                          under the same pair
