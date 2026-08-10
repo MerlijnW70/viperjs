@@ -45,7 +45,8 @@
 //! than an accident.
 
 use super::syntax::{
-    Assertion, ClassEscape, ClassItem, ClassOperation, First, GroupKind, Node, Pattern, fold,
+    Assertion, ClassEscape, ClassItem, ClassOperation, First, GroupKind, Node, Pattern,
+    canonicalize, case_class,
 };
 
 /// How much work one match attempt may cost before it is abandoned.
@@ -741,11 +742,24 @@ impl<'a> Matcher<'a> {
 
     /// §22.2.2.9's `Canonicalize`, as the comparison it exists for.
     ///
-    /// ASCII case folding only, which is what `i` can mean without the Unicode case tables. Those
-    /// are generated data under DR-0003 and a slice of their own; until then `/ä/i` does not match
-    /// `Ä`, which is wrong in a way that is bounded and visible rather than silently approximate.
+    /// Whole now, and the flags choose the branch: `u` and `v` fold, and their absence uppercases.
+    /// This was ASCII-only, so `/ä/i` did not match `Ä` — the comment here called that "bounded and
+    /// visible", and it was bounded and invisible: test262 barely reaches it and a differential
+    /// sweep is what found it.
     fn same(&self, found: u32, wanted: u32) -> bool {
-        found == wanted || (self.pattern.flags.ignore_case && fold(found) == fold(wanted))
+        if found == wanted {
+            return true;
+        }
+        if !self.pattern.flags.ignore_case {
+            return false;
+        }
+        let by_code_point = self.by_code_point();
+        canonicalize(found, by_code_point) == canonicalize(wanted, by_code_point)
+    }
+
+    /// Whether §22.2.2.9 step 1's branch applies — `[[Unicode]]`, which `v` sets as well as `u`.
+    fn by_code_point(&self) -> bool {
+        self.pattern.flags.unicode || self.pattern.flags.unicode_sets
     }
 
     /// Whether a character is among a class's items — the class's own `[^…]` is the caller's.
@@ -757,11 +771,16 @@ impl<'a> Matcher<'a> {
     fn in_item(&self, found: u32, item: &ClassItem) -> bool {
         match item {
             ClassItem::Single(code) => self.same(found, *code),
+            // §22.2.2.7 — "if there exists a member `a` of `A` such that `Canonicalize(a)` is
+            // `cc`". For a range that is a question about every code point between the bounds,
+            // which is asked the other way round: walk the input's own equivalence class, which is
+            // never more than a handful, and see whether any of it lands inside. The old spelling
+            // tried the ASCII fold and its inverse, which is that idea with a class of two.
             ClassItem::Range(low, high) => {
                 (*low..=*high).contains(&found)
                     || (self.pattern.flags.ignore_case
-                        && ((*low..=*high).contains(&fold(found))
-                            || (*low..=*high).contains(&unfold(found))))
+                        && case_class(found, self.by_code_point())
+                            .any(|member| (*low..=*high).contains(&member)))
             }
             ClassItem::Escape(escape) => matches_escape(*escape, found),
             // §22.2.2.9 — a property set is tested on the code point as written. `i` does not
@@ -848,18 +867,6 @@ impl<'a> Matcher<'a> {
         self.input
             .get(at)
             .is_some_and(|unit| is_word(u32::from(*unit)))
-    }
-}
-
-/// The other direction from [`fold`], for testing a range against both cases of a character.
-///
-/// Its partner moved to `syntax.rs` when the alternation prefilter arrived: [`First`] has to fold
-/// exactly as `same` does, and two definitions of one rule is how a prefilter comes to skip a branch
-/// that matches.
-fn unfold(code: u32) -> u32 {
-    match code {
-        0x41..=0x5A => code + 32,
-        _ => code,
     }
 }
 

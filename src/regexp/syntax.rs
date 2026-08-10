@@ -241,15 +241,110 @@ pub enum GroupKind {
     Lookbehind(bool),
 }
 
-/// §22.2.2.9's `Canonicalize`, in the part this engine implements — ASCII case folding.
+/// §22.2.2.9 `Canonicalize`, whole.
 ///
 /// Here rather than in the matcher because [`First`] has to agree with it exactly: a prefilter that
-/// folded differently from the comparison it is filtering for would skip a branch that matches.
-pub(crate) fn fold(code: u32) -> u32 {
-    match code {
-        0x61..=0x7A => code - 32,
-        _ => code,
+/// canonicalised differently from the comparison it is filtering for would skip a branch that
+/// matches.
+///
+/// **The two branches are different functions and the flag chooses between them**, which is the
+/// whole of step 1 against steps 3 to 10. A pattern carrying `u` or `v` folds; one carrying neither
+/// uppercases, and then refuses its own answer when it is not a single code unit or when it would
+/// take a non-ASCII code unit to an ASCII one. They disagree on real characters: `/ſ/iu`
+/// matches `s` and `/ſ/i` does not, because long s folds to `s` and uppercases to `S` — which
+/// step 9 then refuses.
+///
+/// This used to be `a`–`z` and nothing else, so `/café/i` did not match `CAFÉ`. The comment saying
+/// so called it "wrong in a way that is bounded and visible"; it was bounded and it was not
+/// visible, because test262 barely reaches it — a differential sweep is what found it.
+#[inline]
+pub(crate) fn canonicalize(code: u32, unicode: bool) -> u32 {
+    // ASCII is an index and everything else is a search, because this is a **hot path**: `same`
+    // runs per character compared, so a binary search there costs every ordinary `i` pattern a
+    // dozen comparisons per character where the arithmetic it replaced cost one.
+    //
+    // **The bound is the array's own length and not a literal**, which is the part worth copying.
+    // Written as `if code < 0x80` with the mapping as arithmetic, the comparison is a decision no
+    // input can distinguish — U+0080 has no case mapping, so both sides of the boundary answer the
+    // same thing — and that is an untestable branch sitting in the middle of the hottest function
+    // here. `get` puts the boundary where the data already is.
+    let ascii = match unicode {
+        true => &crate::unicode_case_table::FOLD_ASCII,
+        false => &crate::unicode_case_table::UPPER_ASCII,
+    };
+    if let Some(found) = ascii.get(code as usize) {
+        return *found;
     }
+    canonicalize_wide(code, unicode)
+}
+
+/// [`canonicalize`] past ASCII, kept out of line so the ASCII arm above inlines into the matcher.
+///
+/// **This split is worth 3.3× on an ordinary `i` pattern**, and the number is why it is a split
+/// rather than one function: `same` runs per character compared, and a body carrying two static
+/// references and a binary search is too big to inline into it — so ASCII paid for the table it
+/// never reads. Measured on a scan of 8,800 characters, 300 times: 12 ms before the tables, 40 ms
+/// with one function, 12 ms again with two.
+#[inline(never)]
+fn canonicalize_wide(code: u32, unicode: bool) -> u32 {
+    let table = match unicode {
+        true => crate::unicode_case_table::SIMPLE_FOLD,
+        false => crate::unicode_case_table::UPPER_CANON,
+    };
+    mapped(table, code).unwrap_or(code)
+}
+
+/// The value `table` gives `code`, if it gives one.
+fn mapped(table: &[(u32, u32)], code: u32) -> Option<u32> {
+    table
+        .binary_search_by_key(&code, |(from, _)| *from)
+        .ok()
+        .and_then(|at| table.get(at).map(|(_, to)| *to))
+}
+
+/// Every code point that canonicalises to the same value as `code`, `code` itself included.
+///
+/// §22.2.2.7's `CharacterSetMatcher` asks whether **any** member of a class canonicalises to the
+/// same value as the input. For one code point that is a comparison of canonical forms; for a
+/// *range* it is a question about every code point between two bounds, which cannot be asked one
+/// at a time. So the equivalence class is walked instead, and it is never more than a handful —
+/// the generated orbit links each member to the next and closes the ring.
+///
+/// A code point in no class answers with itself alone, which is the overwhelming majority.
+pub(crate) fn case_class(code: u32, unicode: bool) -> impl Iterator<Item = u32> {
+    let mut at = Some(code);
+    std::iter::from_fn(move || {
+        let here = at?;
+        // The ring closes on the code point it started from, which is what ends the walk. A code
+        // point in no class links to itself and ends immediately.
+        at = orbit_link(here, unicode).filter(|next| *next != code);
+        Some(here)
+    })
+}
+
+/// The next member of `code`'s equivalence class, or `None` when it is alone in it.
+///
+/// **ASCII is an array index and everything else is a search**, because this runs per character
+/// tested against a range — the hottest path the matcher has. Measured before the arrays existed:
+/// a scan of a mixed subject took 29% longer than the ASCII-only fold it replaced. A link may
+/// still leave ASCII, which is how `s` reaches long s under folding, and the walk then carries on
+/// through the searched table.
+#[inline]
+fn orbit_link(code: u32, unicode: bool) -> Option<u32> {
+    let (ascii, table) = match unicode {
+        true => (
+            &crate::unicode_case_table::FOLD_ORBIT_ASCII,
+            crate::unicode_case_table::FOLD_ORBIT,
+        ),
+        false => (
+            &crate::unicode_case_table::UPPER_ORBIT_ASCII,
+            crate::unicode_case_table::UPPER_ORBIT,
+        ),
+    };
+    if let Some(next) = ascii.get(code as usize) {
+        return (*next != code).then_some(*next);
+    }
+    mapped(table, code)
 }
 
 /// What an alternative can *begin* with, as much of it as is worth knowing.
@@ -286,17 +381,19 @@ pub enum First {
 impl First {
     /// Whether a branch summarised by this may begin with `code`.
     ///
-    /// Folded on **both** sides: the set holds each literal and its fold, and the input is tested as
-    /// itself and as its fold. That makes one summary right for `i` and for its absence, which is
-    /// what lets [`First::of`] run at parse time without being told the flags — and it is sound in
-    /// the only direction that matters, since a wider set skips fewer branches.
+    /// **One bit test**, because the set already holds every input that could begin the branch.
+    ///
+    /// The set built for a literal stores its whole case-equivalence class, so an input that
+    /// canonicalises to that literal is in the set as itself — there is nothing to canonicalise
+    /// here. That is what lets this run at parse time without being told the flags, and it is why
+    /// this is now cheaper than the ASCII fold it replaced rather than dearer: an orbit walk per
+    /// *literal* is paid once, where one per *input position* would be paid on the hot path this
+    /// prefilter exists to keep cheap.
     #[must_use]
     pub fn may_start(self, code: u32) -> bool {
         match self {
             Self::Any => true,
-            Self::Only { ascii, wide } => {
-                Self::holds(ascii, wide, code) || Self::holds(ascii, wide, fold(code))
-            }
+            Self::Only { ascii, wide } => Self::holds(ascii, wide, code),
         }
     }
 
@@ -317,11 +414,18 @@ impl First {
         }
     }
 
-    /// The set holding `code` and its fold, which is what one literal character contributes.
+    /// The set holding `code` and everything that could match it under `i`, which is what one
+    /// literal character contributes.
+    ///
+    /// **The folding class alone, because it contains the other one.** The flags are not known
+    /// here, so the set has to admit everything either canonicalisation could send this way — and
+    /// folding is the coarser of the two: checked over every code unit, no uppercase class has a
+    /// member its folding class lacks. Chaining both was therefore a second walk that could not
+    /// add anything, which is what mutation coverage said by surviving the flag's inversion.
     fn only(code: u32) -> Self {
         let mut ascii = 0u128;
         let mut wide = false;
-        for member in [code, fold(code)] {
+        for member in std::iter::once(code).chain(case_class(code, true)) {
             match member < 128 {
                 true => ascii |= 1u128 << member,
                 false => wide = true,
@@ -479,7 +583,136 @@ pub struct Pattern {
 
 #[cfg(test)]
 mod tests {
-    use super::{First, Flags, GroupKind, Node};
+    use super::{First, Flags, GroupKind, Node, canonicalize, case_class};
+    use crate::unicode_case_table::{FOLD_ORBIT, SIMPLE_FOLD, UPPER_CANON, UPPER_ORBIT};
+
+    /// The checked-in shape of Unicode 17.0.0. These four numbers are the tables' checksum.
+    ///
+    /// They are not computed from the tables they check — they come from the UCD as counted at
+    /// generation time. A regeneration that moves them is a Unicode version bump, and it should
+    /// arrive as a commit that says so rather than as a diff nobody read. DR-0003's rule, applied
+    /// to the third generated table.
+    #[test]
+    fn the_case_tables_match_the_unicode_version_they_claim() {
+        assert_eq!(SIMPLE_FOLD.len(), 1_486);
+        // The four ASCII arrays are a fixed 128 by type, so what is worth asserting about them is
+        // that they agree with the searched tables about the boundary rather than overlapping it.
+        assert!(SIMPLE_FOLD.iter().all(|(from, _)| *from >= 0x80));
+        assert!(UPPER_CANON.iter().all(|(from, _)| *from >= 0x80));
+        assert!(FOLD_ORBIT.iter().all(|(from, _)| *from >= 0x80));
+        assert!(UPPER_ORBIT.iter().all(|(from, _)| *from >= 0x80));
+        assert_eq!(FOLD_ORBIT.len(), 2_942);
+        assert_eq!(UPPER_CANON.len(), 1_143);
+        assert_eq!(UPPER_ORBIT.len(), 2_261);
+    }
+
+    /// Every table is sorted, because every lookup is a binary search.
+    ///
+    /// A table that arrived unsorted would answer `None` for entries that are in it — a *miss*
+    /// rather than a crash, so every affected character would quietly stop folding and nothing
+    /// would fail loudly. The generator sorts; this is the assertion that it did.
+    #[test]
+    fn every_case_table_is_sorted_by_the_code_point_it_is_searched_by() {
+        for (name, table) in [
+            ("SIMPLE_FOLD", SIMPLE_FOLD),
+            ("FOLD_ORBIT", FOLD_ORBIT),
+            ("UPPER_CANON", UPPER_CANON),
+            ("UPPER_ORBIT", UPPER_ORBIT),
+        ] {
+            assert!(
+                table.windows(2).all(|pair| pair[0].0 < pair[1].0),
+                "{name} is not sorted and strictly increasing"
+            );
+        }
+    }
+
+    /// Every orbit closes, and none of them is long.
+    ///
+    /// `case_class` walks the ring until it returns to where it started, so a link that pointed
+    /// out of its own class — or at itself — would loop for ever or stop early. Both are silent:
+    /// the first hangs the matcher on one character, the second drops a case from a range test.
+    #[test]
+    fn every_case_class_closes_on_itself_within_a_handful_of_members() {
+        for unicode in [true, false] {
+            let table = match unicode {
+                true => FOLD_ORBIT,
+                false => UPPER_ORBIT,
+            };
+            for &(code, _) in table {
+                let members: Vec<u32> = case_class(code, unicode).take(16).collect();
+                assert!(
+                    members.len() < 16,
+                    "the class of {code:#x} did not close within sixteen members"
+                );
+                assert!(members.contains(&code), "{code:#x} is not in its own class");
+                // Every member agrees on the canonical form, which is what makes the class one.
+                for member in &members {
+                    assert_eq!(
+                        canonicalize(*member, unicode),
+                        canonicalize(code, unicode),
+                        "{member:#x} is linked to {code:#x} but canonicalises elsewhere"
+                    );
+                }
+            }
+        }
+    }
+
+    /// Every uppercase class is inside the folding class of the same code point.
+    ///
+    /// [`First::only`] takes the folding class alone and depends on this: a code unit that shared
+    /// an uppercase class with a literal but not a folding class would be skipped by the prefilter
+    /// and never reach the matcher. Folding is the coarser equivalence, and this is the assertion
+    /// that it stays so — a Unicode version bump could in principle break it.
+    #[test]
+    fn an_uppercase_class_never_escapes_the_folding_class_of_the_same_code_point() {
+        for code in 0..0x10000u32 {
+            let folded: Vec<u32> = case_class(code, true).collect();
+            for member in case_class(code, false) {
+                assert!(
+                    folded.contains(&member),
+                    "{member:#x} shares an uppercase class with {code:#x} and not a folding one"
+                );
+            }
+        }
+    }
+
+    /// §22.2.2.9's two branches, on the characters where they disagree.
+    ///
+    /// Asserted here as well as through the matcher because these are the rows a *table* mistake
+    /// shows up in first: reading one table for both branches passes every ASCII test there is.
+    #[test]
+    fn the_two_canonicalisations_are_different_functions() {
+        // Step 1 folds; steps 3 to 10 uppercase. For a plain letter they agree on the answer by
+        // different routes, which is why the interesting rows are below.
+        assert_eq!(canonicalize(0xE9, true), 0xE9, "é folds to itself");
+        assert_eq!(canonicalize(0xC9, true), 0xE9, "É folds to é");
+        assert_eq!(canonicalize(0xE9, false), 0xC9, "é uppercases to É");
+        // Step 9 — a non-ASCII code unit whose uppercase is ASCII keeps itself, which is what
+        // separates the long s and the Kelvin sign from the letters they fold to.
+        assert_eq!(canonicalize(0x17F, true), 0x73, "long s folds to s");
+        assert_eq!(
+            canonicalize(0x17F, false),
+            0x17F,
+            "…and uppercases to itself"
+        );
+        assert_eq!(
+            canonicalize(0x212A, true),
+            0x6B,
+            "the Kelvin sign folds to k"
+        );
+        assert_eq!(canonicalize(0x212A, false), 0x212A);
+        // Step 7 — an uppercase form of more than one code unit is refused whole.
+        assert_eq!(
+            canonicalize(0xDF, false),
+            0xDF,
+            "ß uppercases to SS, so it stands"
+        );
+        assert_eq!(canonicalize(0xDF, true), 0xDF);
+        // A code point in no table is its own answer, which is nearly all of them.
+        assert_eq!(canonicalize(0x41, true), 0x61);
+        assert_eq!(canonicalize(0x4E00, true), 0x4E00);
+        assert_eq!(canonicalize(0x4E00, false), 0x4E00);
+    }
 
     /// The bitmap holding exactly these code points.
     fn bits(codes: &[u32]) -> u128 {
@@ -487,7 +720,7 @@ mod tests {
     }
 
     #[test]
-    fn a_first_set_holds_each_literal_and_its_fold() {
+    fn a_first_set_holds_each_literal_and_everything_that_could_match_it() {
         // Asserted as the **exact** set rather than through `may_start`, and that is the point: a
         // prefilter that is too *wide* answers every question correctly and only runs slower, so
         // nothing behavioural can tell it from a right one. This is the structural row that can.
@@ -497,14 +730,44 @@ mod tests {
                 ascii: bits(&[65, 97]),
                 wide: false
             },
-            "a lower-case letter brings its upper-case fold with it"
+            "a lower-case letter brings its upper-case form with it"
         );
-        // §22.2.2.9's `Canonicalize` here folds *towards* upper case and only over a-z, so an
-        // upper-case literal is alone in its set — and `may_start` is what makes that enough.
+        // …and **the other direction too**, which the ASCII fold did not give. `may_start` used to
+        // canonicalise the input to make up for it; now the set is complete and the input is tested
+        // as itself, so a literal that did not bring its lower-case form would skip a branch that
+        // matches.
         assert_eq!(
             First::of(&Node::Character(65)),
             First::Only {
-                ascii: bits(&[65]),
+                ascii: bits(&[65, 97]),
+                wide: false
+            },
+            "an upper-case letter brings its lower-case form with it"
+        );
+        // §22.2.2.9's two branches disagree about `s`, and the set is the union because the flags
+        // are not known here: `ſ` folds to `s` under `u` and stands alone without it, so the
+        // literal has to admit a non-ASCII input — which the bitmap cannot hold and `wide` does.
+        assert_eq!(
+            First::of(&Node::Character(0x73)),
+            First::Only {
+                ascii: bits(&[0x53, 0x73]),
+                wide: true
+            },
+            "a literal `s` can be begun by the long s under `u`"
+        );
+        // `k` is the same shape through the Kelvin sign, and `q` is the control: no non-ASCII code
+        // point canonicalises to it, so `wide` stays false and the filter keeps its teeth.
+        assert_eq!(
+            First::of(&Node::Character(0x6B)),
+            First::Only {
+                ascii: bits(&[0x4B, 0x6B]),
+                wide: true
+            }
+        );
+        assert_eq!(
+            First::of(&Node::Character(0x71)),
+            First::Only {
+                ascii: bits(&[0x51, 0x71]),
                 wide: false
             }
         );

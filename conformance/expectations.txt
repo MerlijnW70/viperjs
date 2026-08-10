@@ -1886,8 +1886,6 @@ built-ins/RegExp/prototype/exec/success-lastindex-access.js :: it threw an objec
 built-ins/RegExp/prototype/exec/success-lastindex-access.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/RegExp/prototype/exec/u-lastindex-adv.js :: it threw an object with no name: Expected SameValue(«�», «null») to be true
 built-ins/RegExp/prototype/exec/u-lastindex-adv.js (strict) :: it threw an object with no name: Expected SameValue(«�», «null») to be true
-built-ins/RegExp/unicode_full_case_folding.js :: it threw an object with no name: \u0390 does not match \u1fd3
-built-ins/RegExp/unicode_full_case_folding.js (strict) :: it threw an object with no name: \u0390 does not match \u1fd3
 built-ins/Set/prototype/isDisjointFrom/set-like-class-mutation.js :: it threw an object with no name: Set.prototype.isDisjointFrom should not call its argument's has method with values from this which have been deleted before visiting
 built-ins/Set/prototype/isDisjointFrom/set-like-class-mutation.js (strict) :: it threw an object with no name: Set.prototype.isDisjointFrom should not call its argument's has method with values from this which have been deleted before visiting
 built-ins/Set/prototype/isSubsetOf/set-like-class-mutation.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true
@@ -12216,8 +12214,6 @@ language/literals/regexp/S7.8.5_A2.4_T2.js :: it threw an object with no name: C
 language/literals/regexp/S7.8.5_A2.4_T2.js (strict) :: it threw an object with no name: Code unit: d800 Expected SameValue(«"a\\�"», «"a\\\ud800"») to be true
 language/literals/regexp/u-astral-char-class-invert.js :: it threw an object with no name: Expected SameValue(«�», «null») to be true
 language/literals/regexp/u-astral-char-class-invert.js (strict) :: it threw an object with no name: Expected SameValue(«�», «null») to be true
-language/literals/regexp/u-case-mapping.js :: it threw an object with no name: Case mapping is applied in the presence of the `i` and `u` flags
-language/literals/regexp/u-case-mapping.js (strict) :: it threw an object with no name: Case mapping is applied in the presence of the `i` and `u` flags
 language/module-code/ambiguous-export-bindings/namespace-unambiguous-if-export-star-as-from-and-import-star-as-and-export.js :: it did not parse: "./namespace-unambiguous-if-import-star-as-and-export.js" does not export "foo"
 language/module-code/ambiguous-export-bindings/namespace-unambiguous-if-import-star-as-and-export.js :: it did not parse: "./namespace-unambiguous-if-import-star-as-and-export.js" does not export "foo"
 language/module-code/eval-export-dflt-expr-err-eval.js :: expected a Test262Error and it threw an object with no name

@@ -1100,3 +1100,46 @@ fn the_constructor_asks_the_match_symbol_before_it_looks_at_anything_else() {
         "ctor"
     );
 }
+
+#[test]
+fn ignore_case_reaches_past_ascii_and_the_two_flag_forms_disagree() {
+    // §22.2.2.9. `fold` mapped `a`-`z` and nothing else, so this matched nothing outside ASCII —
+    // `/café/i` did not match `CAFÉ`, in every script, in both directions, under `i` and `iu`
+    // alike. test262 barely reaches it; a differential sweep is what found it.
+    //
+    // Raw strings throughout: the escapes here belong to the *pattern*, and a Rust escape would
+    // hand the engine a character where the point is that it reads the escape itself.
+    assert_eq!(run(r"/café/i.test('CAFÉ')"), "true");
+    assert_eq!(run(r"/CAFÉ/i.test('café')"), "true");
+    assert_eq!(run(r"/α/i.test('Α')"), "true");
+    assert_eq!(run(r"/А/i.test('а')"), "true");
+    assert_eq!(run(r"/Ā/iu.test('ā')"), "true");
+    // A range is the other half of the clause: §22.2.2.7 asks whether *any* member of the class
+    // canonicalises to the input's canonical form, which for a range is answered by walking the
+    // input's own equivalence class rather than the range.
+    assert_eq!(run(r"/[à-å]/i.test('Â')"), "true");
+    assert_eq!(run(r"/[À-Å]/i.test('â')"), "true");
+    assert_eq!(run(r"/[a-z]/i.test('Q')"), "true");
+    // …and it must still refuse what is not in the class. A wider fold would answer `true` here
+    // and no ordinary test would notice.
+    assert_eq!(run(r"/[à-å]/i.test('é')"), "false");
+    assert_eq!(run(r"/é/i.test('e')"), "false");
+
+    // **The two branches are different functions**, which is the row that fails if one table is
+    // used for both. Long s folds to `s`, so `u` matches it; without `u` the clause uppercases it
+    // to `S` and step 9 then refuses the answer for turning a non-ASCII code unit into an ASCII
+    // one — so the same pattern does not match.
+    assert_eq!(run(r"/s/iu.test('ſ')"), "true");
+    assert_eq!(run(r"/s/i.test('ſ')"), "false");
+    // The Kelvin sign is the same shape through `k`, and it is why the prefilter has to admit a
+    // non-ASCII input for an ASCII literal.
+    assert_eq!(run(r"/k/iu.test('K')"), "true");
+    assert_eq!(run(r"/k/i.test('K')"), "false");
+    // §22.2.2.9 step 7 — an uppercase form of more than one code unit is refused, so the sharp s
+    // is its own class under both branches and matches neither `SS` nor `ss`.
+    assert_eq!(run(r"/ß/i.test('SS')"), "false");
+    assert_eq!(run(r"/ß/iu.test('ss')"), "false");
+    // A property escape is tested on the code point as written — `i` folds the pattern's literals
+    // and its ranges, and a property is neither.
+    assert_eq!(run(r"/\p{Lu}/u.test('a')"), "false");
+}
