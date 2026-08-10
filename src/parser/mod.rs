@@ -227,10 +227,26 @@ use crate::span::Span;
 /// needs **77**: thirteen more than there is.
 ///
 /// That is close enough to be worth stating precisely and still out of reach, because 77 is past
-/// the 70 the narrowest path survives in the build being asserted against. Nothing else came
-/// near: WordPress's and Moodle's 4,589 built files all parse, and so does every other bundle
-/// fetched. The shape is not "minified code nests deeply" — it is one code generator emitting
-/// labelled blocks where a person would write anything else.
+/// the 70 the narrowest path survives in the build being asserted against. The shape is not
+/// "minified code nests deeply" — it is one code generator emitting labelled blocks where a person
+/// would write anything else.
+///
+/// **"Nothing else came near" is what this said, and a wider sweep found something more than twice
+/// as far away (2026-08-10).** Eight repositories cloned from GitHub — eslint, webpack, express,
+/// jquery, handlebars, async, underscore, moment — gave 2,774 source files, of which 2,755 parse
+/// and **none panics**; every one of the nineteen refusals is JSX, an incomplete template or the
+/// `import source` proposal, and node refuses all nineteen too. So the parser has no gap here at
+/// all. What it has is this cap, and `webpack/schemas/WebpackOptions.check.js` — 374 KB of
+/// **ajv-generated** validator — needs somewhere in **161 to 176**, bisected the same way Draco's
+/// 77 was.
+///
+/// Two things follow. The generator matters more than the minifier: ajv's output is behind this
+/// cap in *its own* package and again in webpack's vendored schema, which with Emscripten's Draco
+/// makes two generators and three packages. And the ask is not creeping towards 64 — it is a
+/// bimodal thing, with hand-written and hand-minified code far below and generated code far above,
+/// so a cap chosen to clear "most real code" does not exist. The number that would clear all of it
+/// is near the ~260 a release build could afford and DR-0006 does not allow, which is the argument
+/// for the embedder-set value the section below promises at M3 — a milestone that has now passed.
 ///
 /// # Why a count and not a stack measurement
 ///
