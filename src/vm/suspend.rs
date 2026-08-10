@@ -44,6 +44,15 @@ pub(crate) struct Suspended {
     this_value: Value,
     new_target: Value,
     environment: EnvironmentId,
+    /// §8.3.2's VariableEnvironment, which a suspension has to carry for the reason it carries the
+    /// one above.
+    ///
+    /// A `yield` inside a block parks with the two *different*, and only the pair says where a
+    /// `var` belongs. Recomputing it on revival is not available — a flat chain of environments
+    /// does not record which level a call opened — so a generator revived inside a block would take
+    /// the block for its variable scope, and a sloppy direct `eval` after the `yield` would put its
+    /// declarations in a scope that goes away at the closing brace.
+    var_environment: EnvironmentId,
     /// The function object this execution is running — §10.2.2's *active function object*.
     function: Option<ObjectId>,
     /// The generator this execution belongs to, if it is a generator's body.
@@ -164,6 +173,7 @@ impl Vm {
             this_value: self.this_value,
             new_target: self.new_target,
             environment: self.environment,
+            var_environment: self.var_environment,
             function: frame.function,
             generator: frame.generator,
             begun: true,
@@ -191,6 +201,7 @@ impl Vm {
         };
         // …and the caller comes back, which is the half this shares with a return.
         self.environment = frame.environment;
+        self.var_environment = frame.var_environment;
         self.this_value = frame.this_value;
         self.new_target = frame.new_target;
         self.realm = self.realm_by_id(frame.realm);
@@ -233,6 +244,7 @@ impl Vm {
             // parked body's own realm is restored below out of the suspension.
             realm: self.realm.id(),
             environment: self.environment,
+            var_environment: self.var_environment,
             stack_base: base,
             handlers_base: self.handlers.len(),
             // §10.2.2 step 13's preference belongs to a construction, and a revival is not one:
@@ -257,6 +269,7 @@ impl Vm {
         self.this_value = parked.this_value;
         self.new_target = parked.new_target;
         self.environment = parked.environment;
+        self.var_environment = parked.var_environment;
         *current = parked.code;
         *at = parked.at;
     }

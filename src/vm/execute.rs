@@ -461,6 +461,21 @@ impl Vm {
                     let key = self.global_name(running, name, heap)?;
                     self.declare_global(key, deletable, heap);
                 }
+                Instruction::DeclareVar { name, depth } => {
+                    let name = self.name_text(running, name, heap)?;
+                    // The depth is counted from the environment this chunk runs in, and the walk
+                    // has to arrive at the one the machine calls the variable environment. It
+                    // cannot fail for a chunk the compiler made — the number came from counting
+                    // this very chain — and a `Fault` rather than a silent fallback is the answer
+                    // for a hand-built one, because the alternative is a `var` in a scope that
+                    // goes away and a program that reads `undefined` for ever after.
+                    let scope = heap
+                        .environment_at(self.environment, depth)
+                        .ok_or(Fault::UnmatchedPopScope)?;
+                    // §19.2.1.1 step 16.b.ii — a name already bound here keeps its value, which is
+                    // `declare_in`'s own contract and not a check repeated at the call site.
+                    heap.declare_in(scope, &name, crate::heap::Mutability::Mutable);
+                }
                 Instruction::CheckGlobalVar(index) | Instruction::CheckGlobalFunction(index) => {
                     let key = self.global_name(running, index, heap)?;
                     let allowed = match instruction {
@@ -573,11 +588,12 @@ impl Vm {
                     let how = if method { Entry::Method } else { Entry::Plain };
                     self.enter_at(how, count, heap, root, current, at, true)?;
                 }
-                Instruction::CallDirectEval(count) | Instruction::CallDirectEvalMethod(count) => {
+                Instruction::CallDirectEval { count, site }
+                | Instruction::CallDirectEvalMethod { count, site } => {
                     // Whether §9.1.1.2.10's `WithBaseObject` is sitting under the callee, which is
                     // the only thing the two spellings differ in — the *question* they carry is the
                     // same one.
-                    let based = matches!(instruction, Instruction::CallDirectEvalMethod(_));
+                    let based = matches!(instruction, Instruction::CallDirectEvalMethod { .. });
                     // §13.3.6.1 — the compiler saw the name `eval`; this is the other half of the
                     // question, which is whether that name holds `%eval%` *now*. The callee sits
                     // under its arguments, having been pushed first.
@@ -599,7 +615,7 @@ impl Vm {
                         // operand of a call that is not going to happen.
                         let base = callee_at - usize::from(based);
                         self.stack.truncate(base);
-                        let answer = self.perform_direct_eval(source, strict, heap);
+                        let answer = self.perform_direct_eval(source, strict, site, heap);
                         match self.settle(answer, heap, root, current, at)? {
                             Some(value) => self.stack.push(value),
                             None => continue,
@@ -2045,6 +2061,7 @@ impl Vm {
             self.stack.push(answer);
         }
         self.environment = frame.environment;
+        self.var_environment = frame.var_environment;
         self.this_value = frame.this_value;
         self.new_target = frame.new_target;
         self.realm = self.realm_by_id(frame.realm);
@@ -2329,6 +2346,7 @@ impl Vm {
             self.stack.push(answer);
         }
         self.environment = frame.environment;
+        self.var_environment = frame.var_environment;
         self.this_value = frame.this_value;
         self.new_target = frame.new_target;
         self.realm = self.realm_by_id(frame.realm);

@@ -50,8 +50,8 @@ mod pattern;
 mod statement;
 
 pub use self::chunk::{
-    Chunk, Deletable, ExportEntry, ExportSource, ImportEntry, Instruction, NamePrefix, Scope,
-    ShortCircuit, SpreadCall, Template,
+    Chunk, Deletable, EvalSite, ExportEntry, ExportSource, ImportEntry, Instruction, NamePrefix,
+    Scope, ShortCircuit, SpreadCall, Template,
 };
 
 use self::chunk::Unpatched;
@@ -84,6 +84,17 @@ pub enum ErrorKind {
     TooLong,
     /// An expression nested deeper than the compiler will walk.
     TooDeep,
+    /// §19.2.1.1 step 5.f — a direct eval's `var` names something already bound on the way out.
+    ///
+    /// The clause walks from the evaluated text's own scope towards the variable environment its
+    /// declarations are going to, and refuses if a level it passes *through* has the name already.
+    /// `function f() { { let y; eval("var y") } }` is the shape: the `var` would be created in the
+    /// function while the block's `let` is still standing, and one name would mean two bindings
+    /// with no rule for which a reference takes.
+    ///
+    /// Carries the name, because a program that hits this is being told about one identifier out of
+    /// however many the text declared, and a message without it does not say which.
+    EvalVarCollision(Box<str>),
     /// §22.2.1.1 — a regular expression literal whose pattern is not one.
     ///
     /// An **early** error, and that is the whole point of it being here. §12.9.5 accepts the
@@ -96,8 +107,11 @@ pub enum ErrorKind {
 impl CompileError {
     /// A sentence describing the failure, without the span.
     pub fn message(&self) -> String {
-        match self.kind {
+        match &self.kind {
             ErrorKind::Unsupported(what) => format!("{what} is not implemented yet"),
+            ErrorKind::EvalVarCollision(name) => {
+                format!("`var {name}` in this eval would cross a binding that already has the name")
+            }
             ErrorKind::BadPattern(why) => why.to_string(),
             ErrorKind::TooManyConstants => "too many constants in one unit of code".to_string(),
             ErrorKind::TooLong => "too many instructions in one unit of code".to_string(),
@@ -723,13 +737,33 @@ pub enum EvalVars {
     /// a ReferenceError — so the eval's own environment is a place they can go that is sized when
     /// its chunk is compiled.
     Own,
-    /// A sloppy `var` inside a function, which ViperJS refuses by name.
+    /// A sloppy `var` inside a function, which goes in the **caller's** variable environment.
     ///
-    /// §19.2.1.1 would add the binding to the *caller's* function scope, whose slot count was fixed
-    /// when that function was compiled. No name list makes a `Vec` longer, so this is the one shape
-    /// DR-0018 leaves open — refused with a message rather than quietly put somewhere else, because
-    /// somewhere else is a wrong answer that runs.
-    Caller,
+    /// §19.2.1.1 step 12 in full. The binding is added to a scope that is already running, which
+    /// `Heap::declare_in` can do because slots are appended and every `(depth, index)` already
+    /// compiled goes on naming what it named. This was refused by name until the machine started
+    /// tracking which level of the chain is the variable one — see `Vm::var_environment`.
+    Caller {
+        /// How many environments out that scope is, counted from the eval's own.
+        ///
+        /// One more than the hops from the caller's *running* environment, because §19.2.1.1 step
+        /// 12 gives the evaluated text a fresh child of it to hold its own `let`s — so a `var` in
+        /// an eval written at the top of a function body is at depth 1 and not 0.
+        depth: u32,
+    },
+    /// The same call, written in a **formal parameter list**, which ViperJS refuses by name.
+    ///
+    /// §10.2.11 step 20 gives such a call a variable environment *outside* the parameters, so that
+    /// `function f(arguments, p = eval("var arguments"))` is §19.2.1.1 step 5.f's SyntaxError — the
+    /// walk out to it passes a binding that is already there. ViperJS puts a function's parameters
+    /// and its `var`s in **one** environment, so it has no level between them to walk past and
+    /// cannot tell the two apart; declaring here would answer that program with silence.
+    ///
+    /// Refused with a message rather than quietly put somewhere else, on the reading this file has
+    /// applied to the whole of `EvalVars`: somewhere else is a wrong answer that runs. What it
+    /// costs is the ~30 `scope-param-*-var-open`/`-close` files, and what it keeps is the 192
+    /// `declare-arguments` ones, which assert exactly the SyntaxError above.
+    CallerParameters,
 }
 
 /// §19.2.1.1 — compile eval'd source against the scopes its caller is *running* in.
@@ -754,7 +788,7 @@ pub enum EvalVars {
 pub fn compile_direct_eval(
     script: &Script,
     heap: &mut Heap,
-    chain: Vec<Vec<crate::heap::Binding>>,
+    chain: Vec<(Vec<crate::heap::Binding>, usize)>,
     vars: EvalVars,
     dynamic: bool,
 ) -> Result<Chunk, CompileError> {
@@ -767,9 +801,10 @@ pub fn compile_direct_eval(
     // changes nothing about the answer.
     compiler.with_depth = u32::from(dynamic);
     compiler.chunk.strict = script.is_strict;
+    compiler.outer_slots = chain.iter().map(|(_, slots)| *slots).collect();
     compiler.outer = chain
         .into_iter()
-        .map(|level| level.into_iter().map(Local::from).collect())
+        .map(|(level, _)| level.into_iter().map(Local::from).collect())
         .collect();
     compiler.seeded_scopes = compiler.outer.len();
     // §19.2.1.1 step 14 — a strict eval's `var`s are its own, so the eval is not "the script" for
@@ -791,29 +826,42 @@ pub fn compile_direct_eval(
                 compiler.declare(name.name);
             }
         }
-        // The refusal, and it is asked before anything is emitted so that the eval either runs or
-        // does nothing at all. A source with no `var` and no function declaration in it needs the
-        // caller's variable scope for nothing, and is compiled here like any other — which is most
-        // of what a direct eval is written for.
-        EvalVars::Caller => {
-            if let Some(name) = var_declared_names(&script.body).into_iter().next() {
-                return Err(unsupported(
-                    "a sloppy `var` inside a direct eval in a function",
-                    name.span,
-                ));
+        // §19.2.1.1 steps 5.f and 16.b — into the caller's variable environment, which is running.
+        EvalVars::Caller { depth } => {
+            // Names are placed here exactly as anywhere else, and **not** resolved dynamically.
+            // `declare_eval_var` grows this compiler's copy of the caller's scope by the same rule
+            // the heap grows the real one, so a `(depth, index)` is available for a binding that
+            // does not exist yet — see [`Compiler::predict_declared_slot`], which also records what
+            // going the other way cost.
+            for name in var_declared_names(&script.body) {
+                compiler.declare_eval_var(name.name, depth, name.span)?;
             }
             // A **function declaration** at the top level is var-scoped too and is not one of those
             // names: `VarDeclaredNames` and `TopLevelVarDeclaredNames` differ on exactly this
-            // production, and ViperJS computes the first. Left out, `eval("function h(){}")` inside
-            // a function would put `h` in a slot that goes away with the eval — a name the caller
-            // asked for and cannot find, which is a wrong answer that runs.
+            // production, and ViperJS computes the first. `hoist_functions` walks that production
+            // itself and needs the depth rather than a second list here, because it also has to
+            // *store* the function object through the name — which step 15 does and step 16 does
+            // not.
+            compiler.caller_var_depth = Some(depth);
+        }
+        // The refusal that is left, and it is asked before anything is emitted so that the eval
+        // either runs or does nothing at all. A source with no `var` and no function declaration in
+        // it needs the caller's variable scope for nothing, and is compiled here like any other —
+        // which is most of what a direct eval is written for.
+        EvalVars::CallerParameters => {
+            if let Some(name) = var_declared_names(&script.body).into_iter().next() {
+                return Err(unsupported(
+                    "a sloppy `var` inside a direct eval in a parameter list",
+                    name.span,
+                ));
+            }
             if let Some(statement) = script
                 .body
                 .iter()
                 .find(|statement| matches!(statement.kind, crate::ast::StmtKind::Function(_)))
             {
                 return Err(unsupported(
-                    "a sloppy function declaration inside a direct eval in a function",
+                    "a sloppy function declaration inside a direct eval in a parameter list",
                     statement.span,
                 ));
             }
@@ -832,8 +880,28 @@ pub fn compile_direct_eval(
     }
     compiler.declare_lexical_names(&script.body)?;
     compiler.hoist_functions(&script.body)?;
+    // …and **only** that call. §19.2.1.1 step 15 instantiates `TopLevelVarScopedDeclarations`,
+    // which is this body's own list and not a block's: a `{ function f() {} }` inside the evaluated
+    // text is §B.3.3.3's business and a lexical binding of that block, not a name the caller
+    // acquires. `Compiler::hoist_functions` is called again for every block below, so leaving the
+    // depth set sent each of those declarations to the caller's variable environment too — which
+    // made `eval('let f = 123; { function f() {} }')` overwrite its own `let`.
+    compiler.caller_var_depth = None;
     compiler.statements(&script.body)?;
     Ok(compiler.finish())
+}
+
+/// A binding of a scope that is already running, as the heap would have written it.
+///
+/// §19.2.1.1 step 16.b creates a **mutable `var`**, which is the only kind that reaches here — both
+/// for a name the evaluated text declared and for the `%gap` that keeps the list and the slots the
+/// same length. See [`Compiler::predict_declared_slot`].
+fn modelled(name: &str) -> crate::heap::Binding {
+    crate::heap::Binding {
+        name: name.into(),
+        mutability: Mutability::Mutable,
+        declared: crate::heap::Declared::Var,
+    }
 }
 
 /// One name with a slot, and what the compiler knows about it.
@@ -853,6 +921,13 @@ struct Local {
     /// environment does not have to be asked a question that was already settled when the name was
     /// looked up.
     mutability: Mutability,
+    /// Whether this was a lexical declaration — see [`crate::heap::Declared`].
+    ///
+    /// Set by [`Compiler::declare_lexical`] and by nothing else, so the default is `Var` and a
+    /// production that forgets to say is treated as a `var`. That is the safe direction: it makes
+    /// §19.2.1.1 step 5.f miss a conflict rather than invent one, and a missed conflict is the
+    /// answer this engine gave for the whole of its life before the clause was implemented.
+    declared: crate::heap::Declared,
 }
 
 impl Local {
@@ -866,14 +941,19 @@ impl From<crate::heap::Binding> for Local {
     /// A slot of a **running** environment, read back as the compiler would have written it.
     ///
     /// `live` is unconditionally true because the list is only ever handed over for scopes that are
-    /// running: a name that had gone out of scope is not in it — see [`bindings_of`]. Whether the
-    /// binding was a `let` is not carried, and does not need to be: §9.1.1.1's dead zone is a slot
-    /// holding *nothing*, which the slot itself says at the moment it is read.
+    /// running: a name that had gone out of scope is not in it — see [`bindings_of`].
+    ///
+    /// **Whether the binding was a `let` is carried, and this said it need not be.** The reasoning
+    /// was that §9.1.1.1's dead zone is a slot holding *nothing*, which the slot says for itself —
+    /// true, and about a different question. §19.2.1.1 step 5.f asks what a binding *was* rather
+    /// than what it currently holds, and an initialised `let` and a `var` are indistinguishable by
+    /// contents. See [`crate::heap::Declared`].
     fn from(binding: crate::heap::Binding) -> Self {
         Self {
             name: binding.name,
             live: true,
             mutability: binding.mutability,
+            declared: binding.declared,
         }
     }
 }
@@ -902,6 +982,33 @@ struct Compiler<'a> {
     arguments_slot: Option<u32>,
     /// Whether anything actually read it.
     uses_arguments: bool,
+    /// How many **slots** each level of [`Compiler::outer`] has, at the same index.
+    ///
+    /// Empty for every compile but a direct `eval`'s, which is the only one whose outer scopes are
+    /// running rather than being built here. A level's slots may run past its names — a binding that
+    /// went out of scope keeps its slot and loses its name — so this is a second number and not
+    /// `outer[level].len()`, and [`Compiler::declare_eval_var`] needs it to predict what
+    /// `Heap::declare_in` is about to hand back.
+    outer_slots: Vec<usize>,
+    /// §19.2.1.1 step 12's `varEnv` as a depth, for a sloppy direct `eval` inside a function.
+    ///
+    /// `None` for everything else, which is every compile but that one: a script's `var`s go on the
+    /// global object and a strict eval's are its own slots, and neither needs a level named.
+    ///
+    /// What reads it is [`Compiler::hoist_functions`], which otherwise puts a declaration in a slot
+    /// of the scope being compiled — right for a function body and wrong for an eval, whose scope
+    /// goes away while the name it declared is the caller's from then on.
+    caller_var_depth: Option<u32>,
+    /// Whether what is being compiled right now is a **formal parameter list**.
+    ///
+    /// True only while this body's own parameter defaults and patterns are being emitted, and false
+    /// again for the body under them. A nested function written *in* a default gets its own
+    /// compiler and so answers `false` for its own body, which is right: §10.2.11's parameter
+    /// environment belongs to the function whose list it is, and `function f(a = () => eval("var
+    /// x"))` puts `x` in the arrow's scope rather than in `f`'s.
+    ///
+    /// The one thing it decides is [`Compiler::eval_site`].
+    in_parameters: bool,
     /// Whether a **direct** `eval` was compiled in this body, nested functions aside.
     ///
     /// Learned rather than looked for: the compiler visits every expression there is, so a flag it
@@ -1211,6 +1318,9 @@ impl<'a> Compiler<'a> {
             global_vars: true,
             deletable: Deletable::No,
             seeded_scopes: 0,
+            outer_slots: Vec::new(),
+            caller_var_depth: None,
+            in_parameters: false,
             with_depth: 0,
         }
     }
@@ -1599,9 +1709,32 @@ impl<'a> Compiler<'a> {
     /// given the slot `x` had finished with. Slots are cheap and closures are not repairable
     /// afterwards.
     fn declare_lexical(&mut self, name: &str, mutability: Mutability) -> u32 {
+        self.declare_binding(name, mutability, crate::heap::Declared::Lexical)
+    }
+
+    /// A binding that is **not** a lexical declaration but still shadows — a parameter, or §B.3.5's
+    /// simple catch parameter.
+    ///
+    /// Both take a slot of their own exactly as a `let` does and neither is one, and the difference
+    /// is the whole of what §19.2.1.1 step 5.f asks: a `var` from an `eval` may cross a parameter
+    /// and may cross a catch parameter, and may not cross a `let`. Written as its own name rather
+    /// than as an argument at those call sites, because "declare_lexical(…, Declared::Var)" reads
+    /// as a contradiction and this reads as what it is.
+    fn declare_shadowing_var(&mut self, name: &str, mutability: Mutability) -> u32 {
+        self.declare_binding(name, mutability, crate::heap::Declared::Var)
+    }
+
+    /// The two above, which differ in one field.
+    fn declare_binding(
+        &mut self,
+        name: &str,
+        mutability: Mutability,
+        declared: crate::heap::Declared,
+    ) -> u32 {
         let slot = self.declare_shadowing(name);
         if let Some(local) = self.locals.last_mut() {
             local.mutability = mutability;
+            local.declared = declared;
         }
         slot
     }
@@ -1625,13 +1758,14 @@ impl<'a> Compiler<'a> {
     /// string to find a variable — §9.1's records, resolved once.
     fn binding(&self, name: &str) -> Option<Where> {
         if let Some(index) = self.resolve(name) {
-            let mutability = self
-                .local(name)
-                .map_or(Mutability::Mutable, |local| local.mutability);
+            let found = self.local(name);
+            let mutability = found.map_or(Mutability::Mutable, |local| local.mutability);
+            let declared = found.map_or(crate::heap::Declared::Var, |local| local.declared);
             return Some(Where {
                 depth: 0,
                 index,
                 mutability,
+                declared,
             });
         }
         // Outwards, one scope at a time. The innermost enclosing scope is the *last* of `outer`,
@@ -1650,10 +1784,14 @@ impl<'a> Compiler<'a> {
             let mutability = scope
                 .get(at)
                 .map_or(Mutability::Mutable, |local| local.mutability);
+            let declared = scope
+                .get(at)
+                .map_or(crate::heap::Declared::Var, |local| local.declared);
             return Some(Where {
                 depth,
                 index,
                 mutability,
+                declared,
             });
         }
         None
@@ -1747,6 +1885,133 @@ impl<'a> Compiler<'a> {
     }
 
     /// Whether a name here has to be resolved at run time — §14.11, and the whole of what it costs.
+    /// One name of §19.2.1.1's `varNames`, checked against the chain and then declared.
+    ///
+    /// Two clauses, and the order between them is the whole of what makes this safe:
+    ///
+    /// - **Step 5.f is a SyntaxError**, and it is asked first. The clause walks outwards from the
+    ///   eval's own environment towards the variable one and refuses if any level it passes
+    ///   *through* already binds the name — so `function f() { { let y; eval("var y") } }` throws
+    ///   rather than shadowing the block's `y` with a function-scoped one. `binding` resolves to
+    ///   the innermost, so a hit at a depth below `depth` is exactly that condition and a hit at or
+    ///   outside it is not one: the name is a `var` or a parameter of the very scope the
+    ///   declaration is going to.
+    /// - **Step 16.b is the declaration**, emitted for every name including the ones that already
+    ///   exist. `Heap::declare_in` is what leaves an existing binding alone, and asking it at run
+    ///   time rather than deciding here is deliberate: an earlier `DeclareVar` in this same eval
+    ///   may have made the binding this one would find, and the compiler's copy of the chain does
+    ///   not grow as the instructions run.
+    ///
+    /// Refusing *before* anything is emitted is what keeps the clause's promise that a refused eval
+    /// leaves nothing behind — a chunk that returned an error is never run.
+    fn declare_eval_var(
+        &mut self,
+        name: &str,
+        depth: u32,
+        span: crate::span::Span,
+    ) -> Result<u32, CompileError> {
+        // §19.2.1.1 step 5.f, and it is a question about **what** the binding is and not only
+        // about where. The walk goes from the eval's own scope out to the variable environment and
+        // refuses a name it meets on the way — and what it meets, in a chain ViperJS has flattened,
+        // is every level up to and including the variable one. A `var` or a parameter *at* that
+        // level is the declaration's own destination and not something it crosses; a `let` is
+        // §10.2.11 step 30's separate record, which the walk does cross. See
+        // [`crate::heap::Declared`], including why a catch parameter counts as the first kind.
+        if self.binding(name).is_some_and(|found| {
+            found.depth <= depth && found.declared == crate::heap::Declared::Lexical
+        }) {
+            return Err(CompileError {
+                kind: ErrorKind::EvalVarCollision(name.into()),
+                span,
+            });
+        }
+        // The level `depth` names, indexed from the outside. `binding` counts depth 1 as the last
+        // entry of `outer` and walks inwards from there, so this is that walk's arithmetic read
+        // backwards — and a depth past the end is a chunk nothing here compiled.
+        let Some(level) = self.outer.len().checked_sub(depth as usize) else {
+            return Err(unsupported(
+                "a direct eval outside its own scope chain",
+                span,
+            ));
+        };
+        let index = self.predict_declared_slot(level, name, span)?;
+        let constant = self.name(name)?;
+        self.chunk.emit(Instruction::DeclareVar {
+            name: constant,
+            depth,
+        });
+        Ok(index)
+    }
+
+    /// Which slot `Heap::declare_in` will give `name`, and the compiler's copy of the scope grown to
+    /// match.
+    ///
+    /// **This is a prediction, and it is exact because the two rules are the same rule.** The heap
+    /// answers an existing name with the slot it already has, and otherwise fills the gap between
+    /// the names and the slots and appends — so the new index is whichever of the two lengths is
+    /// larger, and both become one past it. Written here as the same arithmetic rather than as a
+    /// second guess: the alternative is resolving these names dynamically, which reads the scope by
+    /// *name* and cannot tell two same-named slots apart when one has gone out of scope. That was
+    /// tried, and it made a block's function declaration overwrite an `eval`'s own top-level `let`.
+    ///
+    /// The compiler's copy of the level is grown so that a later name in the same eval predicts the
+    /// index after this one, exactly as the heap will.
+    fn predict_declared_slot(
+        &mut self,
+        level: usize,
+        name: &str,
+        span: Span,
+    ) -> Result<u32, CompileError> {
+        let scope = self.outer.get_mut(level).ok_or(CompileError {
+            kind: ErrorKind::TooDeep,
+            span,
+        })?;
+        if let Some(at) = scope.iter().position(|local| &*local.name == name) {
+            return u32::try_from(at).map_err(|_| CompileError {
+                kind: ErrorKind::TooDeep,
+                span,
+            });
+        }
+        let slots = self.outer_slots.get(level).copied().unwrap_or(0);
+        // The gap the heap fills with `%gap`, spelled the same way here so that the two lists stay
+        // the same length and nothing a source can write resolves to one.
+        //
+        // Both of these are built as `heap::Binding` and converted, rather than written as `Local`
+        // literals: this is the compiler's model of a scope that is **running**, and `Local::from`
+        // is where the rest of that model comes from. A literal here would be a second answer to
+        // `live`, and one nothing could ever distinguish from the first.
+        while scope.len() < slots {
+            scope.push(Local::from(modelled("%gap")));
+        }
+        let at = scope.len();
+        scope.push(Local::from(modelled(name)));
+        // **Nothing writes the slot count back**, and that is not an omission. It is read only by
+        // the padding above, which compares it against `scope.len()` — and after one append that
+        // length *is* the new count, so a stale entry can never be the larger of the two again. A
+        // second declaration at this level predicts from the grown list on its own. Written back,
+        // the assignment was a line no input could make a difference to, which is what mutation
+        // said by surviving its mutation.
+        //
+        // A scope with more than `u32::MAX` bindings is unreachable for DR-0013's reason, and the
+        // heap refuses the declaration at the same boundary.
+        u32::try_from(at).map_err(|_| CompileError {
+            kind: ErrorKind::TooDeep,
+            span,
+        })
+    }
+
+    /// Which of §10.2.11's two variable environments a direct `eval` emitted now would be handed.
+    ///
+    /// See [`crate::compile::EvalSite`]. The question is only ever about *this* body's own list,
+    /// which is why it reads a flag rather than walking anything: a nested function compiled inside
+    /// a default has a list and a body of its own, and is already a separate compiler.
+    pub(super) fn eval_site(&self) -> EvalSite {
+        match self.in_parameters {
+            true => EvalSite::Parameters,
+            false => EvalSite::Body,
+        }
+    }
+
     pub(super) fn names_are_dynamic(&self) -> bool {
         self.with_depth > 0 || self.inside_eval
     }
@@ -1900,6 +2165,7 @@ impl Compiler<'_> {
             name: name.into(),
             live: true,
             mutability: Mutability::Mutable,
+            declared: crate::heap::Declared::Var,
         });
         self.high_water = self.high_water.max(self.locals.len());
         slot
@@ -1977,6 +2243,8 @@ struct Where {
     /// second copy of the resolution rule: the two could disagree about *which* `x` a name means,
     /// and only one of them would be right. Resolving once answers both questions at once.
     mutability: Mutability,
+    /// Whether it was a lexical declaration — [`crate::heap::Declared`], for §19.2.1.1 step 5.f.
+    declared: crate::heap::Declared,
 }
 
 /// Where a derived constructor's `this` lives, from where the compiler is standing — DR-0015.
@@ -2020,6 +2288,7 @@ fn bindings_of(locals: &[Local]) -> Rc<[crate::heap::Binding]> {
         .map(|local| crate::heap::Binding {
             name: local.name.clone(),
             mutability: local.mutability,
+            declared: local.declared,
         })
         .collect()
 }

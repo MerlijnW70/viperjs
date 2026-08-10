@@ -717,10 +717,14 @@ fn an_eval_resolves_names_at_run_time_only_when_the_call_was_made_inside_a_with(
     let reads = |dynamic: bool| {
         let mut heap = Heap::new();
         let script = parse_script("a = a + 1;").expect("the source parses"); // a compiler test needs a tree
-        let outer = vec![vec![crate::heap::Binding {
-            name: "a".into(),
-            mutability: crate::heap::Mutability::Mutable,
-        }]];
+        let outer = vec![(
+            vec![crate::heap::Binding {
+                name: "a".into(),
+                mutability: crate::heap::Mutability::Mutable,
+                declared: crate::heap::Declared::Var,
+            }],
+            1,
+        )];
         let chunk = compile_direct_eval(&script, &mut heap, outer, EvalVars::Own, dynamic)
             .expect("compiles"); // likewise
         chunk
@@ -907,4 +911,36 @@ fn only_the_outermost_call_of_a_return_is_in_tail_position() {
         calls.as_slice(),
         [Instruction::Call(1), Instruction::CallTail(1)]
     ));
+}
+
+#[test]
+fn a_direct_eval_carries_where_it_was_written_and_the_default_is_the_body() {
+    // §10.2.11 step 20's question, and it is a **structural** claim for the reason the `with` test
+    // above states one: by run time a parameter default and a body statement are instructions in
+    // one chunk against one environment, so the answer travels on the instruction and no program
+    // can read it directly. What a program *can* see is the refusal it produces, which
+    // `vm::tests::eval` asserts; what nothing else pins is the value a compiler starts with.
+    //
+    // `Compiler::in_parameters` begins false and only `compile::function` ever sets it, so every
+    // chunk that is not a function body — a script, an eval, a module — emits `Body` by never
+    // having said otherwise. That default is invisible to conformance: a script's own direct eval
+    // is answered by `EvalVars::Global` before the site is consulted, and an eval nested in an eval
+    // by the same rule. So it is asserted here or it is asserted nowhere.
+    let mut heap = Heap::new();
+    let script = parse_script("eval('1')").expect("the source parses"); // a compiler test needs a tree
+    let chunk = compile_script(&script, &mut heap).expect("compiles"); // likewise
+    let sites = chunk
+        .code()
+        .iter()
+        .filter_map(|instruction| match instruction {
+            Instruction::CallDirectEval { site, .. }
+            | Instruction::CallDirectEvalMethod { site, .. } => Some(*site),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        sites,
+        vec![EvalSite::Body],
+        "a direct eval outside any parameter list is written in a body"
+    );
 }

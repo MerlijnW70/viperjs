@@ -307,6 +307,27 @@ pub enum Deletable {
     Yes,
 }
 
+/// Where a direct `eval` call is written — §10.2.11 step 20's distinction, and only it.
+///
+/// A call in a **formal parameter list** and a call in the **body** are handed different variable
+/// environments. Step 20's note says why: with parameter expressions the parameters get an
+/// environment of their own, so that bindings a direct eval creates in the list land *outside* the
+/// names being declared. `function f(arguments, p = eval("var arguments"))` is a SyntaxError
+/// because the walk from the eval out to its variable environment passes the parameter, and the
+/// same text in the body is not, because it does not.
+///
+/// Only the *compiler* knows which it is — by run time both are a call in one chunk against one
+/// environment — so the answer travels on the instruction. A named pair rather than a `bool` for
+/// [`Deletable`]'s reason: the two read the same at a call site, and swapping them turns a
+/// SyntaxError into a program that runs.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EvalSite {
+    /// Anywhere the variable environment is the running function's own.
+    Body,
+    /// Inside a formal parameter list, where §10.2.11 step 20 puts it outside the parameters.
+    Parameters,
+}
+
 /// §10.2.9's `prefix` argument — the word an accessor's name begins with.
 ///
 /// Three values and not an `Option<&str>`, because an instruction carries data and not text: the
@@ -508,6 +529,27 @@ pub enum Instruction {
         /// The clause's `D`.
         deletable: Deletable,
     },
+    /// Give a **running** environment this name as a `var` binding, if it has not got one.
+    ///
+    /// §19.2.1.1 step 16.b, the half of `EvalDeclarationInstantiation` whose variable environment
+    /// is a declarative record rather than the global object: a sloppy direct `eval` inside a
+    /// function adds its `var`s to the *caller's* function scope, which was sized when that
+    /// function was compiled and is now several instructions into running. `Heap::declare_in`
+    /// appends, so every `(depth, index)` already compiled keeps naming the slot it named.
+    ///
+    /// Step 16.b.ii's `bindingExists` is the same "leave it alone" the global form has, and it is
+    /// `declare_in` that answers it: `function f() { var x = 1; eval("var x"); return x }` is 1.
+    ///
+    /// **A depth and not an environment**, counted from the environment the eval's own chunk runs
+    /// in, exactly as [`Instruction::LoadVariable`] counts. The machine knows which level is the
+    /// variable one — see `Vm::var_environment` — and the compiler is told the number so that the
+    /// walk is the same one every other instruction here makes.
+    DeclareVar {
+        /// The constant index of the name.
+        name: u32,
+        /// How many environments out the variable one is, from this chunk's own.
+        depth: u32,
+    },
     /// Settle a property reference's key, in §6.2.5.5's order — for a reference read *and* written.
     ///
     /// The stack holds a base and a key, and this replaces the key with the one `ToPropertyKey`
@@ -697,7 +739,12 @@ pub enum Instruction {
     /// interpreter can. This carries the first half to the second: everything else about it is
     /// [`Instruction::Call`], and it behaves as one whenever the callee turns out to be anything
     /// but `%eval%` — which is exactly what makes `var eval = f; eval(x)` an ordinary call.
-    CallDirectEval(u32),
+    CallDirectEval {
+        /// How many arguments were pushed.
+        count: u32,
+        /// Which of §10.2.11's two environments the call is written in.
+        site: EvalSite,
+    },
     /// The same call, with §9.1.1.2.10's `WithBaseObject` pushed under the callee.
     ///
     /// `with (o) { eval("x") }` is still a **direct** eval — §13.3.6.1 asks how the callee was
@@ -706,7 +753,12 @@ pub enum Instruction {
     /// with one `match`: a receiver made it `CallMethod` and the direct-eval question was dropped.
     /// So the text ran as an **indirect** eval, in the global scope, and read the wrong variables
     /// without refusing anything.
-    CallDirectEvalMethod(u32),
+    CallDirectEvalMethod {
+        /// How many arguments were pushed.
+        count: u32,
+        /// Which of §10.2.11's two environments the call is written in.
+        site: EvalSite,
+    },
     /// Take a receiver, a callee and this many arguments, and call the callee *on* the receiver.
     ///
     /// A method call is not a plain call of a property's value. `o.m()` and `var f = o.m; f()`
@@ -1467,6 +1519,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::StoreGlobal(_)
         | Instruction::TypeofGlobal(_)
         | Instruction::DeclareGlobal { .. }
+        | Instruction::DeclareVar { .. }
         | Instruction::PrepareKey { .. }
         | Instruction::CheckGlobalVar(_)
         | Instruction::CheckGlobalFunction(_)
@@ -1477,8 +1530,8 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::PopHandler
         | Instruction::MakeFunction(_)
         | Instruction::Call(_)
-        | Instruction::CallDirectEval(_)
-        | Instruction::CallDirectEvalMethod(_)
+        | Instruction::CallDirectEval { .. }
+        | Instruction::CallDirectEvalMethod { .. }
         | Instruction::Construct(_)
         | Instruction::CallMethod(_)
         | Instruction::CallTail(_)

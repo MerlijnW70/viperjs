@@ -406,6 +406,7 @@ impl Vm {
                 new_target: self.new_target,
                 realm: self.realm.id(),
                 environment: self.environment,
+                var_environment: self.var_environment,
                 stack_base: receiver_at,
                 handlers_base: self.handlers.len(),
                 constructed: None,
@@ -439,6 +440,10 @@ impl Vm {
         self.stack.truncate(frame.stack_base);
         self.frames.push(frame);
         self.environment = environment;
+        // §10.2.11 step 28 — a body's `var`s belong to the environment the call just opened, and
+        // they go on belonging to it however many blocks the body then enters. This is the only
+        // place that moves forwards; `PushScope` deliberately does not.
+        self.var_environment = environment;
         // §10.2.1.2 step 1 — an arrow's `[[ThisMode]]` is `lexical`, so `OrdinaryCallBindThis`
         // returns without binding anything and the receiver computed above is discarded. What the
         // body sees instead is the `this` the arrow was *written* beside, which it has held since
@@ -802,6 +807,14 @@ pub(super) struct Frame {
     ///
     /// Not the callee's — that one may outlive the call, if the callee made a closure over it.
     pub(super) environment: EnvironmentId,
+    /// The caller's §8.3.2 VariableEnvironment, to go back to.
+    ///
+    /// Saved beside the one above because a call decides both and a return has to put both back —
+    /// the rule this record already follows for the `this`, the `new.target` and the realm. It is a
+    /// *separate* field rather than something a return could recompute, because the two come apart
+    /// the moment the caller was inside a block: restoring only the lexical one would leave a
+    /// `var` from a later `eval` landing in whatever scope the call happened to return into.
+    pub(super) var_environment: EnvironmentId,
     /// Where this frame's operands begin.
     ///
     /// A floor rather than a count: returning truncates back to it, which is what makes a

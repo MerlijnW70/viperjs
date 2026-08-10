@@ -293,6 +293,18 @@ pub struct Vm {
     /// Set when [`Vm::run`] begins and changed by every call and return. A variable is found by
     /// walking out from here, which the compiler has already counted the steps for.
     environment: EnvironmentId,
+    /// §8.3.2's **VariableEnvironment** — where a `var` in the running code belongs.
+    ///
+    /// The same environment as [`Vm::environment`] at the top of a body, and a *different* one as
+    /// soon as a block is entered: a `{}` pushes a scope for its `let`s and a `var` inside it still
+    /// belongs to the function. So this is changed by a call and a return and by **nothing else** —
+    /// in particular not by `PushScope`/`PopScope`, which is the whole of what distinguishes it from
+    /// the field above. A flat chain of environments cannot say which level is which, and this is
+    /// the answer written down rather than searched for.
+    ///
+    /// What needs it is §19.2.1.1 step 12: a sloppy direct `eval` puts its `var`s in the
+    /// **caller's** variable environment, and the caller is the only one that knows which that is.
+    var_environment: EnvironmentId,
     /// The script's completion value so far — §14.2.2's `UpdateEmpty`, as a register.
     completion: Value,
     /// §25.4.1.2's waiter records — the agent's own `Atomics.waitAsync` parks, still unwoken.
@@ -497,6 +509,10 @@ impl Vm {
     pub fn new(heap: &mut Heap) -> Self {
         // Realm zero, and the machine's realm table starts with it — DR-0025.
         let first = Realm::new(heap, crate::heap::RealmId(0));
+        // One environment named twice rather than two made: §8.3.2's Lexical and Variable
+        // Environments are the *same* record at the top of a body, and a placeholder that had two
+        // would start the machine in a state no running code can be in.
+        let placeholder = heap.new_environment(None, 0);
         Self {
             waiters: Vec::new(),
             unhandled: Vec::new(),
@@ -515,7 +531,8 @@ impl Vm {
             frames: Vec::new(),
             // Replaced by the script's own before anything runs; a machine with no environment
             // at all is not a state that has to be representable.
-            environment: heap.new_environment(None, 0),
+            environment: placeholder,
+            var_environment: placeholder,
             this_value: Value::Undefined,
             new_target: Value::Undefined,
             completion: Value::Undefined,
@@ -635,9 +652,14 @@ impl Vm {
         let base = self.stack.len();
         let handlers_base = self.handlers.len();
         let outer_environment = self.environment;
+        let outer_var_environment = self.var_environment;
         let outer_this = self.this_value;
         let outer_target = self.new_target;
         self.environment = environment;
+        // §16.2.1.6.4 step 8 — a module body's Lexical and Variable Environments are both its own
+        // module environment, so a `var` at the top of a module belongs to the module and not to
+        // whatever asked for it.
+        self.var_environment = environment;
         self.this_value = Value::Undefined;
         self.new_target = Value::Undefined;
         // §27.7.5.1's capability, made without going through the constructor: this promise is the
@@ -663,6 +685,7 @@ impl Vm {
             // a module body runs in the realm that asked for it and goes back to the same.
             realm: self.realm.id(),
             environment: outer_environment,
+            var_environment: outer_var_environment,
             stack_base: base,
             handlers_base,
             constructed: None,
@@ -679,6 +702,7 @@ impl Vm {
         self.handlers.truncate(handlers_base);
         self.floor = floor;
         self.environment = outer_environment;
+        self.var_environment = outer_var_environment;
         self.this_value = outer_this;
         self.new_target = outer_target;
         ran?;
@@ -876,6 +900,10 @@ impl Vm {
         // `undefined`, which is what `eval("var x")` and `eval(";")` come to.
         self.completion = Value::Undefined;
         self.environment = environment;
+        // §16.1.7 step 1 — a Script's Lexical and Variable Environments are both the global one, so
+        // a run starts with the two agreeing. Everything that makes them differ is below this: a
+        // block moves the first and a call moves both.
+        self.var_environment = environment;
         // §16.1.7 — a Script's `this` is the global object. A Module's is `undefined` (§16.2.1.6),
         // which is the one place the two goal symbols disagree about it, and so is the one thing
         // the caller has to say.

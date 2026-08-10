@@ -63,6 +63,39 @@ pub struct Binding {
     /// compiler seeded from a running chain has nowhere else to learn it. Without it
     /// `const x = 1; eval("x = 2")` would assign.
     pub mutability: Mutability,
+    /// Which of §10.2.11's two environments this binding would have been in.
+    ///
+    /// Carried for one reader, §19.2.1.1 step 5.f, and it is the second thing a compiler seeded
+    /// from a running chain has nowhere else to learn. See [`Declared`].
+    pub declared: Declared,
+}
+
+/// Whether a binding is a **lexical** declaration — §10.2.11 step 30, collapsed into a flag.
+///
+/// The clause gives a sloppy function's body a separate Environment Record for its top-level `let`
+/// and `const`, and its note says why in as many words: *so that a direct eval can determine
+/// whether any var scoped declarations introduced by the eval code conflict with pre-existing
+/// top-level lexically scoped declarations*. That is the entire purpose of the extra environment —
+/// nothing else in the language can observe it, because the two records have the same lifetime and
+/// the same contents from every other angle.
+///
+/// ViperJS puts both in one environment and slots, so the level that would have distinguished them
+/// is not there to walk past, and §19.2.1.1 step 5.f would answer "no conflict" for
+/// `function f() { let x; eval('var x') }`. This is that level, written down instead of built:
+/// the check asks what a binding *was* rather than which record it is in, and gets the same answer
+/// for a great deal less machinery.
+///
+/// **A catch parameter is [`Declared::Var`] here**, and that is §B.3.5 rather than an oversight:
+/// the clause exempts a simple catch parameter from step 5.f precisely so that
+/// `try {} catch (e) { eval('var e') }` goes on working, which it has to because the web depends
+/// on it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Declared {
+    /// A `var`, a parameter, a function declaration, a simple catch parameter, or a slot the
+    /// compiler made for itself — anything a `var` from an `eval` may cross without complaint.
+    Var,
+    /// A `let`, a `const`, a class, or an import — §10.2.11 step 30's own environment.
+    Lexical,
 }
 
 /// What an assignment to a binding does — §9.1.1.1.5, which has three answers and not two.
@@ -386,6 +419,7 @@ impl Heap {
             names.push(Binding {
                 name: "%gap".into(),
                 mutability: crate::heap::Mutability::Mutable,
+                declared: Declared::Var,
             });
         }
         // A scope with more than `u32::MAX` bindings is unreachable: DR-0013's heap budget stops
@@ -395,6 +429,8 @@ impl Heap {
         names.push(Binding {
             name: name.into(),
             mutability,
+            // §19.2.1.1 step 16.b creates a `var`, which is the only thing that reaches here.
+            declared: Declared::Var,
         });
         record.slots.push(Some(Value::Undefined));
         record.names = Some(names.into());
@@ -608,6 +644,7 @@ mod tests {
             .map(|(name, mutability)| Binding {
                 name: (*name).into(),
                 mutability: *mutability,
+                declared: Declared::Var,
             })
             .collect()
     }
@@ -776,6 +813,7 @@ mod tests {
         let names: Rc<[Binding]> = vec![Binding {
             name: "a".into(),
             mutability: Mutability::Mutable,
+            declared: Declared::Var,
         }]
         .into();
         let scope = heap.new_named_environment(None, 1, names);
@@ -826,6 +864,7 @@ mod tests {
         let names: Rc<[Binding]> = vec![Binding {
             name: "a".into(),
             mutability: Mutability::Mutable,
+            declared: Declared::Var,
         }]
         .into();
         let scope = heap.new_named_environment(None, 3, names);

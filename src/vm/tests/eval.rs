@@ -311,22 +311,138 @@ fn what_a_direct_eval_declares_goes_where_its_callers_variable_scope_is() {
         "undefined"
     );
 
-    // And the one shape DR-0018 leaves open: a sloppy `var` inside a function would have to grow
-    // an environment whose slot count was fixed when that function was compiled. Refused by name
-    // rather than put somewhere else, because somewhere else is a wrong answer that runs.
+    // Step 16.b — the shape DR-0018 left open until the machine started tracking which level of
+    // the chain is the variable one. The binding is appended to a scope that is already running,
+    // and the name is the caller's from then on.
+    assert_eq!(run("(function () { eval('var w = 1'); return w; })()"), "1");
+    // It is the *function's* scope and not the eval's, so it outlives the eval and no more.
     assert_eq!(
-        run("(function () { try { eval('var w = 1'); return 'ran'; } \
-             catch (e) { return e.constructor.name; } })()"),
-        "SyntaxError"
+        run("(function () { eval('var w = 1'); })(); typeof w"),
+        "undefined"
     );
+    // …and not the *block's*, which is the whole reason a variable environment is tracked
+    // separately from the lexical one: a `{}` moves the second and leaves the first alone.
+    assert_eq!(
+        run("(function () { { eval('var w = 3'); } return w; })()"),
+        "3"
+    );
+    // Step 16.b.ii — a name already bound there keeps its value. A `var` re-declaring something is
+    // not an initialisation, so this is 1 rather than `undefined`.
+    assert_eq!(
+        run("(function () { var w = 1; eval('var w'); return w; })()"),
+        "1"
+    );
+    // …and it is hoisted, so the assignment above the declaration in the evaluated text finds a
+    // binding rather than making a global.
+    assert_eq!(
+        run("(function () { eval('w = 4; var w;'); return w; })()"),
+        "4"
+    );
+
+    // Step 5.f — a binding the walk out to the variable environment passes *through* is a
+    // SyntaxError, because one name would otherwise mean two bindings with no rule saying which a
+    // reference takes. The block's `let` is such a level and the function's own `var` is not.
     assert_eq!(
         run(
-            "(function () { try { eval('function w() {}'); return 'ran'; } \
+            "(function () { { let y; try { eval('var y'); return 'ran'; } \
+             catch (e) { return e.constructor.name; } } })()"
+        ),
+        "SyntaxError"
+    );
+    // …and so is a `let` at the **top level of the body**, which is the case the depth alone cannot
+    // see: §10.2.11 step 30 gives a sloppy function's top-level lexical declarations an environment
+    // of their own precisely so this walk crosses one, and ViperJS answers the same question from
+    // `Declared` instead. A comparison that asked only "strictly inside" would let this through.
+    assert_eq!(
+        run(
+            "(function () { let y; try { eval('var y'); return 'ran'; } \
              catch (e) { return e.constructor.name; } })()"
         ),
         "SyntaxError"
     );
-    // The refusal is about the *declaration* and not about being inside a function: an eval that
+    assert_eq!(
+        run(
+            "(function () { const y = 1; try { eval('var y'); return 'ran'; } \
+             catch (e) { return e.constructor.name; } })()"
+        ),
+        "SyntaxError"
+    );
+
+    // The **block that opened an environment** is what says the depth is counted and not assumed.
+    // A `var` declared from inside one belongs to the function all the same, so a walk that stopped
+    // at the first level would put it in a scope that ends at the closing brace.
+    assert_eq!(
+        run("(function () { { let q; eval('var c = 3'); } return c; })()"),
+        "3"
+    );
+    // Two new names in one eval, which is what says the second prediction follows the first: both
+    // are appended, and a count that did not move would give them the same slot.
+    assert_eq!(
+        run("(function () { eval('var p = 1, r = 2'); return p + r; })()"),
+        "3"
+    );
+    // A body whose **slots run past its names** — a closed block's are still taken, and
+    // `Chunk::locals` is the high-water mark where `Chunk::bindings` is the top level alone. So the
+    // appended binding goes after the slack rather than after the names, which is the one place the
+    // compiler's prediction has to know both numbers. Predicted from the names alone, `z` is read
+    // from a slot the block left behind and answers `undefined`.
+    assert_eq!(
+        run("(function () { { let a, b, c; } eval('var z = 7'); return z; })()"),
+        "7"
+    );
+
+    // §10.2.11 step 20 — and a call written in a **formal parameter list** is refused by name,
+    // because the clause hands it a variable environment outside the parameters and ViperJS puts
+    // parameters and `var`s in one. Refusing is what keeps `f(arguments, p = eval('var arguments'))`
+    // a SyntaxError; declaring would answer that program with silence.
+    assert_eq!(
+        run(
+            "(function () { try { (function (a, p = eval('var a')) {})(); return 'ran'; } \
+             catch (e) { return e.constructor.name; } })()"
+        ),
+        "SyntaxError"
+    );
+
+    // Step 15 — a function declaration is var-scoped too and is *not* one of `VarDeclaredNames`:
+    // the two static-semantics walks differ on exactly that production, which is why
+    // `hoist_functions` is told the depth rather than being handed a list. It goes to the same
+    // place a `var` does, and unlike a `var` it is **stored** rather than left alone.
+    assert_eq!(
+        run("(function () { eval('function w() { return 1; }'); return w(); })()"),
+        "1"
+    );
+    assert_eq!(
+        run("(function () { var w = 1; eval('function w() { return 2; }'); return w(); })()"),
+        "2"
+    );
+    // …and only the *top level* of the evaluated text. A declaration inside a block is §B.3.3.3's
+    // and a lexical binding of that block, so it must not reach the caller — and must not overwrite
+    // the eval's own `let` on the way, which is what leaving the depth set for every nested block
+    // did.
+    assert_eq!(
+        run(
+            "(function () { var a; eval('let f = 123; { function f() {} } a = f;'); return a; })()"
+        ),
+        "123"
+    );
+
+    // §15.2.5's binding of a function expression's own name sits in a `funcEnv` *outside* the
+    // variable environment. So step 5.f's walk never reaches it — this is not the error — and step
+    // 16.b.i finds no such binding in `varEnv` and makes a **new** one holding `undefined`, which
+    // shadows the function's own name for the rest of the call. Both halves are the same fact about
+    // where that binding lives, and getting either the other way round would be visible here.
+    assert_eq!(
+        run("(function g () { eval('var g'); return typeof g; })()"),
+        "undefined"
+    );
+    // §B.3.5 — nor does a simple catch parameter, which the clause exempts by name.
+    assert_eq!(
+        run("(function () { try { throw 1 } catch (e) { eval('var e'); return e; } })()"),
+        "1"
+    );
+    // …and neither does a parameter, which §10.2.11 keeps in an environment of its own.
+    assert_eq!(run("(function (a) { eval('var a'); return a; })(3)"), "3");
+    // The refusals are about the *declaration* and not about being inside a function: an eval that
     // declares nothing var-scoped is compiled there like anywhere else, which is most of them.
     assert_eq!(
         run("(function () { var a = 1; return eval('let b = 2; a + b'); })()"),

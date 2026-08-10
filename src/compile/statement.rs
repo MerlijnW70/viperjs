@@ -1629,8 +1629,8 @@ impl Compiler<'_> {
             // with a script's attributes — writable, enumerable, not configurable — and the store
             // then puts the function in it. Assigning to a name that does not exist yet would
             // create it *configurable*, and `delete f` would then work on a function declaration.
-            let placement = match self.at_global_scope() {
-                true => {
+            let placement = match (self.at_global_scope(), self.caller_var_depth) {
+                (true, _) => {
                     let index = self.name(&name.name)?;
                     let deletable = self.deletable;
                     self.chunk.emit(Instruction::DeclareGlobal {
@@ -1639,7 +1639,15 @@ impl Compiler<'_> {
                     });
                     Placement::Global(index)
                 }
-                false => Placement::Slot(self.declare(&name.name)),
+                // §19.2.1.1 step 15 — a sloppy direct eval's declaration belongs to the *caller's*
+                // variable environment, so it is declared there and written through the name rather
+                // than into a slot of the eval's own scope, which goes away with the eval. The
+                // check inside is step 5.f, which counts a function's name among `varNames` exactly
+                // as it counts a `var`'s.
+                (false, Some(depth)) => {
+                    Placement::Caller(depth, self.declare_eval_var(&name.name, depth, span)?)
+                }
+                (false, None) => Placement::Slot(self.declare(&name.name)),
             };
             placed.push((placement, function, span));
         }
@@ -1656,6 +1664,16 @@ impl Compiler<'_> {
             match placement {
                 Placement::Global(index) => self.chunk.emit(Instruction::StoreGlobal(index)),
                 Placement::Slot(slot) => self.chunk.emit(Instruction::StoreVariable(0, slot)),
+                // Step 15's `SetMutableBinding(fn, fo, false)`, and it is a *store* where a `var`
+                // has none: step 16 leaves an existing binding holding what it held, and step 15
+                // replaces it with the function. `eval("var f")` after `function f(){}` keeps the
+                // function; `eval("function f(){}")` after `var f = 1` does not keep the 1.
+                //
+                // Into the slot `declare_eval_var` predicted, at the depth the variable environment
+                // sits at — an ordinary store, because the prediction is exact.
+                Placement::Caller(depth, slot) => {
+                    self.chunk.emit(Instruction::StoreVariable(depth, slot));
+                }
             }
             self.chunk.emit(Instruction::Pop);
         }
@@ -1681,6 +1699,9 @@ enum Placement {
     Global(u32),
     /// An ordinary binding in the running scope.
     Slot(u32),
+    /// §19.2.1.1 step 15 — a binding in the *caller's* variable environment: how far out it is, and
+    /// the slot [`super::Compiler::predict_declared_slot`] says it will get.
+    Caller(u32, u32),
 }
 
 /// Where a well-known Symbol sits in the realm's table — see `crate::builtins::well_known_at`.

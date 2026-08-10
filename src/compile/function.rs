@@ -374,11 +374,15 @@ impl Compiler<'_> {
         // which a tail call has just taken down. Refusing it costs the four `tco-non-eval-*` runs
         // and is the honest reading; see DR-0027 on what a tail call for those would have to check.
         let tail = matches!(position, Position::Tail) && !direct_eval;
+        // §10.2.11 step 20 — read here, where the compiler is standing, because by run time a
+        // parameter default and a body statement are instructions in one chunk against one
+        // environment and nothing tells them apart.
+        let site = self.eval_site();
         self.chunk.emit(match (method, direct_eval, tail) {
-            (true, true, _) => Instruction::CallDirectEvalMethod(count),
+            (true, true, _) => Instruction::CallDirectEvalMethod { count, site },
             (true, false, false) => Instruction::CallMethod(count),
             (true, false, true) => Instruction::CallTailMethod(count),
-            (false, true, _) => Instruction::CallDirectEval(count),
+            (false, true, _) => Instruction::CallDirectEval { count, site },
             (false, false, false) => Instruction::Call(count),
             (false, false, true) => Instruction::CallTail(count),
         });
@@ -926,19 +930,29 @@ fn compile_body_once(
                 bound.push(None);
                 continue;
             };
-            let slot = compiler.declare_lexical(&name.name, crate::heap::Mutability::Mutable);
+            // A parameter shadows like a `let` and is not one: §10.2.11 puts it in the parameter
+            // environment, which a body eval's `var` never crosses. `function f(a) { eval('var a') }`
+            // is legal, and marking these lexical is what would stop it being.
+            let slot = compiler.declare_shadowing_var(&name.name, crate::heap::Mutability::Mutable);
             compiler.chunk.emit(Instruction::Uninitialise(slot));
             bound.push(Some(slot));
         }
         if let Some(rest) = &parameters.rest
             && let Binding::Identifier(name) = rest.as_ref()
         {
-            let slot = compiler.declare_lexical(&name.name, crate::heap::Mutability::Mutable);
+            let slot = compiler.declare_shadowing_var(&name.name, crate::heap::Mutability::Mutable);
             compiler.chunk.emit(Instruction::Uninitialise(slot));
             bound.push(Some(slot));
         }
     }
 
+    // §10.2.11 step 20 — everything from here to the end of the rest binding is the *formal
+    // parameter list*, which is a different variable environment from the body below it. Set around
+    // the emission rather than asked of the AST, because a default's expression may be arbitrarily
+    // deep and a computed key inside a pattern is in the list too: the flag is on while the
+    // compiler is in the list and off the moment it leaves, which no walk of the tree could get
+    // wrong by missing a production.
+    compiler.in_parameters = true;
     // §10.2.11 step 24 — the defaults run *inside* the callee, before the body and after the
     // arguments object is made. So `arguments` holds what the call actually passed and a default
     // that filled in for a missing one is nowhere in it, which is right and is only visible
@@ -1015,6 +1029,9 @@ fn compile_body_once(
             }
         }
     }
+
+    // …and the list ends here, with the rest parameter that closes it.
+    compiler.in_parameters = false;
 
     // §15.5.4 and §27.6.2 — the parameters are done, so this is where the generator is made and
     // everything after it becomes the parked body. Above the `async` handler below, because that

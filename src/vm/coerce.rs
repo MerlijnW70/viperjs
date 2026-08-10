@@ -574,6 +574,17 @@ impl Vm {
             },
         );
         let saved_environment = std::mem::replace(&mut self.environment, environment);
+        // Saved and **not replaced**, which is the one asymmetry in this pair. §19.2.1.1 step 12
+        // hands a sloppy direct eval the *caller's* variable environment, so the eval's `var`s
+        // belong where the caller's do and the field has to go on saying so while its chunk runs.
+        // The other two modes never read it — `Vm::eval_vars` answers `Global` whenever the frame
+        // count is back at the floor, which this call has just raised — so leaving it alone is the
+        // right answer for all three rather than a direct-eval special case.
+        //
+        // Restored by hand for the reason `Vm::nested` gives about the field above: an uncaught
+        // throw does not pop frames one at a time, so without this the caller carries on with a
+        // callee's environment as its variable scope.
+        let saved_var_environment = self.var_environment;
         let saved_completion = std::mem::replace(&mut self.completion, Value::Undefined);
         let base = self.stack.len();
         self.reentries += 1;
@@ -596,6 +607,7 @@ impl Vm {
         self.stack.truncate(base);
         self.completion = saved_completion;
         self.environment = saved_environment;
+        self.var_environment = saved_var_environment;
         self.floor = floor;
         answer
     }
@@ -615,11 +627,15 @@ impl Vm {
             },
         );
         let environment = self.environment;
+        // And the variable one with it, for exactly the reason this function's own documentation
+        // gives: the throw that skips the frame-by-frame restore skips both.
+        let var_environment = self.var_environment;
         let this_value = self.this_value;
         self.reentries += 1;
         let answer = self.nested_body(how, count, heap);
         self.reentries -= 1;
         self.environment = environment;
+        self.var_environment = var_environment;
         self.this_value = this_value;
         self.floor = floor;
         answer

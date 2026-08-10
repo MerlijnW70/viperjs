@@ -21,7 +21,7 @@
 //! it would into scopes it had built itself.
 
 use super::Vm;
-use crate::compile::{EvalVars, compile_direct_eval};
+use crate::compile::{EvalSite, EvalVars, compile_direct_eval};
 use crate::heap::{Binding, EnvironmentId, Heap};
 use crate::value::{Completion, Value};
 use std::collections::HashSet;
@@ -38,6 +38,7 @@ impl Vm {
         &mut self,
         source: Option<Value>,
         strict_caller: bool,
+        site: EvalSite,
         heap: &mut Heap,
     ) -> Completion<Value> {
         // §19.2.1.1 step 2 — anything that is not a String is answered unchanged and *not*
@@ -72,7 +73,7 @@ impl Vm {
         // §14.11 — whether the call is inside a `with`, which decides whether the evaluated
         // text may place its names at all. See `Heap::any_binding_object`.
         let dynamic = heap.any_binding_object(self.environment);
-        let vars = self.eval_vars(script.is_strict);
+        let vars = self.eval_vars(script.is_strict, site, heap);
         let chunk = match compile_direct_eval(&script, heap, chain, vars, dynamic) {
             Ok(chunk) => chunk,
             Err(error) => {
@@ -195,13 +196,43 @@ impl Vm {
     /// caller's frames ended, and the code inside it is at the top level of its own script however
     /// deep the Rust stack is. Counted the other way, `(0, eval)("eval('var x = 1')")` would decide
     /// it was inside whatever function happened to be running underneath.
-    fn eval_vars(&self, strict: bool) -> EvalVars {
+    fn eval_vars(&self, strict: bool, site: EvalSite, heap: &Heap) -> EvalVars {
         match (strict, self.frames.len() > self.floor.frames) {
             // §19.2.1.1 step 14 — strict code's declarations are its own and go away with it.
             (true, _) => EvalVars::Own,
-            (false, true) => EvalVars::Caller,
+            // §10.2.11 step 20 — a call in a parameter list is handed a variable environment
+            // ViperJS does not build. Asked before the depth below, because there is no depth that
+            // would be the right answer: the level it names is one this engine has no level for.
+            (false, true) if site == EvalSite::Parameters => EvalVars::CallerParameters,
+            (false, true) => EvalVars::Caller {
+                depth: self.var_environment_depth(heap),
+            },
             (false, false) => EvalVars::Global,
         }
+    }
+
+    /// How far out [`Vm::var_environment`] is from the environment the eval's own chunk will run in.
+    ///
+    /// Counted from the *caller's* running environment and then one more, because §19.2.1.1 step 12
+    /// gives the evaluated text a fresh child of that to hold its own `let`s — the environment
+    /// `perform_direct_eval` makes below. So the smallest answer is 1.
+    ///
+    /// The walk terminates for the reason every walk of this chain does: a parent existed before its
+    /// child, so the chain strictly decreases. Falling off the end without meeting the variable
+    /// environment is not a state a running machine can be in — a call sets both fields together —
+    /// and the saturating answer is the outermost level, which resolves nothing and declares
+    /// nothing rather than declaring somewhere wrong.
+    fn var_environment_depth(&self, heap: &Heap) -> u32 {
+        let mut hops = 1_u32;
+        let mut at = Some(self.environment);
+        while let Some(environment) = at {
+            if environment == self.var_environment {
+                return hops;
+            }
+            hops = hops.saturating_add(1);
+            at = heap.environment_at(environment, 1);
+        }
+        hops
     }
 
     /// The environments the caller is inside, **outermost first**, each with what it called its
@@ -244,11 +275,20 @@ impl Vm {
         found
     }
 
-    fn running_chain(&self, heap: &Heap) -> Vec<Vec<Binding>> {
+    fn running_chain(&self, heap: &Heap) -> Vec<(Vec<Binding>, usize)> {
         let mut chain = Vec::new();
         let mut at: Option<EnvironmentId> = Some(self.environment);
         while let Some(environment) = at {
-            chain.push(heap.environment_names(environment).unwrap_or(&[]).to_vec());
+            // The **slot count** beside the names, because the two are not the same number and a
+            // `var` this eval is about to declare needs both. `Heap::declare_in` appends past
+            // whichever is longer — a scope whose slots already run past its names gets the gap
+            // filled first — so a compiler predicting the index it will get has to know how far the
+            // slots reach. Named for that: `environment_size`'s own documentation says the two are
+            // not interchangeable, and this is the caller it was waiting for.
+            chain.push((
+                heap.environment_names(environment).unwrap_or(&[]).to_vec(),
+                heap.environment_size(environment).unwrap_or(0),
+            ));
             at = heap.environment_at(environment, 1);
         }
         chain.reverse();
