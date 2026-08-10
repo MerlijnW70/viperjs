@@ -461,6 +461,15 @@ impl Vm {
                     let key = self.global_name(running, name, heap)?;
                     self.declare_global(key, deletable, heap);
                 }
+                Instruction::DeleteVariable { depth, index } => {
+                    // A depth this chunk could not walk is a hand-built chunk rather than anything
+                    // the compiler emits, and the honest answer for it is the one §13.5.1.2 gives
+                    // for a name that is nowhere: nothing was deleted, and nothing is claimed.
+                    let gone = heap
+                        .environment_at(self.environment, depth)
+                        .is_some_and(|scope| heap.delete_in(scope, index));
+                    self.stack.push(Value::Boolean(gone));
+                }
                 Instruction::DeclareVar { name, depth } => {
                     let name = self.name_text(running, name, heap)?;
                     // The depth is counted from the environment this chunk runs in, and the walk
@@ -2423,13 +2432,14 @@ impl Vm {
             None => return Ok(()),
         };
         let answer = match found {
-            // §9.1.1.1.5 — a declarative binding is not deletable, whatever it is: a
-            // `var`, a parameter, a `let`, a function's own slot. The one exception the
-            // specification has is §19.2.1.1's direct eval, whose `var`s *are*, and
-            // ViperJS does not make those deletable either — which is a gap, not this
-            // instruction's business, and it is the same answer it gave before a `with`
-            // could be written around it.
-            crate::vm::dynamic::Resolved::Slot { .. } => false,
+            // §9.1.1.1.7 `DeleteBinding` — a declarative binding is not deletable whatever it
+            // is (a `var`, a parameter, a `let`, a function's own slot) **except** the one
+            // §19.2.1.1 step 16.b.ii.1 creates with `D` true, which is a direct eval's `var`.
+            // `Heap::delete_in` is the clause and answers for both cases; this said ViperJS
+            // did not implement the exception, which was true until it was.
+            crate::vm::dynamic::Resolved::Slot {
+                environment, index, ..
+            } => heap.delete_in(environment, index),
             // §9.1.1.2.7 `DeleteBinding` — `[[Delete]]` of the `with` object, which may
             // run a proxy's trap and so may throw. Own-only, like every `[[Delete]]`:
             // `with (o) { delete toString }` answers true and leaves

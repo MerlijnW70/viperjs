@@ -694,6 +694,23 @@ pub enum Instruction {
     /// §9.1.1.1.5 makes every one of those non-deletable — so that answer is a constant `false` and
     /// needs no instruction at all.
     DeleteGlobal(u32),
+    /// §9.1.1.1.7 `DeleteBinding` for a slot the compiler placed — the eval-created `var` alone.
+    ///
+    /// Emitted only where the resolved binding is a [`crate::heap::Declared::EvalVar`], because
+    /// every other declarative binding is permanent and the compiler answers `false` for those
+    /// without an instruction. So this is not "delete a local": it is the one exception
+    /// §19.2.1.1 step 16.b.ii.1 creates, reached by the depth and index that named it.
+    ///
+    /// It answers `false` rather than faulting when the binding turns out not to be deletable
+    /// after all. The compiler resolved it against a *model* of a running scope, and a model can
+    /// be out of date in one direction: another `eval` may have deleted the same binding first,
+    /// and a second `delete` of it is `false` and not an engine bug.
+    DeleteVariable {
+        /// How many environments out.
+        depth: u32,
+        /// Which slot there.
+        index: u32,
+    },
     /// Take a key and a base and push the property's value — `[[Get]]`, §10.1.8.
     GetProperty,
     /// Take a value, a key and a base; store the value and leave it on the stack — §10.1.9.
@@ -1524,6 +1541,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::CheckGlobalVar(_)
         | Instruction::CheckGlobalFunction(_)
         | Instruction::DeleteGlobal(_)
+        | Instruction::DeleteVariable { .. }
         | Instruction::SetCompletion
         | Instruction::CompletionUndefined
         | Instruction::Throw

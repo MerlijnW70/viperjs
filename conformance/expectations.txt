@@ -11658,9 +11658,7 @@ language/eval-code/direct/arrow-fn-body-cntns-arguments-var-bind-arrow-func-decl
 language/eval-code/direct/arrow-fn-no-pre-existing-arguments-bindings-are-present-arrow-func-declare-arguments-assign-incl-def-param-arrow-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a parameter list is not implemented yet
 language/eval-code/direct/arrow-fn-no-pre-existing-arguments-bindings-are-present-arrow-func-declare-arguments-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a parameter list is not implemented yet
 language/eval-code/direct/var-env-func-init-global-update-configurable.js :: it threw an object with no name: f descriptor should be enumerable; f descriptor should be writable
-language/eval-code/direct/var-env-func-init-local-new-delete.js :: it threw an object with no name: binding may be deleted Expected a ReferenceError to be thrown but no exception was thrown at all
 language/eval-code/direct/var-env-global-lex-non-strict.js :: expected a SyntaxError at runtime time, and nothing was thrown
-language/eval-code/direct/var-env-var-init-local-new-delete.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/eval-code/indirect/lex-env-heritage.js :: it threw ReferenceError: x is not defined
 language/eval-code/indirect/lex-env-heritage.js (strict) :: it threw ReferenceError: x is not defined
 language/eval-code/indirect/this-value-func.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «[object Object]») to be true

@@ -1020,7 +1020,38 @@ impl Compiler<'_> {
                 self.chunk.emit(Instruction::DeleteName(index));
                 Ok(())
             }
+            // …and §19.2.1.1 step 16.b.ii.1's `var` is the **one** declarative binding that is
+            // deletable, so a name the compiler placed is only certainly `false` when it is not
+            // that. The check is on the binding rather than on where it was found: an eval's own
+            // text, a closure written inside one, and the caller afterwards all reach the same
+            // slot by different depths.
             ExprKind::Identifier(name) => match self.binding(name) {
+                Some(found) if found.declared.is_deletable() => {
+                    self.chunk.emit(Instruction::DeleteVariable {
+                        depth: found.depth,
+                        index: found.index,
+                    });
+                    // …and **everything after this point resolves by name**, because the binding
+                    // this expression may remove is reachable two ways and the delete only closes
+                    // one of them. `Heap::delete_in` unspells the name, so nothing *resolved
+                    // afterwards* finds it; a `(depth, index)` the compiler has already handed out
+                    // is not a name and goes on reading the slot.
+                    //
+                    // That difference is what §13.5.1.1 step 2 cannot survive: `delete x; typeof x`
+                    // must answer `"undefined"` — an unresolvable reference is the one thing
+                    // `typeof` is written to tolerate — and a slot read answers with the emptiness
+                    // the delete left, which is a ReferenceError. Resolving by name gives both
+                    // halves at once: the read is unresolvable and the `typeof` says so quietly.
+                    //
+                    // Only from here on, and that is a real limit rather than an oversight: a
+                    // closure compiled **above** the `delete` in the same text still holds its
+                    // slot, so `var q = function () { return typeof x }; delete x; q()` throws
+                    // where it should answer `"undefined"`. Fixing that needs the two-pass
+                    // treatment `compile::function` gives a body containing a direct eval, and no
+                    // test in the suite reaches it.
+                    self.inside_eval = true;
+                    Ok(())
+                }
                 Some(_) => self.constant(Value::Boolean(false)),
                 None => {
                     let index = self.name(name)?;

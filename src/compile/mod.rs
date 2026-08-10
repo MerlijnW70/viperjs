@@ -893,14 +893,17 @@ pub fn compile_direct_eval(
 
 /// A binding of a scope that is already running, as the heap would have written it.
 ///
-/// §19.2.1.1 step 16.b creates a **mutable `var`**, which is the only kind that reaches here — both
-/// for a name the evaluated text declared and for the `%gap` that keeps the list and the slots the
-/// same length. See [`Compiler::predict_declared_slot`].
-fn modelled(name: &str) -> crate::heap::Binding {
+/// §19.2.1.1 step 16.b creates a **mutable `var`**, which is the only kind that reaches here. The
+/// two callers differ in one field and it matters: a name the evaluated text declared is step
+/// 16.b.ii.1's `CreateMutableBinding(vn, true)` and so is [`crate::heap::Declared::EvalVar`] — the
+/// one deletable binding in the language — while the `%gap` that keeps the list and the slots the
+/// same length is not a binding at all and must never answer `delete`. See
+/// [`Compiler::predict_declared_slot`].
+fn modelled(name: &str, declared: crate::heap::Declared) -> crate::heap::Binding {
     crate::heap::Binding {
         name: name.into(),
         mutability: Mutability::Mutable,
-        declared: crate::heap::Declared::Var,
+        declared,
     }
 }
 
@@ -1917,9 +1920,10 @@ impl<'a> Compiler<'a> {
         // level is the declaration's own destination and not something it crosses; a `let` is
         // §10.2.11 step 30's separate record, which the walk does cross. See
         // [`crate::heap::Declared`], including why a catch parameter counts as the first kind.
-        if self.binding(name).is_some_and(|found| {
-            found.depth <= depth && found.declared == crate::heap::Declared::Lexical
-        }) {
+        if self
+            .binding(name)
+            .is_some_and(|found| found.depth <= depth && found.declared.blocks_an_eval_var())
+        {
             return Err(CompileError {
                 kind: ErrorKind::EvalVarCollision(name.into()),
                 span,
@@ -1981,10 +1985,10 @@ impl<'a> Compiler<'a> {
         // is where the rest of that model comes from. A literal here would be a second answer to
         // `live`, and one nothing could ever distinguish from the first.
         while scope.len() < slots {
-            scope.push(Local::from(modelled("%gap")));
+            scope.push(Local::from(modelled("%gap", crate::heap::Declared::Var)));
         }
         let at = scope.len();
-        scope.push(Local::from(modelled(name)));
+        scope.push(Local::from(modelled(name, crate::heap::Declared::EvalVar)));
         // **Nothing writes the slot count back**, and that is not an omission. It is read only by
         // the padding above, which compares it against `scope.len()` — and after one append that
         // length *is* the new count, so a stale entry can never be the larger of the two again. A

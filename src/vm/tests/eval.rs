@@ -339,6 +339,62 @@ fn what_a_direct_eval_declares_goes_where_its_callers_variable_scope_is() {
         "4"
     );
 
+    // Step 16.b.ii.1 — `CreateMutableBinding(vn, **true**)`. Every other creator of a declarative
+    // binding passes `false`, so this is the only one in the language `delete` may take away, and
+    // §9.1.1.1.7 answering `true` for it is the whole of the difference.
+    assert_eq!(
+        run("(function () { eval('var d = 1'); return delete d; })()"),
+        "true"
+    );
+    // …and it is *gone*, not merely reported gone: a name that resolves nowhere is `undefined` to
+    // `typeof`, and a second `var` of the same name makes a fresh binding rather than finding this
+    // one still standing under a spelling nothing can reach.
+    assert_eq!(
+        run("(function () { eval('var d = 1'); delete d; return typeof d; })()"),
+        "undefined"
+    );
+    assert_eq!(
+        run("(function () { eval('var d = 1'); delete d; eval('var d = 2'); return d; })()"),
+        "2"
+    );
+    // Every *other* declarative binding stays permanent, which is the rule this is the exception
+    // to. A `var` the eval only re-declared was not created by step 16.b and keeps its own answer.
+    assert_eq!(
+        run("(function () { var x = 1; eval('var x'); return delete x; })()"),
+        "false"
+    );
+    assert_eq!(
+        run("(function () { let y = 1; return delete y; })()"),
+        "false"
+    );
+    assert_eq!(run("(function (a) { return delete a; })(1)"), "false");
+    // The slot cannot be given back — `declare_in` may only append precisely because every
+    // `(depth, index)` already handed out goes on naming what it named — so a deletion unspells the
+    // name *and* empties the slot. The second is what a reference compiled after the delete needs:
+    // it reads nothing and raises a ReferenceError rather than the `undefined` the slot was still
+    // holding. This is `var-env-var-init-local-new-delete.js`, whose two assertions are the two
+    // halves of that.
+    assert_eq!(
+        run("(function () { var initial, after; \
+             eval('initial = x; delete x; after = function () { x; }; var x;'); \
+             try { after(); return initial + '/no throw'; } \
+             catch (e) { return initial + '/' + e.constructor.name; } })()"),
+        "undefined/ReferenceError"
+    );
+    // …and reading it *inside* the evaluated text after the delete is the same ReferenceError,
+    // where `typeof` beside it is not. Both come from resolving by name once the delete has made a
+    // slot the compiler placed unreachable by any other route.
+    assert_eq!(
+        run("(function () { var r; \
+             eval('var x; delete x; try { r = x } catch (e) { r = e.constructor.name }'); \
+             return r; })()"),
+        "ReferenceError"
+    );
+    assert_eq!(
+        run("(function () { var r; eval('var x; delete x; r = typeof x;'); return r; })()"),
+        "undefined"
+    );
+
     // Step 5.f — a binding the walk out to the variable environment passes *through* is a
     // SyntaxError, because one name would otherwise mean two bindings with no rule saying which a
     // reference takes. The block's `let` is such a level and the function's own `var` is not.

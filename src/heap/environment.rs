@@ -89,6 +89,9 @@ pub struct Binding {
 /// the clause exempts a simple catch parameter from step 5.f precisely so that
 /// `try {} catch (e) { eval('var e') }` goes on working, which it has to because the web depends
 /// on it.
+///
+/// The third answer is about a *different* clause, and it is here because the two facts travel on
+/// the same binding and are decided at the same moment — see [`Declared::EvalVar`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Declared {
     /// A `var`, a parameter, a function declaration, a simple catch parameter, or a slot the
@@ -96,6 +99,38 @@ pub enum Declared {
     Var,
     /// A `let`, a `const`, a class, or an import — §10.2.11 step 30's own environment.
     Lexical,
+    /// A `var` a **direct `eval` created**, which is the one declarative binding the language makes
+    /// **deletable** — §19.2.1.1 step 16.b.ii.1 passes `true` for `CreateMutableBinding`'s `D`
+    /// where every other creator of a binding passes `false`.
+    ///
+    /// A `Var` for §19.2.1.1 step 5.f's purposes and everywhere else; the difference is only what
+    /// §9.1.1.1.7 `DeleteBinding` answers. It is a variant here rather than a second field because
+    /// nothing can be one without being the other: [`Heap::declare_in`] is the only thing that makes
+    /// one, and it is exactly step 16.b.
+    EvalVar,
+}
+
+impl Declared {
+    /// Whether §19.2.1.1 step 5.f's walk refuses to cross this — [`Declared::Lexical`] and no other.
+    ///
+    /// Asked rather than compared, so that a variant added later has to decide rather than being
+    /// swept into whichever side the `==` happened to be written on.
+    #[must_use]
+    pub fn blocks_an_eval_var(self) -> bool {
+        match self {
+            Self::Lexical => true,
+            Self::Var | Self::EvalVar => false,
+        }
+    }
+
+    /// Whether §9.1.1.1.7 `DeleteBinding` may take it away — step 16.b's `var` and no other.
+    #[must_use]
+    pub fn is_deletable(self) -> bool {
+        match self {
+            Self::EvalVar => true,
+            Self::Var | Self::Lexical => false,
+        }
+    }
 }
 
 /// What an assignment to a binding does — §9.1.1.1.5, which has three answers and not two.
@@ -429,12 +464,84 @@ impl Heap {
         names.push(Binding {
             name: name.into(),
             mutability,
-            // §19.2.1.1 step 16.b creates a `var`, which is the only thing that reaches here.
-            declared: Declared::Var,
+            // §19.2.1.1 step 16.b.ii.1 — `CreateMutableBinding(vn, **true**)`. This is the only
+            // creator of a declarative binding in the language that passes `true` for `D`, so this
+            // is the only place [`Declared::EvalVar`] is made, and `delete` answering `true` for
+            // one of these is the whole of what the variant is for.
+            declared: Declared::EvalVar,
         });
         record.slots.push(Some(Value::Undefined));
         record.names = Some(names.into());
         Some(at)
+    }
+
+    /// §9.1.1.1.7 `DeleteBinding(N)` for a declarative record — the other half of [`Heap::declare_in`].
+    ///
+    /// Answers what `delete` should: **true** when the binding was one a direct `eval` created and
+    /// is now gone, **false** for every other declarative binding, which §9.1.1.1 makes permanent.
+    /// A handle this heap did not issue, an index past the end, and an object environment are all
+    /// `false` — a `with` scope's names are properties and §9.1.1.2.7 deletes those its own way.
+    ///
+    /// **The slot is not given back, and it cannot be.** `declare_in` may only append precisely
+    /// because every `(depth, index)` already compiled goes on naming the slot it named; removing
+    /// one would move every slot above it and silently repoint code that is already running. So a
+    /// deletion is two edits that leave the length alone:
+    ///
+    /// - the **name** becomes `%deleted`, which is in neither `IdentifierStart` nor
+    ///   `IdentifierPart`, so nothing a source can write resolves to it again and a later
+    ///   `eval("var x")` appends a fresh binding rather than finding this one;
+    /// - the **slot** becomes empty, so a reference compiled *before* the delete — the closure in
+    ///   `var-env-var-init-local-new-delete.js` is exactly that — reads nothing and raises a
+    ///   ReferenceError instead of the `undefined` the slot would otherwise still be holding.
+    ///
+    /// The second is why emptying is not merely tidiness: the name is unreachable after the first
+    /// edit, but a `(depth, index)` that was resolved while the binding existed is not.
+    pub fn delete_in(&mut self, environment: EnvironmentId, index: u32) -> bool {
+        let at = index as usize;
+        let Some(record) = self.record_mut(environment) else {
+            return false;
+        };
+        // **One check and not two.** An object environment's `names` is `None` — a `with` scope's
+        // bindings are the object's properties and §9.1.1.2.7 deletes those its own way — so it
+        // fails here for the same reason an index past the end of the list does. A separate
+        // `binding_object` guard above this could not change the answer, which is what mutation
+        // coverage said by surviving its removal.
+        let Some(names) = record.names.as_deref() else {
+            return false;
+        };
+        if !names
+            .get(at)
+            .is_some_and(|binding| binding.declared.is_deletable())
+        {
+            return false;
+        }
+        // Rebuilt rather than reached into a second time. The index was proved to be in the list
+        // one line above, so a `get_mut` here would be a branch no input can take — and an
+        // unreachable branch is a decision no test can hold.
+        let renamed: Rc<[Binding]> = names
+            .iter()
+            .enumerate()
+            .map(|(slot, binding)| match slot == at {
+                true => Binding {
+                    name: "%deleted".into(),
+                    mutability: binding.mutability,
+                    // Not `Var`: nothing may resolve here again, and leaving it deletable would
+                    // let a second `delete` of the same index answer `true` for a binding that is
+                    // already gone.
+                    declared: Declared::Lexical,
+                },
+                false => binding.clone(),
+            })
+            .collect();
+        record.names = Some(renamed);
+        // …and the slot is emptied in the same shape, for the same reason: `slots` is at least as
+        // long as `names`, so an indexed write would be a bounds check nothing can fail.
+        for (slot, value) in record.slots.iter_mut().enumerate() {
+            if slot == at {
+                *value = None;
+            }
+        }
+        true
     }
 
     /// The environment `depth` parents out from `from`.
@@ -806,6 +913,87 @@ mod tests {
         // is what stops a function called out of one from resolving dynamically for ever.
         assert!(!heap.any_binding_object(nested));
     }
+    #[test]
+    fn only_a_binding_a_direct_eval_made_may_be_deleted_and_its_slot_stays() {
+        use crate::heap::Mutability;
+        let mut heap = Heap::new();
+        // A `var` the *compiler* placed, which §9.1.1.1 makes permanent, beside one an `eval`
+        // created, which §19.2.1.1 step 16.b.ii.1 makes deletable. The two are the whole point.
+        let names: Rc<[Binding]> = vec![Binding {
+            name: "kept".into(),
+            mutability: Mutability::Mutable,
+            declared: Declared::Var,
+        }]
+        .into();
+        let scope = heap.new_named_environment(None, 1, names);
+        let made = heap
+            .declare_in(scope, "gone", Mutability::Mutable)
+            .expect("a slot");
+        assert_eq!(made, 1);
+
+        // The permanent one refuses, and refusing must leave it exactly as it was — a `delete` that
+        // answered `false` after emptying the slot would be the worst of both.
+        assert!(!heap.delete_in(scope, 0));
+        assert_eq!(
+            heap.environment_names(scope)
+                .and_then(|names| names.first().map(|binding| binding.name.to_string())),
+            Some("kept".to_string())
+        );
+
+        heap.set_variable(scope, 0, Value::Number(7.0));
+        assert!(heap.delete_in(scope, made));
+        // The binding beside it is untouched — both its name and its value — which is what says
+        // the deletion is at an index rather than across the scope.
+        assert!(matches!(
+            heap.variable(scope, 0),
+            Some(Some(Value::Number(seven))) if seven == 7.0
+        ));
+        // The slot is **still there** — `declare_in` may only append because every `(depth, index)`
+        // already handed out goes on naming what it named, and giving this one back would move
+        // every slot above it.
+        assert_eq!(heap.environment_size(scope), Some(2));
+        // …holding nothing, so a reference compiled while it existed reads a dead zone rather than
+        // the `undefined` it was left with.
+        assert!(matches!(heap.variable(scope, made), Some(None)));
+        // …under a name no source can spell, so nothing resolves to it again.
+        let listed: Vec<String> = heap
+            .environment_names(scope)
+            .expect("names")
+            .iter()
+            .map(|binding| binding.name.to_string())
+            .collect();
+        assert_eq!(listed, vec!["kept".to_string(), "%deleted".to_string()]);
+        // …and it does not answer a second time, which is what stops a reused index claiming a
+        // binding it never named.
+        assert!(!heap.delete_in(scope, made));
+    }
+
+    #[test]
+    fn deleting_what_is_not_a_declarative_binding_answers_false_rather_than_guessing() {
+        use crate::heap::Mutability;
+        let mut heap = Heap::new();
+        let scope = heap.new_environment(None, 0);
+        let made = heap
+            .declare_in(scope, "gone", Mutability::Mutable)
+            .expect("a slot");
+
+        // Past the end of the list. No compiled chunk can ask for this — the index came from the
+        // declaration — and a hand-built one can.
+        assert!(!heap.delete_in(scope, made + 7));
+
+        // A handle this heap never issued. An `EnvironmentId` is an index rather than a token, so
+        // one borrowed from *another* heap would collide with a real one here — the miss has to be
+        // past the end of this heap's own table to be a miss at all.
+        assert!(!heap.delete_in(EnvironmentId(9_999), 0));
+
+        // §9.1.1.2 — a `with` scope's names are an object's **properties**, and §9.1.1.2.7 deletes
+        // those its own way. Answering here would delete by index into a list this kind of scope
+        // does not have.
+        let object = heap.new_object(None);
+        let with = heap.new_object_environment(None, object);
+        assert!(!heap.delete_in(with, 0));
+    }
+
     #[test]
     fn a_running_scope_can_take_a_var_and_only_by_appending() {
         use crate::heap::Mutability;
