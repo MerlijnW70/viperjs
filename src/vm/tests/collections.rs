@@ -556,3 +556,35 @@ fn a_collection_built_from_an_iterable_takes_one_element_at_a_time_and_closes_on
         "next,return,RangeError"
     );
 }
+
+#[test]
+fn a_weak_collection_reads_its_iterable_the_same_way_a_strong_one_does() {
+    // §24.3.1.1 and §24.4.1.1 both defer to §24.1.1.2, and `weak.rs` held a verbatim copy of the
+    // loop rather than calling it — so fixing `Map` and `Set` left `WeakMap` and `WeakSet` exactly
+    // as they were. This is the shape that told them apart.
+    //
+    // The iterable is **endless**, which is what makes the difference loud: taking one element at a
+    // time refuses the first and closes, where gathering the whole thing first runs until a budget
+    // stops it and reports a RangeError where §24.1.1.2 step 3.c wants a TypeError. `next` gives up
+    // after three draws so a regression fails in a moment rather than hanging the suite.
+    let endless = "var t = []; var drawn = 0; var it = {}; \
+         it[Symbol.iterator] = function () { return { \
+             next: function () { \
+                 if (++drawn > 3) { throw new Error('drew past the first refusal') } \
+                 t.push('next'); return { value: 1, done: false } }, \
+             'return': function () { t.push('return'); return { done: true } } } }; ";
+    assert_eq!(
+        run(&format!(
+            "{endless} try {{ new WeakMap(it) }} catch (e) {{ t.push(e.constructor.name) }} t.join(',')"
+        )),
+        "next,return,TypeError"
+    );
+    // A WeakSet has no entry-shape rule, so what refuses is the *adder*: a primitive cannot be held
+    // weakly. It closes for the same reason and at the same point.
+    assert_eq!(
+        run(&format!(
+            "{endless} try {{ new WeakSet(it) }} catch (e) {{ t.push(e.constructor.name) }} t.join(',')"
+        )),
+        "next,return,TypeError"
+    );
+}

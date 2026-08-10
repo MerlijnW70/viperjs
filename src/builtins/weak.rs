@@ -83,32 +83,17 @@ fn construct(
             "the collection's adder is not a function",
         ));
     }
-    for element in super::promise_group::iterable_to_list(vm, heap, iterable)? {
-        match kind.keyed() {
-            // §24.3.1.1 — each element of a WeakMap's iterable must be an object with a `0` and a
-            // `1`. A primitive there is a TypeError rather than an entry holding `undefined`.
-            true => {
-                let Value::Object(_) = element else {
-                    return Err(Abrupt::type_error(
-                        "each entry of a WeakMap's iterable must be an object",
-                    ));
-                };
-                let first = key(heap, "0");
-                let second = key(heap, "1");
-                let entry_key = vm.get_property_key(element, first, heap)?;
-                let entry_value = vm.get_property_key(element, second, heap)?;
-                vm.call_value(
-                    adder,
-                    Value::Object(object),
-                    &[entry_key, entry_value],
-                    heap,
-                )?;
-            }
-            false => {
-                vm.call_value(adder, Value::Object(object), &[element], heap)?;
-            }
-        }
-    }
+    // §24.3.1.1 step 8 and §24.4.1.1 step 8 both defer to §24.1.1.2, and so does this: the loop
+    // was a verbatim copy of `Map`'s and kept its bugs when that one was fixed.
+    super::collection::add_entries_from_iterable(
+        vm,
+        heap,
+        object,
+        adder,
+        iterable,
+        kind.keyed(),
+        "each entry of a WeakMap's iterable must be an object",
+    )?;
     Ok(Value::Object(object))
 }
 

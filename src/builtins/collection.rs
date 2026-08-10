@@ -262,12 +262,40 @@ fn construct(
             "the collection's adder is not a function",
         ));
     }
-    // §24.1.1.2 step 3 — **one element at a time, and every failure closes the iterator.** This
-    // used to gather the whole iterable into a list first and then loop over it, which is wrong
-    // twice over and both halves are visible to a program: `new Map([0, 1])` drew *every* value
-    // before refusing the first, and it never called `return` at all. The clause is a `Repeat` of
-    // `IteratorStepValue` with an `IfAbruptCloseIterator` after each of the four steps that can
-    // throw.
+    add_entries_from_iterable(
+        vm,
+        heap,
+        object,
+        adder,
+        iterable,
+        map,
+        "each entry of a Map's iterable must be an object",
+    )?;
+    Ok(Value::Object(object))
+}
+
+/// §24.1.1.2 `AddEntriesFromIterable`, for all four collections.
+///
+/// **One element at a time, and every failure closes the iterator.** Both halves used to be wrong
+/// and both are visible to a program: this gathered the whole iterable into a list and then looped,
+/// so `new Map([0, 1])` drew *every* value before refusing the first, and `return` was never called
+/// at all. An **infinite** iterable made the difference louder still — the eager form ran until the
+/// heap budget stopped it and reported a RangeError where the clause wants a TypeError on the first
+/// element, which is what `iterator-items-are-not-object-close-iterator.js` asks about.
+///
+/// Shared rather than written per collection: `WeakMap` and `WeakSet` had a verbatim copy of this
+/// loop, so fixing `Map` and `Set` left them exactly as they were. Four constructors differ in two
+/// things — whether an element is an entry pair and what to call it in the message — and in nothing
+/// else.
+pub(super) fn add_entries_from_iterable(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    object: ObjectId,
+    adder: Value,
+    iterable: Value,
+    keyed: bool,
+    entries_must_be_objects: &'static str,
+) -> Completion<()> {
     let walk = super::iterator::Walk::over(vm, heap, iterable)?;
     while let Some(element) = walk.step(vm, heap)? {
         // Closed with the *original* completion kept, which is what `IfAbruptCloseIterator` means
@@ -275,12 +303,20 @@ fn construct(
         // itself does when it is closing because something already went wrong. `Walk::close` is
         // that form — `iterator-close-failure-after-set-failure.js` is the file that tells them
         // apart, and it wants the adder's error rather than the close's.
-        if let Err(abrupt) = add_one(vm, heap, object, adder, element, map) {
+        if let Err(abrupt) = add_one(
+            vm,
+            heap,
+            object,
+            adder,
+            element,
+            keyed,
+            entries_must_be_objects,
+        ) {
             walk.close(vm, heap);
             return Err(abrupt);
         }
     }
-    Ok(Value::Object(object))
+    Ok(())
 }
 
 /// One element of §24.1.1.2's iterable, added — steps 3.c to 3.i.
@@ -294,19 +330,18 @@ fn add_one(
     object: ObjectId,
     adder: Value,
     element: Value,
-    map: bool,
+    keyed: bool,
+    entries_must_be_objects: &'static str,
 ) -> Completion<()> {
-    if !map {
+    if !keyed {
         vm.call_value(adder, Value::Object(object), &[element], heap)?;
         return Ok(());
     }
-    // Step 3.c — each element of a Map's iterable must itself be an object with a `0` and a `1`. A
-    // primitive there is a TypeError rather than an entry with `undefined` in it, and the check is
-    // *before* either `Get`.
+    // Step 3.c — each element of a keyed collection's iterable must itself be an object with a `0`
+    // and a `1`. A primitive there is a TypeError rather than an entry with `undefined` in it, and
+    // the check is *before* either `Get`.
     let Value::Object(_) = element else {
-        return Err(Abrupt::type_error(
-            "each entry of a Map's iterable must be an object",
-        ));
+        return Err(Abrupt::type_error(entries_must_be_objects));
     };
     let first = key(heap, "0");
     let second = key(heap, "1");

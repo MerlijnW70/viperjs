@@ -11568,14 +11568,6 @@ built-ins/Uint8Array/prototype/toHex/nonconstructor.js :: it threw an object wit
 built-ins/Uint8Array/prototype/toHex/nonconstructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
 built-ins/Uint8Array/prototype/toHex/results.js :: it threw TypeError: what was called is not a function
 built-ins/Uint8Array/prototype/toHex/results.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/WeakMap/iterator-close-after-set-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/WeakMap/iterator-close-after-set-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/WeakMap/iterator-item-first-entry-returns-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/WeakMap/iterator-item-first-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/WeakMap/iterator-item-second-entry-returns-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/WeakMap/iterator-item-second-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/WeakMap/iterator-items-are-not-object-close-iterator.js :: it threw an object with no name: Expected a TypeError but got a RangeError
-built-ins/WeakMap/iterator-items-are-not-object-close-iterator.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/WeakMap/prototype/getOrInsert/adds-object-element.js :: it threw TypeError: what was called is not a function
 built-ins/WeakMap/prototype/getOrInsert/adds-object-element.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/WeakMap/prototype/getOrInsert/adds-symbol-element.js :: it threw TypeError: what was called is not a function
@@ -11623,8 +11615,6 @@ built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-
 built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-object-key.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-symbol-key.js :: it threw TypeError: what was called is not a function
 built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-symbol-key.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/WeakSet/iterator-close-after-add-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/WeakSet/iterator-close-after-add-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
 language/arguments-object/mapped/mapped-arguments-nonconfigurable-delete-2.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 language/arguments-object/mapped/mapped-arguments-nonconfigurable-delete-3.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 language/arguments-object/mapped/mapped-arguments-nonconfigurable-delete-4.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
