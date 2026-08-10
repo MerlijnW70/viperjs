@@ -46,6 +46,47 @@ pub struct Negative {
     pub kind: String,
 }
 
+/// The block's lines, split on **every** line terminator §12.3 names — not just the two
+/// `str::lines` knows.
+///
+/// `str::lines` splits on a line feed and tolerates a carriage return before it, which is right for
+/// a file written with LF or CRLF endings and wrong for one written with **CR alone**. test262 has
+/// such files deliberately: `line-terminator-normalisation-CR.js` is *about* carriage returns and
+/// is written with them, so its whole frontmatter arrived here as a single line, its `includes:`
+/// was never seen, and the test ran without the harness file it named. It reported
+/// `assertToStringOrNativeFunction is not defined`, which reads like an engine gap and is this.
+///
+/// **`<CR><LF>` is one terminator and not two**, which is §12.3's own rule and is the whole reason
+/// this is written out rather than expressed as a `split` on a set of characters. Splitting on both
+/// characters leaves an empty piece between them, and most of test262 is CRLF — so every block
+/// gained a blank line between each pair of real ones, `negative:` stopped finding the indented
+/// `phase:` under it, and 8,632 negative tests reported the SyntaxError they were written to
+/// require as a failure to parse. Measured, and it is the reason the pair is a case here.
+///
+/// U+2028 and U+2029 are here for completeness rather than for a file that needs one: the lexer
+/// treats all four as terminators, and a frontmatter reader that knew fewer would be a second
+/// opinion about where a line ends.
+fn terminated_lines(block: &str) -> Vec<&str> {
+    let mut lines = Vec::new();
+    let mut rest = block;
+    loop {
+        let Some(at) = rest.find(['\n', '\r', '\u{2028}', '\u{2029}']) else {
+            lines.push(rest);
+            return lines;
+        };
+        lines.push(&rest[..at]);
+        let after = &rest[at..];
+        // The pair first, so that a `\r` immediately followed by a `\n` is stepped over whole.
+        let width = match after.starts_with("\r\n") {
+            true => 2,
+            // Not one byte: U+2028 and U+2029 are three each, and cutting into the middle of one
+            // would leave a fragment that is not a `str` boundary.
+            false => after.chars().next().map_or(1, char::len_utf8),
+        };
+        rest = &after[width..];
+    }
+}
+
 impl Frontmatter {
     /// Read the block out of a test file.
     ///
@@ -55,7 +96,7 @@ impl Frontmatter {
         let start = source.find("/*---")? + "/*---".len();
         let end = source[start..].find("---*/")? + start;
         let mut block = Self::default();
-        let mut lines = source[start..end].lines().peekable();
+        let mut lines = terminated_lines(&source[start..end]).into_iter().peekable();
         while let Some(line) = lines.next() {
             let (key, value) = match line.split_once(':') {
                 // A continuation of a folded scalar, or a blank line inside one. The keys this
@@ -181,6 +222,25 @@ mod tests {
         let block = Frontmatter::parse(flush).expect("a block"); // same
         assert_eq!(block.includes, ["assert.js", "compareArray.js"]);
         // …and the first line without a `- ` ends the list rather than joining it.
+        assert_eq!(block.description, "after");
+    }
+
+    #[test]
+    fn a_block_written_with_carriage_returns_alone_is_still_read_line_by_line() {
+        // test262 has files written with **CR** endings on purpose — the two
+        // `line-terminator-normalisation` tests are about carriage returns and use them — and
+        // `str::lines` does not split on a lone one. Read that way the whole block is a single
+        // line, the first `:` wins, and every key after it is lost: the file runs without the
+        // harness it named and fails complaining about a name the harness defines.
+        let carriage = "/*---\rincludes: [compareArray.js]\rflags: [onlyStrict]\r---*/";
+        let block = Frontmatter::parse(carriage).expect("a block"); // the test is about it
+        assert_eq!(block.includes, ["compareArray.js"]);
+        assert!(block.has("onlyStrict"));
+
+        // …and CRLF still yields one line per line rather than one blank between each pair.
+        let both = "/*---\r\nincludes: [assert.js]\r\ndescription: after\r\n---*/";
+        let block = Frontmatter::parse(both).expect("a block"); // same
+        assert_eq!(block.includes, ["assert.js"]);
         assert_eq!(block.description, "after");
     }
 
