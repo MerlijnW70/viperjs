@@ -1092,6 +1092,19 @@ struct Compiler<'a> {
     /// SyntaxError. That is not the same question as [`Compiler::global_vars`], and this field used
     /// to answer both — which made every direct eval in a function evaluate to `undefined`.
     is_script: bool,
+    /// Whether §14.2.2's completion value is kept by the statements being compiled *right now*.
+    ///
+    /// Starts equal to [`Compiler::is_script`] and is not the same question, which is why it is a
+    /// second field rather than a use of that one. `is_script` answers three: whether a `return`
+    /// here is a Syntax Error, whether a call here can be in tail position, and whether the
+    /// completion value is anybody's business. §14.15.3 step 3 needs the third turned off on its
+    /// own — a `finally` block's value is **discarded** when the block completes normally, so
+    /// `1; try { 2 } finally { 3 }` is 2 — and turning `is_script` off around it would quietly make
+    /// `return` legal at the top level of a script's `finally` and put its calls in tail position.
+    ///
+    /// That is the split this project keeps having to make: see `notes/FINDINGS.md` on one flag
+    /// answering two questions, which this very field is the previous instance of.
+    keeps_completion: bool,
     /// Whether a `var` here becomes a property of the global object rather than a slot.
     ///
     /// §16.1.7's split, and the half that is *not* about being a script. A script's `var`s are
@@ -1318,6 +1331,7 @@ impl<'a> Compiler<'a> {
             this_binding: None,
             derived_fields: None,
             is_script: true,
+            keeps_completion: true,
             global_vars: true,
             deletable: Deletable::No,
             seeded_scopes: 0,

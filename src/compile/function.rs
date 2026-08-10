@@ -784,6 +784,7 @@ fn compile_body_once(
             .intern(&name.encode_utf16().collect::<Vec<_>>())
     });
     compiler.is_script = false;
+    compiler.keeps_completion = false;
     compiler.global_vars = false;
     // The scopes this body is written *inside*, which every depth it resolves is measured against
     // — see `Compiler::own_depth`.

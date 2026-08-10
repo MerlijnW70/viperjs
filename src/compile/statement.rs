@@ -94,7 +94,7 @@ impl Compiler<'_> {
                 // §14.2.2's completion value is the *script's*. What a statement inside a
                 // function evaluates to is nobody's business but `return`'s, so its value is
                 // discarded rather than allowed to overwrite the script's.
-                if self.is_script {
+                if self.keeps_completion {
                     self.chunk.emit(Instruction::SetCompletion);
                 } else {
                     self.chunk.emit(Instruction::Pop);
@@ -321,7 +321,7 @@ impl Compiler<'_> {
     /// Nothing at all outside Script code, where §14.2.2's value is not kept — see the expression
     /// statement above for the same test and the same reason.
     fn begin_completion(&mut self, statement: &Stmt) {
-        if !self.is_script || !Self::starts_a_completion(&statement.kind) {
+        if !self.keeps_completion || !Self::starts_a_completion(&statement.kind) {
             return;
         }
         // Through the register rather than the stack: a statement is stack-neutral, and this runs
@@ -1069,7 +1069,7 @@ impl Compiler<'_> {
                     }
                     Ok(())
                 }
-                Crossing::Finally(body) => self.block(body),
+                Crossing::Finally(body) => self.finally_block(body),
                 Crossing::Iterator(slot, closing) => self.emit_close(*slot, Check::Loop, *closing),
             };
             if outcome.is_err() {
@@ -1420,7 +1420,7 @@ impl Compiler<'_> {
             // The normal way out: forget the handler, then run the finally.
             self.chunk.emit(Instruction::PopHandler);
             if let Some(finalizer) = &statement.finalizer {
-                self.block(finalizer)?;
+                self.finally_block(finalizer)?;
             }
             let end = self.chunk.emit_jump(Instruction::Jump);
             // …and the other way out, carrying whatever was thrown. The value is parked in a
@@ -1430,7 +1430,7 @@ impl Compiler<'_> {
             self.chunk.emit(Instruction::StoreVariable(0, saved));
             self.chunk.emit(Instruction::Pop);
             if let Some(finalizer) = &statement.finalizer {
-                self.block(finalizer)?;
+                self.finally_block(finalizer)?;
             }
             self.chunk.emit(Instruction::LoadVariable(0, saved));
             self.chunk.emit(Instruction::Throw);
@@ -1439,6 +1439,32 @@ impl Compiler<'_> {
         let _ = span;
         Ok(())
     }
+    /// A `finally` block, whose statements' values §14.15.3 step 3 throws away.
+    ///
+    /// "If F is a normal completion, set F to B" — so a finalizer that falls off its own end
+    /// contributes nothing, and `1; try { 2 } finally { 3 }` is 2 rather than 3. That was 3 here
+    /// until this existed.
+    ///
+    /// Every place a finalizer is emitted comes through here, and there are three: the ordinary
+    /// way out, the unwinding one, and [`Crossing::Finally`] for a `break` or a `return` that
+    /// jumps past it. Three call sites is exactly why this is a function.
+    ///
+    /// **The abrupt half of step 3 is still wrong, and this is not the place it is wrong.** When
+    /// the finalizer leaves by a `break`, `continue` or `return`, `F` stays the finalizer's own
+    /// completion and step 4's `UpdateEmpty(F, undefined)` is what the statement answers — so
+    /// `do { try { 39 } finally { 42; break } } while (false)` is **42**, and with no value in the
+    /// finalizer it is `undefined` rather than the `try`'s 39. ViperJS answers 39 for both, and
+    /// answered 39 before this change too; `language/statements/try/completion-values.js` is the
+    /// file, and it is still listed. Parking the value across the finalizer and restoring it on the
+    /// normal path was tried and reverted: it is **indistinguishable** from not tracking at all,
+    /// because the abrupt exits do not reach the restore for a reason that is not this function's.
+    fn finally_block(&mut self, finalizer: &[Stmt]) -> Result<(), CompileError> {
+        let kept = std::mem::replace(&mut self.keeps_completion, false);
+        let compiled = self.block(finalizer);
+        self.keeps_completion = kept;
+        compiled
+    }
+
     /// The try block and its catch clause, up to the point where the finally would begin.
     fn try_body(
         &mut self,

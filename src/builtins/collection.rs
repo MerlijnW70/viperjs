@@ -262,33 +262,63 @@ fn construct(
             "the collection's adder is not a function",
         ));
     }
-    for element in super::promise_group::iterable_to_list(vm, heap, iterable)? {
-        match map {
-            // §24.1.1.2 — each element of a Map's iterable must itself be an object with a `0` and
-            // a `1`. A primitive there is a TypeError rather than an entry with `undefined` in it.
-            true => {
-                let Value::Object(_) = element else {
-                    return Err(Abrupt::type_error(
-                        "each entry of a Map's iterable must be an object",
-                    ));
-                };
-                let first = key(heap, "0");
-                let second = key(heap, "1");
-                let entry_key = vm.get_property_key(element, first, heap)?;
-                let entry_value = vm.get_property_key(element, second, heap)?;
-                vm.call_value(
-                    adder,
-                    Value::Object(object),
-                    &[entry_key, entry_value],
-                    heap,
-                )?;
-            }
-            false => {
-                vm.call_value(adder, Value::Object(object), &[element], heap)?;
-            }
+    // §24.1.1.2 step 3 — **one element at a time, and every failure closes the iterator.** This
+    // used to gather the whole iterable into a list first and then loop over it, which is wrong
+    // twice over and both halves are visible to a program: `new Map([0, 1])` drew *every* value
+    // before refusing the first, and it never called `return` at all. The clause is a `Repeat` of
+    // `IteratorStepValue` with an `IfAbruptCloseIterator` after each of the four steps that can
+    // throw.
+    let walk = super::iterator::Walk::over(vm, heap, iterable)?;
+    while let Some(element) = walk.step(vm, heap)? {
+        // Closed with the *original* completion kept, which is what `IfAbruptCloseIterator` means
+        // by `? IteratorClose(iteratorRecord, k)`: §7.4.9 step 4 discards whatever the `return`
+        // itself does when it is closing because something already went wrong. `Walk::close` is
+        // that form — `iterator-close-failure-after-set-failure.js` is the file that tells them
+        // apart, and it wants the adder's error rather than the close's.
+        if let Err(abrupt) = add_one(vm, heap, object, adder, element, map) {
+            walk.close(vm, heap);
+            return Err(abrupt);
         }
     }
     Ok(Value::Object(object))
+}
+
+/// One element of §24.1.1.2's iterable, added — steps 3.c to 3.i.
+///
+/// Its own function so the caller has a single `Result` to close the iterator on. Written the other
+/// way round, each of the four throwing steps needs its own close and its own early return, and the
+/// one that gets forgotten is the one no test happens to reach.
+fn add_one(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    object: ObjectId,
+    adder: Value,
+    element: Value,
+    map: bool,
+) -> Completion<()> {
+    if !map {
+        vm.call_value(adder, Value::Object(object), &[element], heap)?;
+        return Ok(());
+    }
+    // Step 3.c — each element of a Map's iterable must itself be an object with a `0` and a `1`. A
+    // primitive there is a TypeError rather than an entry with `undefined` in it, and the check is
+    // *before* either `Get`.
+    let Value::Object(_) = element else {
+        return Err(Abrupt::type_error(
+            "each entry of a Map's iterable must be an object",
+        ));
+    };
+    let first = key(heap, "0");
+    let second = key(heap, "1");
+    let entry_key = vm.get_property_key(element, first, heap)?;
+    let entry_value = vm.get_property_key(element, second, heap)?;
+    vm.call_value(
+        adder,
+        Value::Object(object),
+        &[entry_key, entry_value],
+        heap,
+    )?;
+    Ok(())
 }
 
 /// The collection `this` is, or the TypeError §24 asks for.

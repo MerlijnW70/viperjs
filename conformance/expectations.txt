@@ -1531,16 +1531,6 @@ built-ins/JSON/stringify/value-bigint-tojson.js :: it threw TypeError: a BigInt 
 built-ins/JSON/stringify/value-bigint-tojson.js (strict) :: it threw TypeError: a BigInt cannot be serialised to JSON
 built-ins/JSON/stringify/value-bigint.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/JSON/stringify/value-bigint.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Map/iterator-close-after-set-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/Map/iterator-close-after-set-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/Map/iterator-close-failure-after-set-failure.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/Map/iterator-close-failure-after-set-failure.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/Map/iterator-item-first-entry-returns-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/Map/iterator-item-first-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/Map/iterator-item-second-entry-returns-abrupt.js :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/Map/iterator-item-second-entry-returns-abrupt.js (strict) :: it threw an object with no name: Expected a Test262Error but got a RangeError
-built-ins/Map/iterator-items-are-not-object-close-iterator.js :: it threw an object with no name: Expected a TypeError but got a RangeError
-built-ins/Map/iterator-items-are-not-object-close-iterator.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Map/prototype/getOrInsert/append-new-values-normalizes-zero-key.js :: it threw TypeError: what was called is not a function
 built-ins/Map/prototype/getOrInsert/append-new-values-normalizes-zero-key.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Map/prototype/getOrInsert/append-new-values.js :: it threw TypeError: what was called is not a function
@@ -1902,8 +1892,6 @@ built-ins/Set/prototype/isDisjointFrom/set-like-class-mutation.js :: it threw an
 built-ins/Set/prototype/isDisjointFrom/set-like-class-mutation.js (strict) :: it threw an object with no name: Set.prototype.isDisjointFrom should not call its argument's has method with values from this which have been deleted before visiting
 built-ins/Set/prototype/isSubsetOf/set-like-class-mutation.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true
 built-ins/Set/prototype/isSubsetOf/set-like-class-mutation.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true
-built-ins/Set/set-iterator-close-after-add-failure.js :: it threw an object with no name: Expected a Error but got a RangeError
-built-ins/Set/set-iterator-close-after-add-failure.js (strict) :: it threw an object with no name: Expected a Error but got a RangeError
 built-ins/ShadowRealm/WrappedFunction/length-throws-typeerror.js :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/WrappedFunction/length-throws-typeerror.js (strict) :: it threw ReferenceError: ShadowRealm is not defined
 built-ins/ShadowRealm/WrappedFunction/length.js :: it threw ReferenceError: ShadowRealm is not defined
@@ -12472,14 +12460,8 @@ language/statements/generators/scope-param-elem-var-open.js :: it threw SyntaxEr
 language/statements/generators/scope-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a parameter list is not implemented yet
 language/statements/generators/scope-param-rest-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a parameter list is not implemented yet
 language/statements/let/syntax/let-newline-yield-in-generator-function.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/statements/try/completion-values.js :: it threw an object with no name: Expected SameValue(«39», «undefined») to be true
-language/statements/try/completion-values.js (strict) :: it threw an object with no name: Expected SameValue(«39», «undefined») to be true
-language/statements/try/cptn-finally-from-catch.js :: it threw an object with no name: Expected SameValue(«5», «undefined») to be true
-language/statements/try/cptn-finally-from-catch.js (strict) :: it threw an object with no name: Expected SameValue(«5», «undefined») to be true
-language/statements/try/cptn-finally-skip-catch.js :: it threw an object with no name: Expected SameValue(«5», «undefined») to be true
-language/statements/try/cptn-finally-skip-catch.js (strict) :: it threw an object with no name: Expected SameValue(«5», «undefined») to be true
-language/statements/try/cptn-finally-wo-catch.js :: it threw an object with no name: Expected SameValue(«5», «undefined») to be true
-language/statements/try/cptn-finally-wo-catch.js (strict) :: it threw an object with no name: Expected SameValue(«5», «undefined») to be true
+language/statements/try/completion-values.js :: it threw an object with no name: Expected SameValue(«39», «42») to be true
+language/statements/try/completion-values.js (strict) :: it threw an object with no name: Expected SameValue(«39», «42») to be true
 language/statements/using/Symbol.dispose-getter.js :: it did not parse: expected `;`, found an identifier
 language/statements/using/Symbol.dispose-getter.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/using/Symbol.dispose-method-called-with-correct-this.js :: it did not parse: expected `;`, found an identifier

@@ -522,3 +522,37 @@ fn map_set_and_regexp_each_have_the_species_accessor_their_clause_gives_them() {
         "undefined,true"
     );
 }
+
+#[test]
+fn a_collection_built_from_an_iterable_takes_one_element_at_a_time_and_closes_on_failure() {
+    // §24.1.1.2 `AddEntriesFromIterable` is a `Repeat` of `IteratorStepValue` with an
+    // `IfAbruptCloseIterator` after each step that can throw. ViperJS gathered the whole iterable
+    // into a list first and then looped, which is visible twice over: every value was drawn before
+    // the first bad one was refused, and `return` was never called at all.
+    let recorder = "var t = []; function mk(n) { var i = 0; var it = {}; \
+         it[Symbol.iterator] = function () { return this }; \
+         it.next = function () { t.push('next'); return { value: i++, done: i > n } }; \
+         it['return'] = function () { t.push('return'); return { done: true } }; return it }; ";
+    // A Map's entries must be objects — §24.1.1.2 step 3.c — so the first primitive refuses, and
+    // the refusal closes. One `next`, then `return`, and no second draw.
+    assert_eq!(
+        run(&format!(
+            "{recorder} try {{ new Map(mk(3)) }} catch (e) {{ t.push(e.constructor.name) }} t.join(',')"
+        )),
+        "next,return,TypeError"
+    );
+    // A Set has no such requirement, so the same iterable is drawn to the end and never closed:
+    // §7.4.9 is for a walk **abandoned** early, and finishing one is not abandoning it.
+    assert_eq!(
+        run(&format!("{recorder} new Set(mk(2)); t.join(',')")),
+        "next,next,next"
+    );
+    // An adder that throws closes too — step 3.i — and the *adder's* error is what survives, not
+    // whatever the `return` does. That is §7.4.9 step 4, and it is why the close swallows.
+    assert_eq!(
+        run(&format!(
+            "{recorder} class S extends Set {{ add() {{ throw new RangeError('x') }} }}              try {{ new S(mk(3)) }} catch (e) {{ t.push(e.constructor.name) }} t.join(',')"
+        )),
+        "next,return,RangeError"
+    );
+}

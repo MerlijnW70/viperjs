@@ -1136,3 +1136,35 @@ fn a_label_passes_its_bodys_completion_through_rather_than_having_one() {
         "undefined"
     );
 }
+
+#[test]
+fn a_finally_that_falls_off_its_own_end_contributes_no_completion_value() {
+    // §14.15.3 step 3 — "If F is a normal completion, set F to B". The `finally` block's own value
+    // is thrown away when the block finishes ordinarily, so the statement answers with whatever the
+    // `try` or the `catch` produced. This answered 3 here, because the finalizer was compiled as an
+    // ordinary block and its statements overwrote the completion register.
+    assert_eq!(run("1; try { 2 } finally { 3 }"), "2");
+    assert_eq!(run("1; try { throw 0 } catch (e) { 2 } finally { 3 }"), "2");
+    // …and step 4's `UpdateEmpty(F, undefined)`: an empty `try` leaves nothing for step 3 to hand
+    // over, so the answer is `undefined` and *not* the finalizer's 3.
+    assert_eq!(run("typeof eval('1; try { } finally { 3 }')"), "undefined");
+    // A `finally` with nothing in it never had a value to contribute, which is the row that fails
+    // if the fix is "always answer the try block" rather than "discard the finalizer's".
+    assert_eq!(run("1; try { 2 } finally { }"), "2");
+    // The value is still the *script's* only at the top level: inside a function nothing is kept
+    // either way, and this is the row that catches a fix that turned tracking on where it was off.
+    assert_eq!(
+        run("(function () { try { return 2 } finally { 3 } })()"),
+        "2"
+    );
+    // §14.15.3 leaves `return` inside a script's `finally` a Syntax Error, which is a *different*
+    // question from the completion value and is answered by a different flag. Turning the wrong one
+    // off makes this legal.
+    assert_eq!(
+        run(
+            "(function () { try { eval('try { } finally { return 1 }'); return 'ran' } \
+             catch (e) { return e.constructor.name } })()"
+        ),
+        "SyntaxError"
+    );
+}
