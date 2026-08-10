@@ -70,6 +70,13 @@ fn a_piece_of_a_string_is_taken_by_four_rules_that_differ() {
     // §22.1.3.17 — the filler repeats and is then cut to the gap, so it need not divide it.
     assert_eq!(run("'5'.padStart(3, '0')"), "005");
     assert_eq!(run("'5'.padEnd(3, 'ab')"), "5ab");
+    // …and **these two are where it is actually cut**. The pair above divide the gap exactly — one
+    // filler of a single unit, one of two into a gap of two — so neither ever reached the
+    // truncation the comment claims, and mutating it away changed nothing. A gap of three with a
+    // filler of two is the smallest case that does.
+    assert_eq!(run("'5'.padStart(4, 'ab')"), "aba5");
+    assert_eq!(run("'5'.padEnd(4, 'ab')"), "5aba");
+    assert_eq!(run("'x'.padStart(8, 'abc')"), "abcabcax");
     assert_eq!(run("'abc'.padStart(2, '0')"), "abc");
     assert_eq!(run("'abc'.padStart(6)"), "   abc");
     // An empty filler has nothing to pad with, and step 5 answers the string rather than looping.

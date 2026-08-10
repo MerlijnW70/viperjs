@@ -1293,6 +1293,67 @@ mod tests {
     }
 
     #[test]
+    fn a_single_enormous_string_build_is_stopped_like_any_other_walk() {
+        // DR-0022's "what this does not stop" named this one: a built-in that takes a long time
+        // **without** walking a length. `"a".repeat(n)` is the sharpest of them — one fill loop of
+        // up to `MAX_STRING_LENGTH` turns, entered directly, with no bounded work in front of it to
+        // spend the budget first. The size is already refused past DR-0012's cap; the *time* was
+        // not bounded at all.
+        //
+        // Measured with the check removed by hand: 268,435,455 units takes ~700 ms whatever the
+        // budget says. The 50 ms asked for here leaves more than an order of magnitude, which is
+        // what keeps this from being a test about how fast the machine is.
+        let mut engine = Engine::new();
+        engine.set_time_budget(Some(std::time::Duration::from_millis(50)));
+        let started = std::time::Instant::now();
+        let answer = engine.eval("'a'.repeat(268435455).length");
+        let took = started.elapsed();
+        assert!(
+            matches!(answer, Err(Error::Interrupted)),
+            "the build must be stopped rather than finished: {answer:?}"
+        );
+        assert!(
+            took < std::time::Duration::from_millis(400),
+            "the stop must arrive near the budget rather than at the end of the build: {took:?}"
+        );
+        // …and the stop is the machine's rather than the string's, so the engine is usable again.
+        let answer = engine
+            .eval("1 + 1")
+            .expect("the machine is usable after a stop");
+        assert_eq!(engine.text(answer).as_deref(), Ok("2"));
+    }
+
+    #[test]
+    fn a_sort_with_no_comparator_is_stopped_although_nothing_it_runs_is_a_program() {
+        // The other half of DR-0022's paragraph, and the measurement disagreed with it: the record
+        // named "a sort's comparator loop" as unbounded and it is not. **This passed before
+        // anything was changed**, which is why the sort has no new check — see the amendment.
+        //
+        // Two doors close it between them. §23.1.3.30.1's gathering walk asks the budget once per
+        // index, so a sort big enough to matter spends the budget being read rather than being
+        // sorted; and the merge asks once per pass, so what is left is an overshoot of one linear
+        // pass, which costs about what the gathering it followed was already allowed.
+        //
+        // No comparator on purpose: a JavaScript one re-enters the interpreter, which checks the
+        // budget between instructions, so the pure-Rust comparison is the only one that could have
+        // run away.
+        let mut engine = Engine::new();
+        engine
+            .eval("var a = []; for (var i = 0; i < 400000; i++) a.push((i * 7919) % 100003);")
+            .expect("the array is built with no budget set");
+        engine.set_time_budget(Some(std::time::Duration::from_millis(10)));
+        let answer = engine.eval("a.sort(); a.length");
+        assert!(
+            matches!(answer, Err(Error::Interrupted)),
+            "the sort must be stopped: {answer:?}"
+        );
+        let answer = engine
+            .eval("1 + 1")
+            .expect("the machine is usable after a stop");
+        assert_eq!(engine.text(answer).as_deref(), Ok("2"));
+    }
+
+    #[test]
     fn the_budget_does_not_reach_the_regular_expression_matcher() {
         // DR-0022 says this in its "what this does not stop", and a limitation stated only in prose
         // is one nobody finds out has changed. §22.2's backtracking is its own loop and does not

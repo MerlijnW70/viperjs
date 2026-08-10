@@ -118,6 +118,33 @@ them, and nothing bounds the rest.
 > sort's comparator loop, a single enormous string build. Those are bounded by the heap budget when
 > they allocate and by nothing when they do not.
 
+> **Amended again, 2026-08-10: one of that pair was real and the other was not, and only measuring
+> told them apart.**
+>
+> **The string build was real.** `"a".repeat(268435455)` is one fill loop of a quarter of a billion
+> turns, entered directly, with nothing bounded in front of it to spend the budget on first — so a
+> host that asked for fifty milliseconds waited about seven hundred for the whole build. DR-0012's
+> cap bounds how *large* a String may be and says nothing about how long reaching it may take, and
+> the two had been read as one guarantee. `string_edit::cycled_into` is the fill for `repeat`,
+> `padStart` and `padEnd` together and asks the deadline as it goes; `grown` now answers a *length*
+> rather than a string, so the refusal is still decided by a function with no machine in it and can
+> be tested at sizes nothing could afford to build. Verified by removing the check by hand, which
+> takes the test from 0.05 s back to the whole build.
+>
+> **The sort was not.** "A sort's comparator loop" reads as unbounded and is not: §23.1.3.30.1's
+> gathering walk asks the budget once per index, so a sort large enough to matter spends the budget
+> being *read* rather than being sorted, and the merge asks once per pass — leaving an overshoot of
+> at most one linear pass, which costs about what the gathering it followed was already allowed. A
+> JavaScript comparator is bounded anyway, because calling one re-enters the interpreter. The test
+> written to catch this **passed before anything was changed**, so no check was added: a line no
+> input can distinguish is a line mutation coverage is right to call a survivor, and the honest fix
+> correct this record instead. `%TypedArray%.prototype.sort` was checked at the same time and asks
+> per element already.
+>
+> The lesson is the one this repository keeps relearning in a new place: *a limitation stated in
+> prose is a claim somebody made, not a measurement* — including when the prose is a decision
+> record, and including when it is this one.
+
 **A host function.** A `Native` that blocks is the host's own code and the host's own problem; the
 engine cannot interrupt Rust it did not write.
 

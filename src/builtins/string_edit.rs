@@ -9,6 +9,7 @@
 //! of a result is worked out before it is built rather than after — DR-0012 caps a String, and
 //! `"a".repeat(1e18)` has to be refused rather than briefly attempted.
 
+use super::array_methods::within_budget;
 use super::string::{argument_string, characters, clamp, relative, to_integer_or_infinity};
 use crate::heap::{Heap, NativeCall};
 use crate::value::{Abrupt, Completion, Value};
@@ -101,7 +102,14 @@ fn repeat(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Val
             "a string may be repeated a finite, non-negative number of times",
         ));
     }
-    let Some(id) = grown(&units, count).and_then(|built| heap.new_string_checked(built)) else {
+    let Some(total) = grown(&units, count) else {
+        return Err(Abrupt::range_error(
+            "the resulting string would be too long",
+        ));
+    };
+    let mut built = Vec::with_capacity(total);
+    cycled_into(vm, heap, &mut built, &units, total)?;
+    let Some(id) = heap.new_string_checked(built) else {
         return Err(Abrupt::range_error(
             "the resulting string would be too long",
         ));
@@ -109,26 +117,64 @@ fn repeat(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Val
     Ok(Value::String(id))
 }
 
-/// `units` repeated `count` times, or `None` if that many could not be a String.
+/// How many units `units` repeated `count` times would come to, or `None` if that many could not
+/// be a String.
+///
+/// **A length and not the string**, so that the refusal is decided by a function with no machine in
+/// it and can be tested at sizes nothing could afford to build. The filling is [`cycled_into`]'s,
+/// which needs the machine because it asks DR-0022's deadline as it goes.
 ///
 /// The length is worked out in `f64` before a byte is allocated. `"ab".repeat(1e18)` asks for two
 /// exabytes, and a `Vec` that tries to grow that far aborts the process — which DR-0002 does not
 /// permit a script to cause.
-fn grown(units: &[u16], count: f64) -> Option<Vec<u16>> {
+fn grown(units: &[u16], count: f64) -> Option<usize> {
     let total = units.len() as f64 * count;
-    if !crate::heap::fits_in_a_string(total) {
-        return None;
-    }
-    // The *total* bounds the loop and not the count, which is not a tidying. `"".repeat(1e17)`
-    // asks for a hundred quadrillion copies of nothing: the result fits easily, and counting to
-    // it does not. Looping until the answer is long enough makes the empty case take no turns at
+    // The *total* is the answer and not the count, which is not a tidying. `"".repeat(1e17)` asks
+    // for a hundred quadrillion copies of nothing: the result fits easily, and counting to it does
+    // not. Answering with the length the fill has to reach makes the empty case take no turns at
     // all, and a script cannot hang the engine by asking for it.
-    let total = total as usize;
-    let mut built = Vec::with_capacity(total);
-    while built.len() < total {
-        built.extend_from_slice(units);
+    crate::heap::fits_in_a_string(total).then_some(total as usize)
+}
+
+/// Extend `into` with `source` repeated until it holds `total` units, asking DR-0022's deadline as
+/// it goes.
+///
+/// **The reason this is a function.** DR-0022's "what this does not stop" named "a single enormous
+/// string build" and left it there. This is that build: `"a".repeat(268435455)` is one fill loop of
+/// a quarter of a billion turns, entered directly, with no bounded work in front of it to spend the
+/// budget on first — so a host that asked for fifty milliseconds got the whole of it. DR-0012's cap
+/// bounds how *large* the answer may be and says nothing about how long reaching it may take.
+/// Measured at ~700 ms against a 50 ms budget before this existed.
+///
+/// The last copy is **cut to fit**, which is what lets `padStart` share this: a filler of two units
+/// in a gap of three contributes one and a half of itself, where `repeat`'s total is always a whole
+/// multiple and the cut never happens.
+///
+/// **An empty `source` fills nothing rather than looping for ever.** §22.1.3.17 step 5 wants
+/// `"x".padStart(10, "")` to answer `"x"` unchanged, which the old spelling — `cycle().take(gap)`
+/// — arrived at because cycling nothing ends at once. Written as a loop that stops when the length
+/// is reached, nothing is what it would never reach, so the emptiness is a case here.
+fn cycled_into(
+    vm: &mut Vm,
+    heap: &Heap,
+    into: &mut Vec<u16>,
+    source: &[u16],
+    total: usize,
+) -> Completion<()> {
+    if source.is_empty() {
+        return Ok(());
     }
-    Some(built)
+    while into.len() < total {
+        within_budget(vm, heap)?;
+        // The cut is **one expression and not a branch**. Written as a comparison against the
+        // source's length, the two arms agree whenever the two are equal — a whole copy and a copy
+        // cut to its own length are the same bytes — so one of them is a decision no input can
+        // distinguish, which is what mutation coverage reported by surviving its inversion. `min` says
+        // same thing once, and the loop condition is what stops the subtraction going below zero.
+        let wanted = (total - into.len()).min(source.len());
+        into.extend_from_slice(&source[..wanted]);
+    }
+    Ok(())
 }
 
 /// §22.1.3.17 `String.prototype.padStart` and §22.1.3.16 `padEnd`.
@@ -153,19 +199,23 @@ fn padded(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, before: bool) -> 
         }
         Pad::Fill(gap) => gap,
     };
-    // No guard for an empty filler. `cycle` over nothing answers nothing at once, so `take` ends
-    // on its first turn and the result is the string unchanged — which is what §22.1.3.17 step 5
-    // asks for, arrived at rather than tested for.
-    let fill = filler.iter().copied().cycle().take(gap);
+    // The empty filler is [`cycled_into`]'s case rather than this one's — see there for why it
+    // stopped being something this arrived at and became something it tests for.
     let mut built = Vec::with_capacity(gap.saturating_add(units.len()));
     match before {
         true => {
-            built.extend(fill);
+            cycled_into(vm, heap, &mut built, &filler, gap)?;
             built.extend_from_slice(&units);
         }
         false => {
             built.extend_from_slice(&units);
-            built.extend(fill);
+            cycled_into(
+                vm,
+                heap,
+                &mut built,
+                &filler,
+                gap.saturating_add(units.len()),
+            )?;
         }
     }
     let Some(id) = heap.new_string_checked(built) else {
@@ -502,25 +552,28 @@ mod pieces {
 
     #[test]
     fn a_repeat_is_refused_before_it_is_built_when_it_could_not_fit() {
-        assert_eq!(grown(&units("ab"), 3.0), Some(units("ababab")));
-        assert_eq!(grown(&units("ab"), 0.0), Some(Vec::new()));
-        assert_eq!(grown(&units("ab"), 1.0), Some(units("ab")));
+        assert_eq!(grown(&units("ab"), 3.0), Some(6));
+        assert_eq!(grown(&units("ab"), 0.0), Some(0));
+        assert_eq!(grown(&units("ab"), 1.0), Some(2));
         // Nothing repeated any number of times is still nothing — and must not be *counted* to,
         // either. This asked for a hundred quadrillion turns of the loop before the loop was
         // bounded by the length of the answer instead of by the count.
-        assert_eq!(grown(&[], 1e17), Some(Vec::new()));
-        assert_eq!(grown(&[], 1e300), Some(Vec::new()));
+        assert_eq!(grown(&[], 1e17), Some(0));
+        assert_eq!(grown(&[], 1e300), Some(0));
         // The number that matters: two exabytes asked for, and nothing allocated to find out.
         assert_eq!(grown(&units("ab"), 1e18), None);
         assert_eq!(
             grown(&units("a"), crate::heap::MAX_STRING_LENGTH as f64 + 1.0),
             None
         );
-        // The cap itself is *allowed* and is deliberately not asked for here. A String that long
-        // is within DR-0012's limit, so this would answer `Some` after half a gigabyte and a
-        // quarter of a billion turns of the loop — which is what asking it here did. Where the
-        // refusal begins is the only part of the boundary a caller can observe.
+        // The cap itself is *allowed*, and asking is free now that this answers a length rather
+        // than a string: it used to mean half a gigabyte and a quarter of a billion turns of the
+        // fill loop, which is why it was left out.
         assert_eq!(grown(&units("ab"), 134_217_728.0), None);
+        assert_eq!(
+            grown(&units("a"), crate::heap::MAX_STRING_LENGTH as f64),
+            Some(crate::heap::MAX_STRING_LENGTH)
+        );
     }
 
     #[test]
