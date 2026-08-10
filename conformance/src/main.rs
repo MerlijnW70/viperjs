@@ -308,10 +308,23 @@ fn fuzz(root: &std::path::Path, seed: u64, attempts: usize) -> ExitCode {
         report.panics.len(),
         report.attempts
     );
-    for (from, said) in &report.panics {
-        println!("  mutated from {}\n    {said}", from.display());
+    // The offending source is **written to disk**, because it and not the seed is what reproduces a
+    // finding — the seed fixes the inputs and not what the engine does with one, since `Math.random`
+    // is clock-seeded and `Date.now` moves. See `fuzz::Finding::source`.
+    for (at, finding) in report.panics.iter().enumerate() {
+        let path = std::path::PathBuf::from(format!("fuzz-panic-{at}.js"));
+        let written = std::fs::write(&path, &finding.source);
+        println!(
+            "  mutated from {}\n    {}\n    input: {}",
+            finding.from.display(),
+            finding.said,
+            match written {
+                Ok(()) => path.display().to_string(),
+                Err(error) => format!("could not be written ({error})"),
+            }
+        );
     }
-    println!("\nreproduce with --fuzz {attempts} --seed {seed}");
+    println!("\nre-run the same search with --fuzz {attempts} --seed {seed}");
     ExitCode::FAILURE
 }
 

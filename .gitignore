@@ -1,5 +1,11 @@
 /target
 
+# editor and OS droppings
+/.idea/
+/.vscode/
+.DS_Store
+Thumbs.db
+
 # the lab's throwaway corner — junk .js files, one-off dumps, whatever
 /lab/scratch/
 
@@ -12,3 +18,7 @@
 /sweep/
 /webkit/
 /spidermonkey/
+
+# What a fuzzing run writes when it finds a panic — the input that reproduces it, which is
+# evidence for a person rather than something to check in.
+fuzz-panic-*.js

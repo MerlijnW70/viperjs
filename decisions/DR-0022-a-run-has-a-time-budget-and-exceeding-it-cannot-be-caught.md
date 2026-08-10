@@ -98,12 +98,25 @@ them, and nothing bounds the rest.
 > The stop is still uncatchable: `interrupted` sets the flag, and a `try` around the walk sees
 > nothing because the loop's next pass returns before the handler it unwound to can run.
 >
-> **Found by the fuzzer on its first real run**, and as an *abort* rather than a hang — a mutated
-> file asked the allocator for 64 GiB in one go and the process died where `catch_unwind` could not
-> see it. The same seed completes now, because the allocation was inside a walk the deadline
-> reaches. What is still unbounded is a built-in that takes a long time **without** walking a
-> length: a sort's comparator loop, a single enormous string build. Those are bounded by the heap
-> budget when they allocate and by nothing when they do not.
+> **Found while chasing something the fuzzer turned up on its first real run** — an *abort* rather
+> than a hang, a mutated file asking the allocator for 64 GiB in one go, which killed the process
+> where `catch_unwind` could not see it.
+>
+> **That abort is not known to be fixed, and this record said it was.** The sentence here read "the
+> same seed completes now, because the allocation was inside a walk the deadline reaches", on the
+> evidence that seed 1 aborted before the change and did not after. Checked properly the next hour
+> by disabling the new check by hand: **seed 1 does not abort with the fix disabled either.** The
+> seed fixes the fuzzer's *inputs* and not the engine's behaviour — `Math.random` is seeded from the
+> clock at every `Engine::new` — so the two runs were never the comparison they were read as. The
+> abort is an open finding with no reproduction, which is why a finding now writes the offending
+> source to disk instead of trusting the seed.
+>
+> The time-budget hole *is* verified, and by the harder method: disabling the check by hand takes a
+> walk of two hundred million from 0.6 s back to 53 s with a 500 ms budget set.
+>
+> What is still unbounded is a built-in that takes a long time **without** walking a length: a
+> sort's comparator loop, a single enormous string build. Those are bounded by the heap budget when
+> they allocate and by nothing when they do not.
 
 **A host function.** A `Native` that blocks is the host's own code and the host's own problem; the
 engine cannot interrupt Rust it did not write.

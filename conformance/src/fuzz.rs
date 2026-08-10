@@ -222,26 +222,59 @@ fn corpus(root: &Path) -> Vec<PathBuf> {
 pub struct Report {
     /// How many mutations were attempted.
     pub attempts: usize,
-    /// Each panic, with the file it was mutated from and what it said.
-    pub panics: Vec<(PathBuf, String)>,
+    /// Each panic that was found.
+    pub panics: Vec<Finding>,
+}
+
+/// One panic, with enough to reproduce it without running the fuzzer again.
+pub struct Finding {
+    /// The corpus file the mutation was made from — context, not a reproduction.
+    pub from: PathBuf,
+    /// What the panic said.
+    pub said: String,
+    /// **The mutated source itself**, which is the only thing that reproduces it.
+    ///
+    /// Carried rather than left to the seed, and that distinction cost a wrong claim. A seed
+    /// reproduces the *input sequence* and not the engine's behaviour: `Math.random` is seeded from
+    /// the clock at every `Engine::new`, and `Date.now` answers a different number every run — so a
+    /// mutated file that branches on either takes a different path each time. A panic found once at
+    /// seed 1 was not there at seed 1 the next day, and the record said the fix had closed it. It
+    /// had not been shown to.
+    pub source: String,
 }
 
 /// Fuzz the engine with `attempts` mutations of the suite under `root`, from `seed`.
 ///
-/// Deterministic: the same seed, the same corpus and the same count give the same inputs. That is
-/// what makes a finding something somebody else can reproduce rather than something that happened
-/// once on one machine.
+/// **The seed reproduces the inputs and not the run.** The same seed, corpus and count generate the
+/// same sequence of mutated sources — that part is exact. What it does not fix is what the *engine*
+/// does with one: `Math.random` is seeded from the clock at every `Engine::new` and `Date.now`
+/// answers a different number each time, so a mutated file that branches on either takes a different
+/// path on every run. A finding is therefore reproduced by [`Finding::source`], which is why that
+/// field exists; the seed is for re-running the same *search*, which is a weaker thing.
+///
+/// This was claimed the stronger way for one commit. See [`Finding::source`].
 #[must_use]
 pub fn run(root: &Path, seed: u64, attempts: usize) -> Report {
     let files = corpus(root);
     let mut rng = Rng::new(seed);
     let mut panics = Vec::new();
+    // The default hook prints its own line to standard error for every panic, which for a tool
+    // whose whole output is a report turns one finding into a wall — measured by injecting a panic
+    // into the lexer on purpose and watching three findings print six times. The payload is what
+    // this reports and the hook adds nothing to it, so it is silenced for the run and put back
+    // afterwards, because a *host* embedding the engine should keep whatever hook it installed.
+    //
+    // Set **after** the empty-corpus check, so that the one path which returns without reaching the
+    // restore below cannot leave the process without a hook. Reordered rather than given a second
+    // restore: two restores is two things that can come apart.
     if files.is_empty() {
         return Report {
             attempts: 0,
             panics,
         };
     }
+    let previous = std::panic::take_hook();
+    std::panic::set_hook(Box::new(|_| {}));
     for _ in 0..attempts {
         let chosen = &files[rng.below(files.len())];
         let other = &files[rng.below(files.len())];
@@ -253,9 +286,14 @@ pub fn run(root: &Path, seed: u64, attempts: usize) -> Report {
         };
         let mutated = mutate(&mut rng, &source, &second);
         if let Verdict::Panicked(said) = attempt(&mutated) {
-            panics.push((chosen.clone(), said));
+            panics.push(Finding {
+                from: chosen.clone(),
+                said,
+                source: mutated,
+            });
         }
     }
+    std::panic::set_hook(previous);
     Report { attempts, panics }
 }
 
