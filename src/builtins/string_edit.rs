@@ -177,6 +177,76 @@ fn cycled_into(
     Ok(())
 }
 
+/// §11.1.5 `StringToCodePoints` — a String's code points, over §11.1.4's `CodePointAt`.
+///
+/// The joining arithmetic is §11.1.3's `UTF16DecodeSurrogatePair`, written out because there is no
+/// `char` to route it through: an **unpaired** surrogate is a code point of its own here, kept as
+/// itself rather than replaced. It has no decomposition, and a `�` in its place would make
+/// `normalize` lose data on a String this engine is perfectly able to hold.
+fn code_points(units: &[u16]) -> Vec<u32> {
+    let mut out = Vec::with_capacity(units.len());
+    let mut at = 0;
+    while at < units.len() {
+        let first = u32::from(units[at]);
+        let low = units.get(at + 1).copied().map(u32::from);
+        if (0xD800..=0xDBFF).contains(&first)
+            && let Some(low) = low
+            && (0xDC00..=0xDFFF).contains(&low)
+        {
+            out.push(0x10000 + ((first - 0xD800) << 10) + (low - 0xDC00));
+            at += 2;
+            continue;
+        }
+        out.push(first);
+        at += 1;
+    }
+    out
+}
+
+/// §22.1.3.13 `String.prototype.normalize`.
+///
+/// The whole of the clause is the order of its steps and one refusal. `RequireObjectCoercible`
+/// comes first, so `String.prototype.normalize.call(null)` is a TypeError before the form is
+/// looked at; the form is then coerced with `ToString`, so an object with a `toString` names a form
+/// and an array of one does too; and a form that is not one of the four is a **RangeError**, which
+/// is the one place this differs from the many methods that quietly accept what they are given.
+///
+/// **The default is `"NFC"` and it is applied after the coercion, not instead of it.** Step 3 tests
+/// for `undefined` specifically, so an explicit `undefined` is the default and an explicit `null`
+/// is the string `"null"` and therefore a RangeError.
+fn normalize(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    let units = characters(vm, heap, call)?;
+    let wanted = match call.argument(0) {
+        Value::Undefined => "NFC".to_string(),
+        _ => {
+            let text = argument_string(vm, heap, call, 0)?;
+            String::from_utf16_lossy(&text)
+        }
+    };
+    let Some(form) = crate::unicode_normalize::Form::named(&wanted) else {
+        return Err(Abrupt::range_error(
+            "the normalization form must be NFC, NFD, NFKC or NFKD",
+        ));
+    };
+    // Normalization is defined over code points and a String here is code units, so this is
+    // §11.1.5 on the way in and §11.1.2 `CodePointsToString` on the way back — and the round trip
+    // is what keeps `normalize` total on any String this heap can hold, unpaired halves included.
+    let points: Vec<u32> = code_points(&units);
+    let normalized = crate::unicode_normalize::normalize(&points, form);
+    let mut built: Vec<u16> = Vec::with_capacity(normalized.len());
+    for point in normalized {
+        match char::from_u32(point) {
+            Some(found) => {
+                let mut buffer = [0u16; 2];
+                built.extend_from_slice(found.encode_utf16(&mut buffer));
+            }
+            // A lone surrogate, which `char` cannot hold and a String can.
+            None => built.push(point as u16),
+        }
+    }
+    Ok(Value::String(heap.intern(&built)))
+}
+
 /// §22.1.3.17 `String.prototype.padStart` and §22.1.3.16 `padEnd`.
 ///
 /// The filler is repeated and then cut to the exact space left, so a two-unit filler in a gap of
@@ -430,9 +500,10 @@ pub(super) fn is_trimmable(unit: u16) -> bool {
 ///
 /// A table rather than a call per method at the install site, so that adding one here is one line
 /// and cannot be written without being installed.
-pub(super) const METHODS: [(&str, u32, crate::heap::Native); 13] = [
+pub(super) const METHODS: [(&str, u32, crate::heap::Native); 14] = [
     ("concat", 1, concat),
     ("isWellFormed", 0, is_well_formed),
+    ("normalize", 0, normalize),
     ("toWellFormed", 0, to_well_formed),
     ("padEnd", 1, pad_end),
     ("padStart", 1, pad_start),

@@ -36,6 +36,8 @@ pub mod static_semantics;
 mod unicode_case_table;
 mod unicode_id;
 mod unicode_id_table;
+mod unicode_normalize;
+mod unicode_normalize_table;
 mod unicode_property;
 mod unicode_property_table;
 pub mod value;

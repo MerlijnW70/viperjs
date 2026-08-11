@@ -379,3 +379,123 @@ fn a_pattern_whose_match_symbol_is_undefined_is_still_a_pattern() {
         "ok"
     );
 }
+
+#[test]
+fn normalize_applies_all_four_forms_and_refuses_any_other_name() {
+    // §22.1.3.13. The four forms are two independent decisions — which decomposition, and whether
+    // to compose afterwards — so these rows are chosen to separate them rather than to spell all
+    // four out. Raw strings throughout, because the escapes belong to the *source* being normalised.
+    assert_eq!(run(r"'\u00e9'.normalize('NFD').length"), "2");
+    assert_eq!(run(r"'\u00e9'.normalize('NFC').length"), "1");
+    assert_eq!(
+        run(r"String('e\u0301'.normalize('NFC') === '\u00e9')"),
+        "true"
+    );
+    // A **composition exclusion**, which is the whole reason `CompositionExclusions.txt` is read:
+    // U+2ADC decomposes canonically to U+2ADD U+0338 and NFC does *not* put it back, so the
+    // character does not survive its own normalization. Without the exclusion list it would.
+    assert_eq!(
+        run(r"String('\u2ADC'.normalize('NFD') === '\u2ADD\u0338')"),
+        "true"
+    );
+    assert_eq!(
+        run(r"String('\u2ADC'.normalize('NFC') === '\u2ADD\u0338')"),
+        "true"
+    );
+    assert_eq!(
+        run(r"String('\u2ADC'.normalize('NFKC') === '\u2ADD\u0338')"),
+        "true"
+    );
+    // …and the same exclusion seen from the other side: the pair does not compose back when it
+    // is what was written either, so the refusal belongs to the mapping and not to the input.
+    assert_eq!(
+        run(r"String('\u2ADD\u0338'.normalize('NFC') === '\u2ADD\u0338')"),
+        "true"
+    );
+    // Canonical ordering — two marks with different combining classes are sorted, and the sort is
+    // per *run*: a starter is a wall nothing may cross.
+    assert_eq!(
+        run(r"String('q\u0307\u0323'.normalize('NFC') === 'q\u0323\u0307')"),
+        "true"
+    );
+    // Composition walks on: `A` takes the ring to make U+00C5, and that takes the acute to make
+    // U+01FA \u2014 two rounds against the same starter, which a loop stopping after one would miss.
+    assert_eq!(run(r"'A\u030A\u0301'.normalize('NFC').length"), "1");
+    assert_eq!(
+        run(r"String('A\u030A\u0301'.normalize('NFC') === '\u01FA')"),
+        "true"
+    );
+    // **Blocking** is the rule that is easy to miss, and it needs the marks the other way round:
+    // the ring cannot reach the `A` past an acute of the same class, so nothing composes and the
+    // string stays two long. Written with the ring first, this row passes either way.
+    assert_eq!(run(r"'A\u0301\u030A'.normalize('NFC').length"), "2");
+    // Hangul is arithmetic rather than a table, in both directions.
+    assert_eq!(run(r"'\uAC00'.normalize('NFD').length"), "2");
+    assert_eq!(run(r"'\uD4DB'.normalize('NFD').length"), "3");
+    assert_eq!(
+        run(r"String('\u1100\u1161'.normalize('NFC') === '\uAC00')"),
+        "true"
+    );
+    assert_eq!(
+        run(r"String('\u1100\u1161\u11A8'.normalize('NFC') === '\uAC01')"),
+        "true"
+    );
+    assert_eq!(run(r"'\uAC01'.normalize('NFD').length"), "3");
+    // Step 3 — an absent form is `NFC` and an explicit `undefined` is the same, where `null`
+    // becomes the string `"null"` and is refused.
+    assert_eq!(run(r"String('e\u0301'.normalize() === '\u00e9')"), "true");
+    assert_eq!(
+        run(r"String('e\u0301'.normalize(undefined) === '\u00e9')"),
+        "true"
+    );
+    // Step 5 — anything else is a **RangeError**, and the comparison is case-sensitive.
+    for spelling in ["'nfc'", "'NFE'", "''", "null", "1"] {
+        assert_eq!(
+            run(&format!(
+                "(function () {{ try {{ 'a'.normalize({spelling}); return 'no throw' }} \
+                 catch (e) {{ return e.constructor.name }} }})()"
+            )),
+            "RangeError",
+            "{spelling} is not a form"
+        );
+    }
+    // Step 1's `RequireObjectCoercible` comes before any of that, so the receiver is judged first.
+    assert_eq!(
+        run(
+            "(function () { try { String.prototype.normalize.call(null, 'NFC'); return 'no throw' } \
+             catch (e) { return e.constructor.name } })()"
+        ),
+        "TypeError"
+    );
+    // The form is coerced with `ToString`, so an object naming one is one.
+    assert_eq!(
+        run(r"String('\u00e9'.normalize({ toString: function () { return 'NFD' } }).length)"),
+        "2"
+    );
+    assert_eq!(run(r"'\u00e9'.normalize(['NFD']).length"), "2");
+    // **A surrogate pair is one code point**, which is the arithmetic the whole thing rests on:
+    // normalization is defined over scalar values and a String here is code units, so a pair is
+    // joined on the way in and split on the way out. Every row above is in the BMP and none of them
+    // exercises it — an astral character that *decomposes* is what does.
+    // Written as escapes rather than as the characters themselves: U+1D160 and its decomposition
+    // are indistinguishable on screen, and pasted in as text this row asserted 6 against a literal
+    // that was already the decomposed pair.
+    assert_eq!(run(r"'\u{1D160}'.normalize('NFD').length"), "6");
+    assert_eq!(
+        run(r"String('\u{1D160}'.normalize('NFD').codePointAt(0).toString(16))"),
+        "1d158"
+    );
+    // …and one that does not decompose has to come back unit for unit rather than mangled, which is
+    // the half of the arithmetic that puts the pair back together on the way out.
+    assert_eq!(
+        run(r"String('a\u{1F600}b'.normalize('NFC') === 'a\u{1F600}b')"),
+        "true"
+    );
+    assert_eq!(run(r"'\u{1F600}'.normalize('NFC').length"), "2");
+    // An unpaired surrogate has no decomposition and must survive rather than becoming U+FFFD.
+    assert_eq!(run(r"'\uD800'.normalize('NFC').charCodeAt(0)"), "55296");
+    assert_eq!(run(r"'\uD800'.normalize('NFC').length"), "1");
+    // §22.1.3.13's shape, which a program checks before using it.
+    assert_eq!(run("''.normalize.length"), "0");
+    assert_eq!(run("''.normalize.name"), "normalize");
+}

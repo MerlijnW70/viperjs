@@ -2024,26 +2024,6 @@ built-ins/String/prototype/match/regexp-prototype-match-v-u-flag.js :: it threw 
 built-ins/String/prototype/match/regexp-prototype-match-v-u-flag.js (strict) :: it threw an object with no name: Actual argument [null] shouldn't be primitive. Basic match with g flag
 built-ins/String/prototype/matchAll/regexp-prototype-matchAll-v-u-flag.js :: it threw an object with no name: Actual [] and expected [𠮷, 𠮷, 𠮷, 0, 3, 6] should have the same contents.
 built-ins/String/prototype/matchAll/regexp-prototype-matchAll-v-u-flag.js (strict) :: it threw an object with no name: Actual [] and expected [𠮷, 𠮷, 𠮷, 0, 3, 6] should have the same contents.
-built-ins/String/prototype/normalize/form-is-not-valid-throws.js :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/String/prototype/normalize/form-is-not-valid-throws.js (strict) :: it threw an object with no name: Expected a RangeError but got a TypeError
-built-ins/String/prototype/normalize/length.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/normalize/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/normalize/name.js :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/normalize/name.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
-built-ins/String/prototype/normalize/normalize.js :: it threw an object with no name: `typeof String.prototype.normalize` is `function` Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/normalize/normalize.js (strict) :: it threw an object with no name: `typeof String.prototype.normalize` is `function` Expected SameValue(«"undefined"», «"function"») to be true
-built-ins/String/prototype/normalize/not-a-constructor.js :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/String/prototype/normalize/not-a-constructor.js (strict) :: it threw an object with no name: isConstructor invoked with a non-function value
-built-ins/String/prototype/normalize/return-abrupt-from-form.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/String/prototype/normalize/return-abrupt-from-form.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/String/prototype/normalize/return-abrupt-from-this.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/String/prototype/normalize/return-abrupt-from-this.js (strict) :: it threw an object with no name: Expected a Test262Error but got a TypeError
-built-ins/String/prototype/normalize/return-normalized-string-from-coerced-form.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/normalize/return-normalized-string-from-coerced-form.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/normalize/return-normalized-string-using-default-parameter.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/normalize/return-normalized-string-using-default-parameter.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/normalize/return-normalized-string.js :: it threw TypeError: what was called is not a function
-built-ins/String/prototype/normalize/return-normalized-string.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/String/prototype/replace/regexp-prototype-replace-v-u-flag.js :: it threw an object with no name: Basic replace with g flag Expected SameValue(«"𠮷a𠮷b𠮷"», «"-a-b-"») to be true
 built-ins/String/prototype/replace/regexp-prototype-replace-v-u-flag.js (strict) :: it threw an object with no name: Basic replace with g flag Expected SameValue(«"𠮷a𠮷b𠮷"», «"-a-b-"») to be true
 built-ins/String/prototype/search/regexp-prototype-search-v-flag.js :: it threw an object with no name: Search for surrogate pair without v flag Expected SameValue(«-1», «0») to be true
