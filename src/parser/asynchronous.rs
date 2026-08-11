@@ -238,8 +238,17 @@ impl Parser<'_> {
         // encloses it, and §13.1.1 makes `await` under that parameter a Syntax Error. The
         // arguments were read under the *enclosing* `[Await]`, which is what the cover says, so
         // this is the one place the two readings disagree about a name rather than an expression.
-        for element in &parameters.items {
-            for declared in bound_names(&element.target) {
+        //
+        // The rest element is one of the names: `BoundNames` of `ArrowFormalParameters` is the
+        // names of the list *and* of the `FunctionRestParameter`, and walking only `items` let
+        // `async(...await) => {}` through while refusing `async(await) => {}`.
+        let targets = parameters
+            .items
+            .iter()
+            .map(|element| &element.target)
+            .chain(parameters.rest.as_deref());
+        for target in targets {
+            for declared in bound_names(target) {
                 if declared.name == "await" {
                     return Err(ParseError {
                         kind: ParseErrorKind::AwaitAsAsyncArrowParameter,
@@ -640,6 +649,22 @@ mod tests {
             kind("async (await) => 1;"),
             ParseErrorKind::AwaitAsAsyncArrowParameter
         );
+        // …and the rest element is one of the names. `BoundNames` of `ArrowFormalParameters` is
+        // the list's names *and* the `FunctionRestParameter`'s, and the walk stopped at the list:
+        // `async(await) => {}` was refused and `async(...await) => {}` was not.
+        for source in [
+            "async(...await) => {};",
+            "async(a, ...await) => {};",
+            "async(...[await]) => {};",
+            "async(...{a: await}) => {};",
+        ] {
+            assert_eq!(
+                kind(source),
+                ParseErrorKind::AwaitAsAsyncArrowParameter,
+                "{source}"
+            );
+        }
+        assert!(parse_script("async(...a) => {};").is_ok());
         assert!(parse_script("async(await);").is_ok());
         // The one-parameter form reads its name under `[+Await]` directly, so it fails earlier
         // and for the same reason.

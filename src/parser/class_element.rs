@@ -805,8 +805,33 @@ mod tests {
             kind("class C { a = (arguments) => 1; }"),
             ParseErrorKind::ArgumentsInClassInitializer
         );
+        // **An arrow with a block body is still not a boundary**, which is where this failed. A
+        // concise body was refused and the same arrow written with braces was not, because the
+        // block went through the shared function-body parser and that one cleared the record.
+        for source in [
+            "class C { a = () => { arguments; }; }",
+            "class C { a = () => { return arguments; }; }",
+            "class C { a = () => { var t = () => arguments; }; }",
+            "class C { a = () => { if (1) { arguments; } }; }",
+            "class C { a = () => { try { arguments; } catch (e) {} }; }",
+            "class C { static a = () => { arguments; }; }",
+            "class C { #a = () => { arguments; }; }",
+        ] {
+            assert_eq!(
+                kind(source),
+                ParseErrorKind::ArgumentsInClassInitializer,
+                "{source}"
+            );
+        }
         assert!(parse_script("class C { a = function () { arguments; }; }").is_ok());
         assert!(parse_script("class C { a = class { m() { arguments; } }; }").is_ok());
+        // …and the boundary that *is* one, reached through an arrow: the record has to survive the
+        // arrow and stop at the function inside it, which is both halves of the same change.
+        assert!(parse_script("class C { a = () => { function g() { arguments; } }; }").is_ok());
+        assert!(
+            parse_script("class C { a = () => { var t = function () { return arguments; }; }; }")
+                .is_ok()
+        );
         // …and a *property* named `arguments` is not a reading of the name at all.
         assert!(parse_script("class C { a = b.arguments; }").is_ok());
         assert!(parse_script("class C { a = ({arguments: 1}); }").is_ok());

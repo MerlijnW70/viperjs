@@ -102,8 +102,11 @@ impl Parser<'_> {
                 // A method is followed by another element or by the closing brace of the class or
                 // object it is in, and none of those may begin with a `/`. So the goal here is
                 // not observable, and `Div` is the one an expression would ask for.
-                let body =
-                    self.parse_function_body(BodyContext::method(super_allowed), Goal::Div)?;
+                let body = self.parse_function_body(
+                    BodyContext::method(super_allowed),
+                    Goal::Div,
+                    super::function::Boundary::Function,
+                )?;
                 Ok((parameters, body))
             });
         (self.yield_allowed, self.await_allowed) = enclosing;

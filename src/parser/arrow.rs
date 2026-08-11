@@ -48,8 +48,6 @@ use crate::ast::{
 };
 use crate::lexer::{Goal, TokenKind};
 use crate::span::Span;
-use crate::static_semantics::bound_names;
-use std::collections::HashSet;
 
 /// A parenthesized group, before anything has decided what it is.
 ///
@@ -323,8 +321,11 @@ impl Parser<'_> {
             // two statements, the arrow having ended the first. Parentheses change it back,
             // `(x => {}) / 2` being a `PrimaryExpression` divided; the `)` sets the goal there
             // and always did.
-            let (body, end, declares_strict) =
-                self.parse_function_body(self.body_context, Goal::RegExp)?;
+            let (body, end, declares_strict) = self.parse_function_body(
+                self.body_context,
+                Goal::RegExp,
+                super::function::Boundary::Arrow,
+            )?;
             // §15.3.1 borrows §15.2.1's: the parameters were read before the body could say it
             // was strict, so this is the one rule that has to wait for the body.
             if declares_strict && !parameters.is_simple() {
@@ -349,18 +350,7 @@ impl Parser<'_> {
 /// not, and a plain function's simple list may. Shared by both of the ways an arrow's parameters
 /// come to exist, because it is the same production either way.
 pub(super) fn check_unique_parameters(parameters: &FormalParameters) -> Result<(), ParseError> {
-    let mut seen: HashSet<String> = HashSet::new();
-    for element in &parameters.items {
-        for declared in bound_names(&element.target) {
-            if !seen.insert(declared.name.to_string()) {
-                return Err(ParseError {
-                    kind: ParseErrorKind::DuplicateParameterName,
-                    span: declared.span,
-                });
-            }
-        }
-    }
-    Ok(())
+    super::function::check_no_duplicate_parameter(parameters)
 }
 
 #[cfg(test)]
@@ -517,6 +507,32 @@ mod tests {
         // A comma after the list's own `...` is caught by the parenthesis that never came.
         assert!(parse_script("(...a,) => b;").is_err());
         assert!(parse_script("function f(a, a) {}").is_ok());
+        // **The rest element is one of the names.** `BoundNames` of `FormalParameters :
+        // FormalParameterList , FunctionRestParameter` is the names of both halves, and this walk
+        // stopped at the first: `(x, ...x) => 1` was accepted while `function f(x, ...x) {}` — the
+        // same rule, the other copy of the walk — was refused.
+        for source in [
+            "(x, ...x) => 1;",
+            "([x], ...x) => 1;",
+            "({x}, ...x) => 1;",
+            "(x, ...[x]) => 1;",
+            "(x, ...{a: x}) => 1;",
+            "(a, b, ...a) => 1;",
+            "(a, {b: [c]}, ...c) => 1;",
+            "async (x, ...x) => 1;",
+            "({ m(x, ...x) {} });",
+            "function f(x, ...x) {}",
+        ] {
+            assert_eq!(
+                kind(source),
+                ParseErrorKind::DuplicateParameterName,
+                "{source}"
+            );
+        }
+        // …and a rest element that repeats nothing is still fine, which is what says the walk
+        // gained a name rather than a refusal.
+        assert!(parse_script("(x, ...y) => 1;").is_ok());
+        assert!(parse_script("(...x) => 1;").is_ok());
         // The body's rules are a function body's, this being one.
         assert_eq!(
             kind("(a) => { let a; };"),

@@ -11592,10 +11592,6 @@ language/expressions/arrow-function/scope-param-elem-var-close.js :: it threw Sy
 language/expressions/arrow-function/scope-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a parameter list is not implemented yet
 language/expressions/arrow-function/scope-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a parameter list is not implemented yet
 language/expressions/arrow-function/scope-param-rest-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a parameter list is not implemented yet
-language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates-binding-array-3.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates-binding-object-4.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates-binding-object-5.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates-rest.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/assignment/S11.13.1_A5_T1.js :: it threw an object with no name: #1: scope.x === 2. Actual: undefined
 language/expressions/assignment/S11.13.1_A5_T2.js :: it threw an object with no name: #1: scope.x === 2. Actual: undefined
 language/expressions/assignment/S11.13.1_A5_T3.js :: it threw an object with no name: #1: innerScope.x === 2. Actual: undefined
@@ -11636,10 +11632,6 @@ language/expressions/class/decorator/syntax/valid/decorator-member-expr-identifi
 language/expressions/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference-yield.js :: it did not parse: unexpected character
 language/expressions/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference.js :: it did not parse: unexpected character
 language/expressions/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference.js (strict) :: it did not parse: unexpected character
-language/expressions/class/elements/nested-arrow-fnc-init-err-contains-arguments.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/class/elements/nested-arrow-fnc-init-err-contains-arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/class/elements/nested-private-arrow-fnc-init-err-contains-arguments.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/class/elements/nested-private-arrow-fnc-init-err-contains-arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/class/elements/syntax/valid/grammar-field-accessor.js :: it did not parse: expected `;`, found an identifier
 language/expressions/class/elements/syntax/valid/grammar-field-accessor.js (strict) :: it did not parse: expected `;`, found an identifier
 language/expressions/coalesce/tco-pos-null.js (strict) :: it threw RangeError: too much recursion
@@ -12350,10 +12342,6 @@ language/statements/class/decorator/syntax/valid/decorator-parenthesized-expr-id
 language/statements/class/decorator/syntax/valid/decorator-parenthesized-expr-identifier-reference.js (strict) :: it did not parse: unexpected character
 language/statements/class/elements/class-field-is-observable-by-proxy.js :: it threw an object with no name: Expected SameValue(«undefined», «3») to be true
 language/statements/class/elements/class-field-is-observable-by-proxy.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «3») to be true
-language/statements/class/elements/nested-arrow-fnc-init-err-contains-arguments.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/statements/class/elements/nested-arrow-fnc-init-err-contains-arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/statements/class/elements/nested-private-arrow-fnc-init-err-contains-arguments.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/statements/class/elements/nested-private-arrow-fnc-init-err-contains-arguments.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/statements/class/elements/private-class-field-on-nonextensible-objects.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 language/statements/class/elements/public-class-field-initialization-is-visible-to-proxy.js :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all
 language/statements/class/elements/public-class-field-initialization-is-visible-to-proxy.js (strict) :: it threw an object with no name: Expected a Test262Error to be thrown but no exception was thrown at all

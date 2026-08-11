@@ -37,6 +37,21 @@ use crate::span::Span;
 use crate::static_semantics::{bound_names, top_level_lexically_declared_names};
 use std::collections::HashSet;
 
+/// Whether a `{ … }` body is a boundary the static semantics stop at.
+///
+/// An arrow's is not, and that is not a detail of this parser: §8.2.2's `Contains` and §15.7.9's
+/// `ContainsArguments` both recurse through an `ArrowFunction` where they stop at every other
+/// function. It is what makes `class C { x = () => arguments }` a Syntax Error and
+/// `class C { x = function () { return arguments; } }` an ordinary field — an arrow has no
+/// `arguments` of its own for the name to mean, so the name still means the enclosing one.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Boundary {
+    /// A `FunctionBody`, which every static semantic stops at.
+    Function,
+    /// An `ArrowFunction`'s block `ConciseBody`, which they see through.
+    Arrow,
+}
+
 impl Parser<'_> {
     /// `FunctionDeclaration` (§15.2) or `AsyncFunctionDeclaration` (§15.8), with the cursor on
     /// `function` or on the `async` before it.
@@ -219,7 +234,7 @@ impl Parser<'_> {
         let enclosing = (self.yield_allowed, self.await_allowed);
         self.yield_allowed = is_generator;
         self.await_allowed = is_async;
-        let parts = self.parse_function_body(BodyContext::FUNCTION, after);
+        let parts = self.parse_function_body(BodyContext::FUNCTION, after, Boundary::Function);
         (self.yield_allowed, self.await_allowed) = enclosing;
         let (body, end, declares_strict) = parts?;
         check_parameters_against_body(&parameters, &body)?;
@@ -290,6 +305,7 @@ impl Parser<'_> {
         &mut self,
         body_context: BodyContext,
         after: Goal,
+        boundary: Boundary,
     ) -> Result<(Box<[Stmt]>, Span, bool), ParseError> {
         self.eat(TokenKind::LBrace, Goal::RegExp, "`{`")?;
         // `[+Return]`, which only this production sets — and which is restored on the way out
@@ -302,9 +318,16 @@ impl Parser<'_> {
         // `Contains` stops at a function boundary, and this is the boundary — so a `yield`
         // written in here is never a `yield` written in the parameter list that encloses it.
         let enclosing_forbidden_in_parameters = self.forbidden_in_parameters.take();
-        // §15.7.9's `Contains` stops here too, and at nothing smaller — an arrow inside a
-        // field initialiser is still that initialiser's `arguments`.
-        let enclosing_arguments = self.arguments_reference.take();
+        // §15.7.9's `ContainsArguments` stops here too, and at nothing smaller — **which is why
+        // an arrow's body is not a boundary for it**. This function serves both, and taking the
+        // record unconditionally made an arrow one: `class C { x = () => arguments }` was refused
+        // and `class C { x = () => { arguments; } }` was not, the same rule answering differently
+        // for a concise body and a block. An arrow leaves the record alone in both directions —
+        // it neither hides what is outside nor discards what its own body read.
+        let enclosing_arguments = match boundary {
+            Boundary::Function => self.arguments_reference.take(),
+            Boundary::Arrow => None,
+        };
         self.inside_function = true;
         self.body_context = body_context;
         let body = self.parse_body_with_prologue(TokenKind::RBrace);
@@ -312,7 +335,9 @@ impl Parser<'_> {
         self.strict = enclosing_strict;
         self.body_context = enclosing_context;
         self.forbidden_in_parameters = enclosing_forbidden_in_parameters;
-        self.arguments_reference = enclosing_arguments;
+        if boundary == Boundary::Function {
+            self.arguments_reference = enclosing_arguments;
+        }
         let (body, declares_strict) = body?;
         let close = self.eat(TokenKind::RBrace, after, "`}`")?;
         // §15.2.1 asks of a FunctionStatementList exactly what §16.1.1 asks of a Script, and asks
@@ -367,19 +392,27 @@ fn check_parameter_names(parameters: &FormalParameters) -> Result<(), ParseError
     if parameters.is_simple() {
         return Ok(());
     }
+    check_no_duplicate_parameter(parameters)
+}
+
+/// The question both of the duplicate-parameter rules ask, once.
+///
+/// §15.1.1 and `UniqueFormalParameters` differ only in the guard in front — the first asks it of a
+/// non-simple list and the second of every list — and yet this walk existed twice, in `function`
+/// and in `arrow`. The arrow's copy **stopped at `items`**, so `(x, ...x) => 1` was accepted where
+/// `function f(x, ...x) {}` was refused: `BoundNames` of `FormalParameters : FormalParameterList ,
+/// FunctionRestParameter` is the names of both halves, and one of the two walks knew it.
+pub(super) fn check_no_duplicate_parameter(
+    parameters: &FormalParameters,
+) -> Result<(), ParseError> {
     let mut seen: HashSet<String> = HashSet::new();
-    for element in &parameters.items {
-        for declared in bound_names(&element.target) {
-            if !seen.insert(declared.name.to_string()) {
-                return Err(ParseError {
-                    kind: ParseErrorKind::DuplicateParameterName,
-                    span: declared.span,
-                });
-            }
-        }
-    }
-    if let Some(rest) = &parameters.rest {
-        for declared in bound_names(rest) {
+    let targets = parameters
+        .items
+        .iter()
+        .map(|element| &element.target)
+        .chain(parameters.rest.as_deref());
+    for target in targets {
+        for declared in bound_names(target) {
             if !seen.insert(declared.name.to_string()) {
                 return Err(ParseError {
                     kind: ParseErrorKind::DuplicateParameterName,
