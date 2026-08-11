@@ -248,6 +248,33 @@ use crate::span::Span;
 /// is near the ~260 a release build could afford and DR-0006 does not allow, which is the argument
 /// for the embedder-set value the section below promises at M3 — a milestone that has now passed.
 ///
+/// **Fifty repositories, 2026-08-11, and the question is now closed rather than open.** 30,122
+/// JavaScript files across fifty GitHub checkouts: over the whole corpus including every test
+/// fixture, **32,109 files parse or are refused and none panics** — 172.7 MB. Excluding test trees,
+/// 9,609 files give **37 refusals, of which 32 are correct** (19 JSX, 6 Flow, 3 `%placeholder%`
+/// templates, an EJS template, a `do` expression, an `import … assert`, a decorator — node refuses
+/// every one under both goal symbols) and **5 are this cap**. There is no other parser gap in
+/// 9,572 real files.
+///
+/// The five are `fastify/lib/config-validator.js` (ajv, needs 81–88), two Emscripten fallbacks in
+/// `pdf.js` and two Draco decoders in `three.js` (77–80, which is Draco's 77 above, measured again
+/// from a different checkout), and `pdf.js/external/jbig2/jbig2_nowasm_fallback.js`, which needs
+/// **173** — inside the 161–176 band webpack's ajv output gave, from an unrelated generator.
+///
+/// **And 173 is past what the stack allows, which is what makes this not a question of choosing a
+/// larger number.** Bisected the same day with the cap moved out of the way: a bracket chain — the
+/// *cheapest* path per level — survives about 168 levels in a debug build on the one-mebibyte stack
+/// `parsing_at_the_cap_fits_in_the_stack_it_claims_to_need` measures against, and about 1,150 in a
+/// release build. So 64 keeps
+/// roughly a 2.6× margin on the smallest common stack, and the deepest real file needs more levels
+/// than that stack has, whatever the constant says. A cap cannot buy it. What could is a bigger
+/// stack — the parse already runs on a spawned thread in that test, and an embedder can do the same
+/// — or a production made iterative. Both are real work and neither is a constant.
+///
+/// Beyond the stack it is worth knowing that the count is **one budget shared with statements**,
+/// so a block chain reaches it one level sooner than a bracket chain: the script's own statement
+/// list spends a level before the first `{`. That is why the refusal no longer says "expression".
+///
 /// # Why a count and not a stack measurement
 ///
 /// Because a stack measurement would make which programs parse depend on how the engine was

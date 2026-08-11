@@ -443,7 +443,15 @@ impl fmt::Display for ParseErrorKind {
                     fixed => write!(f, "`{}`", fixed.as_str().unwrap_or_default()),
                 }
             }
-            Self::TooDeeplyNested => write!(f, "expression nests too deeply"),
+            // Not "expression": the counter is one depth shared by every recursive entry, and
+            // statements reach it as readily as expressions do. `{{{…}}}`, a chain of labelled
+            // blocks and a chain of `if`s each contain no expression at all beyond a literal, and
+            // each reported an expression. Emscripten output is exactly that shape — nested
+            // labelled blocks around `while` loops — so the one message a reader of a real failure
+            // was most likely to see named the wrong construct and sent them looking for a deep
+            // expression that is not there. The span points at the token that would have opened
+            // the next level, which is what says *what* nested.
+            Self::TooDeeplyNested => write!(f, "this nests too deeply"),
             Self::StrictReservedWord => {
                 write!(f, "this name is reserved in strict mode code")
             }
@@ -776,7 +784,7 @@ mod tests {
         );
         assert_eq!(
             ParseErrorKind::TooDeeplyNested.to_string(),
-            "expression nests too deeply"
+            "this nests too deeply"
         );
     }
 }

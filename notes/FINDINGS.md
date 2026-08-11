@@ -10,6 +10,7 @@ in.
 
 ## Index
 
+- [Fifty repositories: no parser gap, and the one cap that cannot be raised](#fifty-repositories-no-parser-gap-and-the-one-cap-that-cannot-be-raised)
 - [Splitting a file removes it from the coverage ratchet, and an audit found four more](#splitting-a-file-removes-it-from-the-coverage-ratchet-and-an-audit-found-four-more)
 - [One clause, two implementations, and only one of them was fixed — §10.1.13 and §10.3.1](#one-clause-two-implementations-and-only-one-of-them-was-fixed--10113-and-1031)
 - [A comment that was true when it was written — §23.1.3.21 step 5.c, and the hole under the fix](#a-comment-that-was-true-when-it-was-written--231321-step-5c-and-the-hole-under-the-fix)
@@ -54,6 +55,56 @@ in.
 - [What is left, in the order the numbers put it](#what-is-left-in-the-order-the-numbers-put-it)
 
 ---
+
+### Fifty repositories: no parser gap, and the one cap that cannot be raised
+
+Fifty GitHub checkouts, `--depth 1` — **30,122 JavaScript files, 1.7 GB**. Two runs, because the two
+questions want different corpora.
+
+**The no-panic invariant, over everything including test fixtures:** 32,109 files, 26,445 parsed,
+5,664 refused, **0 panicked**, 172.7 MB in 8.3 s. The refusals are dominated by babel's parser
+fixtures, which are deliberately invalid JavaScript — a parser test suite is the wrong corpus for a
+refusal count and the right one for a panic count.
+
+**Excluding test and fixture trees:** 9,609 files, 9,572 parsed, **37 refused, 0 panicked**. Every
+one of the 37 triaged against the sound oracle — `vm.Script` *and* `vm.SourceTextModule`, never
+`node --check`, which this file records as accepting arbitrary syntax errors in an ambiguous `.js`:
+
+| | |
+| --- | --- |
+| **32 correct refusals** | 19 JSX · 6 Flow type annotations · 3 `%placeholder%` templates · 1 EJS template · 1 `do` expression · 1 `import … assert` · 1 decorator |
+| **5 genuine gaps** | all one cause: `MAX_NESTING_DEPTH` |
+
+**No parser bug in 9,572 real files.** That is the third such sweep and the third with the same
+answer; the grammar is not where the risk is.
+
+**The five, and the number that closes the question.** `fastify/lib/config-validator.js` (ajv) needs
+81–88; two Emscripten fallbacks in `pdf.js` and two Draco decoders in `three.js` need 77–80 — Draco's
+77, measured again from a different checkout years after the first time; and
+`pdf.js/external/jbig2/jbig2_nowasm_fallback.js` needs **173**, which lands inside the 161–176 band
+webpack's ajv output gave, from an unrelated generator and package.
+
+Then the part nobody had measured. With the cap moved out of the way and the depth bisected: a
+bracket chain — the *cheapest* path per level — survives about **168 levels in a debug build on one
+mebibyte**, and about **1,150 in release**. So the deepest real file needs **more levels than the
+smallest common stack has**, and the cap is not a conservative choice that could be relaxed: 173 > 168.
+**No value of the constant parses that file.** What could is a larger stack — the parser already
+runs on a spawned 1 MiB thread in its own stack test, and an embedder can give it more — or a
+production made iterative. Neither is a constant, and both want a decision record.
+
+**Two things the sweep fixed on the way, and the first is the useful one.**
+
+- **The refusal said "expression nests too deeply" for nesting that contains no expression.** The
+  depth counter is one budget shared by every recursive entry, so `{{{…}}}`, a chain of labelled
+  blocks and a chain of `if`s all reach it — and Emscripten's output is *exactly* the middle one,
+  `Ba:{…xa:{…Da:{…while(1){`. So the message a reader of the only real-world failure would ever see
+  named the one construct that is not there, and sent them looking for a deep expression. It reads
+  "this nests too deeply" now; the span already points at the token that would have opened the next
+  level, which is what says *what* nested. Threading a construct name through the guard's 51 call
+  sites would say more and is not worth 23 files of churn.
+- **A statement chain reaches the cap one level sooner than a bracket chain**, because the script's
+  own statement list spends a level before the first `{`. Pinned rather than rounded off: it is the
+  difference between a budget a reader can predict from the constant and one they cannot.
 
 ### Splitting a file removes it from the coverage ratchet, and an audit found four more
 

@@ -13,6 +13,65 @@ use crate::lexer::LexErrorKind;
 use crate::parser::test_support::*;
 use crate::span::Span;
 #[test]
+fn a_statement_reaches_the_cap_as_readily_as_an_expression_and_the_message_says_so() {
+    // One depth counter serves every recursive entry, so a chain of blocks costs exactly what a
+    // chain of brackets does — and none of these contains an expression at all beyond a literal.
+    // Nothing said so until a sweep of fifty repositories put the failure in front of a reader:
+    // Emscripten output nests *labelled blocks around loops*, and the message it produced named
+    // an expression, which is the one construct that is not there.
+    let depth = MAX_NESTING_DEPTH as usize;
+    let forms = [
+        // A bare block, which is the plainest statement nesting there is.
+        ("{".repeat(depth + 1) + "var x = 1;" + &"}".repeat(depth + 1)),
+        // Labelled blocks — Emscripten's own shape, `Ba:{…xa:{…Da:{`.
+        ((0..=depth)
+            .map(|at| format!("L{at}:{{"))
+            .collect::<String>()
+            + "x = 1;"
+            + &"}".repeat(depth + 1)),
+        // A chain of `if`s, which nests through the *statement* position rather than a brace.
+        ("if (a) ".repeat(depth + 1) + "x = 1;"),
+        // …and a chain of `while`s, for the same reason one clause along.
+        ("while (a) ".repeat(depth + 1) + "x = 1;"),
+    ];
+    for source in &forms {
+        assert_eq!(
+            script_error(source).kind,
+            ParseErrorKind::TooDeeplyNested,
+            "a statement chain {} deep should reach the cap",
+            depth + 1
+        );
+    }
+    // …and the boundary, which is **one lower than for an expression**: a bracket chain parses at
+    // exactly the cap, a block chain at one less. The script's own statement list is a level, so
+    // it is spent before the first `{` is read. Worth pinning rather than rounding off — it is the
+    // difference between a budget a reader can predict from the constant and one they cannot.
+    let statement_budget = depth - 1;
+    assert!(
+        !statements(&("{".repeat(statement_budget) + "var x = 1;" + &"}".repeat(statement_budget)))
+            .is_empty(),
+        "a block chain one under the cap should parse"
+    );
+    assert_eq!(
+        script_error(&("{".repeat(depth) + "var x = 1;" + &"}".repeat(depth))).kind,
+        ParseErrorKind::TooDeeplyNested,
+        "and one *at* the cap should not, because the script took a level first"
+    );
+
+    // And the wording, which is the part the sweep actually corrected. A reader who sees this
+    // over `Ba:{xa:{Da:{` must not be sent looking for a deep expression.
+    assert_eq!(
+        ParseErrorKind::TooDeeplyNested.to_string(),
+        "this nests too deeply"
+    );
+    assert!(
+        !ParseErrorKind::TooDeeplyNested
+            .to_string()
+            .contains("expression")
+    );
+}
+
+#[test]
 fn nesting_is_bounded_by_the_parser_rather_than_by_the_stack() {
     // DR-0002: a stack overflow is not a failure any `Result` can rescue, and it takes the
     // embedder's process with it. So the cap is the parser's, it is explicit, and it is
