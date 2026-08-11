@@ -11525,15 +11525,6 @@ built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-
 built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-object-key.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-symbol-key.js :: it threw TypeError: what was called is not a function
 built-ins/WeakMap/prototype/getOrInsertComputed/returns-value-if-key-is-present-symbol-key.js (strict) :: it threw TypeError: what was called is not a function
-language/arguments-object/mapped/mapped-arguments-nonconfigurable-delete-2.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
-language/arguments-object/mapped/mapped-arguments-nonconfigurable-delete-3.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
-language/arguments-object/mapped/mapped-arguments-nonconfigurable-delete-4.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
-language/arguments-object/mapped/mapped-arguments-nonconfigurable-nonwritable-3.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
-language/arguments-object/mapped/mapped-arguments-nonconfigurable-strict-delete-2.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
-language/arguments-object/mapped/mapped-arguments-nonconfigurable-strict-delete-3.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
-language/arguments-object/mapped/mapped-arguments-nonconfigurable-strict-delete-4.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
-language/arguments-object/mapped/nonconfigurable-nonenumerable-nonwritable-descriptors-set-by-param.js :: it threw an object with no name: 0 descriptor value should be 2; 0 value should be 2
-language/arguments-object/mapped/nonconfigurable-nonwritable-descriptors-set-by-param.js :: it threw an object with no name: 0 descriptor value should be 2; 0 value should be 2
 language/destructuring/binding/keyed-destructuring-property-reference-target-evaluation-order-with-bindings.js :: it threw an object with no name: Actual [binding::source, binding::sourceKey, sourceKey, get source, binding::defaultValue, binding::varTarget] and expected [binding::source, binding::sourceKey, sourceKey, binding::varTarget, get source, binding::defaultValue] should have the same contents.
 language/eval-code/direct/arrow-fn-body-cntns-arguments-func-decl-arrow-func-declare-arguments-assign-incl-def-param-arrow-arguments.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a parameter list is not implemented yet
 language/eval-code/direct/arrow-fn-body-cntns-arguments-func-decl-arrow-func-declare-arguments-assign.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a parameter list is not implemented yet

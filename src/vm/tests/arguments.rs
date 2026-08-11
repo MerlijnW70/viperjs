@@ -109,6 +109,72 @@ fn an_index_and_its_parameter_are_one_variable() {
 }
 
 #[test]
+fn a_delete_that_was_refused_breaks_nothing() {
+    // §10.4.4.5 step 4 — the link goes when the delete **succeeded**, and a `delete` at a
+    // non-configurable index succeeds at nothing. This unmapped first and unconditionally, so a
+    // refused delete left an index that is still sitting there no longer following its parameter,
+    // and a later assignment stopped showing through. Nothing throws and nothing disappears: the
+    // property simply stops being the variable it was, which is why it needs a *write* to see.
+    assert_eq!(
+        run(
+            "function f(a) { Object.defineProperty(arguments, '0', {configurable: false});              var refused = delete arguments[0]; a = 2; return refused + ',' + arguments[0]; } f(1)"
+        ),
+        "false,2"
+    );
+    // …and the same index still answers as the parameter in the other direction.
+    assert_eq!(
+        run(
+            "function f(a) { Object.defineProperty(arguments, '0', {configurable: false});              delete arguments[0]; arguments[0] = 3; return a; } f(1)"
+        ),
+        "3"
+    );
+    // The contrast that gives the rows above their meaning: a delete that *is* allowed does break
+    // the link, which is the next test's subject and is asserted here so the two cannot both pass
+    // by the link never breaking at all.
+    assert_eq!(
+        run("function f(a) { delete arguments[0]; a = 2; return typeof arguments[0]; } f(1)"),
+        "undefined"
+    );
+}
+
+#[test]
+fn freezing_an_index_without_a_value_freezes_it_where_the_parameter_is() {
+    // §10.4.4.2 step 4 — a define that asks for `[[Writable]]: false` and names **no** value takes
+    // the value from the *map*, which is the parameter as it stands now. The arguments object's own
+    // slot still holds what the parameter had when the object was made, so reading from there
+    // answers the argument that was passed rather than the one the function is holding.
+    assert_eq!(
+        run(
+            "function f(a) { a = 5; Object.defineProperty(arguments, '0', {writable: false});              return arguments[0]; } f(1)"
+        ),
+        "5"
+    );
+    assert_eq!(
+        run(
+            "function f(a) { a = 5; Object.defineProperty(arguments, '0', {writable: false});              var d = Object.getOwnPropertyDescriptor(arguments, '0');              return d.value + ',' + d.writable; } f(1)"
+        ),
+        "5,false"
+    );
+    // …and a define that *does* name a value uses that one, which is the branch the substitution
+    // must not reach — otherwise every freeze would ignore what it was told.
+    assert_eq!(
+        run(
+            "function f(a) { a = 5; Object.defineProperty(arguments, '0',              {value: 7, writable: false}); return arguments[0] + ',' + a; } f(1)"
+        ),
+        "7,7"
+    );
+    // A define that changes neither writability nor value leaves the link alone, so the parameter
+    // goes on showing through — which says the substitution is about `writable: false` and not
+    // about defines in general.
+    assert_eq!(
+        run(
+            "function f(a) { Object.defineProperty(arguments, '0', {enumerable: true});              a = 5; return arguments[0]; } f(1)"
+        ),
+        "5"
+    );
+}
+
+#[test]
 fn the_link_can_be_broken_and_never_comes_back() {
     // §10.4.4.5 step 4 — deleting the index separates the two names for good: the parameter goes
     // on changing and the object no longer hears about it.

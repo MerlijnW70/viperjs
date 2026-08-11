@@ -540,8 +540,21 @@ impl Heap {
                 self, &current, descriptor,
             ));
         }
+        // §10.4.4.2 step 4 — the descriptor is *amended* before the ordinary define when it freezes
+        // a joined index without saying at what value, and the value comes from the parameter.
+        let frozen;
+        let descriptor = match self.frozen_argument_value(object, key, descriptor) {
+            Some(value) => {
+                frozen = PropertyDescriptor {
+                    value: Some(value),
+                    ..*descriptor
+                };
+                &frozen
+            }
+            None => descriptor,
+        };
         let defined = self.define_ordinary_property(object, key, descriptor);
-        // §10.4.4.2 steps 3 to 5 — only when the define was allowed. A refused define changes
+        // §10.4.4.2 steps 5 to 7 — only when the define was allowed. A refused define changes
         // nothing, and must not break a link either.
         if defined {
             self.settle_argument(object, key, descriptor);
@@ -692,6 +705,31 @@ impl Heap {
             return;
         };
         self.set_variable(environment, slot, value);
+    }
+
+    /// §10.4.4.2 step 4 — the value a define should take from the map rather than from the object.
+    ///
+    /// `Some` for exactly the shape the clause names: a joined index, a **data** descriptor that
+    /// carries no `[[Value]]` and asks for `[[Writable]]: false`. That define is a program saying
+    /// "freeze this index where it is", and where it is means *where the parameter is now* — the
+    /// arguments object's own slot still holds whatever the parameter had when the object was made,
+    /// which is only the same value if nothing has assigned to it since.
+    fn frozen_argument_value(
+        &self,
+        object: ObjectId,
+        key: PropertyKey,
+        descriptor: &PropertyDescriptor,
+    ) -> Option<Value> {
+        if descriptor.is_accessor_descriptor()
+            || descriptor.value.is_some()
+            || descriptor.writable != Some(false)
+        {
+            return None;
+        }
+        let index = key.as_array_index()?;
+        let map = self.object(object).and_then(Object::arguments_map)?;
+        let slot = map.slot(index)?;
+        self.variable(map.environment, slot).flatten()
     }
 
     /// Put an arguments object on the heap — §10.4.4.4 `CreateMappedArgumentsObject`.

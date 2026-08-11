@@ -881,16 +881,21 @@ impl Vm {
         };
         // Own only: `delete` never reaches through a prototype, which is why deleting an
         // inherited property answers `true` and leaves it exactly where it was.
-        // §10.4.4.5 step 4 — a deleted index stops being the parameter it was, whatever happens
-        // to the property itself. Broken *before* the delete, because the delete may refuse and
-        // the link is about the index rather than about what is at it.
         // §10.4.6.11 — an exported name may not be deleted. A key that is *not* an export is
         // absent, and deleting an absent property answers true, so only the export needs saying.
         if heap.namespace_export(object, key).is_some() {
             return Ok(Value::Boolean(false));
         }
-        heap.unmap_argument(object, key);
         let gone = heap.delete_own_property(object, key);
+        // §10.4.4.5 step 4 — a deleted index stops being the parameter it was, and **only when the
+        // delete succeeded**. This unmapped first and unconditionally, on the reasoning that "the
+        // link is about the index rather than about what is at it" — which reads well and is not
+        // what the clause says. A `delete` refused by a non-configurable index left that index no
+        // longer following its parameter, so a later assignment to the parameter stopped showing
+        // through a property that is still sitting there.
+        if gone {
+            heap.unmap_argument(object, key);
+        }
         Ok(Value::Boolean(gone))
     }
     /// `[[HasProperty]]` (§10.1.7) through §13.10.1's `in`.
