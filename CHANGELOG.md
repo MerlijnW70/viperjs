@@ -7,7 +7,7 @@ public API is not stable and may change in any release.
 
 ## [Unreleased]
 
-**86.32% of test262** — 80,415 of 93,161 runs, measured three times on an idle machine against the
+**86.35% of test262** — 80,443 of 93,161 runs, measured three times on an idle machine against the
 suite revision the expectations file names, up from 86.01% at 0.3.0.
 
 ### Added
@@ -21,6 +21,12 @@ suite revision the expectations file names, up from 86.01% at 0.3.0.
   method's text starts at `get`, `set`, `async` or `*` and otherwise at its name, with `static`
   outside it; a class constructor's is the whole class. A built-in, a bound function and a Proxy
   still answer step 3's form.
+- **A regular expression reads its pattern as code units** unless `u` or `v` says otherwise, which
+  is §22.2.1 and which it did not: a literal astral character became one atom and could never match
+  a code unit, so `new RegExp(emoji).test(emoji)` was `false` and a `replace` with one did nothing.
+  A lone surrogate in a pattern survives now too — the source had been arriving through a lossy
+  conversion — and a group name may hold an astral letter, §22.2.1's `RegExpIdentifierStart`
+  admitting a surrogate pair as one identifier character without asking for the flag.
 - **Case-insensitive matching past ASCII** — §22.2.2.9's `Canonicalize` was `a`-`z` and nothing
   else, so `/café/i` did not match `CAFÉ` in any script or direction. Both of the clause's branches
   are built: folding under `u` and `v`, uppercasing without them.
@@ -30,6 +36,18 @@ suite revision the expectations file names, up from 86.01% at 0.3.0.
 
 ### Fixed
 
+- **A step under `u` is a code point in all four places it is taken.** §22.2.7.8
+  `AdvanceStringIndex` was written once and three callers ignored it, so an empty match under `u`
+  put its replacement *between* the halves of a surrogate pair, and the matcher's own scan retried
+  one unit into a character it had just declined and reported that as a match. Separately, §22.2.7.2
+  step 11 runs the matcher over code points, so a `lastIndex` inside a pair names the character
+  containing it and the attempt begins at its start.
+- **A proxy could report deleting what its target can never regain** — §10.5.10 step 13, the one
+  invariant of the eleven that turns on the target's extensibility rather than the property's
+  attributes.
+- **A `for`-`in` over a primitive enumerated nothing.** §14.7.5.9 step 6's `ToObject` was missing,
+  so `for (var k in "ab")` saw no indices and an enumerable property on `Number.prototype` or any
+  of the other four was invisible to a `for`-`in` over a primitive of that type.
 - **A `finally` that leaves abruptly keeps its own completion value**, and an empty one answers
   `undefined` — §14.15.3 step 3. `1; try { 2 } finally { 3 }` answered 3.
 - **A collection reads its iterable one element at a time.** §24.1.1.2 `AddEntriesFromIterable`

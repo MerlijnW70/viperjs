@@ -12,6 +12,7 @@ in.
 
 - [Differential testing is a fourth instrument, and it found six bugs the ratchet cannot see](#differential-testing-is-a-fourth-instrument-and-it-found-six-bugs-the-ratchet-cannot-see)
 - [The intrinsics and the grammar, swept structurally: five bugs, and two the other engine has](#the-intrinsics-and-the-grammar-swept-structurally-five-bugs-and-two-the-other-engine-has)
+- [Surrogates, and the six places an engine can be per-unit or per-point and pick wrong](#surrogates-and-the-six-places-an-engine-can-be-per-unit-or-per-point-and-pick-wrong)
 - [Reading the property table where the clause says `Get`, and three things it lost](#reading-the-property-table-where-the-clause-says-get-and-three-things-it-lost)
 - [test262 runs ahead of the specification, and two "gaps" were unmerged PRs — costed, refused](#test262-runs-ahead-of-the-specification-and-two-gaps-were-unmerged-prs--costed-refused)
 - [A sloppy eval's `var` lands in a running scope, and two clauses had nowhere to be — +49](#a-sloppy-evals-var-lands-in-a-running-scope-and-two-clauses-had-nowhere-to-be--49)
@@ -182,6 +183,79 @@ cover, which is presumably why they survive:
 Neither has been reported. **Check them against a third engine before filing** — a lone
 disagreement with V8 in a corner test262 does not reach is exactly where a misreading of the
 grammar hides, and the argument above is a reading.
+
+### Surrogates, and the six places an engine can be per-unit or per-point and pick wrong
+
+A String is code units and a `char` is a code point, and every operation on text has to say which it
+means. Six places here had it wrong, in both directions, and **one of the six is a bug a user would
+hit in an afternoon**: `new RegExp(emoji).test(emoji)` was `false`, and a `replace` with a literal
+emoji did nothing at all.
+
+**Per-unit where the clause says per-point.** §22.2.7.8 `AdvanceStringIndex` was written once and
+correctly, and three callers ignored it: `Symbol.replace`'s empty-match advance, which put the
+replacement *between* the halves of a pair; `Symbol.match`'s; and §22.2.7.2 step 12.c.ii, the
+matcher's own scan — the one that reads as a wrong answer rather than as mangled output. A negated
+class of an astral character declined the whole character at 0, retried one unit along, matched its
+**trail surrogate**, and reported a match inside a character it had just refused.
+
+**Per-point where the clause says per-unit.** §22.2.1's productions are over `SourceCharacter`,
+which is a code unit without `u` or `v`. The parser read `source.chars()` — always code points — so
+a literal astral character became one atom, and the matcher then compared that atom against single
+code units. It could never match. The element type is `u32` now, built per-flags; `u32` rather than
+`char` because a lone surrogate is neither a `char` nor an error, and the source had also been
+arriving through `String::from_utf16_lossy`, which replaced one with U+FFFD before parsing began.
+
+**And a third thing, which is neither.** §22.2.7.2 step 11 runs the matcher over
+`StringToCodePoints(S)` under `u`, and step 13.b starts it at "the index into input of the character
+that was obtained from element lastIndex of S" — so a `lastIndex` of 1 inside a two-unit character
+names that character and the attempt begins at **0**. The first version of this asserted the
+opposite, in a comment; the probe that measured it is what said so.
+
+**What to take from it.** `peek()` still answers `Option<char>` after the change, which is why
+twenty-seven syntax tests needed no edit — a surrogate is never a syntax character, so a test
+written against a `char` declines one correctly. What had to change is the four places that read "no
+`char`" as "no input" and ended a construct early: the atom reader, the alternative loop, the class
+loop and the group-name walk. That last is why a group named with an astral letter works now;
+§22.2.1's `RegExpIdentifierStart` admits a surrogate pair as one identifier character and does so
+without asking for `u`.
+
+**The instrument.** 19,584 rows — 89 patterns × 12 flag sets × 17 subjects — compared not on whether
+they matched but on where the match stopped, what it captured and where `lastIndex` was left,
+through `exec`, `replace`, `split` and `matchAll`. Write the pattern pieces as JavaScript string
+literals **inside the probe** and combine them there: a backslash crossing a language boundary has
+collapsed four times in this project, and each time produced a page of disagreements that were the
+harness's own.
+
+**Two things the expectations file's reason column caught that pass and fail could not.** A first
+`identifier_of` routed everything through `u16` and dropped the code points `u` mode had already
+paired — four regressions, found before blessing. And an astral group name reported "not closed"
+rather than "not an identifier", which was the same early-exit bug one layer up; fixing it left that
+reason exactly where it started, and what it now describes is a real remaining gap: a group name
+does not decode its unicode escapes.
+
+### A `for`-`in` over a primitive enumerated nothing, and the comment above it said why it should not
+
+§14.7.5.9 step 6 is `ToObject(exprValue)` once `undefined` and `null` have been answered, so every
+other primitive is wrapped and walked. The code matched `Value::Object` and returned an empty list
+for everything else — and the comment directly above it read:
+
+> Any other primitive is wrapped by `ToObject`, and a wrapper has no enumerable own properties
+> except a String's, which has one per index (§10.4.3).
+
+The rule, stated correctly, beside code that did none of it. **The fourth comment in this engine
+found asserting the bug as a rule**, and the pattern is worth naming: all four were written by
+somebody who had read the clause, and none by somebody who had run it.
+
+Two visible consequences. `for (var k in "ab")` visited nothing. And an enumerable property put on
+`Number.prototype`, `String.prototype`, `Boolean.prototype`, `Symbol.prototype` or
+`BigInt.prototype` was invisible to a `for`-`in` over a primitive of that type — which is what
+extending a built-in's prototype was ever for.
+
+The fix is one match arm: `Vm::wrapped` already answers `None` for exactly `undefined` and `null`,
+which is the question the clause asks and no other. **No conformance movement** — test262 does not
+enumerate a primitive string — and mutation coverage found nothing to mutate, a match arm not being
+a mutation site, so the guarantee is a test checked by hand against the code with the wrapping taken
+back out.
 
 ### Reading the property table where the clause says `Get`, and three things it lost
 
