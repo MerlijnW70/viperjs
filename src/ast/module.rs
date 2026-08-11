@@ -22,6 +22,8 @@ pub struct Module {
     pub body: Box<[ModuleItem]>,
     /// The whole source text.
     pub span: Span,
+    /// The source itself — see [`crate::ast::Script::source`], which keeps it for the same reason.
+    pub source: std::rc::Rc<str>,
 }
 
 /// One `ModuleItem` (§16.2).

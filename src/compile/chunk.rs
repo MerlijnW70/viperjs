@@ -19,6 +19,20 @@ use std::rc::Rc;
 /// time, rather than each time the line runs.
 #[derive(Debug, Default)]
 pub struct Chunk {
+    /// The source text this body was compiled from — §20.2.3.5's `[[SourceText]]`, held whole.
+    ///
+    /// An `Rc<str>` shared by every chunk from one parse, so a script's text is kept once however
+    /// many functions it contains. That does mean a script stays alive as long as any function in
+    /// it does, which is the reason this used to be absent and the answer was `[native code]` for
+    /// everything: a program using `String(f)` to re-read a function got nothing. Every engine
+    /// pays the same cost for the same reason, and one `Rc` per chunk is the whole of it here.
+    pub(super) source: std::rc::Rc<str>,
+    /// Where in [`Chunk::source`] this body's *production* begins and ends.
+    ///
+    /// The production and not the body: `function f() {}` starts at `function`, an arrow at its
+    /// parameters, a method at its name, and a class constructor covers the whole class — which is
+    /// what §15.7.14 gives it. Slicing the source by this is the whole of `toString`.
+    pub(super) source_span: Span,
     pub(super) code: Vec<Instruction>,
     pub(super) constants: Vec<Value>,
     pub(super) locals: usize,
@@ -1282,6 +1296,24 @@ impl Chunk {
     /// number of *slots*. What this reports is how many arguments the function says it needs.
     pub fn length(&self) -> usize {
         self.length
+    }
+
+    /// §20.2.3.5's `[[SourceText]]` — the text of the production this body was compiled from.
+    ///
+    /// Empty for a body ViperJS synthesises rather than reads: a class field's initialiser and a
+    /// static block are compiled into functions of their own that no production names, so there is
+    /// nothing to slice and nothing that can ask. `Function.prototype.toString` answers §20.2.3.5
+    /// step 3's `NativeFunction` form when this is empty, which is what step 2 allows a host to do.
+    #[must_use]
+    pub fn source_text(&self) -> &str {
+        let (from, to) = (
+            self.source_span.start as usize,
+            self.source_span.end as usize,
+        );
+        // Bounds-checked rather than indexed: a span is built by the parser from the source this
+        // chunk holds, so it fits — and a slice that panicked would break DR-0002 on a fact no
+        // input controls.
+        self.source.get(from..to).unwrap_or("")
     }
 
     /// §10.2.9's `name`, or `None` where the specification asks for the empty string.

@@ -226,6 +226,9 @@ fn a_return_at_the_top_level_is_refused_by_the_compiler_too() {
             span: Span::new(0, 7),
         }]),
         span: Span::new(0, 7),
+        // Built by hand rather than parsed, so there is no text — and none is read: this tree
+        // never reaches a function, which is what makes it worth building by hand.
+        source: "".into(),
     };
     let error = compile_script(&script, &mut heap).expect_err("no function to return from"); // the test is about the error
     assert_eq!(
@@ -292,6 +295,7 @@ fn a_break_with_no_loop_around_it_is_refused_rather_than_left_dangling() {
                 span: Span::new(0, 5),
             }]),
             span: Span::new(0, 5),
+            source: "".into(),
         };
         let error = compile_script(&script, &mut heap).expect_err("no loop to leave"); // the test is about the error
         assert_eq!(

@@ -165,6 +165,7 @@ fn parse_script_seeded_recording_arguments(
             is_strict: declares_strict || strict,
             body,
             span: Span::new(0, source.len() as u32),
+            source: source.into(),
         },
         parser.arguments_reference,
     ))

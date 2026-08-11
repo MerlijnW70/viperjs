@@ -29,18 +29,18 @@ pub fn call(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
 
 /// §20.2.3.5 `Function.prototype.toString`.
 ///
-/// # Why every function answers the `[native code]` form
+/// # Step 2 for a function written in JavaScript, step 3 for everything else
 ///
-/// Step 2 answers a function's `[[SourceText]]` — but only when `HostHasSourceTextAvailable` says
-/// so, and a host is allowed to say no. ViperJS says no for everything: a compiled chunk does not
-/// keep the text it came from, and retaining it would mean holding every script alive for as long
-/// as any function in it. So step 3's `NativeFunction` form is what comes back, for a function
-/// written in JavaScript as much as for a built-in.
+/// Step 2 answers a function's `[[SourceText]]`, and this used to answer nothing at all: a host
+/// may say `HostHasSourceTextAvailable` is false, and ViperJS said so for every function because a
+/// compiled chunk did not keep the text it came from. The cost of keeping it is one `Rc<str>` per
+/// parse, shared by every body compiled out of it — see [`crate::compile::Chunk::source`] — and the
+/// cost of *not* keeping it was that `String(f)` gave a program nothing it could use.
 ///
-/// That is a real limitation and not a reading of the clause: a program using `String(f)` to
-/// re-parse a function gets nothing useful. It is written down here because the alternative — a
-/// plausible-looking reconstruction — would be worse, and because keeping the source is a change
-/// to the compiler rather than to this function.
+/// So a function whose chunk carries a source span answers with that slice, byte for byte:
+/// comments, the original line terminators, and the exact bounds of the production. Everything else
+/// falls to step 3's `NativeFunction` form — a built-in, a bound function, a Proxy, and the bodies
+/// ViperJS synthesises rather than reads, which are a class field's initialiser and a static block.
 ///
 /// # The name goes in only when the grammar can hold it
 ///
@@ -67,6 +67,23 @@ fn to_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
         return Err(Abrupt::type_error(
             "Function.prototype.toString requires a function",
         ));
+    }
+    // Step 2 — an ECMAScript function object answers its `[[SourceText]]`, and answers it whatever
+    // it is. Ahead of everything below, because a function that has its own text does not need a
+    // name spliced into a grammar: the text *is* the answer.
+    //
+    // **No guard for an empty one.** The four bodies ViperJS synthesises rather than reads — a
+    // field initialiser, a static block — have no production to slice, and §15.7.10 step 1.b.v is
+    // explicit that a field initialiser's `[[SourceText]]` is "the empty sequence of Unicode code
+    // points". So the empty String is the clause's answer and not a case to fall through from. A
+    // guard was written here first and was a branch no input could reach either way: nothing in
+    // §19 through §28 hands one of those functions to a program.
+    if let Value::Object(object) = call.this_value
+        && let Some(crate::heap::Callable::Bytecode { code, .. }) =
+            heap.object(object).and_then(crate::heap::Object::call)
+    {
+        let units: Vec<u16> = code.source_text().encode_utf16().collect();
+        return Ok(Value::String(heap.intern(&units)));
     }
     let name = key(heap, "name");
     let held = vm.get_property_key(call.this_value, name, heap)?;

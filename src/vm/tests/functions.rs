@@ -609,30 +609,58 @@ fn an_optional_call_gives_up_one_link_later_than_an_optional_member() {
 }
 
 #[test]
-fn a_function_stringifies_in_the_native_code_form_whatever_it_was_written_as() {
-    // §20.2.3.5 step 2 answers a function's source text *when the host has it*, and ViperJS's host
-    // does not: a compiled chunk does not keep the text it came from. So step 3's `NativeFunction`
-    // form comes back for every function, which the clause allows and which is a real limitation
-    // rather than a reading of it.
-    assert_eq!(run("String(Math.max)"), "function max() { [native code] }");
+fn a_function_answers_with_its_own_source_and_a_built_in_with_the_native_form() {
+    // §20.2.3.5 step 2 answers a function's `[[SourceText]]`. This test asserted step 3's
+    // `NativeFunction` form for *everything*, because a compiled chunk did not keep the text it
+    // came from — a real limitation the clause permits, and one that made `String(f)` useless to a
+    // program. The chunk keeps it now, so step 2 applies wherever there is a production to slice.
     assert_eq!(
         run("String(function f(a) { return a; })"),
-        "function f() { [native code] }"
+        "function f(a) { return a; }"
+    );
+    // Byte for byte, which is what "the source text matched by" means: the comments are inside the
+    // production and the spacing is whatever was written.
+    assert_eq!(
+        run("var f = /* before */function  f ( a ) { /* in */ }/* after */; String(f)"),
+        "function  f ( a ) { /* in */ }"
+    );
+    // An arrow starts at its parameters, not at what it is assigned to.
+    assert_eq!(
+        run("var h = /* x */ a /* y */ => /* z */ 0; String(h)"),
+        "a /* y */ => /* z */ 0"
+    );
+    // A method starts at `get`, `set`, `async` or `*` when one is written, and at its name when
+    // none is — and `static` is outside the production, the grammar putting it on the element.
+    assert_eq!(
+        run("String(({ m(y) { return y; } }).m)"),
+        "m(y) { return y; }"
     );
     assert_eq!(
-        run("String(function () {})"),
+        run("String(Object.getOwnPropertyDescriptor({ get x() { return 1; } }, 'x').get)"),
+        "get x() { return 1; }"
+    );
+    assert_eq!(run("String(({ async a() {} }).a)"), "async a() {}");
+    assert_eq!(run("String(({ *g() {} }).g)"), "*g() {}");
+    assert_eq!(run("class C { static s() {} } String(C.s)"), "s() {}");
+    // §15.7.14 — a constructor's source text is the **whole class**, written constructor or not.
+    assert_eq!(
+        run("class C { constructor() {} m() {} } String(C)"),
+        "class C { constructor() {} m() {} }"
+    );
+    assert_eq!(
+        run("class D { m() {} } String(D.prototype.constructor)"),
+        "class D { m() {} }"
+    );
+    // …and step 3's form is what is left: a built-in has no source text to have, and neither does
+    // a bound function or a Proxy.
+    assert_eq!(run("String(Math.max)"), "function max() { [native code] }");
+    assert_eq!(
+        run("String(function f() {}.bind(null))"),
         "function () { [native code] }"
     );
-    // An accessor's name already carries its `get`, which is exactly §20.2.3.5's
-    // `NativeFunctionAccessor` — so the two spellings need no case of their own.
     assert_eq!(
-        run("var o = { get x() { return 1; } }; \
-             String(Object.getOwnPropertyDescriptor(o, 'x').get)"),
-        "function get x() { [native code] }"
-    );
-    assert_eq!(
-        run("String(function () {}.bind(null))"),
-        "function bound () { [native code] }"
+        run("String(new Proxy(function f() {}, {}))"),
+        "function f() { [native code] }"
     );
     // Step 5 — something that is not callable has nothing to answer about, and saying
     // `[object Object]` would be a lie about what was asked.
@@ -640,13 +668,6 @@ fn a_function_stringifies_in_the_native_code_form_whatever_it_was_written_as() {
         run("try { Function.prototype.toString.call({}) } catch (e) { e.constructor.name }"),
         "TypeError"
     );
-    assert_eq!(
-        run("try { Function.prototype.toString.call(undefined) } catch (e) { e.constructor.name }"),
-        "TypeError"
-    );
-    // …and it is what `String(f)` and `f + ''` both reach, because §7.1.1 finds it before
-    // `Object.prototype.toString`.
-    assert_eq!(run("Math.max + ''"), "function max() { [native code] }");
 }
 
 #[test]

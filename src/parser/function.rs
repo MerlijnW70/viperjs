@@ -138,10 +138,16 @@ impl Parser<'_> {
     ) -> Result<Function, ParseError> {
         // `async [no LineTerminator here] function` — the caller checked both, and the `async` is
         // still the current token when it did not.
+        //
+        // Where the production begins, for §20.2.3.5's `[[SourceText]]`: at the `async` when there
+        // is one, because `AsyncFunctionDeclaration : async function …` puts the word *inside* the
+        // production. Taken before the word is consumed, since after it the `function` looks like
+        // the start of an ordinary one.
+        let start = self.current.span;
         if is_async {
             self.advance(Goal::RegExp)?;
         }
-        let keyword = self.advance(Goal::RegExp)?;
+        self.advance(Goal::RegExp)?;
         // `function *` — the one bit of syntax between §15.2's productions and §15.5's, and
         // nothing about it is restricted — no `[no LineTerminator here]`, so `function*g`,
         // `function * g` and a `*` on its own line are the same generator.
@@ -177,7 +183,7 @@ impl Parser<'_> {
             is_strict,
             is_generator,
             is_async,
-            span: keyword.span.to(end),
+            span: start.to(end),
         })
     }
 

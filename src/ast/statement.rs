@@ -20,6 +20,12 @@ pub struct Script {
     pub body: Box<[Stmt]>,
     /// The whole source text, so a diagnostic about the script itself has somewhere to point.
     pub span: Span,
+    /// The source itself, kept so §20.2.3.5 can answer with it.
+    ///
+    /// `[[SourceText]]` is "the source text matched by" a function's production, which means the
+    /// text has to outlive the parse — and an `Rc` shared by every function compiled from this
+    /// script is the whole of what that costs — see the `source` field on `compile::Chunk`.
+    pub source: std::rc::Rc<str>,
 }
 
 /// A statement, with where it was written.

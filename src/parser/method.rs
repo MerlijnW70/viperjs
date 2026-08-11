@@ -34,6 +34,7 @@ use super::body::{BodyContext, SuperAllowed};
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{FormalParameters, Function, MethodKind, PropertyKey};
 use crate::lexer::{Goal, TokenKind};
+use crate::span::Span;
 use crate::static_semantics::bound_names;
 use std::collections::HashSet;
 
@@ -82,6 +83,7 @@ impl Parser<'_> {
         super_allowed: SuperAllowed,
         is_generator: bool,
         is_async: bool,
+        start: Span,
     ) -> Result<Box<Function>, ParseError> {
         // `GeneratorMethod : * ClassElementName ( UniqueFormalParameters[+Yield] ) { GeneratorBody }`
         // — so the `*` reaches the parameters as much as the body, exactly as a generator
@@ -128,7 +130,12 @@ impl Parser<'_> {
             is_strict,
             is_generator,
             is_async,
-            span: end,
+            // §20.2.3.5's `[[SourceText]]` needs the whole production and not the body, so the
+            // caller says where it began: at `get`, `set`, `async` or `*` when one of those is
+            // written, and at the `ClassElementName` otherwise. **`static` is outside it** —
+            // `ClassElement : static MethodDefinition` puts the word beside the production rather
+            // than in it, and test262 compares the string without it.
+            span: start.to(end),
         }))
     }
 

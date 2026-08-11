@@ -124,6 +124,9 @@ impl CompileError {
 ///
 /// Takes the heap because a String literal is a heap value and the compiler is where it is made.
 pub fn compile_expression(expression: &Expr, heap: &mut Heap) -> Result<Chunk, CompileError> {
+    // No source seeded, unlike the three below: an `Expr` does not carry the text it was read
+    // from, and nothing but a test reaches this. A function compiled here would answer the
+    // empty String from §20.2.3.5, which is the same thing a body with no production answers.
     let mut compiler = Compiler::new(heap);
     compiler.expression(expression)?;
     compiler.chunk.emit(Instruction::SetCompletion);
@@ -175,6 +178,10 @@ fn compile_script_bindings(
     deletable: Deletable,
 ) -> Result<Chunk, CompileError> {
     let mut compiler = Compiler::new(heap);
+    // §20.2.3.5's `[[SourceText]]` starts here and is handed to every body below.
+    compiler.chunk.source = script.source.clone();
+    // §20.2.3.5's `[[SourceText]]` starts here and is handed to every body below.
+    compiler.chunk.source = script.source.clone();
     // §11.2.1 — a Script is strict only if its own Directive Prologue says so, and everything nested
     // inherits that. A Module always is, which is M7's to record.
     compiler.chunk.strict = script.is_strict;
@@ -243,6 +250,8 @@ fn compile_module_body(
     asynchronous: bool,
 ) -> Result<(Chunk, bool), CompileError> {
     let mut compiler = Compiler::new(heap);
+    // §20.2.3.5's `[[SourceText]]` starts here and is handed to every body below.
+    compiler.chunk.source = module.source.clone();
     compiler.chunk.strict = true;
     // §16.2.1.5.3 — an asynchronous module's body is entered like an `async` function's and answers
     // a promise, so it carries the same brand and the same wrapper.
@@ -793,6 +802,12 @@ pub fn compile_direct_eval(
     dynamic: bool,
 ) -> Result<Chunk, CompileError> {
     let mut compiler = Compiler::new(heap);
+    // §20.2.3.5's `[[SourceText]]` — the *eval's* text, which is the source a function
+    // declared inside it was written in. Missed when the other three entry points were
+    // seeded, and the failure was silent in the useful direction: a function declared by a
+    // direct eval answered the empty String, because an unseeded chunk has an empty source
+    // and every body below inherits it.
+    compiler.chunk.source = script.source.clone();
     // §14.11 — the call is inside a `with`, so every free name in this text is a run-time question.
     // The chain above cannot say it: an object environment has no names to list and arrives as an
     // empty level, indistinguishable from one the engine made for a temporary. One flag rather than

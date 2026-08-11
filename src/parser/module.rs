@@ -83,6 +83,7 @@ pub fn parse_module(source: &str) -> Result<Module, ParseError> {
     Ok(Module {
         body: body.into_boxed_slice(),
         span: Span::new(0, source.len() as u32),
+        source: source.into(),
     })
 }
 

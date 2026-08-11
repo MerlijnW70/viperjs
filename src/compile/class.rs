@@ -571,6 +571,10 @@ impl Compiler<'_> {
         // without `new` it is a TypeError. The body has to carry that, because by the time a call
         // happens the only thing left is the chunk.
         body.class_constructor = true;
+        // §15.7.14 again — a constructor's `[[SourceText]]` is the **whole class**, not the
+        // `constructor(){}` inside it, and a class with no constructor written still has one. So
+        // `String(C)` and `String(C.prototype.constructor)` are the class's own text either way.
+        body.source_span = class.span;
         self.emit_class(body, class.heritage.is_some(), span)
     }
 

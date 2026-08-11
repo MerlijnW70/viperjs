@@ -86,6 +86,10 @@ impl Parser<'_> {
         // `AsyncMethod : async [no LineTerminator here] ClassElementName …`, and
         // `AsyncGeneratorMethod` puts the `*` between the two — so the words come in this order
         // and `static` is outside both, the grammar putting it on the `ClassElement`.
+        // Where the `MethodDefinition` begins, for §20.2.3.5's `[[SourceText]]` — taken here, which
+        // is *after* `static`, because the grammar puts that word on the `ClassElement` around the
+        // production rather than in it.
+        let start = self.current.span;
         let is_async = self.at_async_method()?;
         if is_async {
             self.advance(Goal::Div)?;
@@ -165,6 +169,7 @@ impl Parser<'_> {
             },
             is_generator,
             is_async,
+            start,
         )?;
         Ok(ClassElement::Method(ClassMethod {
             key,

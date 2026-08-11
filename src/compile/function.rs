@@ -61,6 +61,10 @@ impl Compiler<'_> {
             Asynchrony::of(function.is_async),
             span,
         )?;
+        // §20.2.3.5 — the production, which for a method starts at `get`, `set`, `async` or `*` and
+        // otherwise at the name. The parser recorded it; `span` here is a diagnostic's.
+        let mut body = body;
+        body.source_span = function.span;
         self.emit_function(body, span)
     }
 
@@ -146,6 +150,10 @@ impl Compiler<'_> {
             Asynchrony::of(arrow.is_async),
             span,
         )?;
+        // §20.2.3.5 — `ArrowFunction : ArrowParameters => ConciseBody`, so the text starts at the
+        // parameters and not at whatever the arrow is being assigned to.
+        let mut body = body;
+        body.source_span = arrow.span;
         self.emit_function(body, span)
     }
 
@@ -234,6 +242,7 @@ impl Compiler<'_> {
                 field_initializer: self.chunk.field_initializer,
             },
             span,
+            &self.chunk.source,
         )
     }
 
@@ -724,6 +733,7 @@ fn compile_body(
     outer: Vec<Vec<Local>>,
     nesting: Nesting<'_>,
     span: Span,
+    source: &std::rc::Rc<str>,
 ) -> Result<Chunk, CompileError> {
     // §19.2.1.1 — a **direct** `eval` in this body may add a `var` to this body's own variable
     // scope, so a name here cannot be pinned to a slot at compile time: the binding it should
@@ -738,7 +748,15 @@ fn compile_body(
     //
     // The retry is bounded at one. The second pass is told, so it never asks again, and a body
     // without a direct eval pays nothing at all.
-    let first = compile_body_once(heap, parameters, body.clone(), outer.clone(), nesting, span)?;
+    let first = compile_body_once(
+        heap,
+        parameters,
+        body.clone(),
+        outer.clone(),
+        nesting,
+        span,
+        source,
+    )?;
     if !first.saw_direct_eval || nesting.inside_eval {
         return Ok(first.chunk);
     }
@@ -746,7 +764,7 @@ fn compile_body(
         inside_eval: true,
         ..nesting
     };
-    Ok(compile_body_once(heap, parameters, body, outer, told, span)?.chunk)
+    Ok(compile_body_once(heap, parameters, body, outer, told, span, source)?.chunk)
 }
 
 /// What one pass of [`compile_body`] produced, and the one thing it learned on the way.
@@ -769,9 +787,16 @@ fn compile_body_once(
     outer: Vec<Vec<Local>>,
     nesting: Nesting<'_>,
     span: Span,
+    source: &std::rc::Rc<str>,
 ) -> Result<Compiled, CompileError> {
     let lexical = nesting.lexical;
     let mut compiler = Compiler::new(heap);
+    // §20.2.3.5's `[[SourceText]]`, carried down rather than looked up: every body compiled out of
+    // one parse shares the text. **Which slice of it** is set by the caller and not here — the
+    // `span` threaded through this function is for a diagnostic, and for a method or an arrow it is
+    // the span of whatever *contains* the production rather than of the production. A body nobody
+    // sets it for has none, which is right for the three ViperJS synthesises.
+    compiler.chunk.source = source.clone();
     // §10.2.9 — interned, so that the hundred `function f` in a program share one String and so that
     // the key made from it is the one the object already has.
     compiler.chunk.method = nesting.method;

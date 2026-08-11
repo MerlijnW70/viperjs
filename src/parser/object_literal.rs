@@ -96,6 +96,9 @@ impl Parser<'_> {
         // `AsyncGeneratorMethod` being both — all three put their marker before the name, so it is
         // read before anything knows what the name will be. Nothing else in a `PropertyDefinition`
         // may begin with either.
+        // Where the `MethodDefinition` begins, which is the marker if there is one and the name if
+        // there is not — see [`Parser::parse_method`] on why it is the caller that knows.
+        let start = self.current.span;
         let is_async = self.at_async_method()?;
         if is_async {
             self.advance(Goal::Div)?;
@@ -107,8 +110,13 @@ impl Parser<'_> {
         if is_async || is_generator {
             let key = self.parse_property_key()?;
             let kind = crate::ast::MethodKind::Normal;
-            let function =
-                self.parse_method(kind, SuperAllowed::PROPERTY_ONLY, is_generator, is_async)?;
+            let function = self.parse_method(
+                kind,
+                SuperAllowed::PROPERTY_ONLY,
+                is_generator,
+                is_async,
+                start,
+            )?;
             return Ok(PropertyDefinition::Method {
                 key,
                 kind,
@@ -127,7 +135,8 @@ impl Parser<'_> {
         // [`super::method`]. A `(` means the word was the name.
         if let Some(kind) = self.at_accessor(&key, escaped) {
             let key = self.parse_property_key()?;
-            let function = self.parse_method(kind, SuperAllowed::PROPERTY_ONLY, false, false)?;
+            let function =
+                self.parse_method(kind, SuperAllowed::PROPERTY_ONLY, false, false, start)?;
             return Ok(PropertyDefinition::Method {
                 key,
                 kind,
@@ -136,7 +145,8 @@ impl Parser<'_> {
         }
         if self.current.kind == TokenKind::LParen {
             let kind = crate::ast::MethodKind::Normal;
-            let function = self.parse_method(kind, SuperAllowed::PROPERTY_ONLY, false, false)?;
+            let function =
+                self.parse_method(kind, SuperAllowed::PROPERTY_ONLY, false, false, start)?;
             return Ok(PropertyDefinition::Method {
                 key,
                 kind,

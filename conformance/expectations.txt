@@ -122,7 +122,7 @@ annexB/language/eval-code/direct/func-switch-case-eval-func-existing-fn-no-init.
 annexB/language/eval-code/direct/func-switch-case-eval-func-no-skip-param.js :: it threw an object with no name: binding is not initialized to `undefined` Expected SameValue(«undefined», «123») to be true
 annexB/language/eval-code/direct/func-switch-dflt-eval-func-existing-fn-no-init.js :: it threw TypeError: what was called is not a function
 annexB/language/eval-code/direct/func-switch-dflt-eval-func-no-skip-param.js :: it threw an object with no name: binding is not initialized to `undefined` Expected SameValue(«undefined», «123») to be true
-annexB/language/eval-code/direct/script-decl-lex-no-collision.js :: it threw an object with no name: Expected SameValue(«function test262Fn() { [native code] }», «1») to be true
+annexB/language/eval-code/direct/script-decl-lex-no-collision.js :: it threw an object with no name: Expected SameValue(«function test262Fn() {}», «1») to be true
 annexB/language/eval-code/direct/script-decl-lex-no-collision.js (strict) :: it threw ReferenceError: test262Fn is not defined
 annexB/language/expressions/assignment/dstr/array-pattern-emulates-undefined.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 annexB/language/expressions/assignment/dstr/array-pattern-emulates-undefined.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
@@ -156,8 +156,8 @@ annexB/language/statements/const/dstr/array-pattern-emulates-undefined.js :: it 
 annexB/language/statements/const/dstr/array-pattern-emulates-undefined.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 annexB/language/statements/const/dstr/object-pattern-emulates-undefined.js :: it threw an object with no name: Expected SameValue(«1», «0») to be true
 annexB/language/statements/const/dstr/object-pattern-emulates-undefined.js (strict) :: it threw an object with no name: Expected SameValue(«1», «0») to be true
-annexB/language/statements/for-await-of/iterator-close-return-emulates-undefined-throws-when-called.js :: the test called $DONE with Test262Error: expected TypeError because `iter[Symbol.asyncIterator]() returned a non-object: Test262Error: shouldn't touch Symbol.iterator Expected SameValue(«function Test262Error() { [native code] }», «function TypeError() { [native code] }») to be true
-annexB/language/statements/for-await-of/iterator-close-return-emulates-undefined-throws-when-called.js (strict) :: the test called $DONE with Test262Error: expected TypeError because `iter[Symbol.asyncIterator]() returned a non-object: Test262Error: shouldn't touch Symbol.iterator Expected SameValue(«function Test262Error() { [native code] }», «function TypeError() { [native code] }») to be true
+annexB/language/statements/for-await-of/iterator-close-return-emulates-undefined-throws-when-called.js :: the test called $DONE with Test262Error: expected TypeError because `iter[Symbol.asyncIterator]() returned a non-object: Test262Error: shouldn't touch Symbol.iterator Expected SameValue(«function Test262Error(message) {   if (!(this instanceof Test262Error)) return new Test262Error(message);   this.message = message || ""; }», «function TypeError() { [native code] }») to be true
+annexB/language/statements/for-await-of/iterator-close-return-emulates-undefined-throws-when-called.js (strict) :: the test called $DONE with Test262Error: expected TypeError because `iter[Symbol.asyncIterator]() returned a non-object: Test262Error: shouldn't touch Symbol.iterator Expected SameValue(«function Test262Error(message) {   if (!(this instanceof Test262Error)) return new Test262Error(message);   this.message = message || ""; }», «function TypeError() { [native code] }») to be true
 annexB/language/statements/for-in/nonstrict-initializer.js :: it did not parse: a `for`-`in` or `for`-`of` binding may not have an initializer
 annexB/language/statements/for-of/iterator-close-return-emulates-undefined-throws-when-called.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 annexB/language/statements/for-of/iterator-close-return-emulates-undefined-throws-when-called.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -1171,8 +1171,6 @@ built-ins/Function/proto-from-ctor-realm-prototype.js :: it threw an object with
 built-ins/Function/proto-from-ctor-realm-prototype.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Function/prototype/bind/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Function/prototype/bind/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
-built-ins/Function/prototype/toString/method-computed-property-name.js :: it threw an object with no name: Conforms to NativeFunction Syntax: "undefined" ([ { a(){} }.a ](){ })
-built-ins/Function/prototype/toString/method-computed-property-name.js (strict) :: it threw an object with no name: Conforms to NativeFunction Syntax: "undefined" ([ { a(){} }.a ](){ })
 built-ins/GeneratorFunction/instance-length.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 built-ins/GeneratorFunction/instance-length.js (strict) :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 built-ins/GeneratorFunction/proto-from-ctor-realm-prototype.js :: it threw an object with no name: Expected SameValue(«[object Generator]», «[object Generator]») to be true
