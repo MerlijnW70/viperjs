@@ -427,3 +427,104 @@ fn a_source_that_ran_out_is_not_told_a_second_time() {
         );
     }
 }
+
+/// An iterator whose `next` is a throwing getter and whose `return` records that it was called.
+///
+/// The throwing getter is the point: §27.1.4.4 closes the *this value* before `GetIteratorDirect`
+/// reads `next`, so an engine that reads it first fails differently and an assertion about the
+/// error alone would not notice.
+const REFUSABLE: &str = "var o = {closed: false}; \
+     Object.defineProperty(o, 'next', {get: function () { throw new Error('next read'); }}); \
+     o.return = function () { o.closed = true; return {done: true}; }; \
+     Object.setPrototypeOf(o, Iterator.prototype); ";
+
+#[test]
+fn a_refused_count_closes_what_is_underneath_including_when_the_conversion_refused() {
+    // §27.1.4.4 step 5's `IfAbruptCloseIterator` and steps 6.b and 7.b. Every row asserts the
+    // **close** rather than the error, because the error is right either way.
+    for method in ["take", "drop"] {
+        for argument in ["undefined", "NaN", "-1"] {
+            assert_eq!(
+                run(&format!(
+                    "{REFUSABLE} try {{ o.{method}({argument}); }} catch (e) {{}} o.closed"
+                )),
+                "true",
+                "{method}({argument})"
+            );
+        }
+        // **A `valueOf` that throws is step 5 itself**, and it is the only shape that reaches the
+        // conversion at all — the three above get a number out of `ToNumber` and fail after it.
+        // This one propagated without closing.
+        assert_eq!(
+            run(&format!(
+                "{REFUSABLE} try {{ \
+                 o.{method}({{valueOf: function () {{ throw new TypeError('v'); }}}}); \
+                 }} catch (e) {{}} o.closed"
+            )),
+            "true",
+            "{method} with a throwing valueOf"
+        );
+        // …and the error is still the conversion's rather than a RangeError about the count.
+        assert_eq!(
+            run(&format!(
+                "{REFUSABLE} var name = 'none'; try {{ \
+                 o.{method}({{valueOf: function () {{ throw new TypeError('v'); }}}}); \
+                 }} catch (e) {{ name = e.constructor.name; }} name"
+            )),
+            "TypeError",
+            "{method} error"
+        );
+    }
+    // A count that is accepted closes nothing, which is what says the rows above are about the
+    // refusal rather than about `take` closing eagerly.
+    assert_eq!(
+        run(&format!(
+            "{SOURCES} var it = watched([1, 2]); it.take(1); it.closed"
+        )),
+        "false"
+    );
+}
+
+#[test]
+fn a_flat_maps_return_reaches_the_iterator_its_mapper_made() {
+    // §27.1.4.4 step 6.a — the closure yields from *inside* the inner iterator, so a `return`
+    // arriving there is an abrupt completion with the inner one open. It is closed first and the
+    // source after. Closing only the source left a mapper's iterator running with nothing left to
+    // draw it, and nothing else in the program can reach it to close.
+    let inner = format!(
+        "{SOURCES} var innerClosed = 0; var source = watched([1]); \
+         var it = source.flatMap(function () {{ \
+             var o = {{next: function () {{ return {{done: false, value: 9}}; }}, \
+                      return: function () {{ innerClosed++; return {{done: true}}; }}}}; \
+             Object.setPrototypeOf(o, Iterator.prototype); return o; }}); "
+    );
+    assert_eq!(
+        run(&format!(
+            "{inner} it.next(); var before = innerClosed; it.return(); before + ',' + innerClosed"
+        )),
+        "0,1"
+    );
+    // …once, however many times `return` is called: the helper is finished after the first.
+    assert_eq!(
+        run(&format!(
+            "{inner} it.next(); it.return(); it.return(); it.return(); innerClosed"
+        )),
+        "1"
+    );
+    // The **source** is closed as well — step 6.c closes `iterated` whatever the inner close
+    // answered — so this is not the inner one standing in for it.
+    assert_eq!(
+        run(&format!("{inner} it.next(); it.return(); source.closed")),
+        "true"
+    );
+    // A `flatMap` that never entered an inner iterator has none to close, which is the branch the
+    // `Option` is for and the one a test of the row above would not reach.
+    assert_eq!(
+        run(&format!(
+            "{SOURCES} var source = watched([1]); \
+             var it = source.flatMap(function (x) {{ return [x]; }}); \
+             it.return(); source.closed"
+        )),
+        "true"
+    );
+}

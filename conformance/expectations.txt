@@ -1247,14 +1247,10 @@ built-ins/Iterator/prototype/Symbol.dispose/prop-desc.js :: it threw an object w
 built-ins/Iterator/prototype/Symbol.dispose/prop-desc.js (strict) :: it threw an object with no name: undefined should be an own property
 built-ins/Iterator/prototype/Symbol.dispose/return-val.js :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/Symbol.dispose/return-val.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Iterator/prototype/drop/argument-validation-failure-closes-underlying.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true
-built-ins/Iterator/prototype/drop/argument-validation-failure-closes-underlying.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true
 built-ins/Iterator/prototype/drop/throws-typeerror-when-generator-is-running.js :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Iterator/prototype/drop/throws-typeerror-when-generator-is-running.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Iterator/prototype/filter/throws-typeerror-when-generator-is-running.js :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Iterator/prototype/filter/throws-typeerror-when-generator-is-running.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
-built-ins/Iterator/prototype/flatMap/return-is-forwarded-to-mapper-result.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/Iterator/prototype/flatMap/return-is-forwarded-to-mapper-result.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Iterator/prototype/flatMap/throws-typeerror-when-generator-is-running.js :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Iterator/prototype/flatMap/throws-typeerror-when-generator-is-running.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Iterator/prototype/join/closes-on-contents-coercion-exception.js :: it threw an object with no name: Expected a Test262Error but got a TypeError
@@ -1291,8 +1287,6 @@ built-ins/Iterator/prototype/join/separator-tostring.js :: it threw TypeError: w
 built-ins/Iterator/prototype/join/separator-tostring.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Iterator/prototype/map/throws-typeerror-when-generator-is-running.js :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Iterator/prototype/map/throws-typeerror-when-generator-is-running.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
-built-ins/Iterator/prototype/take/argument-validation-failure-closes-underlying.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true
-built-ins/Iterator/prototype/take/argument-validation-failure-closes-underlying.js (strict) :: it threw an object with no name: Expected SameValue(«false», «true») to be true
 built-ins/Iterator/prototype/take/throws-typeerror-when-generator-is-running.js :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Iterator/prototype/take/throws-typeerror-when-generator-is-running.js (strict) :: it threw an object with no name: Expected a TypeError but got a RangeError
 built-ins/Iterator/zip/basic-longest.js :: it threw TypeError: what was called is not a function

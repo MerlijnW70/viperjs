@@ -76,7 +76,18 @@ fn limit(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<u64>
     };
     // Steps 3 to 6 all come before step 7's `GetIteratorDirect`, so the count is converted and
     // judged with `next` still unread — and the close on failure happens that way too.
-    let number = vm.to_number(call.argument(0), heap)?;
+    // Step 5's `IfAbruptCloseIterator` covers the **conversion** as much as the two RangeErrors
+    // below it: a `limit` whose `valueOf` throws leaves the iterator open, and the clause closes it
+    // before the error goes on. A `?` here propagated without closing, which is the one shape of
+    // failure that reaches the coercion at all — and the only one an `assert.throws` on the error
+    // cannot tell from the right answer.
+    let number = match vm.to_number(call.argument(0), heap) {
+        Ok(number) => number,
+        Err(raised) => {
+            Walk::close_unread(vm, heap, call.this_value);
+            return Err(raised);
+        }
+    };
     if number.is_nan() || number.trunc() < 0.0 {
         Walk::close_unread(vm, heap, call.this_value);
         return Err(Abrupt::range_error("the count must not be negative or NaN"));
@@ -386,7 +397,22 @@ fn helper_return(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
     // on the way out is still only asked once.
     if !state.done {
         finish(heap, object);
-        Walk::of(state.source, state.next).close_reporting(vm, heap)?;
+        // §27.1.4.4 step 6.a — a `flatMap` suspended *inside* an inner iterator closes that one
+        // **first**, and the source after it. The closure yields from the inner loop, so a `return`
+        // arriving there is an abrupt completion at the inner `Yield` and the inner iterator is
+        // what is open around it; closing only the source left a mapper's iterator running with
+        // nothing left to draw it.
+        //
+        // The source is closed either way, which is why this is a statement rather than an early
+        // return: step 6.c closes `iterated` whatever the inner close answered.
+        let inner = state
+            .inner
+            .map(|(iterator, next)| Walk::of(iterator, next).close_reporting(vm, heap));
+        let source = Walk::of(state.source, state.next).close_reporting(vm, heap);
+        // Step 6.b — the inner close's refusal is the one reported, the source having been closed
+        // for it in turn.
+        inner.transpose()?;
+        source?;
     }
     Ok(result(vm, heap, Value::Undefined, true))
 }
