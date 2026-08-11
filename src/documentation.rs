@@ -372,3 +372,173 @@ fn every_module_doc_that_lists_its_parts_lists_all_of_them() {
         wrong.join("\n")
     );
 }
+
+/// The behavioural-coverage configuration, if this checkout has one.
+///
+/// Identified by what it contains rather than by what it is called: the root-level YAML declaring a
+/// `sources:` list. The published tree carries no such file — the configuration is stripped on the
+/// way out — and answering `None` there is correct rather than a gap, because there is nothing in
+/// that tree for the list to have fallen behind.
+fn coverage_configuration() -> Option<String> {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let mut found = None;
+    for entry in fs::read_dir(root).ok()?.flatten() {
+        let path = entry.path();
+        if !path
+            .extension()
+            .is_some_and(|kind| kind == "yaml" || kind == "yml")
+        {
+            continue;
+        }
+        let Ok(text) = fs::read_to_string(&path) else {
+            continue;
+        };
+        if text.lines().any(|line| line.trim_end() == "sources:") {
+            // Concatenated rather than taken, so that two of them cannot silently mean one is
+            // ignored — the union is what is actually being probed either way.
+            found = Some(match found {
+                None => text,
+                Some(seen) => format!("{seen}\n{text}"),
+            });
+        }
+    }
+    found
+}
+
+/// Every `.rs` file under `src/` and `conformance/src/` that is not a test, as repository paths.
+///
+/// Spelled with forward slashes whatever the host uses, because what they are compared against is a
+/// hand-written list in a configuration file and that list is written one way.
+fn probeable_sources() -> BTreeSet<String> {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let mut found = BTreeSet::new();
+    let mut pending = vec![root.join("src"), root.join("conformance").join("src")];
+    while let Some(directory) = pending.pop() {
+        let Ok(entries) = fs::read_dir(&directory) else {
+            continue;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                pending.push(path);
+                continue;
+            }
+            if !path.extension().is_some_and(|kind| kind == "rs") {
+                continue;
+            }
+            let Ok(relative) = path.strip_prefix(root) else {
+                continue;
+            };
+            let spelled = relative.to_string_lossy().replace('\\', "/");
+            // A test file is not a target and must not be one: a mutated assertion fails the test
+            // it is in, so it scores a kill that means nothing and costs a deep run the time to
+            // find it. Two were swept in by a refactor once and had to be taken back out.
+            if spelled.contains("/tests/") || spelled.ends_with("tests.rs") {
+                continue;
+            }
+            found.insert(spelled);
+        }
+    }
+    found
+}
+
+#[test]
+fn every_source_file_is_either_covered_or_excluded_on_purpose() {
+    // **The failure this exists for has happened at least six times and the recorded fix has always
+    // been "remember".** The behavioural-coverage configuration names the files it probes one per
+    // line — deliberately, because some are plumbing whose mutants no test could kill — and a file
+    // it does not name is not probed *and the run reports green*. Nothing warns. The unit suite
+    // passes, the conformance figure does not move, and the diff-scoped run prints a plausible
+    // number of changed lines.
+    //
+    // A refactor is the worst case: splitting a file moves working, covered code into a name the
+    // list has never heard of, and every other signal agrees that nothing is wrong — because
+    // nothing *is* wrong except that the check stopped happening. That is how UAX #15 shipped with
+    // all four normalization forms interchangeable and every Hangul index calculation unexercised.
+    //
+    // So this is the audit, wired to the build rather than to anybody's memory. It is not a
+    // judgement about *whether* a file should be probed — that judgement is the exclusion list
+    // below, and adding to it is a deliberate act with a reason written beside it. What it refuses
+    // is a file that is on neither list, which is the only state that is always a mistake.
+    // The configuration is found by its *shape* rather than by its name — the root-level YAML that
+    // declares a `sources:` list. Two reasons, and the second is the load-bearing one: a name
+    // written here would be a second place to update when the tooling changes, and this file is
+    // published while the configuration is not, so a hard-coded name would be a reference to
+    // something no reader of the published tree can look at.
+    let Some(configuration) = coverage_configuration() else {
+        // Nothing to compare against, which is the published tree's normal state. A check that
+        // invented a failure there would be worse than no check.
+        return;
+    };
+
+    // Files that are deliberately unprobed, each for a reason recorded beside the list itself.
+    // Named here as well so that the two cannot drift apart silently: an entry removed from the
+    // configuration without being removed here fails this test rather than passing it.
+    const EXCLUDED: [&str; 5] = [
+        // Orchestration and the report. Listed for exactly one commit, on the strength of a
+        // fail-closed argument reader being added to it, and it answered with 64 survivors — every
+        // one a branch in `main` itself or in the printing, none of them killable, because an
+        // integration test drives this binary as a *subprocess* and a mutant reaches the binary the
+        // sandbox built rather than the one the test ran. The file was not the unit of judgement:
+        // the two pure decisions inside it moved to `conformance/src/options.rs`, which is.
+        "conformance/src/main.rs",
+        // Walks a directory and supervises threads it cannot stop. What it does is observable only
+        // by having a filesystem and a stuck worker.
+        "conformance/src/drive.rs",
+        // Threads, channels and a thread-local, where every branch is decided by whether another
+        // operating-system thread has got somewhere yet. A mutant is killed by a timeout or by
+        // nothing, depending on scheduling.
+        "conformance/src/agent.rs",
+        // `mod` declarations over the files that are listed.
+        "conformance/src/lib.rs",
+        // This file: `#[cfg(test)]` throughout, so a mutant fails the assertion it is inside.
+        "src/documentation.rs",
+    ];
+
+    let listed: BTreeSet<String> = configuration
+        .lines()
+        .map(str::trim)
+        .filter_map(|line| line.strip_prefix("- "))
+        // A listed source is one word. The architectural rules in the same file are also `- ` items
+        // and name `.rs` paths inside a sentence — `confine-ref std::fs src/bin/** …` — so an
+        // `ends_with` alone reads a rule as a file and then reports it missing. Caught by the
+        // second half of this test on its first run, which is the half that exists for exactly the
+        // case of a list naming something that is not there.
+        .filter(|path| path.ends_with(".rs") && !path.contains(char::is_whitespace))
+        .map(str::to_owned)
+        .collect();
+
+    let mut unaccounted = Vec::new();
+    for path in probeable_sources() {
+        if !listed.contains(&path) && !EXCLUDED.contains(&path.as_str()) {
+            unaccounted.push(path);
+        }
+    }
+    assert!(
+        unaccounted.is_empty(),
+        "a source file is on neither the coverage list nor the exclusion list beside it, so \
+         nothing is mutating it and every run reports green:\n  {}\n\nAdd it to the `sources:` \
+         list in the coverage configuration, or to EXCLUDED here with the reason — but not \
+         neither.",
+        unaccounted.join("\n  ")
+    );
+
+    // …and the other direction: a listed path that no longer exists means a rename left the
+    // configuration pointing at nothing, which is a file that has quietly stopped being probed
+    // while the list still claims it is.
+    let present = probeable_sources();
+    let mut missing: Vec<&String> = listed
+        .iter()
+        .filter(|path| !present.contains(*path))
+        .collect();
+    missing.sort();
+    assert!(
+        missing.is_empty(),
+        "the coverage list names files that are not there, so those entries guard nothing:\n  {}",
+        missing
+            .iter()
+            .map(|path| path.as_str())
+            .collect::<Vec<_>>()
+            .join("\n  ")
+    );
+}

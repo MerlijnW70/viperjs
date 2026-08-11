@@ -167,6 +167,31 @@ with a reason that has now been measured rather than asserted.
 So a survivor count answers a question the list cannot: **not "is this file tested" but "is this
 file the right thing to be testing".** 27 said write the tests; 64 said move the code.
 
+**And then the audit was wired to the build, which is the only part of this that stops it
+recurring.** Six times the recorded fix was "remember to add the file", and six times the next file
+was missed — by the author of the rule, twice in one session. `documentation.rs` already refuses a
+module doc that has fallen behind the `mod` declarations beside it; the same shape refuses a source
+file that is on neither the coverage list nor an exclusion list with a reason written next to it.
+Neither list is a judgement this test makes: what it refuses is the *third* state, a file on
+neither, which is the only one that is always a mistake.
+
+Three things it had to get right, and two of them it got wrong on the first run — which is the
+argument for testing a check by breaking the thing it checks:
+
+- **It fired immediately on a real case.** `conformance/src/main.rs` had been taken off the list an
+  hour earlier, for a good reason, and that reason lived only in a commit message. It is an
+  `EXCLUDED` entry with its 64-survivor measurement beside it now.
+- **The reverse direction caught a bug in its own parser.** The architectural rules in the same
+  configuration are also `- ` items and name `.rs` paths inside a sentence, so "ends with `.rs`"
+  read a rule as a file and reported it missing. A listed source is one word.
+- **The configuration is stripped from the published tree**, so the check must be exact where the
+  file exists and silent where it does not. Verified by hiding the file and re-running rather than
+  by reasoning about it.
+
+Then both failure modes were simulated — a listed entry deleted, and an entry added for a file that
+does not exist — and each produced the message it should. **A gate nobody has watched fail is a
+gate nobody has tested.**
+
 ### One clause, two implementations, and only one of them was fixed — §10.1.13 and §10.3.1
 
 Fourteen runs, found by reading the `proto-from-ctor-realm` failures rather than by counting a
