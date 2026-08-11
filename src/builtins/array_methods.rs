@@ -177,8 +177,11 @@ pub(super) fn heap_within_budget(heap: &Heap) -> Completion<()> {
 /// other array-like, so `Array.prototype.map.call({length: 1})` is not affected by anything the
 /// object's `constructor` says.
 ///
-/// The realm check in step 4 is not written: ViperJS has one realm, so "the constructor came from
-/// another realm" is a condition no program here can produce.
+/// Step 4 is the cross-realm rule, and it is the reason `A.Array.prototype.map.call([1], f)`
+/// answers an array belonging to **A** rather than to whoever made the `[1]`. A constructor that is
+/// merely some *other* realm's `%Array%` is an accident of where the array came from and says
+/// nothing about what to build, so it is discarded and step 6 makes a plain Array in the running
+/// realm. A genuine subclass is never discarded, whichever realm it belongs to.
 pub(super) fn array_species_create(
     vm: &mut Vm,
     heap: &mut Heap,
@@ -190,6 +193,17 @@ pub(super) fn array_species_create(
     }
     let name = key(heap, "constructor");
     let mut constructor = vm.get_property_key(Value::Object(original), name, heap)?;
+    // Step 4 — a foreign `%Array%` is demoted to `undefined`, and only that. The comparison is by
+    // identity against the intrinsic the *constructor's own* realm holds, so replacing a realm's
+    // global `Array` does not exempt it, and a subclass declared in that realm is not caught by it.
+    if let Value::Object(object) = constructor
+        && heap.is_constructor(constructor)
+    {
+        let from = vm.realm_of(object, heap);
+        if from.id() != vm.realm().id() && object == from.array_constructor() {
+            constructor = Value::Undefined;
+        }
+    }
     // Step 5 — the species is read off the constructor *only* when the constructor is an object.
     // A primitive one is left alone and refused by step 7, which is why `a.constructor = 1` is a
     // TypeError rather than quietly making a plain Array.

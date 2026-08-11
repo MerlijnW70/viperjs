@@ -141,8 +141,8 @@ badge reads, and the workflow refuses a build whose committed figure has drifted
 just measured.
 
 ```
-80443 passed, 12412 failed, 306 not run
-86.63% of what ran — 86.35% of the whole suite
+80486 passed, 12369 failed, 306 not run
+86.68% of what ran — 86.39% of the whole suite
 ```
 
 **Two caveats, both honest.** The second percentage is the one to quote; the first flatters an

@@ -34,6 +34,12 @@ pub struct Realm {
     function_prototype: ObjectId,
     error_prototype: ObjectId,
     array_prototype: ObjectId,
+    /// `%Array%` — the constructor, held by identity for §23.1.3.21 step 5.c.
+    ///
+    /// Discovered after the built-ins run, like `%RegExp%` below it. Held separately from the
+    /// `constructor` property on [`Self::array_prototype`] because the clause compares against the
+    /// *intrinsic*, and a program may overwrite the property.
+    array_constructor: ObjectId,
     /// What `new Boolean(true)` inherits from.
     boolean_prototype: ObjectId,
     /// What `new Number(1)` inherits from.
@@ -454,6 +460,8 @@ impl Realm {
             function_prototype,
             error_prototype,
             array_prototype,
+            // Replaced below, once the built-ins have made the real one.
+            array_constructor: array_prototype,
             boolean_prototype,
             number_prototype,
             date_prototype,
@@ -538,6 +546,11 @@ impl Realm {
         // distinction nothing but a call would notice.
         if let Some(found) = crate::builtins::global_object(heap, &realm, "RegExp") {
             realm.regexp_constructor = found;
+        }
+        // §23.1.3.21 step 5.c compares a foreign constructor against *this* — by identity, which
+        // is why it is taken now rather than read off `Array.prototype.constructor` at the call.
+        if let Some(found) = crate::builtins::global_object(heap, &realm, "Array") {
+            realm.array_constructor = found;
         }
         // §25.2.5.4 step 10's default. `SharedArrayBuffer` is a global here, so this is the same
         // discovery the two above are — and the same reason it cannot be allocated up there.
@@ -643,6 +656,14 @@ impl Realm {
     /// `%Array.prototype%` — itself an Array, per §23.1.3.
     pub fn array_prototype(&self) -> ObjectId {
         self.array_prototype
+    }
+
+    /// `%Array%` — the constructor §23.1.3.21 step 5.c demotes a *foreign* realm's copy of.
+    ///
+    /// The constructor and not the prototype: the clause compares what `Get(a, "constructor")`
+    /// answered, which is the constructor.
+    pub fn array_constructor(&self) -> ObjectId {
+        self.array_constructor
     }
 
     /// `%Boolean.prototype%`.

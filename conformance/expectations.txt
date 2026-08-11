@@ -375,16 +375,12 @@ built-ins/Array/fromAsync/thisarg-primitive-sloppy.js :: the test called $DONE w
 built-ins/Array/fromAsync/thisarg-primitive-strict.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Array/of/proto-from-ctor-realm.js :: it threw an object with no name: Object.getPrototypeOf(Array.of.call(C, 1, 2, 3)) returns other.Object.prototype Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Array/of/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Object.getPrototypeOf(Array.of.call(C, 1, 2, 3)) returns other.Object.prototype Expected SameValue(«[object Object]», «[object Object]») to be true
-built-ins/Array/prototype/concat/create-proto-from-ctor-realm-array.js :: it threw an object with no name: The value of callCount is expected to be 0 Expected SameValue(«1», «0») to be true
-built-ins/Array/prototype/concat/create-proto-from-ctor-realm-array.js (strict) :: it threw an object with no name: The value of callCount is expected to be 0 Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/fill/coerced-indexes.js :: it threw an object with no name: Actual [0, 0] and expected [1, 1] should have the same contents. [0, 0].fill(1, 0, undefined) must return [1, 1]
 built-ins/Array/prototype/fill/coerced-indexes.js (strict) :: it threw an object with no name: Actual [0, 0] and expected [1, 1] should have the same contents. [0, 0].fill(1, 0, undefined) must return [1, 1]
 built-ins/Array/prototype/fill/resizable-buffer.js :: it threw an object with no name: Actual [0, 0, 0, 0] and expected [1, 1, 1, 1] should have the same contents.
 built-ins/Array/prototype/fill/resizable-buffer.js (strict) :: it threw an object with no name: Actual [0, 0, 0, 0] and expected [1, 1, 1, 1] should have the same contents.
 built-ins/Array/prototype/fill/typed-array-resize.js :: it threw an object with no name: Actual [0, 3] and expected [0, 0] should have the same contents.
 built-ins/Array/prototype/fill/typed-array-resize.js (strict) :: it threw an object with no name: Actual [0, 3] and expected [0, 0] should have the same contents.
-built-ins/Array/prototype/filter/create-proto-from-ctor-realm-array.js :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
-built-ins/Array/prototype/filter/create-proto-from-ctor-realm-array.js (strict) :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.js :: it threw an object with no name: it does not define an own length property Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.js (strict) :: it threw an object with no name: it does not define an own length property Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/includes/length-zero-returns-false.js :: it threw an object with no name: length is checked before ToInteger(fromIndex) Expected SameValue(«1», «0») to be true
@@ -393,12 +389,6 @@ built-ins/Array/prototype/indexOf/length-zero-returns-minus-one.js :: it threw a
 built-ins/Array/prototype/indexOf/length-zero-returns-minus-one.js (strict) :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
 built-ins/Array/prototype/lastIndexOf/length-zero-returns-minus-one.js :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
 built-ins/Array/prototype/lastIndexOf/length-zero-returns-minus-one.js (strict) :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
-built-ins/Array/prototype/map/create-proto-from-ctor-realm-array.js :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
-built-ins/Array/prototype/map/create-proto-from-ctor-realm-array.js (strict) :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
-built-ins/Array/prototype/slice/create-proto-from-ctor-realm-array.js :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
-built-ins/Array/prototype/slice/create-proto-from-ctor-realm-array.js (strict) :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
-built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
-built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js (strict) :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js :: it threw an object with no name: // deleteCount argument exceeding 2^53-1. Array.prototype.splice.call(source, 0, 2 ** 53 + 4) throws a StopSplice exception Expected a StopSplice but got a RangeError
 built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js (strict) :: it threw an object with no name: // deleteCount argument exceeding 2^53-1. Array.prototype.splice.call(source, 0, 2 ** 53 + 4) throws a StopSplice exception Expected a StopSplice but got a RangeError
 built-ins/Array/prototype/splice/property-traps-order-with-species.js :: it threw an object with no name: Actual [defineProperty, defineProperty, set, getOwnPropertyDescriptor, defineProperty] and expected [set, getOwnPropertyDescriptor, defineProperty] should have the same contents.

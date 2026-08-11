@@ -79,18 +79,27 @@ fn main() -> ExitCode {
     while let Some(argument) = arguments.next() {
         match argument.as_str() {
             "--bless" => bless = true,
-            "--summary" => summary_path = arguments.next().map(PathBuf::from),
+            "--summary" => match value_for("--summary", &mut arguments) {
+                Ok(path) => summary_path = Some(PathBuf::from(path)),
+                Err(problem) => return complain(&problem),
+            },
             // How the run talks to its own child processes — see `drive::work`. Deliberately
             // absent from the usage text, because nobody should be typing it.
             WORKER_FLAG => worker = true,
-            "--test262" => root = arguments.next().map(PathBuf::from),
-            "--expectations" => match arguments.next() {
-                Some(path) => expectations_path = PathBuf::from(path),
-                None => return complain("--expectations needs a path"),
+            "--test262" => match value_for("--test262", &mut arguments) {
+                Ok(path) => root = Some(PathBuf::from(path)),
+                Err(problem) => return complain(&problem),
+            },
+            "--expectations" => match value_for("--expectations", &mut arguments) {
+                Ok(path) => expectations_path = PathBuf::from(path),
+                Err(problem) => return complain(&problem),
             },
             // Running one directory is how a failure bucket gets worked through, and it must not
             // touch the ratchet — a partial run has nothing to say about the tests it skipped.
-            "--only" => filter = arguments.next(),
+            "--only" => match value_for("--only", &mut arguments) {
+                Ok(chosen) => filter = Some(chosen),
+                Err(problem) => return complain(&problem),
+            },
             // Both of these change what a *timing* failure means, so they are named in the report
             // below: a number produced under one pair is not comparable with one produced under
             // another, and a reader who cannot see which was used cannot know that.
@@ -391,6 +400,30 @@ fn report_judgement(judgement: &Judgement) {
     }
 }
 
+/// The value belonging to a flag, or what to say about its absence.
+///
+/// Every value-taking flag reads through this rather than calling `next` for itself, because a bare
+/// `next` fails **open** in two ways and both have been seen here:
+///
+/// - A missing value is `None`, and an arm that writes `option = next().map(…)` treats that as "no
+///   option was asked for". `--summary` with no path wrote no badge and reported nothing wrong, so
+///   three consecutive runs left a stale number on disk and looked like they had refreshed it.
+/// - A value that is *itself* a flag is taken literally. `--summary --bless` writes a file called
+///   `--bless` **and does not bless** — a spelling close enough to the working one to be typed by
+///   accident, and one whose whole effect is silence.
+///
+/// Refusing a value beginning with `--` costs nothing: no path, count or filter this harness takes
+/// may start that way, and a directory that did could still be reached as `./--odd`.
+fn value_for(flag: &str, arguments: &mut impl Iterator<Item = String>) -> Result<String, String> {
+    match arguments.next() {
+        Some(value) if !value.starts_with("--") => Ok(value),
+        Some(flagged) => Err(format!(
+            "{flag} needs a value, and {flagged} is another flag"
+        )),
+        None => Err(format!("{flag} needs a value")),
+    }
+}
+
 /// Say what is wrong on stderr and leave.
 fn complain(problem: &str) -> ExitCode {
     eprintln!("conformance: {problem}\n\n{USAGE}");
@@ -413,3 +446,58 @@ usage: cargo run -p conformance -- [options]
   --fuzz <attempts>      DR-0002 instead of the suite: mutate the corpus and look for panics
   --seed <number>        which fuzzing run to reproduce (default 1)
   --help                 this";
+
+#[cfg(test)]
+mod tests {
+    use super::value_for;
+
+    /// The arguments as the loop sees them, from the words a shell would hand over.
+    fn words(text: &str) -> impl Iterator<Item = String> + use<> {
+        text.split_whitespace()
+            .map(str::to_owned)
+            .collect::<Vec<_>>()
+            .into_iter()
+    }
+
+    #[test]
+    fn a_flag_reads_the_word_after_it() {
+        let mut arguments = words("conformance/summary.json --bless");
+        assert_eq!(
+            value_for("--summary", &mut arguments),
+            Ok("conformance/summary.json".to_owned())
+        );
+        // …and leaves the rest of the line alone, which is what makes the order of flags free.
+        assert_eq!(arguments.next(), Some("--bless".to_owned()));
+    }
+
+    #[test]
+    fn a_flag_with_nothing_after_it_is_refused_rather_than_ignored() {
+        // The failure this exists for: `--summary` alone used to set no path and say nothing, so a
+        // run that was asked for a badge quietly wrote none and left whatever was on disk. Three
+        // consecutive runs then agreed with each other and with a number none of them measured.
+        assert_eq!(
+            value_for("--summary", &mut words("")),
+            Err("--summary needs a value".to_owned())
+        );
+    }
+
+    #[test]
+    fn a_flag_will_not_swallow_the_flag_that_follows_it() {
+        // `--summary --bless` is one space away from the working spelling and its whole effect is
+        // silence: a file named `--bless` appears and the expectations file is not rewritten. The
+        // message names the word that was found, because the mistake is invisible in the line.
+        assert_eq!(
+            value_for("--summary", &mut words("--bless")),
+            Err("--summary needs a value, and --bless is another flag".to_owned())
+        );
+        // A path is still a path when it merely *contains* dashes, and one that has to begin with
+        // them can be spelled relative to here.
+        for allowed in ["-x", "./--odd", "a--b", "built-ins/Array"] {
+            assert_eq!(
+                value_for("--only", &mut words(allowed)),
+                Ok(allowed.to_owned()),
+                "{allowed} is a value and not a flag"
+            );
+        }
+    }
+}

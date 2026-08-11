@@ -10,6 +10,8 @@ in.
 
 ## Index
 
+- [A comment that was true when it was written — §23.1.3.21 step 5.c, and the hole under the fix](#a-comment-that-was-true-when-it-was-written--231321-step-5c-and-the-hole-under-the-fix)
+- [The harness swallowed the flag after `--summary`, and three runs agreed on a number none measured](#the-harness-swallowed-the-flag-after---summary-and-three-runs-agreed-on-a-number-none-measured)
 - [Differential testing is a fourth instrument, and it found six bugs the ratchet cannot see](#differential-testing-is-a-fourth-instrument-and-it-found-six-bugs-the-ratchet-cannot-see)
 - [The intrinsics and the grammar, swept structurally: five bugs, and two the other engine has](#the-intrinsics-and-the-grammar-swept-structurally-five-bugs-and-two-the-other-engine-has)
 - [Surrogates, and the six places an engine can be per-unit or per-point and pick wrong](#surrogates-and-the-six-places-an-engine-can-be-per-unit-or-per-point-and-pick-wrong)
@@ -50,6 +52,92 @@ in.
 - [What is left, in the order the numbers put it](#what-is-left-in-the-order-the-numbers-put-it)
 
 ---
+
+### A comment that was true when it was written — §23.1.3.21 step 5.c, and the hole under the fix
+
+`ArraySpeciesCreate` had no cross-realm demotion, so `map`, `filter`, `slice`, `splice` and
+`concat` built their result in the realm the **array** came from rather than the one the method was
+running in. Ten runs, and four separate lessons that are worth more than the ten.
+
+**The comment said so, and it was not wrong when it was written.** In full:
+
+> The realm check in step 4 is not written: ViperJS has one realm, so "the constructor came from
+> another realm" is a condition no program here can produce.
+
+That was a true and well-reasoned statement about an engine with one realm. DR-0025 built a second
+one and moved +383 runs, and nothing went looking for the sentences the new realm had falsified.
+This repository has a named pattern for *"the comment states the bug as a rule"* — six instances so
+far, all of them wrong on the day they were typed. This is a different animal: **a comment that
+was accurate and was outlived**, and it is worse, because the six read as suspicious to a careful
+reader and this one reads as diligence. The tell is not the wording but the premise: any comment
+whose reason is "the engine cannot do X yet" is a dated claim, and the date is invisible.
+
+*What to do about it:* when a slice adds a capability the engine did not have, grep the tree for
+prose asserting its absence. `realm` would have found this in one command.
+
+**The bug is symmetric, and half of it looks like the correct answer.** Step 5.c demotes a
+constructor that is merely *another* realm's `%Array%` to `undefined`, so step 6 builds in the
+running realm — which §10.3.1 step 3 has already made the callee's. With no demotion, the result
+follows the array's provenance in **both** directions: `other.Array.prototype.map.call(mine)` built
+here where it should build there, and `Array.prototype.map.call(theirs)` built there where it
+should build here. A test written in one direction only passes against an engine that does nothing
+at all, half the time by luck.
+
+**The first version of the subclass test passed against a deliberately broken engine.** The other
+half of step 5.c is that a genuine subclass is *never* demoted, so the check is `SameValue` against
+one intrinsic and not a realm comparison. The test was:
+
+```js
+var Sub = other.eval('(class Sub extends Array {})');
+var a = new Sub(); a.push(1);
+var answer = a.map(function (x) { return x; });   // <-- wrong
+```
+
+`Sub` extends the *other* realm's `Array`, so `a.map` **is** the other realm's `map`: the
+constructor and the running realm are the same realm and step 5.c is never reached. Hand-mutated to
+demote on the realm difference alone, the engine still passed. `Array.prototype.map.call(a, …)` is
+the spelling that puts them in different realms, and it fails the mutant `false,false`. A
+cross-realm test has to be read for *which realm each half is in*, and an instance method quietly
+supplies one of them.
+
+**And mutating the finished fix found a hole that predated it.** Dropping the realm-difference
+guard — demote every `%Array%`, in any realm — passed **all 1,715 tests**. Nothing in the suite
+said that a program overriding `Array[@@species]` still decides what its own arrays copy into:
+
+```js
+var C = function () { this.length = 0; this.tag = 'C'; };
+Object.defineProperty(Array, Symbol.species, {value: C});
+[1, 2].map(function (x) { return x * 2; });   // node: a C. The mutant: a plain Array.
+```
+
+The species machinery was thoroughly tested through `a.constructor`, and not once through the
+intrinsic's own `@@species`. That row is now in `src/vm/tests/species.rs`. **Mutating a new fix is
+worth doing even when the fix is certainly right** — the mutants land on *neighbouring* conditions,
+which are usually older than the fix and have never been aimed at.
+
+### The harness swallowed the flag after `--summary`, and three runs agreed on a number none measured
+
+Found while checking the badge against the run that had just written it. `--summary` takes a path;
+with none it read `arguments.next()` into an `Option` and a missing value became "no summary was
+asked for" — silently. Three consecutive runs were invoked as `-- --summary`, wrote nothing, and
+left a stale `conformance/summary.json` on disk that agreed with itself every time.
+
+The near-miss spelling is worse. `--summary --bless` writes a file called `--bless` **and does not
+bless**: the flag is consumed as the path, the expectations file is untouched, and the run reports
+success. `--expectations` complained about a missing value and had the same swallowing bug;
+`--workers` and the other numeric flags failed closed only by accident, because `--bless` does not
+parse as a number.
+
+All four value-taking flags read through one `value_for` now, which refuses a missing value *and* a
+value beginning with `--`. No path, count or filter this harness takes may begin that way, and one
+that had to could still be written `./--odd`. The tests are unit tests **inside the binary** rather
+than in `tests/cli.rs`, for the reason recorded under the `atob` slice: an integration test runs the
+binary as a subprocess and a mutation there survives.
+
+Two things this is an instance of. A ratchet's own tooling is not covered by the ratchet — the gate
+has a fail-closed section and it scans `src/`, not `conformance/`. And **a number that agrees with
+itself across runs is not thereby a measurement**; what makes the conformance figure trustworthy is
+that three runs *of the suite* agree, not that a file on disk keeps saying the same thing.
 
 ### Differential testing is a fourth instrument, and it found six bugs the ratchet cannot see
 
