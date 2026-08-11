@@ -11396,8 +11396,6 @@ built-ins/TypedArray/prototype/toLocaleString/BigInt/get-length-uses-internal-ar
 built-ins/TypedArray/prototype/toLocaleString/BigInt/get-length-uses-internal-arraylength.js (strict) :: it threw an object with no name: ignores length properties Expected SameValue(«1», «0») to be true (Testing with BigInt64Array and makePassthrough.)
 built-ins/TypedArray/prototype/toLocaleString/get-length-uses-internal-arraylength.js :: it threw an object with no name: ignores length properties Expected SameValue(«1», «0») to be true (Testing with Float64Array and makePassthrough.)
 built-ins/TypedArray/prototype/toLocaleString/get-length-uses-internal-arraylength.js (strict) :: it threw an object with no name: ignores length properties Expected SameValue(«1», «0») to be true (Testing with Float64Array and makePassthrough.)
-built-ins/TypedArray/prototype/toString.js :: it threw an object with no name: Expected SameValue(«function toString() { [native code] }», «function toString() { [native code] }») to be true
-built-ins/TypedArray/prototype/toString.js (strict) :: it threw an object with no name: Expected SameValue(«function toString() { [native code] }», «function toString() { [native code] }») to be true
 built-ins/TypedArray/prototype/with/index-validated-against-current-length.js :: it threw RangeError: that index is not in the TypedArray
 built-ins/TypedArray/prototype/with/index-validated-against-current-length.js (strict) :: it threw RangeError: that index is not in the TypedArray
 built-ins/TypedArray/prototype/with/negative-index-resize-to-out-of-bounds.js :: it threw an object with no name: Expected a RangeError to be thrown but no exception was thrown at all (Testing with Float64Array and makePassthrough.)

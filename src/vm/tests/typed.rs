@@ -970,9 +970,16 @@ fn a_comparator_decides_the_order_and_may_be_asked_many_times() {
 
 #[test]
 fn to_string_goes_through_join_and_a_walk_reads_its_callbacks_answer() {
-    // §23.2.3.31 is `Array.prototype.toString`, which calls whatever `join` currently *is* — so
-    // replacing it changes what `toString` answers, and a `join` that is not callable is refused
-    // rather than falling back to something else.
+    // §23.2.3.32 does not describe a method: it says the value of `toString` **is**
+    // `%Array.prototype.toString%`. So the identity is the test, and a copy that behaved the same
+    // would still be wrong — which is what a program comparing the two sees, and what this used to
+    // answer `false` to.
+    assert_eq!(
+        run("Object.getPrototypeOf(Int8Array.prototype).toString === Array.prototype.toString"),
+        "true"
+    );
+    // …and being that function means §23.1.3.36 step 2 reads whatever `join` currently *is*, so
+    // replacing it changes what `toString` answers.
     assert_eq!(
         run(
             "var a = new Int8Array([1, 2]); a.join = function () { return 'replaced'; }; \
@@ -980,11 +987,33 @@ fn to_string_goes_through_join_and_a_walk_reads_its_callbacks_answer() {
         ),
         "replaced"
     );
+    // **Step 3 falls back rather than refusing**, which is where the copy differed and where this
+    // assertion used to pin the copy's TypeError as though it were the clause. A `join` that is not
+    // callable sends `toString` to `%Object.prototype.toString%`, which answers by @@toStringTag.
     assert_eq!(
-        run("var a = new Int8Array([1, 2]); a.join = 1; \
-             try { a.toString(); } catch (e) { e.constructor.name }"),
-        "TypeError"
+        run("var a = new Int8Array([1, 2]); a.join = 1; a.toString()"),
+        "[object Int8Array]"
     );
+    assert_eq!(
+        run("var a = new BigInt64Array(1); a.join = null; a.toString()"),
+        "[object BigInt64Array]"
+    );
+    // The alias is defined rather than installed with the other methods, so it has to carry the
+    // ordinary built-in attributes itself — writable, not enumerable, configurable. Getting them
+    // wrong would leave `toString` unreplaceable, or make it show up in a `for...in`.
+    for (attribute, expected) in [
+        ("writable", "true"),
+        ("enumerable", "false"),
+        ("configurable", "true"),
+    ] {
+        assert_eq!(
+            run(&format!(
+                "Object.getOwnPropertyDescriptor(Object.getPrototypeOf(Int8Array.prototype), \
+                 'toString').{attribute}"
+            )),
+            expected
+        );
+    }
     // §23.2.3.7 and §23.2.3.28 — the two that stop early, and the two answers each gives.
     assert_eq!(
         run(
@@ -1030,11 +1059,6 @@ fn what_must_be_callable_says_which_argument_was_wrong() {
     // Without these checks the call below fails anyway and says "what was called is not a
     // function" — true, and unhelpful when the thing handed over was a function often enough that
     // the useful sentence names the argument. Each is a different mistake and reads as one.
-    assert_eq!(
-        run("var a = new Int8Array([1, 2]); a.join = 1; \
-             try { a.toString(); } catch (e) { e.message }"),
-        "join is not a function"
-    );
     assert_eq!(
         run("try { new Int8Array([1]).map(1); } catch (e) { e.message }"),
         "the callback is not a function"

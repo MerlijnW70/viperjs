@@ -73,11 +73,31 @@ pub(super) fn install(heap: &mut Heap, realm: &Realm, prototype: ObjectId, const
         ("subarray", 2, subarray),
         ("toReversed", 0, to_reversed),
         ("toSorted", 1, to_sorted),
-        ("toString", 0, to_string),
         ("with", 2, with),
         ("values", 0, values),
     ] {
         define_method(heap, realm, prototype, name, length, native);
+    }
+    // §23.2.3.32 — `toString` **is** `%Array.prototype.toString%`, not a method that behaves like
+    // it. The clause has no steps of its own: "the initial value of the `toString` property is
+    // %Array.prototype.toString%". A copy was here instead, and being a copy cost two things a
+    // program can see. `ta.toString === Array.prototype.toString` was false, which is what
+    // test262 compares; and the copy threw where §23.1.3.36 step 3 falls back to
+    // `%Object.prototype.toString%`, so a TypedArray whose `join` had been shadowed by a
+    // non-callable answered a TypeError rather than `"[object Int8Array]"`.
+    if let Some(found) = super::own_value(heap, realm.array_prototype(), "toString") {
+        let spelled = key(heap, "toString");
+        let _ = heap.define_own_property(
+            prototype,
+            spelled,
+            &crate::heap::PropertyDescriptor {
+                value: Some(found),
+                writable: Some(true),
+                enumerable: Some(false),
+                configurable: Some(true),
+                ..crate::heap::PropertyDescriptor::EMPTY
+            },
+        );
     }
     // §23.2.3.36 — `[@@iterator]` is the *same function object* as `values`, which a program can
     // see. It follows from a TypedArray's iteration being over its elements and nothing else.
@@ -718,18 +738,6 @@ fn join(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
         joined.push(String::from_utf16_lossy(heap.string(id).unwrap_or(&[])));
     }
     Ok(super::text(heap, &joined.join(&separator)))
-}
-
-/// §23.2.3.31 — `toString`, which is `join` with the default separator and nothing else.
-fn to_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    let name = key(heap, "join");
-    let found = vm.get_property_key(call.this_value, name, heap)?;
-    // Through the *property*, because §23.2.3.31 is `Array.prototype.toString` and that one calls
-    // whatever `join` currently is — so replacing `join` changes what `toString` answers.
-    if !heap.is_callable(found) {
-        return Err(Abrupt::type_error("join is not a function"));
-    }
-    vm.call_value(found, call.this_value, &[], heap)
 }
 
 /// §23.2.3.14 — `indexOf`.
