@@ -344,12 +344,36 @@ fn a_dynamic_function_compiles_against_the_global_scope_and_nothing_else() {
     assert_eq!(run("new Function('a', 'b', 'return a + b')(2, 3)"), "5");
     assert_eq!(run("typeof Function()()"), "undefined");
     assert_eq!(run("Function('a,b', 'return a * b')(6, 7)"), "42");
-    // Steps 31 to 33 — `length` counts what was written, the name is always `anonymous`, and it
-    // constructs like any ordinary function.
+    // Steps 31 to 33 — `length` is §10.2.3's `ExpectedArgumentCount` of the parameters that were
+    // **parsed**, the name is always `anonymous`, and it constructs like any ordinary function.
     assert_eq!(
         run("var f = new Function('a', 'b', ''); f.length + ':' + f.name"),
         "2:anonymous"
     );
+    // …and *parsed* is the whole of it. Step 17 joins the argument strings with commas and reads
+    // the result as one `FormalParameters`, so how many strings there were says nothing: counting
+    // them gave 1 for two parameters, 1 for three, and 1 for none at all. The body was compiled
+    // from the same parse either way, so the function ran correctly and only the number a program
+    // can read was wrong.
+    for (written, expected) in [
+        ("'a,b', ''", "2"),
+        ("'a, b', ''", "2"),
+        ("'a,b,c', ''", "3"),
+        ("'a,b', 'c', ''", "3"),
+        ("'a,[b,c]', ''", "2"),
+        ("'', ''", "0"),
+        ("''", "0"),
+    ] {
+        assert_eq!(
+            run(&format!("Function({written}).length")),
+            expected,
+            "Function({written})"
+        );
+    }
+    // §10.2.3 stops at the first default or rest wherever it is written, which is the same rule an
+    // ordinary function's `length` follows and is why these two are 1 rather than 2.
+    assert_eq!(run("Function('a,b=1', '').length"), "1");
+    assert_eq!(run("Function('a,...r', '').length"), "1");
     assert_eq!(
         run("var f = new Function('a', 'this.a = a'); new f(1).a"),
         "1"

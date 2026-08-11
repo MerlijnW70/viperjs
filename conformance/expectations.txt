@@ -675,10 +675,6 @@ built-ins/AsyncFromSyncIteratorPrototype/throw/throw-result-poisoned-wrapper.js 
 built-ins/AsyncFromSyncIteratorPrototype/throw/throw-result-poisoned-wrapper.js (strict) :: the test called $DONE with Test262Error: iterator closed properly Expected SameValue(«0», «1») to be true
 built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-poisoned-return.js :: the test called $DONE with Test262Error: Promise should be rejected Expected a CatchError to be thrown asynchronously but got a TypeError
 built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-poisoned-return.js (strict) :: the test called $DONE with Test262Error: Promise should be rejected Expected a CatchError to be thrown asynchronously but got a TypeError
-built-ins/AsyncFunction/AsyncFunction-construct.js :: it threw an object with no name: length with 2 arguments in one, call Expected SameValue(«1», «2») to be true
-built-ins/AsyncFunction/AsyncFunction-construct.js (strict) :: it threw an object with no name: length with 2 arguments in one, call Expected SameValue(«1», «2») to be true
-built-ins/AsyncGeneratorFunction/instance-length.js :: it threw an object with no name: test 5 Expected SameValue(«1», «2») to be true
-built-ins/AsyncGeneratorFunction/instance-length.js (strict) :: it threw an object with no name: test 5 Expected SameValue(«1», «2») to be true
 built-ins/AsyncGeneratorFunction/proto-from-ctor-realm-prototype.js :: it threw an object with no name: Expected SameValue(«[object AsyncGenerator]», «[object AsyncGenerator]») to be true
 built-ins/AsyncGeneratorFunction/proto-from-ctor-realm-prototype.js (strict) :: it threw an object with no name: Expected SameValue(«[object AsyncGenerator]», «[object AsyncGenerator]») to be true
 built-ins/AsyncGeneratorPrototype/return/return-state-completed-broken-promise.js :: the test called $DONE with Test262Error: Expected rejection
@@ -1155,24 +1151,10 @@ built-ins/Function/internals/Construct/base-ctor-revoked-proxy-realm.js :: it th
 built-ins/Function/internals/Construct/base-ctor-revoked-proxy-realm.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Function/internals/Construct/base-ctor-revoked-proxy.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Function/internals/Construct/base-ctor-revoked-proxy.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/length/S15.3.5.1_A1_T1.js :: it threw an object with no name: The value of f.length is expected to be 3 Expected SameValue(«1», «3») to be true
-built-ins/Function/length/S15.3.5.1_A1_T1.js (strict) :: it threw an object with no name: The value of f.length is expected to be 3 Expected SameValue(«1», «3») to be true
-built-ins/Function/length/S15.3.5.1_A1_T2.js :: it threw an object with no name: The value of f.length is expected to be 5 Expected SameValue(«2», «5») to be true
-built-ins/Function/length/S15.3.5.1_A1_T2.js (strict) :: it threw an object with no name: The value of f.length is expected to be 5 Expected SameValue(«2», «5») to be true
-built-ins/Function/length/S15.3.5.1_A1_T3.js :: it threw an object with no name: The value of f.length is expected to be 6 Expected SameValue(«3», «6») to be true
-built-ins/Function/length/S15.3.5.1_A1_T3.js (strict) :: it threw an object with no name: The value of f.length is expected to be 6 Expected SameValue(«3», «6») to be true
-built-ins/Function/length/S15.3.5.1_A3_T1.js :: it threw an object with no name: #4: the length property has the attributes { ReadOnly }
-built-ins/Function/length/S15.3.5.1_A3_T1.js (strict) :: it threw an object with no name: #4: the length property has the attributes { ReadOnly }
-built-ins/Function/length/S15.3.5.1_A3_T2.js :: it threw an object with no name: #4: the length property has the attributes { ReadOnly }
-built-ins/Function/length/S15.3.5.1_A3_T2.js (strict) :: it threw an object with no name: #4: the length property has the attributes { ReadOnly }
-built-ins/Function/length/S15.3.5.1_A3_T3.js :: it threw an object with no name: #4: the length property has the attributes { ReadOnly }
-built-ins/Function/length/S15.3.5.1_A3_T3.js (strict) :: it threw an object with no name: #4: the length property has the attributes { ReadOnly }
 built-ins/Function/proto-from-ctor-realm-prototype.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Function/proto-from-ctor-realm-prototype.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Function/prototype/bind/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Function/prototype/bind/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
-built-ins/GeneratorFunction/instance-length.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
-built-ins/GeneratorFunction/instance-length.js (strict) :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 built-ins/GeneratorFunction/proto-from-ctor-realm-prototype.js :: it threw an object with no name: Expected SameValue(«[object Generator]», «[object Generator]») to be true
 built-ins/GeneratorFunction/proto-from-ctor-realm-prototype.js (strict) :: it threw an object with no name: Expected SameValue(«[object Generator]», «[object Generator]») to be true
 built-ins/Iterator/concat/arguments-checked-in-order.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true

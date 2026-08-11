@@ -446,10 +446,20 @@ fn dynamic_function(
     // Step 30 — the global environment, and an empty one of its own so that the body's own slots
     // have somewhere to live. Its parent is `None`: there is nothing outside a dynamic function.
     let environment = heap.new_environment(None, 0);
+    // Read before the chunk is handed over, the `Rc` moving into the function object.
+    let expected = u32::try_from(inner.length()).unwrap_or(u32::MAX);
     let object = heap.new_function(prototype, inner, environment, None, vm.realm().id());
-    // §20.2.1.1.1 steps 31 to 33 — `length` is how many parameters were written, `name` is
-    // `"anonymous"` whatever the source says, and it is a constructor like any ordinary function.
-    let length = u32::try_from(parameters.len()).unwrap_or(u32::MAX);
+    // §20.2.1.1.1 steps 31 to 33 — `length` is §10.2.3's `ExpectedArgumentCount` of the parameters
+    // that were *parsed*, `name` is `"anonymous"` whatever the source says, and it is a constructor
+    // like any ordinary function.
+    //
+    // From the **chunk** and not from `parameters.len()`, which is how many argument *strings* the
+    // call was given. Step 17 joins them with commas and parses the result as one
+    // `FormalParameters`, so the two agree only when each string holds exactly one parameter:
+    // `Function("a,b", "")` has two parameters and answered 1, `Function("a,b,c", "")` answered 1
+    // for three, and `Function("", "")` answered 1 for none at all. The body was always compiled
+    // from the same parse and so was always right — only the count a program can read was not.
+    let length = expected;
     super::define_function_metadata(heap, object, "anonymous", length);
     // DR-0028 — the third site, and the one `GeneratorFunction/instance-restricted-properties.js`
     // is about: `new GeneratorFunction()` is **sloppy**, so a host that asked only about strictness
