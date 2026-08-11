@@ -12446,8 +12446,6 @@ language/statements/generators/scope-param-elem-var-open.js :: it threw SyntaxEr
 language/statements/generators/scope-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a parameter list is not implemented yet
 language/statements/generators/scope-param-rest-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a parameter list is not implemented yet
 language/statements/let/syntax/let-newline-yield-in-generator-function.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/statements/try/completion-values.js :: it threw an object with no name: Expected SameValue(«39», «42») to be true
-language/statements/try/completion-values.js (strict) :: it threw an object with no name: Expected SameValue(«39», «42») to be true
 language/statements/using/Symbol.dispose-getter.js :: it did not parse: expected `;`, found an identifier
 language/statements/using/Symbol.dispose-getter.js (strict) :: it did not parse: expected `;`, found an identifier
 language/statements/using/Symbol.dispose-method-called-with-correct-this.js :: it did not parse: expected `;`, found an identifier

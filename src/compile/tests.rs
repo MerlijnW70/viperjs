@@ -944,3 +944,65 @@ fn a_direct_eval_carries_where_it_was_written_and_the_default_is_the_body() {
         "a direct eval outside any parameter list is written in a body"
     );
 }
+
+#[test]
+fn only_code_that_keeps_a_completion_value_pays_for_a_finally() {
+    // §14.15.3 step 3 needs the value the `try` produced parked across the finalizer and put back
+    // on the way out — but only where a completion value is kept at all, which is a Script and a
+    // direct `eval` and nothing else. A function's statements discard their values anyway, so the
+    // parking would be a hidden slot and six instructions that no program can observe.
+    //
+    // **Structural, because that is the only kind of test this can have.** Emitting the machinery
+    // inside a function is invisible: the register it saves and restores is never read there, so
+    // every behavioural row answers the same either way and mutation coverage is right to call the
+    // guard untested. This is the row that fails when it goes.
+    let parked = |source: &str| {
+        let mut heap = Heap::new();
+        let script = parse_script(source).expect("the source parses"); // a compiler test needs a tree
+        let chunk = compile_script(&script, &mut heap).expect("compiles"); // likewise
+        // **Nested chunks too**, which is the whole point: a function body is a chunk of its own,
+        // so counting only the script's code answers zero for a function whether the guard is
+        // there or not — and the row below would pass against the mutation it exists to catch.
+        fn parked_in(chunk: &Chunk) -> usize {
+            let here = chunk
+                .code()
+                .iter()
+                .filter(|instruction| matches!(instruction, Instruction::LoadCompletion))
+                .count();
+            let mut index = 0;
+            let mut nested = 0;
+            while let Some(inner) = chunk.function(index) {
+                nested += parked_in(inner);
+                index += 1;
+            }
+            here + nested
+        }
+        parked_in(&chunk)
+    };
+    assert_eq!(
+        parked("try { 1 } finally { 2 }"),
+        2,
+        "a script's finalizer is emitted twice — the ordinary way out and the unwinding one — and \
+         both have to park the value"
+    );
+    assert_eq!(
+        parked("function f() { try { 1 } finally { 2 } }"),
+        0,
+        "a function keeps no completion value, so there is nothing to park"
+    );
+    // A `break` **in the try block** jumps past the finalizer, so the finalizer is emitted a third
+    // time for the crossing — and that copy parks the value as the other two do, or what the label
+    // carries out depends on which copy ran. A `break` written *inside* the finalizer is not this
+    // shape: it crosses nothing, because the crossing is taken down before the finalizer is
+    // compiled.
+    assert_eq!(
+        parked("L: { try { break L } finally { 2 } }"),
+        3,
+        "the crossing's copy parks the value as the other two do"
+    );
+    assert_eq!(
+        parked("L: { try { 1 } finally { 2; break L } }"),
+        2,
+        "a break inside the finalizer crosses nothing, so there is no third copy"
+    );
+}

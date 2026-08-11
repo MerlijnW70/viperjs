@@ -1187,6 +1187,14 @@ pub enum Instruction {
     /// fixed, the error kind is fixed, and building it out of the global `TypeError` would let a
     /// script that replaced that name change what the engine throws.
     ThrowNoThrowMethod,
+    /// Push §14.2.2's completion value so far, leaving the register as it was.
+    ///
+    /// The counterpart of [`Instruction::SetCompletion`], and it exists for §14.15.3 step 3: a
+    /// `finally` block's value belongs to the statement only when the block leaves **abruptly**, so
+    /// the value the `try` produced has to be parked across the finalizer and put back on the way
+    /// out. A `break`, a `continue` or a `return` jumps past the putting back, which is what makes
+    /// the two cases one piece of code rather than a flag.
+    LoadCompletion,
     /// Take the top value and make it the script's completion value.
     ///
     /// §14.2.2 — a Script evaluates to the value of its last *value-producing* statement, which
@@ -1542,6 +1550,7 @@ pub(super) fn retarget(instruction: Instruction, target: u32) -> Instruction {
         | Instruction::CheckGlobalFunction(_)
         | Instruction::DeleteGlobal(_)
         | Instruction::DeleteVariable { .. }
+        | Instruction::LoadCompletion
         | Instruction::SetCompletion
         | Instruction::CompletionUndefined
         | Instruction::Throw

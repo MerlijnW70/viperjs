@@ -1157,6 +1157,32 @@ fn a_finally_that_falls_off_its_own_end_contributes_no_completion_value() {
         run("(function () { try { return 2 } finally { 3 } })()"),
         "2"
     );
+    // …and step 3's **other** half: when the finalizer leaves abruptly the value it produced is the
+    // statement's, because `F` is not a normal completion and never becomes `B`. So the `try`'s 39
+    // is discarded here rather than kept.
+    assert_eq!(
+        run("99; do { try { 39 } finally { 42; break } } while (false)"),
+        "42"
+    );
+    assert_eq!(run("99; L: { try { 39 } finally { 42; break L } }"), "42");
+    // …and step 4's `UpdateEmpty(F, undefined)` under it: a finalizer that leaves abruptly having
+    // produced *nothing* answers `undefined`, which is the row that fails if the fix is "keep the
+    // finalizer's value when it breaks" without starting that value empty.
+    assert_eq!(
+        run("typeof eval('99; do { try { 39 } finally { break } } while (false)')"),
+        "undefined"
+    );
+    assert_eq!(
+        run("typeof eval('99; do { 5; try { 39 } finally { break } } while (false)')"),
+        "undefined"
+    );
+    // A `break` *after* the try statement is not a break out of the finalizer, so the ordinary
+    // rule applies and the `try`'s value stands. This is the control for the four rows above.
+    assert_eq!(
+        run("99; do { try { 39 } finally { 42 }; break } while (false)"),
+        "39"
+    );
+
     // §14.15.3 leaves `return` inside a script's `finally` a Syntax Error, which is a *different*
     // question from the completion value and is answered by a different flag. Turning the wrong one
     // off makes this legal.

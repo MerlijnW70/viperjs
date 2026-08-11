@@ -1449,20 +1449,38 @@ impl Compiler<'_> {
     /// way out, the unwinding one, and [`Crossing::Finally`] for a `break` or a `return` that
     /// jumps past it. Three call sites is exactly why this is a function.
     ///
-    /// **The abrupt half of step 3 is still wrong, and this is not the place it is wrong.** When
-    /// the finalizer leaves by a `break`, `continue` or `return`, `F` stays the finalizer's own
-    /// completion and step 4's `UpdateEmpty(F, undefined)` is what the statement answers — so
-    /// `do { try { 39 } finally { 42; break } } while (false)` is **42**, and with no value in the
-    /// finalizer it is `undefined` rather than the `try`'s 39. ViperJS answers 39 for both, and
-    /// answered 39 before this change too; `language/statements/try/completion-values.js` is the
-    /// file, and it is still listed. Parking the value across the finalizer and restoring it on the
-    /// normal path was tried and reverted: it is **indistinguishable** from not tracking at all,
-    /// because the abrupt exits do not reach the restore for a reason that is not this function's.
+    /// **Both halves of step 3 are here, and they are one piece of code.** The value is parked and
+    /// the register reset to *empty* before the finalizer runs; the restore below is reached only
+    /// when the finalizer completes normally, because a `break`, a `continue` or a `return` jumps
+    /// past it. So `try { 39 } finally { 42 }` is 39 and `do { try { 39 } finally { 42; break } }`
+    /// is 42 — and with nothing in the finalizer the reset is what makes the second `undefined`
+    /// rather than the `try`'s 39, which is step 4's `UpdateEmpty(F, undefined)`.
+    ///
+    /// A first attempt parked the value and did **not** reset it, which fixed the normal half and
+    /// left the abrupt one answering 39; it was indistinguishable from not tracking at all and was
+    /// reverted before the reset was found.
     fn finally_block(&mut self, finalizer: &[Stmt]) -> Result<(), CompileError> {
-        let kept = std::mem::replace(&mut self.keeps_completion, false);
-        let compiled = self.block(finalizer);
-        self.keeps_completion = kept;
-        compiled
+        // Nothing to preserve where no completion value is kept at all, which is every function.
+        if !self.keeps_completion {
+            return self.block(finalizer);
+        }
+        let saved = self.declare_hidden("completion");
+        self.chunk.emit(Instruction::LoadCompletion);
+        self.chunk.emit(Instruction::StoreVariable(0, saved));
+        self.chunk.emit(Instruction::Pop);
+        // Step 4's `UpdateEmpty(F, undefined)`, arranged rather than computed: `F` begins **empty**,
+        // so a finalizer that leaves abruptly without producing a value answers `undefined` and not
+        // whatever the `try` left behind. `do { try { 39 } finally { break } } while (false)` is the
+        // shape, and it is `undefined`.
+        self.chunk.emit(Instruction::CompletionUndefined);
+        self.block(finalizer)?;
+        // **Only reached when the finalizer completed normally**, which is step 3's "if F is a
+        // normal completion, set F to B". A `break`, a `continue` or a `return` has jumped past
+        // this, and for those the finalizer's own value is the statement's — which is why the two
+        // halves of the step are one piece of code and not a test.
+        self.chunk.emit(Instruction::LoadVariable(0, saved));
+        self.chunk.emit(Instruction::SetCompletion);
+        Ok(())
     }
 
     /// The try block and its catch clause, up to the point where the finally would begin.

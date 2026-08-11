@@ -536,6 +536,9 @@ impl Vm {
                         .ok_or(Fault::StackUnderflow)?;
                     self.stack.insert(at, value);
                 }
+                Instruction::LoadCompletion => {
+                    self.stack.push(self.completion);
+                }
                 Instruction::SetCompletion => {
                     self.completion = self.pop()?;
                 }
