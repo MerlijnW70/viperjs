@@ -11958,14 +11958,6 @@ language/expressions/generators/scope-param-elem-var-close.js :: it threw Syntax
 language/expressions/generators/scope-param-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a parameter list is not implemented yet
 language/expressions/generators/scope-param-rest-elem-var-close.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a parameter list is not implemented yet
 language/expressions/generators/scope-param-rest-elem-var-open.js :: it threw SyntaxError: a sloppy `var` inside a direct eval in a parameter list is not implemented yet
-language/expressions/greater-than/bigint-and-boolean.js :: it threw an object with no name: The result of (true > 0n) is true Expected SameValue(«false», «true») to be true
-language/expressions/greater-than/bigint-and-boolean.js (strict) :: it threw an object with no name: The result of (true > 0n) is true Expected SameValue(«false», «true») to be true
-language/expressions/greater-than/bigint-and-symbol.js :: it threw an object with no name: 3n > Symbol("2") throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/greater-than/bigint-and-symbol.js (strict) :: it threw an object with no name: 3n > Symbol("2") throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/less-than/bigint-and-boolean.js :: it threw an object with no name: The result of (0n < true) is true Expected SameValue(«false», «true») to be true
-language/expressions/less-than/bigint-and-boolean.js (strict) :: it threw an object with no name: The result of (0n < true) is true Expected SameValue(«false», «true») to be true
-language/expressions/less-than/bigint-and-symbol.js :: it threw an object with no name: 3n < Symbol("2") throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
-language/expressions/less-than/bigint-and-symbol.js (strict) :: it threw an object with no name: 3n < Symbol("2") throws TypeError Expected a TypeError to be thrown but no exception was thrown at all
 language/expressions/logical-and/tco-right.js (strict) :: it threw RangeError: too much recursion
 language/expressions/logical-or/tco-right.js (strict) :: it threw RangeError: too much recursion
 language/expressions/member-expression/computed-reference-null-or-undefined.js :: it threw an object with no name: Expected a TypeError but got a Test262Error

@@ -173,6 +173,42 @@ fn a_string_is_read_as_a_bigint_where_one_is_expected() {
     // …and one that is not a BigInt makes the *ordering* undefined too, so both directions are
     // false rather than one of them being true.
     assert_eq!(run("(1n < 'abc') + ',' + (1n > 'abc')"), "false,false");
+    // §7.2.13 steps 3.d and 3.e — **`ToNumeric` on each operand**, which the BigInt path skipped
+    // entirely. A Boolean, `null` and `undefined` are Numbers by the time the comparison happens,
+    // so these are ordinary orderings and not "not comparable"; every one of them answered
+    // `false` while the conversion was missing, because the BigInt branch took the pair and had
+    // no arm for it.
+    assert_eq!(run("(1n <= true) + ',' + (true >= 1n)"), "true,true");
+    assert_eq!(run("(0n <= false) + ',' + (0n >= false)"), "true,true");
+    assert_eq!(run("(1n >= null) + ',' + (null < 1n)"), "true,true");
+    assert_eq!(run("(2n > true) + ',' + (0n < true)"), "true,true");
+    // `undefined` is the one that keeps its old answer, and for a different reason: `ToNumber`
+    // makes it NaN, which is not comparable to anything. That is why it hid the other three.
+    assert_eq!(
+        run("(1n < undefined) + ',' + (1n > undefined) + ',' + (1n <= undefined)"),
+        "false,false,false"
+    );
+    // …and a **Symbol** is where `ToNumeric` refuses rather than converts, so the ordering throws
+    // where it used to answer `false`.
+    for source in [
+        "1n < Symbol()",
+        "Symbol() < 1n",
+        "1n >= Symbol()",
+        "Symbol() > 1n",
+    ] {
+        assert_eq!(
+            run(&format!(
+                "(function () {{ try {{ return {source}; }}                  catch (e) {{ return e.constructor.name; }} }})()"
+            )),
+            "TypeError",
+            "{source}"
+        );
+    }
+    // The String pair still has to be read rather than converted, and it is the reason the
+    // conversion above cannot simply come first: `StringToBigInt` has no fraction, so `1n < "1.5"`
+    // is not comparable, where `ToNumber` of the String would make it true.
+    assert_eq!(run("1n < '1.5'"), "false");
+    assert_eq!(run("(1n < '2') + ',' + (1n < ' 2 ')"), "true,true");
 }
 
 #[test]

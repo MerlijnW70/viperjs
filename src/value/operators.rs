@@ -35,9 +35,10 @@ fn compare_across_types(left: Value, right: Value, heap: &Heap) -> Option<bool> 
             heap.bigint(a)?.compare(&string_as_bigint(b, heap)?)
         }
         (Value::String(a), Value::BigInt(b)) => string_as_bigint(a, heap)?.compare(heap.bigint(b)?),
-        // A Boolean, `null` or `undefined` against a BigInt reaches here having already been
-        // through `ToNumeric` at the call site, so there is nothing left that is not one of the
-        // pairs above.
+        // Everything else has been through §7.1.6 `ToNumeric` at the call site, so a Boolean,
+        // `null` or `undefined` arrives as the Number it converts to and never as itself. That
+        // sentence stood here while it was false — nothing ran `ToNumeric` — and this arm was
+        // silently answering "not comparable" for all three.
         _ => return None,
     };
     Some(order == std::cmp::Ordering::Less)
@@ -413,19 +414,52 @@ fn is_less_than(left: Value, right: Value, heap: &Heap) -> Completion<Option<boo
         };
         return Ok(Some(left < right));
     }
-    // Steps 3.c to 3.f — a BigInt is *compared* with anything numeric, unlike in arithmetic. The
-    // ordering is of mathematical values, so it is exact on both sides: a BigInt turned into an
-    // `f64` first would put `2n ** 53n + 1n` and `2 ** 53` in the wrong order to each other.
+    // Steps 3.a and 3.b — a BigInt against a **String** is the one pair read rather than
+    // converted. `StringToBigInt` is not `ToNumber`: it has no fraction, so `1n < "1.5"` is "not
+    // comparable" and therefore false, where converting the String would make it true. This has
+    // to come before the conversion below for that reason.
+    if matches!(
+        (left, right),
+        (Value::BigInt(_), Value::String(_)) | (Value::String(_), Value::BigInt(_))
+    ) {
+        return Ok(compare_across_types(left, right, heap));
+    }
+    // Steps 3.d and 3.e — **`ToNumeric` on each operand**, which is where a Boolean, `null` and
+    // `undefined` become Numbers and where a Symbol becomes a TypeError.
+    //
+    // This was a `ToNumber` pair reached only when neither side was a BigInt, and the BigInt
+    // branch above took everything else — so `1n <= true` and `1n >= null` were *false* rather
+    // than true, and `1n < Symbol()` was false rather than a refusal. `compare_across_types` said
+    // in a comment that those had "already been through `ToNumeric` at the call site"; they had
+    // not, and there was no call site that did it.
+    let left = to_numeric(left, heap)?;
+    let right = to_numeric(right, heap)?;
+    // Steps 3.f and 3.g — the two may still be a BigInt and a Number, which arithmetic refuses and
+    // comparison does not. The ordering is of mathematical values and is exact on both sides: a
+    // BigInt turned into an `f64` first would put `2n ** 53n + 1n` and `2 ** 53` in the wrong
+    // order to each other.
     if matches!(left, Value::BigInt(_)) || matches!(right, Value::BigInt(_)) {
         return Ok(compare_across_types(left, right, heap));
     }
-    // Steps 8 to 10 — everything else through `ToNumber`, and NaN is not less than, greater
-    // than, or equal to anything.
+    // Steps 3.h to 3.k — both Numbers, and NaN is not less than, greater than, or equal to
+    // anything.
     let (left, right) = (left.to_number(heap)?, right.to_number(heap)?);
     if left.is_nan() || right.is_nan() {
         return Ok(None);
     }
     Ok(Some(left < right))
+}
+
+/// §7.1.6 `ToNumeric` for a value that is already a primitive.
+///
+/// A BigInt is its own numeric type and stays one; everything else goes through §7.1.4 `ToNumber`,
+/// which is what refuses a Symbol. No `ToPrimitive` here — [`is_less_than`] has run it already, and
+/// running it twice would call a `valueOf` twice.
+fn to_numeric(value: Value, heap: &Heap) -> Completion<Value> {
+    match value {
+        Value::BigInt(_) => Ok(value),
+        other => Ok(Value::Number(other.to_number(heap)?)),
+    }
 }
 
 /// `IsLooselyEqual` (§7.2.13) — the `==` operator.
