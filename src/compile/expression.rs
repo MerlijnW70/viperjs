@@ -457,10 +457,11 @@ impl Compiler<'_> {
                     span,
                 };
                 let flags = crate::regexp::Flags::parse(&literal.flags).map_err(refused)?;
-                crate::regexp::parse(&literal.body, flags).map_err(refused)?;
-                let source = self
-                    .heap
-                    .new_string(literal.body.encode_utf16().collect::<Vec<_>>());
+                // The pattern is read as code units — see [`crate::regexp::parse`] — and the
+                // same units are what the `RegExp` object keeps, so they are made once.
+                let units: Vec<u16> = literal.body.encode_utf16().collect();
+                crate::regexp::parse(&units, flags).map_err(refused)?;
+                let source = self.heap.new_string(units);
                 self.constant(Value::String(source))?;
                 let spelled = self
                     .heap

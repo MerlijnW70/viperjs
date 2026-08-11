@@ -1143,3 +1143,150 @@ fn ignore_case_reaches_past_ascii_and_the_two_flag_forms_disagree() {
     // and its ranges, and a property is neither.
     assert_eq!(run(r"/\p{Lu}/u.test('a')"), "false");
 }
+
+#[test]
+fn a_pattern_is_read_as_code_units_unless_the_unicode_flags_say_otherwise() {
+    // §22.2.1's productions are over `SourceCharacter`, which is a **code unit** without `u` or `v`
+    // and a code point with them. A surrogate pair written *literally* in a pattern is therefore
+    // two atoms or one, depending on the flag — the same text is two different patterns.
+    //
+    // The parser read the source with `chars()`, always code points, so a literal astral character
+    // became one atom of `U+1F600`; the matcher then compared that atom against single code units
+    // and it could never match. `new RegExp(emoji).test(emoji)` answered **false**, and a `replace`
+    // with one silently did nothing. Every row below is written with `String.fromCharCode` so the
+    // units are unambiguous rather than a question about this file's own encoding.
+    let pair = "var P = String.fromCharCode(0xD83D, 0xDE00); ";
+    assert_eq!(run(&format!("{pair} new RegExp(P).test(P)")), "true");
+    assert_eq!(run(&format!("{pair} new RegExp(P, 'u').test(P)")), "true");
+    assert_eq!(
+        run(&format!(
+            "{pair} ('a' + P + 'b').replace(new RegExp(P), '-')"
+        )),
+        "a-b"
+    );
+    // Two atoms without the flag, so the quantifier binds only the second: the lead is required.
+    assert_eq!(
+        run(&format!(
+            "{pair} String(new RegExp(P + '?').exec('') === null)"
+        )),
+        "true"
+    );
+    assert_eq!(
+        run(&format!("{pair} new RegExp(P + '?').exec(P)[0].length")),
+        "2"
+    );
+    // …and one atom *with* the flag, so the whole character is optional and an empty subject
+    // matches. That contrast is the test: either row alone passes with the reading wrong.
+    assert_eq!(
+        run(&format!(
+            "{pair} new RegExp(P + '?', 'u').exec('')[0].length"
+        )),
+        "0"
+    );
+    // Inside a class the same split shows as which halves are members.
+    assert_eq!(
+        run(&format!(
+            "{pair} var m = new RegExp('[' + P + ']').exec(P); m.index + ',' + m[0].length"
+        )),
+        "0,1"
+    );
+    assert_eq!(
+        run(&format!(
+            "{pair} var m = new RegExp('[' + P + ']', 'u').exec(P); m.index + ',' + m[0].length"
+        )),
+        "0,2"
+    );
+    // A negated class of the pair excludes *both units* without the flag, so the first thing it
+    // can match is what comes after the character.
+    assert_eq!(
+        run(&format!(
+            "{pair} new RegExp('[^' + P + ']').exec(P + 'a').index"
+        )),
+        "2"
+    );
+    // A lone surrogate is a pattern character of its own and survives being one. It could not
+    // before: the source reached the parser through a lossy conversion that made it `U+FFFD`.
+    let lead = "var L = String.fromCharCode(0xD83D); var T = String.fromCharCode(0xDE00); ";
+    assert_eq!(
+        run(&format!("{lead} new RegExp(T).exec('a' + T + 'b').index")),
+        "1"
+    );
+    assert_eq!(
+        run(&format!("{lead} new RegExp(L).exec(L + 'b').index")),
+        "0"
+    );
+    assert_eq!(
+        run(&format!(
+            "{lead} new RegExp('[' + T + ']').exec('a' + T).index"
+        )),
+        "1"
+    );
+    // …and a lone surrogate in the *subject* is still reachable when the pattern names it by
+    // escape, which is the spelling that always worked and is here to say the two now agree.
+    assert_eq!(run(r"/[\uDE00]/u.exec('a\uDE00b').index"), "1");
+}
+
+#[test]
+fn a_group_name_may_hold_an_astral_letter_and_is_paired_back_into_one() {
+    // §22.2.1's `RegExpIdentifierStart` and `RegExpIdentifierPart` admit
+    // `UnicodeLeadSurrogate UnicodeTrailSurrogate` as **one identifier character**, and admit it
+    // without asking for `u` — so a name written as two units in a flagless pattern is one
+    // character of the name, and the same name under `u` arrives already whole. Both spellings
+    // have to end at the same string, which is what these rows are for: an implementation that
+    // handled only one of them passes half of them and looks fine.
+    //
+    // `codePointAt` rather than a comparison, because it pins the *arithmetic* — a pairing that
+    // shifted by the wrong amount or added the wrong base would still produce some character, and
+    // a test that only asked "did it match" would take it.
+    let start = "var S = String.fromCharCode(0xD835, 0xDC00); "; // U+1D400, an ID_Start
+    let cont = "var D = String.fromCharCode(0xD835, 0xDFDA); "; // U+1D7DA, ID_Continue only
+    assert_eq!(
+        run(&format!(
+            "{start} Object.keys('x'.match(new RegExp('(?<' + S + '>x)')).groups)[0].codePointAt(0)\
+             .toString(16)"
+        )),
+        "1d400"
+    );
+    assert_eq!(
+        run(&format!(
+            "{start} Object.keys('x'.match(new RegExp('(?<' + S + '>x)', 'u')).groups)[0]\
+             .codePointAt(0).toString(16)"
+        )),
+        "1d400"
+    );
+    // …in a *continue* position too, which is the only place `U+1D7DA` is legal: it is a digit, so
+    // a name of it alone is refused by both engines and says nothing about the pairing.
+    assert_eq!(
+        run(&format!(
+            "{cont} Object.keys('x'.match(new RegExp('(?<the' + D + '>x)')).groups)[0]\
+             .codePointAt(3).toString(16)"
+        )),
+        "1d7da"
+    );
+    // The name has to round-trip to something a program can look the group up by, which is the
+    // whole point of getting the character back rather than merely accepting the pattern.
+    assert_eq!(
+        run(&format!(
+            "{start} var g = 'x'.match(new RegExp('(?<' + S + '>x)')).groups; g[S]"
+        )),
+        "x"
+    );
+    // …and a back-reference has to spell the same name, so the two readings agree with each other
+    // and not only with the specification.
+    assert_eq!(
+        run(&format!(
+            "{start} var B = String.fromCharCode(92); \
+             'xx'.match(new RegExp('(?<' + S + '>x)' + B + 'k<' + S + '>'))[0]"
+        )),
+        "xx"
+    );
+    // Two of them, so a pairing that ran off the end of one name into the next would show.
+    assert_eq!(
+        run(&format!(
+            "{start} var T = String.fromCharCode(0xD835, 0xDC01); \
+             var g = 'xy'.match(new RegExp('(?<' + S + '>x)(?<' + T + '>y)')).groups; \
+             Object.keys(g).length + ',' + g[S] + g[T]"
+        )),
+        "2,xy"
+    );
+}

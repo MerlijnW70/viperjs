@@ -51,8 +51,11 @@ fn initialize(
     };
     let flags = Flags::parse(&String::from_utf16_lossy(&spelled))
         .map_err(|error| Abrupt::Raised(ErrorKind::Syntax, error.message))?;
-    let parsed = parse(&String::from_utf16_lossy(&source), flags)
-        .map_err(|error| Abrupt::Raised(ErrorKind::Syntax, error.message))?;
+    // The units themselves, not a lossy `String` of them: §22.2.1 reads a pattern as code units
+    // unless `u` or `v` says otherwise, and converting first both fused a literal surrogate pair
+    // into one atom and replaced a lone surrogate with `U+FFFD` before the parser saw either.
+    let parsed =
+        parse(&source, flags).map_err(|error| Abrupt::Raised(ErrorKind::Syntax, error.message))?;
     let escaped = escape_source(&source);
     if let Some(found) = heap.object_mut(object) {
         found.set_regexp(RegExp::new(parsed, source.clone(), escaped, flags));

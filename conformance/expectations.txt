@@ -1832,8 +1832,6 @@ built-ins/RegExp/prototype/Symbol.split/splitter-proto-from-ctor-realm.js :: it 
 built-ins/RegExp/prototype/Symbol.split/splitter-proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/RegExp/prototype/exec/failure-lastindex-access.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/RegExp/prototype/exec/failure-lastindex-access.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/RegExp/prototype/exec/regexp-builtin-exec-v-u-flag.js :: it threw an object with no name: Actual argument [null] shouldn't be primitive. Basic exec without v flag
-built-ins/RegExp/prototype/exec/regexp-builtin-exec-v-u-flag.js (strict) :: it threw an object with no name: Actual argument [null] shouldn't be primitive. Basic exec without v flag
 built-ins/RegExp/prototype/exec/success-lastindex-access.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/RegExp/prototype/exec/success-lastindex-access.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Set/prototype/isDisjointFrom/set-like-class-mutation.js :: it threw an object with no name: Set.prototype.isDisjointFrom should not call its argument's has method with values from this which have been deleted before visiting
@@ -1970,16 +1968,6 @@ built-ins/SharedArrayBuffer/options-maxbytelength-allocation-limit.js :: it thre
 built-ins/SharedArrayBuffer/options-maxbytelength-allocation-limit.js (strict) :: it threw an object with no name: `maxByteLength` option is 7 PiB Expected a RangeError to be thrown but no exception was thrown at all
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js :: it threw an object with no name: String.prototype.localeCompare considers ö (\u006f\u0308) ≠ ö (\u00f6).
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js (strict) :: it threw an object with no name: String.prototype.localeCompare considers ö (\u006f\u0308) ≠ ö (\u00f6).
-built-ins/String/prototype/match/regexp-prototype-match-v-u-flag.js :: it threw an object with no name: Actual argument [null] shouldn't be primitive. Basic match with g flag
-built-ins/String/prototype/match/regexp-prototype-match-v-u-flag.js (strict) :: it threw an object with no name: Actual argument [null] shouldn't be primitive. Basic match with g flag
-built-ins/String/prototype/matchAll/regexp-prototype-matchAll-v-u-flag.js :: it threw an object with no name: Actual [] and expected [𠮷, 𠮷, 𠮷, 0, 3, 6] should have the same contents.
-built-ins/String/prototype/matchAll/regexp-prototype-matchAll-v-u-flag.js (strict) :: it threw an object with no name: Actual [] and expected [𠮷, 𠮷, 𠮷, 0, 3, 6] should have the same contents.
-built-ins/String/prototype/replace/regexp-prototype-replace-v-u-flag.js :: it threw an object with no name: Basic replace with g flag Expected SameValue(«"𠮷a𠮷b𠮷"», «"-a-b-"») to be true
-built-ins/String/prototype/replace/regexp-prototype-replace-v-u-flag.js (strict) :: it threw an object with no name: Basic replace with g flag Expected SameValue(«"𠮷a𠮷b𠮷"», «"-a-b-"») to be true
-built-ins/String/prototype/search/regexp-prototype-search-v-flag.js :: it threw an object with no name: Search for surrogate pair without v flag Expected SameValue(«-1», «0») to be true
-built-ins/String/prototype/search/regexp-prototype-search-v-flag.js (strict) :: it threw an object with no name: Search for surrogate pair without v flag Expected SameValue(«-1», «0») to be true
-built-ins/String/prototype/search/regexp-prototype-search-v-u-flag.js :: it threw an object with no name: Search for surrogate pair without flags Expected SameValue(«-1», «0») to be true
-built-ins/String/prototype/search/regexp-prototype-search-v-u-flag.js (strict) :: it threw an object with no name: Search for surrogate pair without flags Expected SameValue(«-1», «0») to be true
 built-ins/String/prototype/split/separator-tostring-error.js :: it threw an object with no name: ToString should be called on the separator before checking if the limit is zero. Expected a ExpectedError to be thrown but no exception was thrown at all
 built-ins/String/prototype/split/separator-tostring-error.js (strict) :: it threw an object with no name: ToString should be called on the separator before checking if the limit is zero. Expected a ExpectedError to be thrown but no exception was thrown at all
 built-ins/String/prototype/toLocaleLowerCase/Final_Sigma_U180E.js :: it threw an object with no name: Sigma preceded by LATIN CAPITAL LETTER A, MONGOLIAN VOWEL SEPARATOR Expected SameValue(«"a᠎σ"», «"a᠎ς"») to be true

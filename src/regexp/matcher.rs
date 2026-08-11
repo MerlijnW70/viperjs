@@ -929,7 +929,13 @@ fn matches_escape(escape: ClassEscape, code: u32) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{Match, Matcher};
-    use crate::regexp::parser::parse;
+    /// `parse` over source written as a `&str` — see the shim in [`crate::regexp::parser`].
+    fn parse(
+        source: &str,
+        flags: crate::regexp::Flags,
+    ) -> Result<crate::regexp::Pattern, crate::regexp::Error> {
+        crate::regexp::parser::parse(&source.encode_utf16().collect::<Vec<_>>(), flags)
+    }
     use crate::regexp::syntax::Flags;
 
     /// What `source` under `flags` finds in `subject`, from position `start`.

@@ -27,8 +27,24 @@ use crate::unicode_property::Property;
 ///
 /// Every §22.2.1.1 early error this implements, as an [`Error`] whose message is what the
 /// `SyntaxError` will say.
-pub fn parse(source: &str, flags: Flags) -> Result<Pattern, Error> {
-    let text: Vec<char> = source.chars().collect();
+pub fn parse(source: &[u16], flags: Flags) -> Result<Pattern, Error> {
+    // §22.2.1 reads a pattern as **code units** unless `[+UnicodeMode]`, and as code points when it
+    // is set. That is not a detail of the escapes: a surrogate pair written *literally* in the
+    // source is two `SourceCharacter`s without the flag and one with it, so the same text is two
+    // different patterns depending on which was asked for.
+    //
+    // This read `source.chars()` — always code points — which made a literal astral character one
+    // atom of `U+1F600`. The matcher then compared that atom against single code units, so it
+    // could never match: `new RegExp("<emoji>").test("<emoji>")` was **false**, and a `replace`
+    // with one did nothing at all.
+    //
+    // `u32` and not `char` because a lone surrogate is neither a `char` nor an error: a pattern
+    // may name an unpaired half, and taking the source as a `&str` had already replaced one with
+    // `U+FFFD` before parsing began.
+    let text: Vec<u32> = match flags.unicode_mode() {
+        true => code_points(source),
+        false => source.iter().map(|unit| u32::from(*unit)).collect(),
+    };
     // The counting pass. `\1` may name a group written later, and `\k<name>` may too, so neither
     // can be checked while the body is still being read.
     let (groups, names) = survey(&text)?;
@@ -52,6 +68,62 @@ pub fn parse(source: &str, flags: Flags) -> Result<Pattern, Error> {
         names,
         flags,
     })
+}
+
+/// A `GroupSpecifier`'s name, from the units it was written as.
+///
+/// §22.2.1's `RegExpIdentifierStart` and `RegExpIdentifierPart` admit
+/// `UnicodeLeadSurrogate UnicodeTrailSurrogate` **as one identifier character**, and they do so
+/// without asking for `u` — so a group named with an astral letter is written as two units in a
+/// pattern with no flag and is still one character of the name. Pairing here rather than dropping
+/// what is not a `char`: dropping made such a name come out *empty*, which is a different refusal
+/// from the one the name deserves and reads as a different bug.
+fn identifier_of(units: &[u32]) -> String {
+    let mut out = String::new();
+    let mut at = 0;
+    while at < units.len() {
+        let first = units[at];
+        // Under `u` or `v` the elements are already code points, so an astral letter arrives whole;
+        // without them it arrives as the two units it was written as, and is paired here. Both
+        // spellings have to work: routing everything through `u16` first dropped the code points
+        // the flags had already made, which is four tests' worth of a name coming out empty.
+        if (0xD800..=0xDBFF).contains(&first)
+            && let Some(second) = units.get(at + 1).copied()
+            && (0xDC00..=0xDFFF).contains(&second)
+        {
+            let paired = 0x10000 + ((first - 0xD800) << 10) + (second - 0xDC00);
+            out.extend(char::from_u32(paired));
+            at += 2;
+            continue;
+        }
+        out.extend(char::from_u32(first));
+        at += 1;
+    }
+    out
+}
+
+/// The pattern's code points, for `[+UnicodeMode]` — §11.1.5 `StringToCodePoints`.
+///
+/// An unpaired surrogate is a code point of its own and is kept as one, which is what lets a
+/// pattern name the half a program wrote rather than a replacement character.
+fn code_points(source: &[u16]) -> Vec<u32> {
+    let mut out = Vec::with_capacity(source.len());
+    let mut at = 0;
+    while at < source.len() {
+        let first = u32::from(source[at]);
+        let second = source.get(at + 1).copied().map(u32::from);
+        if (0xD800..=0xDBFF).contains(&first)
+            && let Some(second) = second
+            && (0xDC00..=0xDFFF).contains(&second)
+        {
+            out.push(0x10000 + ((first - 0xD800) << 10) + (second - 0xDC00));
+            at += 2;
+            continue;
+        }
+        out.push(first);
+        at += 1;
+    }
+    out
 }
 
 /// Where a group sits in the pattern's alternations — one entry per enclosing `Disjunction`.
@@ -94,7 +166,7 @@ fn might_both_participate(left: &Path, right: &Path) -> bool {
 /// name was written in, which §22.2.1.1 needs and nothing else here does. Crude in the same way:
 /// an unbalanced `)` is left to the real parse to complain about, and popping nothing is not an
 /// error *here* because it is one *there*.
-fn survey(text: &[char]) -> Result<(u32, Vec<(String, u32)>), Error> {
+fn survey(text: &[u32]) -> Result<(u32, Vec<(String, u32)>), Error> {
     let mut groups = 0;
     let mut names: Vec<(String, u32)> = Vec::new();
     let mut paths: Vec<Path> = Vec::new();
@@ -104,13 +176,13 @@ fn survey(text: &[char]) -> Result<(u32, Vec<(String, u32)>), Error> {
     let mut at = 0;
     let mut in_class = false;
     while at < text.len() {
-        match text[at] {
-            '\\' => at += 2,
-            '[' if !in_class => {
+        match char::from_u32(text[at]) {
+            Some('\\') => at += 2,
+            Some('[') if !in_class => {
                 in_class = true;
                 at += 1;
             }
-            ']' if in_class => {
+            Some(']') if in_class => {
                 in_class = false;
                 at += 1;
             }
@@ -118,13 +190,13 @@ fn survey(text: &[char]) -> Result<(u32, Vec<(String, u32)>), Error> {
             // alike — so every one of them is a level. `|` inside it belongs to that level and not
             // to the one outside, which is the whole reason the alternatives are counted on a stack
             // rather than as one number.
-            '|' if !in_class => {
+            Some('|') if !in_class => {
                 if let Some(level) = path.last_mut() {
                     level.1 += 1;
                 }
                 at += 1;
             }
-            ')' if !in_class => {
+            Some(')') if !in_class => {
                 // An unbalanced `)` is the real parse's to complain about, so the base level is
                 // never popped. Popping it would leave every later name with an empty path, and two
                 // empty paths compare as "both could participate" — so `/)(?<x>a)|(?<x>b)/` would be
@@ -136,7 +208,7 @@ fn survey(text: &[char]) -> Result<(u32, Vec<(String, u32)>), Error> {
                 }
                 at += 1;
             }
-            '(' if !in_class => {
+            Some('(') if !in_class => {
                 at += 1;
                 // §22.2.1.1 reads a `GroupSpecifier` as part of `( GroupSpecifier Disjunction )`,
                 // so the name sits in the alternative containing the *whole group* and not inside
@@ -144,27 +216,30 @@ fn survey(text: &[char]) -> Result<(u32, Vec<(String, u32)>), Error> {
                 let outer = path.clone();
                 disjunctions += 1;
                 path.push((disjunctions, 0));
-                if text.get(at) != Some(&'?') {
+                if text.get(at) != Some(&u32::from(b'?')) {
                     groups += 1;
                     continue;
                 }
                 at += 1;
-                if text.get(at) != Some(&'<') {
+                if text.get(at) != Some(&u32::from(b'<')) {
                     continue;
                 }
                 // `(?<=` and `(?<!` are lookbehind and name nothing.
-                if matches!(text.get(at + 1), Some('=' | '!')) {
+                if matches!(
+                    text.get(at + 1).copied().and_then(char::from_u32),
+                    Some('=' | '!')
+                ) {
                     continue;
                 }
                 at += 1;
                 let Some(end) = text[at..]
                     .iter()
-                    .position(|c| *c == '>')
+                    .position(|c| *c == u32::from(b'>'))
                     .map(|off| at + off)
                 else {
                     return Err(Error::at("a group name is not closed"));
                 };
-                let name: String = text[at..end].iter().collect();
+                let name: String = identifier_of(&text[at..end]);
                 if name.is_empty() {
                     return Err(Error::at("a group name is empty"));
                 }
@@ -204,7 +279,7 @@ fn survey(text: &[char]) -> Result<(u32, Vec<(String, u32)>), Error> {
 
 /// Where the parse has got to.
 struct Reader<'a> {
-    text: &'a [char],
+    text: &'a [u32],
     at: usize,
     flags: Flags,
     groups: u32,
@@ -220,8 +295,22 @@ struct Reader<'a> {
 
 impl Reader<'_> {
     /// The character at the cursor, without moving it.
+    ///
+    /// `None` at the end **and** for a lone surrogate, which is not a `char` — and which is never a
+    /// syntax character either, so every test written against this correctly declines one. The
+    /// places that need the value rather than the syntax read [`Reader::unit`] instead.
     fn peek(&self) -> Option<char> {
-        self.text.get(self.at).copied()
+        self.unit(self.at).and_then(char::from_u32)
+    }
+
+    /// The code unit or code point at `at`, whatever it is.
+    fn unit(&self, at: usize) -> Option<u32> {
+        self.text.get(at).copied()
+    }
+
+    /// The character at `at` for the purpose of matching *syntax*, which a surrogate never is.
+    fn ch(&self, at: usize) -> Option<char> {
+        self.unit(at).and_then(char::from_u32)
     }
 
     /// Whether the cursor sits on this character, and step over it if so.
@@ -248,8 +337,10 @@ impl Reader<'_> {
     /// §22.2.1 `Alternative` — terms until a `|` or a `)` or the end.
     fn alternative(&mut self) -> Result<Node, Error> {
         let mut terms = Vec::new();
-        while let Some(next) = self.peek() {
-            if next == '|' || next == ')' {
+        // The loop ends at the *end of the pattern*, which is where there is no unit — not where
+        // there is no `char`. A lone surrogate has no `char` and is a term all the same.
+        while self.unit(self.at).is_some() {
+            if matches!(self.peek(), Some('|' | ')')) {
                 break;
             }
             terms.push(self.term()?);
@@ -373,10 +464,20 @@ impl Reader<'_> {
 
     /// §22.2.1 `Atom` and `Assertion` — everything a term can be before its quantifier.
     fn atom(&mut self) -> Result<Node, Error> {
-        let Some(next) = self.peek() else {
+        // The **unit** decides whether there is a term at all, and the *character* decides which
+        // one. A lone surrogate is a `PatternCharacter` like any other and is not a `char`, so
+        // reading only the character would end the pattern here — which is what happened for one
+        // commit, and turned every literal astral character into "a regular expression ends
+        // part-way through a term".
+        let Some(unit) = self.unit(self.at) else {
             return Err(Error::at(
                 "a regular expression ends part-way through a term",
             ));
+        };
+        let Some(next) = char::from_u32(unit) else {
+            // A surrogate is none of the syntax below, so it is the last arm's answer directly.
+            self.at += 1;
+            return Ok(Node::Character(unit));
         };
         match next {
             '^' => {
@@ -443,7 +544,7 @@ impl Reader<'_> {
     /// the thing they check.
     fn at_a_modifier_group(&self) -> bool {
         let mut at = self.at;
-        while let Some(&next) = self.text.get(at) {
+        while let Some(next) = self.ch(at) {
             match next {
                 'i' | 'm' | 's' | '-' => at += 1,
                 // No check that anything was read first: `(?:` is a non-capturing group and the
@@ -473,11 +574,11 @@ impl Reader<'_> {
                     self.at += 1;
                     GroupKind::Lookahead(true)
                 }
-                Some('<') if matches!(self.text.get(self.at + 1), Some('=')) => {
+                Some('<') if self.ch(self.at + 1) == Some('=') => {
                     self.at += 2;
                     GroupKind::Lookbehind(false)
                 }
-                Some('<') if matches!(self.text.get(self.at + 1), Some('!')) => {
+                Some('<') if self.ch(self.at + 1) == Some('!') => {
                     self.at += 2;
                     GroupKind::Lookbehind(true)
                 }
@@ -515,9 +616,12 @@ impl Reader<'_> {
     /// A `GroupName` — everything up to the `>`, which the survey has already validated.
     fn group_name(&mut self) -> Result<String, Error> {
         let start = self.at;
-        while let Some(next) = self.peek() {
-            if next == '>' {
-                let name: String = self.text[start..self.at].iter().collect();
+        // Walked by *unit*: a name may hold a surrogate — §22.2.1's `RegExpIdentifierStart` admits
+        // a pair as one identifier character, without asking for `u` — and reading only characters
+        // ended the walk at the first half, reporting the name as unclosed.
+        while self.unit(self.at).is_some() {
+            if self.peek() == Some('>') {
+                let name: String = identifier_of(&self.text[start..self.at]);
                 self.at += 1;
                 return Ok(name);
             }
@@ -575,9 +679,12 @@ impl Reader<'_> {
         let mut items = Vec::new();
         let mut operation = ClassOperation::Union;
         loop {
-            match self.peek() {
-                None => return Err(Error::at("a character class is not closed")),
-                Some(']') => {
+            // Only a *character* can close the class, so `peek` answering `None` for a lone
+            // surrogate is right here — a surrogate is an operand and never a `]`. The end of the
+            // pattern is deliberately **not** tested: `class_atom` below reports an unterminated
+            // class, and a second test of the same thing was a branch no input could distinguish.
+            {
+                if self.peek() == Some(']') {
                     self.at += 1;
                     // `[a--]` has an operator and one operand short of a use for it.
                     if operation != ClassOperation::Union && items.len() < 2 {
@@ -600,15 +707,15 @@ impl Reader<'_> {
                         items,
                     });
                 }
-                Some(_) => {}
             }
             // §22.2.1's `ClassSetReservedDoublePunctuator` — `v` reserves a *doubled* punctuator
             // inside a class for set notation it does not have yet, so `/[&&]/v` is a Syntax Error
             // where `/[&&]/u` is a class holding two ampersands. Checked before the atom is read,
             // because either character alone is fine and it is the pair that is reserved.
             if self.flags.unicode_sets
-                && matches!(self.text[self.at..], [here, next, ..] if here == next
-                    && is_reserved_double(here))
+                && let Some(here) = self.ch(self.at)
+                && self.ch(self.at + 1) == Some(here)
+                && is_reserved_double(here)
             {
                 return Err(Error::at(
                     "this punctuator is doubled, which a v pattern reserves inside a class",
@@ -642,7 +749,7 @@ impl Reader<'_> {
             // `-` between two atoms makes a range, but a `-` before the closing `]` is itself an
             // atom: `[a-]` is `a` and `-`, not an unfinished range. §22.2.1 puts a range in
             // `ClassUnion` only, which is what the refusal above has established this is.
-            if self.peek() == Some('-') && self.text.get(self.at + 1) != Some(&']') {
+            if self.peek() == Some('-') && self.ch(self.at + 1) != Some(']') {
                 self.at += 1;
                 let second = self.class_operand()?;
                 let ends = match (&first, &second) {
@@ -688,12 +795,12 @@ impl Reader<'_> {
         if !self.flags.unicode_sets {
             return None;
         }
-        match self.text[self.at..] {
-            ['&', '&', ..] if self.text.get(self.at + 2) != Some(&'&') => {
+        match (self.ch(self.at), self.ch(self.at + 1)) {
+            (Some('&'), Some('&')) if self.ch(self.at + 2) != Some('&') => {
                 self.at += 2;
                 Some(ClassOperation::Intersection)
             }
-            ['-', '-', ..] => {
+            (Some('-'), Some('-')) => {
                 self.at += 2;
                 Some(ClassOperation::Difference)
             }
@@ -717,7 +824,11 @@ impl Reader<'_> {
         // wrong answer in the one direction this engine cannot afford. It is the same refusal
         // `\p{RGI_Emoji}` gets, and for the same reason — a class that can match more than one
         // code point is a matcher change rather than a parser one.
-        if self.flags.unicode_sets && matches!(self.text[self.at..], ['\\', 'q', '{', ..]) {
+        if self.flags.unicode_sets
+            && self.ch(self.at) == Some('\\')
+            && self.ch(self.at + 1) == Some('q')
+            && self.ch(self.at + 2) == Some('{')
+        {
             return self.class_strings();
         }
         self.class_atom()
@@ -777,8 +888,14 @@ impl Reader<'_> {
 
     /// One entry inside `[…]` — a character, or an escape that may stand for a set.
     fn class_atom(&mut self) -> Result<ClassItem, Error> {
-        let Some(next) = self.peek() else {
+        // The unit says whether there is an atom; the character says which one. A lone surrogate is
+        // a `ClassAtom` and has no `char`, so asking only for the character ended the class here.
+        let Some(unit) = self.unit(self.at) else {
             return Err(Error::at("a character class is not closed"));
+        };
+        let Some(next) = char::from_u32(unit) else {
+            self.at += 1;
+            return Ok(ClassItem::Single(unit));
         };
         if next != '\\' {
             // §22.2.1's `ClassSetSyntaxCharacter` — `v` reserves these inside a class for its set
@@ -854,7 +971,12 @@ impl Reader<'_> {
         if self.peek() != Some('}') {
             return Some(Err(Error::at("a property escape's name is not closed")));
         }
-        let spelled: String = self.text[start..self.at].iter().collect();
+        // A property name is ASCII, so a surrogate cannot be part of one and is dropped here —
+        // whatever is left then fails the property lookup, which is the right refusal.
+        let spelled: String = self.text[start..self.at]
+            .iter()
+            .filter_map(|unit| char::from_u32(*unit))
+            .collect();
         self.at += 1;
         if crate::unicode_property::OF_STRINGS.contains(&spelled.as_str()) {
             // §22.2.1's early errors, and all three are the specification refusing rather than
@@ -1156,7 +1278,7 @@ impl Reader<'_> {
         if self.flags.unicode_mode()
             && (0xD800..=0xDBFF).contains(&high)
             && self.peek() == Some('\\')
-            && self.text.get(self.at + 1) == Some(&'u')
+            && self.ch(self.at + 1) == Some('u')
         {
             let mark = self.at;
             self.at += 2;
@@ -1323,7 +1445,17 @@ fn is_syntax_character(letter: char) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{Assertion, ClassEscape, ClassItem, Flags, GroupKind, Node, parse};
+    use super::{Assertion, ClassEscape, ClassItem, Flags, GroupKind, Node};
+
+    /// `parse` over source written as a `&str`, which is every test in this file.
+    ///
+    /// The parser takes code units because §22.2.1 reads a pattern as units without `u` or `v` —
+    /// see [`super::parse`]. A test writes its pattern as Rust source, so it converts here rather
+    /// than at forty call sites, and a test that means to write a lone surrogate builds the units
+    /// itself and calls the real one.
+    fn parse(source: &str, flags: Flags) -> Result<super::Pattern, super::Error> {
+        super::parse(&source.encode_utf16().collect::<Vec<_>>(), flags)
+    }
 
     fn plain(source: &str) -> Node {
         parse(source, Flags::default())
