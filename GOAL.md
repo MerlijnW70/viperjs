@@ -46,6 +46,14 @@ Naming these keeps them from arriving by accident, one reasonable-sounding PR at
   realms are ECMA-262's own, §4 makes the suite the arbiter, and a second one adds no thread and
   grants no isolation. DR-0025 records what moved, and that it was built before this line was
   read.)
+
+  **What §9.7's agents added, and what they did not — 2026-08-10.** The engine still starts no
+  thread: `SharedArrayBuffer`'s bytes are one allocation behind an `Arc` that any number of *heaps*
+  may hold, and a host that wants a second agent runs a second engine on a thread of its own, which
+  is exactly what this bullet already said embedders should do. So the refusal stands as written and
+  the sentence "no parallelism inside it" now needs the qualifier: two engines sharing a buffer are
+  parallel with each other, and §25.4's blocking `Atomics` are how they agree about it. What is
+  still refused is the engine spawning anything.
 - **No `eval` of native code, no FFI.** The host binds functions in; nothing escapes outward.
 
 ## §4 The oracle

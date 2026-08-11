@@ -40,13 +40,21 @@ engine rather than in the harness.
 | `--test262 <path>` | The checkout. `TEST262` in the environment does the same. |
 | `--only <substring>` | Run just the matching files, and do **not** judge the ratchet. |
 | `--expectations <path>` | The ratchet file. Defaults to `conformance/expectations.txt`. |
+| `--workers <count>` | How many tests run at once. Defaults to half the hardware threads — see below for why that is not a performance setting. |
+| `--budget <seconds>` | How long one test may take. Default 30. |
 | `--bless` | Rewrite the ratchet file from this run. A deliberate act — see below. |
+| `--summary <path>` | Also write the headline figure as shields.io endpoint JSON, which is what the badge reads. |
+| `--fuzz <attempts>` | DR-0002 instead of the suite: mutate the corpus and look for panics. |
+| `--seed <number>` | Which fuzzing run to reproduce. The seed fixes the *inputs*, not the run — see DR-0002. |
+
+A number is only comparable with one measured under the same `--workers` and `--budget`, which is
+why a run prints both.
 
 ## What a run says
 
 ```
-78222 passed, 14619 failed, 320 not run
-84.25% of what ran — 83.96% of the whole suite
+80415 passed, 12440 failed, 306 not run
+86.60% of what ran — 86.32% of the whole suite
 ```
 
 Both percentages, always. The first flatters an engine that declines most of the suite, and it
@@ -59,14 +67,14 @@ Then the buckets:
 what stopped the rest, commonest first:
     170  the RegExp modifiers proposal is not implemented yet
      92  a property of strings is not implemented yet
-     18  agents are not implemented
      16  `super` outside a derived constructor is not implemented yet
+      5  an imported module did not parse: expected `;`, found an identifier
 ```
 
 That list is the reason the directory exists. It used to be the whole work list — the top bucket
-once had seventy thousand runs behind it and named the next milestone. It is now 320 runs in total,
-and everything left in it is a proposal or something a single-threaded engine cannot do, so the
-work list has moved to the **failures** instead. Sort those by reason to find the next slice:
+once had seventy thousand runs behind it and named the next milestone. It is now 306 runs in total,
+and nearly all of it is proposals, so the work list has moved to the **failures** instead. Sort
+those by reason to find the next slice:
 
 ```sh
 grep -av '^#' expectations.txt | sed 's/.* :: //' | sort | uniq -c | sort -rn | head -25
@@ -81,11 +89,11 @@ have begun. This is the half of test262 that catches a permissive parser, and it
 that is easiest to accidentally score backwards.
 
 A test is **not run** when the engine declined it before anything executed: a construct the
-compiler has not been taught, a syntax from a proposal, a test needing `$262.agent`. Nothing ran, so
-nothing can be said about what it would have done. Counting those as failures would write the same
+compiler has not been taught, or a syntax from a proposal. Nothing ran, so nothing can be said about
+what it would have done. Counting those as failures would write the same
 sentence into the expectations file and bury the entries that mean something.
 
-This column used to hold tens of thousands of runs and now holds 320. **A shrinking "not run" is
+This column used to hold tens of thousands of runs and now holds 306. **A shrinking "not run" is
 not automatically progress** — a construct wrongly recorded as declined passes every negative test
 that asserts it must be rejected, so moving a test out of this column and into `failed` is the
 honest outcome and moving it into `passed` may not be.
@@ -150,9 +158,9 @@ commit, same machine, one afternoon:
 | half (32 → 16) | 890, 890, 890 | 6, 6, 6 |
 
 Three runs at half subscription were identical down to *which* tests, so those 890 came out of
-`expectations.txt` and the default is now `available_parallelism() / 2`. A run costs about four
-minutes and answers the same thing twice, which is the trade worth making: the whole point of the
-number is comparing it with the last one.
+`expectations.txt` and the default is now `available_parallelism() / 2`. A run costs about two
+minutes on sixteen workers and answers the same thing twice, which is the trade worth making: the
+whole point of the number is comparing it with the last one.
 
 **What this cost while it was misdiagnosed.** Those entries sat in the ratchet under the reason
 `the heap has grown past what this engine will allocate`, which is a *different* failure and was

@@ -13,9 +13,9 @@
 
 </div>
 
-It runs about **85% of test262** — classes, generators, `async`/`await`, ES modules, `Proxy`,
-`BigInt`, TypedArrays, and its own regular-expression engine. No `unsafe`, no crates, and no input
-makes it panic.
+It runs **86% of test262** — classes, generators, `async`/`await`, ES modules, `Proxy`, `BigInt`,
+TypedArrays, and its own regular-expression engine. No `unsafe`, no crates, and no input makes it
+panic.
 
 **Why it exists.** Embedding a scripting language should not mean embedding a C++ codebase, a
 build system and someone else's `unsafe`. The constraint — no dependencies, no `unsafe`, no panics
@@ -141,8 +141,8 @@ badge reads, and the workflow refuses a build whose committed figure has drifted
 just measured.
 
 ```
-80126 passed, 12729 failed, 306 not run
-86.29% of what ran — 86.01% of the whole suite
+80415 passed, 12440 failed, 306 not run
+86.60% of what ran — 86.32% of the whole suite
 ```
 
 **Two caveats, both honest.** The second percentage is the one to quote; the first flatters an
@@ -177,11 +177,23 @@ cargo run --release --example parse -- --commonjs /path/to/a/repo
 
 It walks the directory, parses every `.js`, `.mjs` and `.cjs` under both the Script and Module
 goals, and groups whatever it cannot read by error kind — so one missing production appears as one
-bucket with a large number, not four hundred unrelated-looking lines.
+bucket with a large number, not four hundred unrelated-looking lines. `--exclude <name>` skips a
+directory by name, which is worth knowing before you point it at a repository that vendors another
+engine's test corpus.
 
-Over `nodejs/node`, `webpack` and `ramda` — 20,379 files — it parses 20,102 and panics on none.
-Every one of the 277 refusals is a Stage 3 proposal, JSX, a deliberately-broken test fixture, or, in
-one case, a real duplicate-binding bug in webpack's own test suite that node rejects identically.
+Over `nodejs/node`, `webpack` and `ramda` — 21,591 files, with node's vendored V8 test tree
+excluded — it parses 21,311 and **panics on none**. That last part is the claim worth making; the
+refusals are a work list, not a score.
+
+The 280 it will not read group into a handful of buckets, and the four largest — 198 of the 280 —
+are things that are not ECMAScript: node's own deliberately-broken `.cjs` fixtures, the
+`using` / `await using` proposal, `import defer`, and webpack's HMR marker files, which begin `---`.
+The rest were not read one by one, so take the sample rather than a sweeping claim about all of
+them. Point it at your own code and read your own buckets.
+
+Include node's `deps/` and the file count goes to 33,409 with 4,801 refusals, of which 4,295 are
+V8's `%RuntimeFunction()` natives syntax — a different language, and the reason the figure above
+excludes that tree.
 
 ## What works, and what does not
 
@@ -194,6 +206,11 @@ with live bindings, namespace objects, cycles, top-level `await` and dynamic `im
 — block-level function declarations, the HTML string methods, and §B.1.2's regular-expression
 grammar, so `/}/`, `/\1/` and `/[\d-x]/` mean what a browser means by them.
 
+`String.prototype.normalize` is there, over generated UCD 17.0.0 tables, and so is
+`Function.prototype.toString` answering the **source text** a function was written as rather than
+`[native code]`. `SharedArrayBuffer` and the blocking `Atomics` work across engines on separate
+threads — the engine still starts no thread of its own; a host that wants two runs two.
+
 The regular-expression engine is ours — backtracking, with named groups, lookbehind, the `d` flag's
 `indices`, Unicode property escapes and the `v` flag's set notation.
 
@@ -204,21 +221,32 @@ The regular-expression engine is ours — backtracking, with named groups, lookb
   mentioning it at all), and building it would raise the number without making this more of a
   JavaScript engine.
 - **`Intl`** — ECMA-402 is a separate specification, not attempted.
-- **`ShadowRealm`, `SharedArrayBuffer`, `Atomics` needing agents** — this is single-threaded.
-- **`String.prototype.normalize`** — needs the Unicode decomposition tables. Absent on purpose
-  rather than stubbed: a `normalize` that returned its receiver would pass eleven of its fourteen
-  test files and be a silently wrong answer for the other three.
-- **`Function.prototype.toString`** does not reproduce source text.
+- **`ShadowRealm`** — a proposal, and not the same thing as the second realm that *is* built: a
+  realm here shares a heap and passes objects freely, where a ShadowRealm puts a membrane between
+  the two sides.
 - **Proposals**: decorators, `using`/`await using`, `import defer`, `import source`, `Iterator.zip`
-  and its neighbours.
+  and its neighbours, `Uint8Array` base64, `JSON.rawJSON`.
+- **`Error.prototype.stack`** — not in ECMA-262, and not built.
 
-**Speed.** A straightforward bytecode interpreter: no JIT, no inline caches, no hidden classes. That
-work is a later milestone and each piece of it has to arrive with a benchmark rather than a hunch.
-A million-iteration arithmetic loop takes about 200 ms here against 3 ms in node — call it 70×, and
-note that a JIT can prove most of that loop dead while an interpreter cannot. Linking and evaluating
-ramda's 1,027 modules takes about 83 ms. If you want JavaScript at V8 speed this is not it; if you
-want a small spec-faithful engine inside a Rust binary with no `unsafe` anywhere in it, that is the
-trade on offer.
+**Speed. It is slow, and the gap is bigger than a single number suggests.** A straightforward
+bytecode interpreter: no JIT, no inline caches, no hidden classes. That work is a later milestone
+and each piece of it has to arrive with a benchmark rather than a hunch.
+
+Measured against node v22.22 on one machine, best of five, process startup subtracted:
+
+| | ViperJS | node | |
+| --- | --- | --- | --- |
+| `for (i = 0; i < 1e6; i++) s += i` | 599 ms | 1 ms | ~460× |
+| `fib(27)`, recursive | 180 ms | 2 ms | ~86× |
+| build and walk 200,000 objects | 419 ms | 19 ms | ~22× |
+
+The spread is the point: the tighter and more numeric the loop, the better a JIT does and the worse
+this looks, and the first row is close to the worst case rather than a typical one. Quote the 460×
+if you quote anything. Startup goes the other way — about 6 ms against node's 34 — which matters if
+you run many short scripts and not at all if you run one long one.
+
+If you want JavaScript at V8 speed this is not it; if you want a small spec-faithful engine inside a
+Rust binary with no `unsafe` anywhere in it, that is the trade on offer.
 
 ## The properties that are not negotiable
 
@@ -263,7 +291,7 @@ and the house style. Two things are worth knowing before you start: no change ma
 dependency or any `unsafe`, and a test that merely passes is worth very little — it has to *fail*
 when the logic is wrong.
 
-Architectural changes get a decision record in [`decisions/`](decisions). The existing 23 are short,
+Architectural changes get a decision record in [`decisions/`](decisions). The existing 30 are short,
 and are the fastest way to understand why the engine is shaped as it is.
 
 ## Licence

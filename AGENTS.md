@@ -216,6 +216,21 @@ runs assert exactly that error. Read `notes/FINDINGS.md` before touching it; the
 prerequisite for this slice was wrong twice, and the obvious design (resolve the eval's names
 dynamically) is wrong for a reason worth knowing.
 
+**And `String.prototype.normalize` is built**, which was the last thing this file listed as absent
+for want of data: UAX #15's four forms over tables generated from the same UCD 17.0.0 the identifier,
+property and case tables pin. Worth +20. The composition exclusions are the part to read
+`notes/FINDINGS.md` for — a character need not survive its own normalization, and a test written
+without that in mind passes for the wrong reason.
+
+**And `Function.prototype.toString` answers the source text.** §20.2.3.5 step 2 rather than step 3's
+`[native code]`, which cost one `Rc<str>` per parse shared by every body compiled out of it. Only +2
+runs and that number badly understates it: 78 of the directory's 80 tests already passed by falling
+back to the native form, and all 80 now match the exact slice. **Which slice is the whole
+difficulty** — a method starts at `get`, `set`, `async` or `*` and otherwise at its name with
+`static` outside it, an `async function` at the `async`, an arrow at its parameters, and a class
+constructor covers the whole class. The span threaded through the compiler is for diagnostics and is
+the *enclosing* expression's, so a body that has a production says so at the site that makes it.
+
 **And case-insensitive matching reaches past ASCII**, which it never had: §22.2.2.9's
 `Canonicalize` was `a`-`z` and nothing else, so `/café/i` did not match `CAFÉ` in any script, in
 either direction, under `i` or `iu`. `src/unicode_case_table.rs` is generated from the same UCD
@@ -260,7 +275,7 @@ and mostly are not, which is worth doing once and writing down rather than re-de
 | Runs | Reason | What it really is |
 | --- | --- | --- |
 | 8,316 | `Temporal is not defined` | a proposal — costed and refused, see below |
-| 405 | `what was called is not a function` | proposals now, and only now: `Array.fromAsync`, `Iterator.zip`/`zipKeyed`/`concat`, `Promise.allKeyed`/`allSettledKeyed`, `Map`/`WeakMap`'s `getOrInsert`, `Uint8Array` base64, `DataView`'s `getFloat16`. **It was 939, then 821, and this file called it "mostly proposals" at both figures — twice wrongly.** Seven *shipped* functions were hiding in it the first time and **369 runs of `$262.createRealm`** the second, which is nearly half. It is 407 because both were built. **Ask the engine what it has** before believing this row; it has misled two readers already |
+| 409 | `what was called is not a function` | proposals now, and only now: `Array.fromAsync`, `Iterator.zip`/`zipKeyed`/`concat`, `Promise.allKeyed`/`allSettledKeyed`, `Map`/`WeakMap`'s `getOrInsert`, `Uint8Array` base64, `DataView`'s `getFloat16`. **It was 939, then 821, and this file called it "mostly proposals" at both figures — twice wrongly.** Seven *shipped* functions were hiding in it the first time and **369 runs of `$262.createRealm`** the second, which is nearly half. It is 409 because both were built. **Ask the engine what it has** before believing this row; it has misled two readers already |
 | 126 | `cannot read a property…` | **was 352 and the 224 that went were `$262.agent`, which is built** — see below. What is left is `Error.prototype.stack` 64 and `legacy-accessors` 24, both proposals, `Promise.allKeyed`/`allSettledKeyed` 26, another, and a dozen real ones |
 | 208 | `$DONE with what was called is not a function` | the asynchronous half of the row above, and the same proposals |
 | 293 | `expected 'meta', found an identifier` | `import.defer` and `import.source` — two proposals, not `import.meta` |

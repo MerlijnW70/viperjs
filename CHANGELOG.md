@@ -7,6 +7,80 @@ public API is not stable and may change in any release.
 
 ## [Unreleased]
 
+**86.32% of test262** — 80,415 of 93,161 runs, measured three times on an idle machine against the
+suite revision the expectations file names, up from 86.01% at 0.3.0.
+
+### Added
+
+- **`String.prototype.normalize`** — UAX #15's four forms over tables generated from UCD 17.0.0, the
+  same edition the identifier, property and case tables pin. Absent until now because the
+  decomposition data was missing, and stubbing it would have been a silently wrong answer.
+- **`Function.prototype.toString` answers the source text** a function was written as, rather than
+  `function f() { [native code] }` for everything. §20.2.3.5 step 2 needs the text to outlive the
+  parse, which costs one `Rc<str>` per compilation unit shared by every body compiled out of it. A
+  method's text starts at `get`, `set`, `async` or `*` and otherwise at its name, with `static`
+  outside it; a class constructor's is the whole class. A built-in, a bound function and a Proxy
+  still answer step 3's form.
+- **Case-insensitive matching past ASCII** — §22.2.2.9's `Canonicalize` was `a`-`z` and nothing
+  else, so `/café/i` did not match `CAFÉ` in any script or direction. Both of the clause's branches
+  are built: folding under `u` and `v`, uppercasing without them.
+- `$262.createRealm`, `$262.agent` and the blocking `Atomics` (0.3.0 shipped the first two; this
+  records that `SharedArrayBuffer` and `Atomics.wait`/`notify` now work between engines on separate
+  threads — the engine still starts none of its own).
+
+### Fixed
+
+- **A `finally` that leaves abruptly keeps its own completion value**, and an empty one answers
+  `undefined` — §14.15.3 step 3. `1; try { 2 } finally { 3 }` answered 3.
+- **A collection reads its iterable one element at a time.** §24.1.1.2 `AddEntriesFromIterable`
+  gathered the whole thing first, so `new Map([0, 1])` drew every value before refusing and never
+  closed the iterator. The weak collections held a verbatim copy of the same loop and needed the
+  same fix; they share one now.
+- **`toExponential` took its digits from one spelling of the number and its exponent from another**,
+  which put 13 of the first 30 negative powers of ten one place out.
+- **A BigInt comparison never ran `ToNumeric`** — §7.2.13 steps 3.d and 3.e — so `1n <= true`,
+  `0n <= false` and `1n >= null` were all `false`, and `1n < Symbol()` was `false` where the
+  conversion refuses.
+- **`Function.prototype.bind` read the property table where §20.2.3.2 says `Get`**, so an accessor
+  decided nothing, a throwing getter was swallowed, and a Proxy target never saw its trap. Step
+  6.b.i's `ToIntegerOrInfinity` was missing too, so a `length` of 3.7 produced a function object
+  whose `length` was 3.7.
+- **Which built-in is running was read off its own `name`.** `Int8Array` renamed to
+  `"Float64Array"` allocated sixteen bytes per element and deleting the name made every
+  construction a RangeError; the six `NativeError` constructors chose §20.5.6.2's intrinsic default
+  the same way. Both answer by object identity now.
+- **`%TypedArray%.prototype.toString` is `%Array.prototype.toString%`**, not a copy — §23.2.3.32 —
+  which a program compares and which the copy got wrong in a second way: it threw where §23.1.3.36
+  step 3 falls back to `%Object.prototype.toString%`.
+- **`Math[@@toStringTag]`** (§21.3.1.9) and an own **`message`** on each of the six `NativeError`
+  prototypes (§20.5.6.3.2), both simply absent.
+- **`Symbol` and `BigInt` have a `[[Construct]]` that throws**, rather than none at all — so
+  `class A extends Symbol {}` is legal and the exception belongs to the `super` call, which is what
+  both clauses say.
+- **Four early errors an arrow was let off.** A rest element is one of the `BoundNames`, and the
+  duplicate-parameter walk existed twice with one copy stopping at the list — so `(x, ...x) => 1`
+  was accepted where `function f(x, ...x) {}` was refused, and `async(...await) => {}` where
+  `async(await) => {}` was refused. An arrow's *block* body was treated as a boundary for
+  §15.7.9's `ContainsArguments` and is not. And an async arrow's head refuses `await` as a **name**,
+  which in a Script is the only thing it ever is.
+- **A sloppy direct `eval`'s `var` reaches the caller's scope** (§19.2.1.1), and such a binding is
+  the one `delete` may take away.
+- **`Array.prototype.reverse` interleaves `HasProperty` and `Get` per end**, and does not read an
+  absent index.
+- **A class field's initialiser is a function of its own** — DR-0030 — which four bugs were under.
+- The nesting bound was lower than real code asks for; eight repositories said so.
+
+### Changed
+
+- **The no-panic invariant has an instrument.** `cargo run --release -p conformance -- --fuzz <n>`
+  mutates test262 rather than random bytes, because random bytes are refused in the first few
+  characters and measure the same refusal every time. Four mutations: truncation, a flipped code
+  unit, a deleted run, and a splice of two files. Only a panic is a failure. The seed reproduces the
+  *inputs* and not the run — `Math.random` is seeded from the clock at every `Engine::new`.
+- `--summary` writes the badge's JSON, and the conformance workflow reds the build when the
+  committed figure has drifted from the one it just measured.
+- The per-test budget is 30 seconds, so no entry in the expectations file names a time.
+
 ## [0.3.0] — 2026-08-09
 
 **86.01% of test262** — 80,126 of 93,161 runs, measured three times on an idle machine against the
