@@ -327,10 +327,27 @@ impl Vm {
         if !answer.to_boolean(heap) {
             return Ok(Some(false));
         }
-        // Step 11 — a property the target cannot lose cannot be reported as deleted.
-        if self.fixed_own(target, key, heap)?.is_some() {
+        // Steps 10 to 13 — one `[[GetOwnProperty]]` on the target, and **two** ways its answer
+        // refuses the trap's `true`.
+        let Some(found) = self.own_property_through(target, key, heap)? else {
+            // Step 11 — nothing there to keep, so there is nothing to have lied about.
+            return Ok(Some(true));
+        };
+        // Step 12 — a property the target cannot lose cannot be reported as deleted.
+        if !found.configurable {
             return Err(Abrupt::type_error(
                 "a proxy deleteProperty trap removed a property the target cannot lose",
+            ));
+        }
+        // Step 13 — **and a target that has stopped accepting properties cannot lose one either.**
+        // This step was missing, and it is the one invariant of the eleven that turns on the
+        // *target's* extensibility rather than on the property's own attributes: a configurable
+        // property on a non-extensible target could be deleted through the target and not through
+        // a trap that merely says so, because the proxy would then report a key the target still
+        // has and can never regain.
+        if !self.extensible_through(target, heap)? {
+            return Err(Abrupt::type_error(
+                "a proxy deleteProperty trap removed a property from a target that cannot regain it",
             ));
         }
         Ok(Some(true))

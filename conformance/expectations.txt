@@ -1776,8 +1776,6 @@ built-ins/Promise/prototype/finally/resolved-observable-then-calls-argument.js :
 built-ins/Promise/prototype/finally/resolved-observable-then-calls-argument.js (strict) :: the test called $DONE with Test262Error: The value of resolve.length is expected to equal the value of expected[calls].length Expected SameValue(«1», «0») to be true
 built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
-built-ins/Proxy/deleteProperty/targetdesc-is-configurable-target-is-not-extensible.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Proxy/deleteProperty/targetdesc-is-configurable-target-is-not-extensible.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-missing-target-is-proxy.js :: it threw an object with no name: 0 should be an own property
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-missing-target-is-proxy.js (strict) :: it threw an object with no name: 0 should be an own property
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-null-target-is-proxy.js :: it threw an object with no name: foo should be an own property

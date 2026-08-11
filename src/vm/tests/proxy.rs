@@ -163,6 +163,32 @@ fn a_set_or_has_or_delete_trap_may_not_contradict_one_either() {
              catch (e) { e.constructor.name }"),
         "TypeError"
     );
+    // §10.5.10 step 13 — **and the target's extensibility refuses it too**, which is a separate
+    // question from the property's attributes and was the missing half. A perfectly configurable
+    // property on a target that has stopped accepting properties still cannot be reported as
+    // deleted: the target keeps it and can never regain it, so a proxy claiming otherwise would
+    // report a key that is there.
+    assert_eq!(
+        run(
+            "var t = { x: 1 }; Object.preventExtensions(t);              try { delete new Proxy(t, {deleteProperty: function () { return true; }}).x }              catch (e) { e.constructor.name }"
+        ),
+        "TypeError"
+    );
+    // …and each half alone is allowed, which is what says the two checks are both needed. A
+    // configurable property on an *extensible* target may go, and a property the target does not
+    // have at all may be "deleted" from a non-extensible one — step 11 answers before either.
+    assert_eq!(
+        run(
+            "var t = { x: 1 };              delete new Proxy(t, {deleteProperty: function () { return true; }}).x"
+        ),
+        "true"
+    );
+    assert_eq!(
+        run(
+            "var t = {}; Object.preventExtensions(t);              delete new Proxy(t, {deleteProperty: function () { return true; }}).absent"
+        ),
+        "true"
+    );
     // A trap that reports *failure* is always allowed: refusing to do something breaks no promise.
     assert_eq!(
         run("var t = {}; Object.defineProperty(t, 'x', {value: 1}); \
