@@ -10,6 +10,7 @@ in.
 
 ## Index
 
+- [Differential testing is a fourth instrument, and it found six bugs the ratchet cannot see](#differential-testing-is-a-fourth-instrument-and-it-found-six-bugs-the-ratchet-cannot-see)
 - [test262 runs ahead of the specification, and two "gaps" were unmerged PRs — costed, refused](#test262-runs-ahead-of-the-specification-and-two-gaps-were-unmerged-prs--costed-refused)
 - [A sloppy eval's `var` lands in a running scope, and two clauses had nowhere to be — +49](#a-sloppy-evals-var-lands-in-a-running-scope-and-two-clauses-had-nowhere-to-be--49)
 - [An engine can fail by succeeding — §9.13, and the ratchets that cannot see it — DR-0029](#an-engine-can-fail-by-succeeding--913-and-the-ratchets-that-cannot-see-it--dr-0029)
@@ -46,6 +47,65 @@ in.
 - [What is left, in the order the numbers put it](#what-is-left-in-the-order-the-numbers-put-it)
 
 ---
+
+### Differential testing is a fourth instrument, and it found six bugs the ratchet cannot see
+
+Reading, running real code and fuzzing are disjoint sets; so is this. Roughly **2,200 probes**
+against another engine found **six real bugs**, and **four of them moved no conformance number at
+all** — test262 either does not cover the case or covers it so narrowly that the wrong answer sits
+outside. That is the argument for the instrument: the ratchet is a floor, not a ceiling.
+
+**The recipe.** Each probe answers with a self-describing string, so the comparison is on *answers*
+and not on message wording, which legitimately differs between implementations:
+
+```
+(function(){try{return "V:"+String(<EXPR>)}catch(e){return "T:"+(e&&e.constructor?e.constructor.name:String(e))}})()
+```
+
+One per line through `examples/evaluate.rs`; the other side evaluates each line in a **fresh
+context**, because this engine builds a fresh Heap and Vm per line and a shared realm lets one probe
+change the next probe's answer on one side only. Ordering questions need a different harness — a
+whole script whose **stdout** is the trace, because a script's completion value is decided before
+the job queue drains.
+
+**What it found**, in the order the sweeps ran:
+
+| what | how it showed | ratchet |
+| --- | --- | --- |
+| `toExponential()` took its digits from one spelling and its exponent from another | 13 of the first 30 negative powers of ten off by one place | **nothing** |
+| `AddEntriesFromIterable` gathered the whole iterable before looking at any of it | `new Map([0,1])` drew every value, never closed | +12 |
+| the weak collections held a verbatim copy of that loop | an endless iterable reported RangeError where the clause wants TypeError | +10 |
+| a `finally` block's value overwrote the statement's | `1; try { 2 } finally { 3 }` was 3 | +8 |
+| `Canonicalize` was ASCII-only | `/café/i` did not match `CAFÉ` | +4 |
+| `node --check` accepts an ES module with a syntax error | nine files it called valid were not | *theirs* |
+
+**Four traps, every one of which produced a false finding before it was caught.**
+
+- **Validate the oracle before believing the diff.** The first triage used `node --check`, which
+  silently passes an ambiguous `.js` containing ESM syntax — it reported nine engine bugs, all
+  false. The sound oracle compiles under **both** goal symbols without running: `vm.Script` and
+  `vm.SourceTextModule`, invalid only when both refuse.
+- **A probe whose answer contains a newline breaks the line-for-line alignment.** Two extra output
+  lines put every later comparison against the wrong probe, and the "disagreement" it reported was a
+  pattern against a subject the corpus never had. Assert that `wc -l` of the corpus equals the line
+  count of *both* outputs before reading any diff.
+- **Backslashes lose a level from a generator into JavaScript**, and again from a shell heredoc into
+  Rust. One turned every probe into a syntax error and reported **1,140 of 1,147** disagreements; the
+  other broke a test file on the way in. Write the escaper with no backslash in it at all — a
+  `charCodeAt` loop — and write test files with a file tool, never a heredoc.
+- **A disagreement is not a bug until the clause says so.** Three of the divergences found were the
+  *specification permitting both answers*: `Math.cbrt` to 1 ULP (§21.3 is implementation-approximated),
+  a non-decimal `toString` radix (§21.1.3.6 likewise), and `for-in` trap order over a Proxy —
+  §14.7.5.10.1 says outright that the mechanics "is not specified" and **excludes Proxy** from the
+  `CreateForInIterator` requirement, because implementations historically differed. A fourth was V8
+  knowingly non-conformant: `o[k] += 1` calls `ToPropertyKey` twice there, and the whole
+  `S11.13.2_A7.*_T4` family is listed `[FAIL]` in `v8/v8:test/test262/test262.status`.
+
+**Reading a clause is possible after all**, and this file said it was not. `tc39.es` answers with a
+table of contents whatever anchor is asked for — but
+`curl https://raw.githubusercontent.com/tc39/ecma262/main/spec.html` is 3 MB of plain source and
+greps fine. That is the fastest route to a clause when test262's `info:` blocks do not quote it, and
+it is what settled the Proxy question above.
 
 ### test262 runs ahead of the specification, and two "gaps" were unmerged PRs — costed, refused
 

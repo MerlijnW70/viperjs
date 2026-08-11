@@ -216,7 +216,23 @@ runs assert exactly that error. Read `notes/FINDINGS.md` before touching it; the
 prerequisite for this slice was wrong twice, and the obvious design (resolve the eval's names
 dynamically) is wrong for a reason worth knowing.
 
-Conformance as of this commit is **86.18% of test262** — 80,283 of 93,161 runs, the same figure on
+**And case-insensitive matching reaches past ASCII**, which it never had: §22.2.2.9's
+`Canonicalize` was `a`-`z` and nothing else, so `/café/i` did not match `CAFÉ` in any script, in
+either direction, under `i` or `iu`. `src/unicode_case_table.rs` is generated from the same UCD
+17.0.0 the identifier and property tables pin, and carries both of the clause's branches — folding
+for `u` and `v`, uppercasing without them — plus the equivalence classes a *range* test needs. Worth
+only +4 runs and a great deal more than that: **test262 barely reaches this**, which is why it
+survived a conformance number of 86% and was found by differential sweep instead.
+
+**A differential sweep against another engine is a fourth instrument**, beside reading, running
+real code and fuzzing, and it finds a different class from all three. Roughly 2,200 probes — values,
+evaluation order, RegExp, async job ordering, Proxy invariants, iterator closing, completion values,
+detached buffers — found six real bugs, four of them invisible to the ratchet. The recipe and its
+traps are in `notes/FINDINGS.md`; the shortest version is that each probe answers with a
+self-describing string so the two engines are compared on *answers* rather than on message wording,
+and that the oracle has to be validated before the diff is believed.
+
+Conformance as of this commit is **86.22% of test262** — 80,321 of 93,161 runs, the same figure on
 three consecutive runs alone. Treat that number as perishable and re-measure rather than quoting it;
 the point of the figure is the work list under it. Only 306 runs are now *stopped* before anything
 executes. **One of them was misfiled here for a long time and it matters:** `(?i:…)` 170 is the
