@@ -718,7 +718,7 @@ impl Vm {
         constructor: crate::heap::ObjectId,
         heap: &mut Heap,
     ) -> crate::value::Completion<crate::heap::ObjectId> {
-        self.prototype_for(constructor, self.realm.object_prototype(), heap)
+        self.prototype_for(constructor, crate::realm::Realm::object_prototype, heap)
     }
 
     /// The same, with the intrinsic §10.1.13 falls back to named by the caller.
@@ -726,10 +726,22 @@ impl Vm {
     /// `new f()` falls back to `%Object.prototype%` and a generator to `%GeneratorPrototype%`, and
     /// the clause is the same one both times: `GetPrototypeFromConstructor` takes the intrinsic as
     /// an argument. Two callers, one walk, and the fallback is the only thing that differs.
+    ///
+    /// **The fallback is a function of a realm and not one object, because step 4.a says whose.**
+    /// It is `GetFunctionRealm(constructor)`'s intrinsic, which is not the realm the construction
+    /// is *running* in whenever the constructor came from somewhere else. Taking the running
+    /// realm's is invisible until a program has two, and then it is invisible again unless the
+    /// constructor's `prototype` is not an object — so what shows it is the pair
+    /// `C.prototype = null; new C()`, and nothing else does.
+    ///
+    /// [`crate::builtins::prototype_from`] is this clause for a *built-in* constructor and has
+    /// taken the realm from the constructor since DR-0025. This is the copy that did not, which is
+    /// worth a moment: one clause with two implementations gets fixed once, and the tests for the
+    /// fix are written against the implementation somebody was looking at.
     pub(super) fn prototype_for(
         &mut self,
         constructor: crate::heap::ObjectId,
-        fallback: crate::heap::ObjectId,
+        fallback: fn(&crate::realm::Realm) -> crate::heap::ObjectId,
         heap: &mut Heap,
     ) -> crate::value::Completion<crate::heap::ObjectId> {
         let key = crate::heap::PropertyKey::from_units(
@@ -745,8 +757,8 @@ impl Vm {
             Value::Object(prototype) => prototype,
             // A `prototype` that is not an object — a script may assign anything to it — falls
             // back to the intrinsic the caller named, which is what §10.1.13 says rather than an
-            // error.
-            _ => fallback,
+            // error. Taken out of the *constructor's* realm, per step 4.a.
+            _ => fallback(&self.realm_of(constructor, heap)),
         })
     }
 }

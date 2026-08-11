@@ -11,7 +11,8 @@ use super::call::Entry;
 use super::suspend::Suspended;
 use super::{Fault, Vm};
 use crate::compile::Chunk;
-use crate::heap::{Heap, Object, Resumption};
+use crate::heap::{Heap, Object, ObjectId, Resumption};
+use crate::realm::Realm;
 use crate::value::{Abrupt, Value};
 use std::collections::VecDeque;
 use std::rc::Rc;
@@ -46,16 +47,16 @@ impl Vm {
         // The three things §27.6.2 changes about §15.5.4, decided together. Separately they were
         // three conditions asking one question, and the two that only added state — the brand's
         // sibling and the queue — could each be mutated away without any program noticing.
-        let (fallback, brand, queue) = match asynchronous {
+        let (fallback, brand, queue): (fn(&Realm) -> ObjectId, _, _) = match asynchronous {
             true => (
-                self.realm.async_generator_prototype(),
+                Realm::async_generator_prototype,
                 crate::heap::Suspendable::AsyncGenerator,
                 // §27.6.1's `[[AsyncGeneratorQueue]]`, empty and present from the start: a queue
                 // that appears on first use is a queue that can be missing.
                 Some(crate::heap::Role::Requests(VecDeque::new())),
             ),
             false => (
-                self.realm.generator_prototype(),
+                Realm::generator_prototype,
                 crate::heap::Suspendable::Generator,
                 None,
             ),

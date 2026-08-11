@@ -10,6 +10,7 @@ in.
 
 ## Index
 
+- [One clause, two implementations, and only one of them was fixed — §10.1.13 and §10.3.1](#one-clause-two-implementations-and-only-one-of-them-was-fixed--10113-and-1031)
 - [A comment that was true when it was written — §23.1.3.21 step 5.c, and the hole under the fix](#a-comment-that-was-true-when-it-was-written--231321-step-5c-and-the-hole-under-the-fix)
 - [The harness swallowed the flag after `--summary`, and three runs agreed on a number none measured](#the-harness-swallowed-the-flag-after---summary-and-three-runs-agreed-on-a-number-none-measured)
 - [Differential testing is a fourth instrument, and it found six bugs the ratchet cannot see](#differential-testing-is-a-fourth-instrument-and-it-found-six-bugs-the-ratchet-cannot-see)
@@ -52,6 +53,54 @@ in.
 - [What is left, in the order the numbers put it](#what-is-left-in-the-order-the-numbers-put-it)
 
 ---
+
+### One clause, two implementations, and only one of them was fixed — §10.1.13 and §10.3.1
+
+Fourteen runs, found by reading the `proto-from-ctor-realm` failures rather than by counting a
+bucket, and the shape is worth more than the number: **both bugs are a clause that ViperJS
+implements twice, fixed once.**
+
+**§10.1.13 `GetPrototypeFromConstructor` step 4.a.** When `Get(constructor, "prototype")` does not
+answer an object, the default prototype comes from `GetFunctionRealm(constructor)` — not from the
+realm the construction is running in. `builtins::prototype_from` has taken it from the constructor
+since DR-0025 and its doc comment says so in as many words. `Vm::prototype_for`, which is the same
+clause for an *ordinary* function and for a generator, took a fallback its callers had already
+resolved out of `self.realm`. So `C.prototype = null; new C()` with a foreign `C` inherited from
+the wrong realm's `%Object.prototype%`, and every built-in that reaches `Construct` with a foreign
+new.target — `bind`, `Array.from`, `Array.of`, `RegExp[@@split]`, a Proxy with no `construct` trap
+— inherited the mistake.
+
+The fix is to make the fallback a *function of a realm* rather than an object, which is how
+`prototype_from` had already been written. Callers pass `Realm::object_prototype` or
+`Realm::generator_prototype` and the realm is chosen at the point that knows whose it is.
+
+**§10.3.1 step 3, and this one is general.** A built-in runs in the realm it was made in. `Vm::enter`
+has done that since DR-0025; `Vm::reach` — the path Rust takes to call a function — never did. So
+the realm a built-in ran in depended on *who reached it*: `new other.Function(src)` was right and
+`Reflect.construct(other.Function, [src])` was wrong, for the same construction. Everything through
+`Reflect.construct`, `Reflect.apply` and every callback one built-in invokes on another was in the
+caller's realm.
+
+**What hid it for as long as it existed is that almost nothing looks at the running realm.** A
+built-in builds what it builds out of `new.target`'s realm, so `Reflect.construct(other.Array, [])`
+was correct throughout and looks like proof the path is fine. §20.2.1.1 is the exception: a dynamic
+function is *stamped* with the running realm, and step 30 then gives its body that realm's global
+environment. So the failure was a function that read a different global — `calls is not defined`,
+which reads like a broken test rather than like a realm bug.
+
+**Two lessons.** When a slice fixes a clause, grep for the clause number rather than fixing the call
+site in front of you: `10.1.13` finds both implementations in one command, and the tests for the fix
+get written against whichever one the author had open. And a realm bug shows up as a **ReferenceError
+about an ordinary name**, not as an assertion about prototypes — the prototype assertions are what
+test262 writes down, but the name resolution is what a program notices.
+
+**A test that survives every mutant is not a test.** The first version pinned that a generator object
+inherits from its own realm's `%GeneratorPrototype%` — true, checked, and unkillable, because
+`GeneratorStart` runs *inside* the generator function, so the running realm is already the
+function's and step 4's two candidates are the same realm. It was replaced with a `Reflect.construct`
+row, which fails `ours` against `theirs` the moment the switch is removed. **Mutate a new test before
+believing it**, especially a cross-realm one: the two realms have to be different *at the point the
+code chooses*, and an instance method or an inside-the-callee clause quietly makes them the same.
 
 ### A comment that was true when it was written — §23.1.3.21 step 5.c, and the hole under the fix
 

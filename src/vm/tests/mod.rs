@@ -185,6 +185,24 @@ fn run(source: &str) -> String {
     describe(outcome, &mut heap)
 }
 
+/// Run `source` in a machine that has a second realm, whose global is reachable as `other`.
+///
+/// `other` is the second realm's *global object*, so `other.Array` is its `%Array%` and
+/// `other.Array.prototype.map` is a method belonging to it. Named rather than passed as an
+/// argument because what is under test is which realm a method *runs* in, and a method reached
+/// through a global is reached the way a program reaches one.
+fn run_with_other_realm(source: &str) -> String {
+    let mut heap = Heap::new();
+    let script = parse_script(source).expect("the source parses"); // a VM test needs a chunk
+    let chunk = compile_script(&script, &mut heap).expect("the source compiles"); // same
+    let mut vm = Vm::new(&mut heap);
+    let second = vm.create_realm(&mut heap);
+    let global = vm.realm().global();
+    crate::builtins::define_value(&mut heap, global, "other", Value::Object(second.global()));
+    let outcome = vm.run(&chunk, &mut heap).expect("the chunk is well formed"); // same
+    describe(outcome, &mut heap)
+}
+
 /// Run a chunk on a machine that already exists, and describe what it came to.
 ///
 /// For the chunks that are built by hand rather than compiled: those need a heap prepared in

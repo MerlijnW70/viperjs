@@ -165,24 +165,6 @@ fn a_target_that_will_not_take_an_element_is_a_type_error_rather_than_a_silent_l
     );
 }
 
-/// Run `source` in a machine that has a second realm, whose global is reachable as `other`.
-///
-/// `other` is the second realm's *global object*, so `other.Array` is its `%Array%` and
-/// `other.Array.prototype.map` is a method belonging to it. Named rather than passed as an
-/// argument because what is under test is which realm a method *runs* in, and a method reached
-/// through a global is reached the way a program reaches one.
-fn run_with_other_realm(source: &str) -> String {
-    let mut heap = Heap::new();
-    let script = parse_script(source).expect("the source parses"); // a VM test needs a chunk
-    let chunk = compile_script(&script, &mut heap).expect("the source compiles"); // same
-    let mut vm = Vm::new(&mut heap);
-    let second = vm.create_realm(&mut heap);
-    let global = vm.realm().global();
-    crate::builtins::define_value(&mut heap, global, "other", Value::Object(second.global()));
-    let outcome = vm.run(&chunk, &mut heap).expect("the chunk is well formed"); // same
-    describe(outcome, &mut heap)
-}
-
 #[test]
 fn another_realms_array_is_not_a_species_and_the_copy_is_made_where_the_method_ran() {
     // §23.1.3.21 step 5.c. A copying method asks the array it was given for its `constructor`, and

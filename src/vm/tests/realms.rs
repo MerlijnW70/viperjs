@@ -265,3 +265,99 @@ fn refuses(
 ) -> crate::value::Completion<Value> {
     Ok(Value::Undefined)
 }
+
+#[test]
+fn a_default_prototype_comes_from_the_constructors_realm_and_not_the_running_one() {
+    // §10.1.13 `GetPrototypeFromConstructor` step 4.a. Step 3's `Get(constructor, "prototype")`
+    // decides on its own whenever it answers an object, so the realm in step 4 is reachable by
+    // exactly one route: a constructor whose `prototype` is **not** an object, which a script
+    // makes by assigning one. `C.prototype = null; new C()` is the whole shape, and without it
+    // nothing distinguishes the two realms' `%Object.prototype%` from each other.
+    //
+    // Every row here answered `here` before, including the two that go through a built-in: those
+    // reach `Construct` with the foreign `C` as new.target, so they ask the same question one
+    // clause further along.
+    for construct in [
+        "new C()",
+        "Reflect.construct(function () {}, [], C)",
+        "Array.from.call(C, [])",
+        "Array.of.call(C, 1)",
+    ] {
+        assert_eq!(
+            run_with_other_realm(&format!(
+                "var C = other.eval('(function C() {{}})'); C.prototype = null; \
+                 Object.getPrototypeOf({construct}) === other.Object.prototype"
+            )),
+            "true",
+            "{construct} should inherit from the other realm's Object.prototype"
+        );
+    }
+    // A function made by the other realm's `Function` constructor rather than by its `eval`, which
+    // is the shape `built-ins/Function/proto-from-ctor-realm-prototype.js` uses and a different
+    // path to the same `[[Realm]]`.
+    assert_eq!(
+        run_with_other_realm(
+            "var C = new other.Function(); C.prototype = null; \
+             Object.getPrototypeOf(new C()) === other.Object.prototype"
+        ),
+        "true"
+    );
+    // …and the running realm still decides when the constructor belongs to it, which is what says
+    // the fallback follows the constructor rather than simply always answering `other`.
+    assert_eq!(
+        run_with_other_realm(
+            "function C() {} C.prototype = null; \
+             Object.getPrototypeOf(new C()) === Object.prototype"
+        ),
+        "true"
+    );
+}
+
+#[test]
+fn a_built_in_reached_from_rust_runs_in_its_own_realm_as_one_reached_from_an_instruction_does() {
+    // §10.3.1 step 3 — the running realm becomes the callee's for the duration of a built-in.
+    // There are two ways into a built-in and only one of them did it: `Vm::enter`, which an
+    // instruction goes through, and `Vm::reach`, which is how Rust calls one. So the realm a
+    // built-in ran in depended on who reached it, and `Reflect` is the plainest way for a program
+    // to tell the difference — `Reflect.construct(F, args)` and `new F(...args)` are the same
+    // construction by the specification and were not the same here.
+    //
+    // §20.2.1.1 is what notices, because a dynamic function is stamped with the **running** realm
+    // rather than built from `new.target`'s. Most built-ins take everything they need from
+    // `new.target`, which is why `Reflect.construct(other.Array, [])` was right throughout and hid
+    // this for as long as it existed.
+    //
+    // The body's free names are the sharper half of the assertion: step 30 gives the function its
+    // *own* realm's global environment, so a function stamped with the wrong realm does not merely
+    // look wrong, it reads a different global — and reads it as a `ReferenceError` when the name
+    // is only defined on one side.
+    for construct in [
+        "new other.Function('return marker;')",
+        "Reflect.construct(other.Function, ['return marker;'])",
+        "Reflect.construct(other.Function, ['return marker;'], other.Function)",
+    ] {
+        assert_eq!(
+            run_with_other_realm(&format!(
+                "other.marker = 'theirs'; var marker = 'ours'; \
+                 ({construct})()"
+            )),
+            "theirs",
+            "{construct} should read the other realm's global"
+        );
+    }
+    // The same question for §20.2.1.1's other three kinds, asked through the `prototype` object a
+    // generator function is given — §15.5.4's, which inherits from that realm's
+    // `%GeneratorPrototype%` rather than from `%Object.prototype%`.
+    for kind in ["function*", "async function*"] {
+        assert_eq!(
+            run_with_other_realm(&format!(
+                "var Ctor = other.eval('({kind} () {{}})').constructor; \
+                 var theirs = Object.getPrototypeOf(other.eval('({kind} () {{}})').prototype); \
+                 var made = Reflect.construct(Ctor, ['']); \
+                 Object.getPrototypeOf(made.prototype) === theirs"
+            )),
+            "true",
+            "a dynamic {kind} built through Reflect.construct"
+        );
+    }
+}

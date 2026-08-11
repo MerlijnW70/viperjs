@@ -512,7 +512,25 @@ impl Vm {
                     _ => Value::Undefined,
                 },
             };
-            return native(self, heap, &call);
+            // §10.3.1 step 3 — a built-in runs in the realm it was *made* in, and that is as true
+            // of one reached from Rust as of one reached from an instruction. [`Vm::enter`] has
+            // done this since DR-0025 and this path never did, so everything that goes through
+            // `Reflect.construct`, `Reflect.apply` or a callback another built-in invokes ran in
+            // the **caller's** realm instead.
+            //
+            // Most built-ins never notice, because what they build they build from `new.target`'s
+            // realm and not from the running one — which is why `Reflect.construct(A.Array, [])`
+            // was right all along and hid this. What notices is §20.2.1.1: a dynamic function is
+            // stamped with the running realm, so `Reflect.construct(A.GeneratorFunction, [""])`
+            // produced a function belonging to the caller, whose body then resolved its free names
+            // in the caller's global.
+            let caller_realm = self.realm;
+            if let Some(callee_realm) = self.own_realm(function, heap) {
+                self.realm = callee_realm;
+            }
+            let answer = native(self, heap, &call);
+            self.realm = caller_realm;
+            return answer;
         }
         if self.reentries >= MAX_REENTRY_DEPTH {
             // A program chose this depth, so it is a run-time error like any other recursion that

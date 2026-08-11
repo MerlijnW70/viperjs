@@ -185,8 +185,6 @@ built-ins/AbstractModuleSource/prototype/proto.js :: it threw an object with no 
 built-ins/AbstractModuleSource/throw-from-constructor.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"function"») to be true
 built-ins/Array/from/iter-cstm-ctor-err.js :: it threw an object with no name: Array.from.call(C, items) throws a Test262Error exception Expected a Test262Error but got a TypeError
 built-ins/Array/from/iter-cstm-ctor-err.js (strict) :: it threw an object with no name: Array.from.call(C, items) throws a Test262Error exception Expected a Test262Error but got a TypeError
-built-ins/Array/from/proto-from-ctor-realm.js :: it threw an object with no name: Object.getPrototypeOf(Array.from.call(C, [])) returns other.Object.prototype Expected SameValue(«[object Object]», «[object Object]») to be true
-built-ins/Array/from/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Object.getPrototypeOf(Array.from.call(C, [])) returns other.Object.prototype Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Array/fromAsync/async-iterable-async-mapped-awaits-once.js :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Array/fromAsync/async-iterable-async-mapped-awaits-once.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Array/fromAsync/async-iterable-input-does-not-await-input.js :: the test called $DONE with TypeError: what was called is not a function
@@ -373,8 +371,6 @@ built-ins/Array/fromAsync/thisarg-omitted-sloppy.js :: the test called $DONE wit
 built-ins/Array/fromAsync/thisarg-omitted-strict.js (strict) :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Array/fromAsync/thisarg-primitive-sloppy.js :: the test called $DONE with TypeError: what was called is not a function
 built-ins/Array/fromAsync/thisarg-primitive-strict.js (strict) :: the test called $DONE with TypeError: what was called is not a function
-built-ins/Array/of/proto-from-ctor-realm.js :: it threw an object with no name: Object.getPrototypeOf(Array.of.call(C, 1, 2, 3)) returns other.Object.prototype Expected SameValue(«[object Object]», «[object Object]») to be true
-built-ins/Array/of/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Object.getPrototypeOf(Array.of.call(C, 1, 2, 3)) returns other.Object.prototype Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Array/prototype/fill/coerced-indexes.js :: it threw an object with no name: Actual [0, 0] and expected [1, 1] should have the same contents. [0, 0].fill(1, 0, undefined) must return [1, 1]
 built-ins/Array/prototype/fill/coerced-indexes.js (strict) :: it threw an object with no name: Actual [0, 0] and expected [1, 1] should have the same contents. [0, 0].fill(1, 0, undefined) must return [1, 1]
 built-ins/Array/prototype/fill/resizable-buffer.js :: it threw an object with no name: Actual [0, 0, 0, 0] and expected [1, 1, 1, 1] should have the same contents.
@@ -665,8 +661,8 @@ built-ins/AsyncFromSyncIteratorPrototype/throw/throw-result-poisoned-wrapper.js 
 built-ins/AsyncFromSyncIteratorPrototype/throw/throw-result-poisoned-wrapper.js (strict) :: the test called $DONE with Test262Error: iterator closed properly Expected SameValue(«0», «1») to be true
 built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-poisoned-return.js :: the test called $DONE with Test262Error: Promise should be rejected Expected a CatchError to be thrown asynchronously but got a TypeError
 built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-poisoned-return.js (strict) :: the test called $DONE with Test262Error: Promise should be rejected Expected a CatchError to be thrown asynchronously but got a TypeError
-built-ins/AsyncGeneratorFunction/proto-from-ctor-realm-prototype.js :: it threw an object with no name: Expected SameValue(«[object AsyncGenerator]», «[object AsyncGenerator]») to be true
-built-ins/AsyncGeneratorFunction/proto-from-ctor-realm-prototype.js (strict) :: it threw an object with no name: Expected SameValue(«[object AsyncGenerator]», «[object AsyncGenerator]») to be true
+built-ins/AsyncGeneratorFunction/proto-from-ctor-realm-prototype.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
+built-ins/AsyncGeneratorFunction/proto-from-ctor-realm-prototype.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/AsyncGeneratorPrototype/return/return-state-completed-broken-promise.js :: the test called $DONE with Test262Error: Expected rejection
 built-ins/AsyncGeneratorPrototype/return/return-state-completed-broken-promise.js (strict) :: the test called $DONE with Test262Error: Expected rejection
 built-ins/AsyncGeneratorPrototype/return/return-suspendedStart-broken-promise.js :: the test called $DONE with Test262Error: Expected rejection
@@ -1141,12 +1137,8 @@ built-ins/Function/internals/Construct/base-ctor-revoked-proxy-realm.js :: it th
 built-ins/Function/internals/Construct/base-ctor-revoked-proxy-realm.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Function/internals/Construct/base-ctor-revoked-proxy.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Function/internals/Construct/base-ctor-revoked-proxy.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
-built-ins/Function/proto-from-ctor-realm-prototype.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
-built-ins/Function/proto-from-ctor-realm-prototype.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
-built-ins/Function/prototype/bind/proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
-built-ins/Function/prototype/bind/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
-built-ins/GeneratorFunction/proto-from-ctor-realm-prototype.js :: it threw an object with no name: Expected SameValue(«[object Generator]», «[object Generator]») to be true
-built-ins/GeneratorFunction/proto-from-ctor-realm-prototype.js (strict) :: it threw an object with no name: Expected SameValue(«[object Generator]», «[object Generator]») to be true
+built-ins/GeneratorFunction/proto-from-ctor-realm-prototype.js :: it threw ReferenceError: calls is not defined
+built-ins/GeneratorFunction/proto-from-ctor-realm-prototype.js (strict) :: it threw ReferenceError: calls is not defined
 built-ins/Iterator/concat/arguments-checked-in-order.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Iterator/concat/arguments-checked-in-order.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Iterator/concat/fresh-iterator-result.js :: it threw TypeError: what was called is not a function
@@ -1740,8 +1732,6 @@ built-ins/Promise/prototype/finally/rejected-observable-then-calls-argument.js :
 built-ins/Promise/prototype/finally/rejected-observable-then-calls-argument.js (strict) :: the test called $DONE with Test262Error: The value of resolve.length is expected to equal the value of expected[calls].length Expected SameValue(«1», «0») to be true
 built-ins/Promise/prototype/finally/resolved-observable-then-calls-argument.js :: the test called $DONE with Test262Error: The value of resolve.length is expected to equal the value of expected[calls].length Expected SameValue(«1», «0») to be true
 built-ins/Promise/prototype/finally/resolved-observable-then-calls-argument.js (strict) :: the test called $DONE with Test262Error: The value of resolve.length is expected to equal the value of expected[calls].length Expected SameValue(«1», «0») to be true
-built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
-built-ins/Proxy/construct/trap-is-undefined-proto-from-newtarget-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-missing-target-is-proxy.js :: it threw an object with no name: 0 should be an own property
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-missing-target-is-proxy.js (strict) :: it threw an object with no name: 0 should be an own property
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-null-target-is-proxy.js :: it threw an object with no name: foo should be an own property
@@ -1794,8 +1784,6 @@ built-ins/RegExp/prototype/Symbol.search/lastindex-no-restore.js :: it threw an 
 built-ins/RegExp/prototype/Symbol.search/lastindex-no-restore.js (strict) :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 built-ins/RegExp/prototype/Symbol.search/match-err.js :: it threw an object with no name: `lastIndex` property is not restored Expected SameValue(«86», «0») to be true
 built-ins/RegExp/prototype/Symbol.search/match-err.js (strict) :: it threw an object with no name: `lastIndex` property is not restored Expected SameValue(«86», «0») to be true
-built-ins/RegExp/prototype/Symbol.split/splitter-proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
-built-ins/RegExp/prototype/Symbol.split/splitter-proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/RegExp/prototype/exec/failure-lastindex-access.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/RegExp/prototype/exec/failure-lastindex-access.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/RegExp/prototype/exec/success-lastindex-access.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
@@ -11905,8 +11893,6 @@ language/expressions/super/prop-dot-obj-ref-strict.js (strict) :: it threw an ob
 language/expressions/super/prop-expr-cls-ref-strict.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
 language/expressions/super/prop-expr-cls-ref-strict.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
 language/expressions/super/prop-expr-obj-ref-strict.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"object"») to be true
-language/expressions/super/realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
-language/expressions/super/realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 language/expressions/tagged-template/tco-call.js (strict) :: it threw RangeError: too much recursion
 language/expressions/tagged-template/tco-member.js (strict) :: it threw RangeError: too much recursion
 language/function-code/10.4.3-1-19-s.js (strict) :: it threw an object with no name: my_eval("this") Expected SameValue(«undefined», «[object Object]») to be true
