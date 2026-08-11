@@ -180,7 +180,15 @@ cover, which is presumably why they survive:
   the field too. ViperJS agrees with V8 on the non-static field and with the grammar on the static
   one, which is the tell that the rule is being applied by position rather than by production.
 
-Neither has been reported. **Check them against a third engine before filing** — a lone
+**A third one is confirmed rather than argued, and is the model for how to settle these.** A `with`
+over a Proxy must call the `has` trap **twice** per name read — §9.1.1.2.1 `HasBinding` step 2 and
+§9.1.1.2.6 `GetBindingValue` step 2 each do `HasProperty`, and
+`language/statements/with/get-binding-value-idref-with-proxy-env.js` asserts that exact sequence with
+both steps named in its comments. ViperJS passes it and node 22 fails it, its log short the second
+`has`. When a sweep turns up a difference, look for the test262 file that covers it and run that on
+both engines: it converts "my reading against theirs" into a result.
+
+Neither of the first two has been reported. **Check them against a third engine before filing** — a lone
 disagreement with V8 in a corner test262 does not reach is exactly where a misreading of the
 grammar hides, and the argument above is a reading.
 
