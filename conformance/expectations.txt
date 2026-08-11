@@ -11601,14 +11601,6 @@ language/expressions/assignment/S11.13.1_A6_T3.js :: it threw an object with no 
 language/expressions/assignment/assignment-operator-calls-putvalue-lref--rval-.js :: it threw an object with no name: Expected a ReferenceError to be thrown but no exception was thrown at all
 language/expressions/assignment/fn-name-lhs-cover.js :: it threw an object with no name: name descriptor value should be ; name value should be
 language/expressions/assignment/fn-name-lhs-cover.js (strict) :: it threw an object with no name: name descriptor value should be ; name value should be
-language/expressions/async-arrow-function/await-as-param-ident-nested-arrow-parameter-position.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/async-arrow-function/await-as-param-ident-nested-arrow-parameter-position.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/async-arrow-function/await-as-param-nested-arrow-parameter-position.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/async-arrow-function/await-as-param-nested-arrow-parameter-position.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/async-arrow-function/await-as-param-rest-nested-arrow-parameter-position.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/async-arrow-function/await-as-param-rest-nested-arrow-parameter-position.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/async-arrow-function/early-errors-arrow-await-in-formals-default.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/expressions/async-arrow-function/early-errors-arrow-await-in-formals-default.js (strict) :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/expressions/call/eval-spread-empty-leading.js :: it threw an object with no name: Expected SameValue(«"local"», «0») to be true
 language/expressions/call/eval-spread-empty-leading.js (strict) :: it threw an object with no name: Expected SameValue(«"local"», «0») to be true
 language/expressions/call/eval-spread-empty-trailing.js :: it threw an object with no name: Expected SameValue(«"local"», «0») to be true

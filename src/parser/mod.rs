@@ -401,6 +401,20 @@ struct Parser<'a> {
     /// what makes `class C { a = () => arguments; }` a Syntax Error and
     /// `class C { a = function () { arguments; }; }` an ordinary field.
     pub(super) arguments_reference: Option<Span>,
+    /// Where the name `await` was read as a *name*, since the last boundary.
+    ///
+    /// The half of §15.9.1 that `forbidden_in_parameters` cannot hold. That field records an
+    /// `AwaitExpression`, which is what an `await` becomes where `[+Await]` is already in force;
+    /// in a sloppy Script it is an `IdentifierReference` instead and `parse_await` never runs, so
+    /// `async(x = await) => {}` parsed cleanly and there was nothing left to object to it.
+    ///
+    /// `AsyncArrowHead : async ArrowFormalParameters[~Yield, +Await]`, but a
+    /// `CoverCallExpressionAndAsyncArrowHead` is read as `Arguments` under whatever `[Await]`
+    /// *encloses* it — until the `=>` arrives it may still be a call. So this is kept the way
+    /// [`Self::arguments_reference`] is, and asked about only where the `[+Await]` applies. A flag
+    /// saying "a cover is open" was tried and deleted: only the cover ever reads this, and it
+    /// takes the record first, so the flag had no setting any input could tell from any other.
+    pub(super) await_named: Option<Span>,
     /// Every `#a` read whose declaration has not been found yet.
     ///
     /// §15.7.7's `AllPrivateIdentifiersValid`, which cannot be answered where the name is read:
@@ -471,6 +485,7 @@ impl<'a> Parser<'a> {
             await_allowed: false,
             forbidden_in_parameters: None,
             arguments_reference: None,
+            await_named: None,
             private_references: Vec::new(),
             module: false,
             strict: false,
@@ -536,6 +551,13 @@ impl<'a> Parser<'a> {
     pub(super) fn note_arguments(&mut self, name: &str, span: Span) {
         if name == "arguments" {
             self.arguments_reference.get_or_insert(span);
+        }
+        // §13.1.1 — `await` is not an `IdentifierReference` or a `BindingIdentifier` under
+        // `[+Await]`, and an async arrow's head has `[+Await]` whatever encloses it. Recorded
+        // unconditionally and asked about only there: the same text is a perfectly ordinary
+        // argument if no `=>` follows, and an ordinary name anywhere no cover is reading.
+        if name == "await" {
+            self.await_named.get_or_insert(span);
         }
     }
 

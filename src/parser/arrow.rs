@@ -290,10 +290,15 @@ impl Parser<'_> {
         // `[+Await]` was refused. `[Yield]` is dropped either way — there is no async *generator*
         // arrow, an arrow having no `yield` of its own to suspend at.
         let enclosing = (self.yield_allowed, self.await_allowed);
+        // A body resets `[Await]`, so an enclosing async arrow head's does not reach it — which is
+        // what makes `async(a = () => (await)) => {}` legal while `async(a = (await) => {}) => {}`
+        // is not. The *parameters* above are outside this, which is the grammar's own asymmetry.
+        let enclosing_await_named = self.await_named.take();
         self.yield_allowed = false;
         self.await_allowed = is_async;
         let body = self.parse_concise_body_inner(allow_in, parameters);
         (self.yield_allowed, self.await_allowed) = enclosing;
+        self.await_named = enclosing_await_named;
         body
     }
 

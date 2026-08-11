@@ -233,6 +233,7 @@ impl Parser<'_> {
         let enclosing_context = self.body_context;
         self.yield_allowed = false;
         self.await_allowed = false;
+        let enclosing_await_named = self.await_named.take();
         self.body_context = BodyContext::CLASS_INITIALIZER;
         self.enter()?;
         let value = self.parse_assignment(super::expression::AllowIn::Yes);
@@ -241,6 +242,7 @@ impl Parser<'_> {
         (self.yield_allowed, self.await_allowed) = enclosing;
         self.arguments_reference = enclosing_arguments;
         self.body_context = enclosing_context;
+        self.await_named = enclosing_await_named;
         // §15.7.1: "It is a Syntax Error if Initializer is present and ContainsArguments of
         // Initializer is true." The initialiser runs as its own method, so `arguments` there
         // would be that method's and never the enclosing function's — which is nobody's idea of

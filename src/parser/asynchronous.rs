@@ -133,11 +133,14 @@ impl Parser<'_> {
         // is recorded and asked about below, exactly as for a parenthesized group — and so is a
         // `{a = 1}`, these parentheses being able to become parameters like any others.
         let enclosing_forbidden = self.forbidden_in_parameters.take();
+        let enclosing_await_named = self.await_named.take();
         self.open_covers += 1;
         let list = self.parse_arguments();
         self.open_covers -= 1;
         let forbidden = self.forbidden_in_parameters.take();
+        let await_named = self.await_named.take();
         self.forbidden_in_parameters = enclosing_forbidden;
+        self.await_named = enclosing_await_named;
         self.leave();
         let list = list?;
         if self.current.kind == TokenKind::Arrow && !self.current.newline_before {
@@ -147,6 +150,16 @@ impl Parser<'_> {
             // parameter default and there is nothing for it to suspend into.
             if let Some(error) = forbidden {
                 return Err(error);
+            }
+            // …and the same rule for an `await` that was read as a *name*, which is what it is in
+            // a Script: `async(x = await) => {}` and `async(a = (await) => {}) => {}` are both
+            // §13.1.1 under the head's `[+Await]`, and neither is an `AwaitExpression` for the
+            // record above to have caught.
+            if let Some(span) = await_named {
+                return Err(ParseError {
+                    kind: ParseErrorKind::AwaitAsAsyncArrowParameter,
+                    span,
+                });
             }
             let parameters = self.refine_arguments_to_parameters(list, keyword.span)?;
             return Ok(ArrowOrGroup::Arrow(
@@ -158,6 +171,10 @@ impl Parser<'_> {
         if let Some(error) = forbidden {
             self.forbidden_in_parameters.get_or_insert(error);
         }
+        // The name record is *not* carried out, and that asymmetry is the point: `await` as a name
+        // is refused by the head's `[+Await]` and by nothing else, so an `async(await)` that turned
+        // out to be a call is an ordinary call with an ordinary argument.
+        let _ = await_named;
         let name = crate::lexer::identifier_value(self.source, keyword.span)
             .ok_or_else(|| self.value_missing(keyword))?;
         let callee = Expr::new(ExprKind::Identifier(name.into_owned()), keyword.span);
@@ -181,9 +198,11 @@ impl Parser<'_> {
         // `AsyncArrowBindingIdentifier[Yield] : BindingIdentifier[?Yield, +Await]` — so `await` is
         // refused here however sloppy the enclosing code, where an ordinary arrow would take it.
         let enclosing = self.await_allowed;
+        let enclosing_await_named = self.await_named.take();
         self.await_allowed = true;
         let name = self.parse_binding_name();
         self.await_allowed = enclosing;
+        self.await_named = enclosing_await_named;
         let name = name?;
         if self.current.kind != TokenKind::Arrow || self.current.newline_before {
             return Err(self.unexpected("`=>`"));
@@ -665,6 +684,43 @@ mod tests {
             );
         }
         assert!(parse_script("async(...a) => {};").is_ok());
+        // **And an `await` read as a *name*, which is what it is in a Script.** The record above it
+        // holds an `AwaitExpression`, and there is no `AwaitExpression` here to hold: the head is
+        // read as `Arguments` under the enclosing `[~Await]`, so `await` parsed as an ordinary
+        // `IdentifierReference` and nothing was left to object to it. §13.1.1 under the head's own
+        // `[+Await]` is what refuses it, and that parameter is asked about after the `=>` arrives.
+        for source in [
+            "async(x = await) => {};",
+            "async(a = (await) => {}) => {};",
+            "async(a = await => {}) => {};",
+            "async(a = (...await) => {}) => {};",
+            "async(a = (b = await) => {}) => {};",
+            "async(a = (b = (await) => {}) => {}) => {};",
+            "async(a = class { [await]() {} }) => {};",
+            "async (x = await) => {};",
+        ] {
+            assert_eq!(
+                kind(source),
+                ParseErrorKind::AwaitAsAsyncArrowParameter,
+                "{source}"
+            );
+        }
+        // …and the four places the head's `[+Await]` stops, each of which resets it for itself.
+        // A body drops both parameters, so an arrow's is where `await` is a name again; a function
+        // is a boundary for everything; and a cover that turns out to be an ordinary **call** is
+        // an ordinary call, its argument read under the code that encloses it.
+        for source in [
+            "async(a = () => (await)) => {};",
+            "async(a = (b) => { var await; }) => {};",
+            "async(a = function (await) {}) => {};",
+            "async(a = function () { var await; }) => {};",
+            "async(a = { m(await) {} }) => {};",
+            "async(await);",
+            "async(a = await);",
+            "function* g(p = async(await)) {}",
+        ] {
+            assert!(parse_script(source).is_ok(), "{source}");
+        }
         assert!(parse_script("async(await);").is_ok());
         // The one-parameter form reads its name under `[+Await]` directly, so it fails earlier
         // and for the same reason.

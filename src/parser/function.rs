@@ -198,12 +198,14 @@ impl Parser<'_> {
             return Ok(None);
         }
         let enclosing = (self.yield_allowed, self.await_allowed);
+        let enclosing_await_named = self.await_named.take();
         if !name_required {
             self.yield_allowed = is_generator;
             self.await_allowed = is_async;
         }
         let name = self.parse_binding_name();
         (self.yield_allowed, self.await_allowed) = enclosing;
+        self.await_named = enclosing_await_named;
         Ok(Some(name?))
     }
 
@@ -232,10 +234,12 @@ impl Parser<'_> {
         // A plain function is where `super` stops, however deep inside a method it is written:
         // §15.2.1 makes a `FunctionBody` containing either form a Syntax Error outright.
         let enclosing = (self.yield_allowed, self.await_allowed);
+        let enclosing_await_named = self.await_named.take();
         self.yield_allowed = is_generator;
         self.await_allowed = is_async;
         let parts = self.parse_function_body(BodyContext::FUNCTION, after, Boundary::Function);
         (self.yield_allowed, self.await_allowed) = enclosing;
+        self.await_named = enclosing_await_named;
         let (body, end, declares_strict) = parts?;
         check_parameters_against_body(&parameters, &body)?;
         // The two rules that cannot be applied while the parameters are read, because the body

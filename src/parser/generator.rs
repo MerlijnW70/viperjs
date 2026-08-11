@@ -113,6 +113,7 @@ impl Parser<'_> {
         let enclosing_yield = self.yield_allowed;
         let enclosing_await = self.await_allowed;
         let enclosing_seen = self.forbidden_in_parameters.take();
+        let enclosing_await_named = self.await_named.take();
         self.yield_allowed = is_generator;
         self.await_allowed = is_async;
         let parameters = self.parse_formal_parameters();
@@ -120,6 +121,7 @@ impl Parser<'_> {
         self.yield_allowed = enclosing_yield;
         self.await_allowed = enclosing_await;
         self.forbidden_in_parameters = enclosing_seen;
+        self.await_named = enclosing_await_named;
         let parameters = parameters?;
         // §15.5.1 and §15.8.1: a `YieldExpression` in a generator's own parameters, or an
         // `AwaitExpression` in an async function's. A default is evaluated before the function is

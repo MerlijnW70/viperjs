@@ -93,6 +93,7 @@ impl Parser<'_> {
         // one that matters is this one, which is in place while the parameters are read.
         let enclosing = (self.yield_allowed, self.await_allowed);
         let enclosing_context = self.body_context;
+        let enclosing_await_named = self.await_named.take();
         self.yield_allowed = is_generator;
         self.await_allowed = is_async;
         self.body_context = BodyContext::method(super_allowed);
@@ -111,6 +112,7 @@ impl Parser<'_> {
             });
         (self.yield_allowed, self.await_allowed) = enclosing;
         self.body_context = enclosing_context;
+        self.await_named = enclosing_await_named;
         let (parameters, (body, end, declares_strict)) = parts?;
         self.check_method_body(&parameters, &body, declares_strict)?;
         // §11.2.1 again, and a class body brings its own: §15.7.1 makes every part of a class
