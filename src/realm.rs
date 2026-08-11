@@ -222,6 +222,15 @@ pub struct Realm {
     /// wants to walk them. [`NativeError`] indexes into it for the three the engine itself
     /// throws; the other three exist because a *script* can reach them.
     native_error_prototypes: [ObjectId; NATIVE_ERRORS.len()],
+    /// The six constructors, in the same order — the only unforgeable way to ask which one is
+    /// running.
+    ///
+    /// The six share one Rust body, so it has to know which of them it is. It asked by reading its
+    /// own `name`, and a `name` is a property a program may rewrite: with `TypeError.name` set to
+    /// `"RangeError"`, a `new.target` whose `prototype` is not an object made
+    /// `Reflect.construct(TypeError, [], badTarget)` produce a **RangeError**. Object identity has
+    /// no such hole, and §23.2's TypedArray constructors are stored here for the same reason.
+    native_error_constructors: [ObjectId; NATIVE_ERRORS.len()],
 }
 
 /// §20.5.5's native error types, in the order their prototypes are stored.
@@ -506,6 +515,9 @@ impl Realm {
             legacy_caller,
             legacy_arguments,
             native_error_prototypes,
+            // Filled in below, once the built-ins have made them. A prototype stands in until then
+            // and is never read: nothing can call a constructor that does not exist yet.
+            native_error_constructors: native_error_prototypes,
         };
         // The intrinsics are what a realm *is*, and §19 through §28 are intrinsics. Building them
         // here rather than at the first call is what makes `typeof Error` answer `"function"` in
@@ -550,6 +562,11 @@ impl Realm {
         {
             realm.array_values = found;
         }
+        for (at, name) in NATIVE_ERRORS.into_iter().enumerate() {
+            if let Some(found) = crate::builtins::global_object(heap, &realm, name) {
+                realm.native_error_constructors[at] = found;
+            }
+        }
         for (at, (name, _, _)) in crate::heap::KINDS.into_iter().enumerate() {
             if let Some(found) = crate::builtins::global_object(heap, &realm, name) {
                 realm.typed_constructors[at] = found;
@@ -573,11 +590,24 @@ impl Realm {
         NATIVE_ERRORS.into_iter().zip(self.native_error_prototypes)
     }
 
+    /// Which of §20.5.5's six `function` is, or `None` for anything that is not one of them.
+    ///
+    /// The question `native_error_prototype` used to be asked in the form of: the six share one
+    /// Rust body, and it has to know which. By identity rather than by the `name` on the function
+    /// object, because that name is a property and a program may rewrite it.
+    #[must_use]
+    pub fn native_error_named(&self, function: ObjectId) -> Option<&'static str> {
+        let at = self
+            .native_error_constructors
+            .iter()
+            .position(|known| *known == function)?;
+        NATIVE_ERRORS.get(at).copied()
+    }
+
     /// §20.5.5's prototype for the native error *named* `name`, or `None` for anything else.
     ///
-    /// By name because that is what a built-in has: the six share one Rust body, so the only thing
-    /// telling `TypeError` from `URIError` at call time is the `name` §10.3.3 put on the function
-    /// object — the same trick §23.2's nine TypedArray constructors use.
+    /// By name because that is what [`Realm::native_error_named`] answers, and because the name is
+    /// also the global the constructor is installed under.
     #[must_use]
     pub fn native_error_prototype(&self, name: &str) -> Option<ObjectId> {
         let at = NATIVE_ERRORS.iter().position(|known| *known == name)?;

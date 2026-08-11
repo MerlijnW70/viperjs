@@ -148,7 +148,7 @@ fn construct_concrete(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Co
             "a TypedArray constructor must be called with new",
         ));
     }
-    let Some((element, clamped)) = kind_of(heap, call) else {
+    let Some((element, clamped)) = kind_of(vm, heap, call) else {
         return Err(Abrupt::type_error("this is not a TypedArray constructor"));
     };
     // **Where `AllocateTypedArray` runs is decided per branch, and the two branches disagree.**
@@ -196,22 +196,24 @@ fn construct_concrete(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Co
     }
 }
 
-/// Which kind this constructor makes, read off its own `BYTES_PER_ELEMENT` and name.
+/// Which kind this constructor makes — decided by **which constructor it is**.
 ///
-/// A `fn` pointer holds no state, so the nine share one body and it has to ask which it is. The
-/// answer is on the function object, where §23.2.6.2 already puts it for the program's benefit.
-fn kind_of(heap: &Heap, call: &NativeCall<'_>) -> Option<(Element, bool)> {
-    let name = super::own_value(heap, call.function, "name")?;
-    let Value::String(id) = name else {
-        return None;
-    };
-    let units = heap.string(id)?;
-    let text: String = char::decode_utf16(units.iter().copied())
-        .map(|found| found.unwrap_or(char::REPLACEMENT_CHARACTER))
-        .collect();
+/// A `fn` pointer holds no state, so the eleven kinds share one body and it has to ask which of
+/// them it is running as. It asked by reading its own `name`, and `name` is a property like any
+/// other: renaming `Int8Array.name` to `"Float64Array"` made `new Int8Array(2)` allocate sixteen
+/// bytes and answer `[object Float64Array]`, and *deleting* the name made every construction a
+/// RangeError. §23.2.6 puts nothing on a TypedArray constructor that a program may not rewrite, so
+/// there is no property to ask; the kind is object identity against the realm's own table.
+///
+/// The realm is the **function's**, not the caller's, so a constructor reached across a realm
+/// boundary still knows what it makes.
+fn kind_of(vm: &Vm, heap: &Heap, call: &NativeCall<'_>) -> Option<(Element, bool)> {
+    let realm = vm.realm_of(call.function, heap);
     crate::heap::KINDS
         .into_iter()
-        .find(|(known, _, _)| *known == text)
+        .find(|(_, element, clamped)| {
+            realm.typed_constructor(*element, *clamped) == Some(call.function)
+        })
         .map(|(_, element, clamped)| (element, clamped))
 }
 

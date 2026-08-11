@@ -969,6 +969,54 @@ fn a_comparator_decides_the_order_and_may_be_asked_many_times() {
 }
 
 #[test]
+fn which_kind_a_constructor_makes_is_not_a_property_a_program_can_rewrite() {
+    // The eleven kinds share one Rust body, so it has to know which of them it is running as. It
+    // asked by reading its own `name` — and `name` is an ordinary configurable property. Renaming
+    // it made `new Int8Array(2)` allocate sixteen bytes and answer `[object Float64Array]`, and
+    // *deleting* it made every construction a RangeError. §23.2.6 puts nothing on the constructor
+    // that a program may not rewrite, so there is no property to read: the kind is identity.
+    assert_eq!(
+        run(
+            "Object.defineProperty(Int8Array, 'name', { value: 'Float64Array' });              var a = new Int8Array(2);              a.byteLength + ',' + Object.prototype.toString.call(a)"
+        ),
+        "2,[object Int8Array]"
+    );
+    assert_eq!(
+        run(
+            "Object.defineProperty(Uint8Array, 'name', { value: 0, configurable: true });              delete Uint8Array.name; var a = new Uint8Array(3); a.length + ',' + a.BYTES_PER_ELEMENT"
+        ),
+        "3,1"
+    );
+    // …and the identity has to survive every indirection a program can put in front of it, which
+    // is what a `new.target` and a Proxy are for here.
+    assert_eq!(
+        run(
+            "(function () { class X extends Int8Array {} var a = new X(3);              return a.length + ',' + a.BYTES_PER_ELEMENT; })()"
+        ),
+        "3,1"
+    );
+    assert_eq!(
+        run(
+            "(function () { function T() {} T.prototype = Float64Array.prototype;              var a = Reflect.construct(Int8Array, [4], T);              return a.byteLength + ',' + a.BYTES_PER_ELEMENT; })()"
+        ),
+        "4,8"
+    );
+    assert_eq!(
+        run("var a = new (new Proxy(Int8Array, {}))(6); a.length + ',' + a.BYTES_PER_ELEMENT"),
+        "6,1"
+    );
+    // The two kinds that share an `Element` and differ only in clamping are the pair identity has
+    // to keep apart, and a name lookup kept them apart by spelling.
+    assert_eq!(
+        run(
+            "var a = new Uint8ClampedArray(1); a[0] = 300;              a[0] + ',' + Object.prototype.toString.call(a)"
+        ),
+        "255,[object Uint8ClampedArray]"
+    );
+    assert_eq!(run("var a = new Uint8Array(1); a[0] = 300; a[0]"), "44");
+}
+
+#[test]
 fn to_string_goes_through_join_and_a_walk_reads_its_callbacks_answer() {
     // §23.2.3.32 does not describe a method: it says the value of `toString` **is**
     // `%Array.prototype.toString%`. So the identity is the test, and a copy that behaved the same

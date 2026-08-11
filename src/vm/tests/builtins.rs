@@ -122,6 +122,38 @@ fn a_native_error_inherits_twice_and_the_second_one_is_the_forgotten_half() {
         run("delete Error.prototype.message; JSON.stringify(new TypeError().message)"),
         r#""""#
     );
+    // §20.5.6.2's *intrinsic default* — `URIError` falls back to `URIError.prototype` and not to
+    // `Error.prototype` — and which of the six is running was decided by reading the constructor's
+    // own `name`. That is a property a program may rewrite, so with `TypeError.name` set to
+    // `"RangeError"` this built a RangeError. Only a `new.target` whose `prototype` is not an
+    // object reaches the default at all, which is why it took this shape to see.
+    assert_eq!(
+        run(
+            "(function () { function T() {} T.prototype = 1;              var e = Reflect.construct(TypeError, ['m'], T);              return (e instanceof TypeError) + ',' + Object.getPrototypeOf(e).name + ',' + e.message;              })()"
+        ),
+        "true,TypeError,m"
+    );
+    assert_eq!(
+        run(
+            "(function () {              Object.defineProperty(TypeError, 'name', { value: 'RangeError' });              function T() {} T.prototype = 1;              var e = Reflect.construct(TypeError, ['m'], T);              return (e instanceof TypeError) + ',' + (e instanceof RangeError); })()"
+        ),
+        "true,false"
+    );
+    // …and the fallback still picks each of the six correctly when nothing has been renamed.
+    for name in [
+        "EvalError",
+        "RangeError",
+        "ReferenceError",
+        "SyntaxError",
+        "URIError",
+    ] {
+        assert_eq!(
+            run(&format!(
+                "(function () {{ function T() {{}} T.prototype = 1;                   return Object.getPrototypeOf(Reflect.construct({name}, [], T)).name; }})()"
+            )),
+            name
+        );
+    }
 }
 
 #[test]

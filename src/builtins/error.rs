@@ -39,21 +39,19 @@ pub fn construct(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
     //
     // **Which** intrinsic is the part this had wrong: §20.5.6.2 gives a native error
     // `%NativeError.prototype%`, so `URIError` falls back to `URIError.prototype` and not to
-    // `Error.prototype`. The six share one Rust body, so the name on the function object is what
-    // tells them apart — read *before* the call, because the closure may not hold the heap while
-    // `prototype_from` is writing to it. Unmeasured until the fallback started being reached: it
-    // takes a `new.target` whose `prototype` is not an object to see it at all.
-    let named = super::own_value(heap, call.function, "name").and_then(|value| match value {
-        Value::String(id) => heap.string(id).map(|units| {
-            char::decode_utf16(units.iter().copied())
-                .map(|found| found.unwrap_or(char::REPLACEMENT_CHARACTER))
-                .collect::<String>()
-        }),
-        _ => None,
-    });
+    // `Error.prototype`. The six share one Rust body, so it has to be told apart — and it asked by
+    // reading its own `name`, which is a property a program may rewrite. With `TypeError.name` set
+    // to `"RangeError"`, `Reflect.construct(TypeError, [], badTarget)` produced a RangeError.
+    // Identity against the realm's own table has no such hole, and it is the *function's* realm so
+    // that a constructor reached across a boundary still knows what it is.
+    //
+    // Read before the call because the closure may not hold the heap while `prototype_from` is
+    // writing to it. Only the fallback sees any of this: it takes a `new.target` whose `prototype`
+    // is not an object for the intrinsic default to be reached at all.
+    let function_realm = vm.realm_of(call.function, heap);
+    let named = function_realm.native_error_named(call.function);
     let prototype = super::prototype_from(vm, heap, call, |realm| {
         named
-            .as_deref()
             .and_then(|name| realm.native_error_prototype(name))
             .unwrap_or_else(|| realm.error_prototype())
     })?;
