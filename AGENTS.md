@@ -242,7 +242,7 @@ two traps that cost the most are that the roots must be *named* rather than take
 object, and that the walk must be breadth-first over sorted keys or the same object gets a different
 name in each engine.
 
-Conformance as of this commit is **86.30% of test262** — 80,401 of 93,161 runs, the same figure on
+Conformance as of this commit is **86.32% of test262** — 80,413 of 93,161 runs, the same figure on
 three consecutive runs alone. Treat that number as perishable and re-measure rather than quoting it;
 the point of the figure is the work list under it. Only 306 runs are now *stopped* before anything
 executes. **One of them was misfiled here for a long time and it matters:** `(?i:…)` 170 is the

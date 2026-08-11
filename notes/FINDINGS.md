@@ -12,6 +12,7 @@ in.
 
 - [Differential testing is a fourth instrument, and it found six bugs the ratchet cannot see](#differential-testing-is-a-fourth-instrument-and-it-found-six-bugs-the-ratchet-cannot-see)
 - [The intrinsics and the grammar, swept structurally: five bugs, and two the other engine has](#the-intrinsics-and-the-grammar-swept-structurally-five-bugs-and-two-the-other-engine-has)
+- [Reading the property table where the clause says `Get`, and three things it lost](#reading-the-property-table-where-the-clause-says-get-and-three-things-it-lost)
 - [test262 runs ahead of the specification, and two "gaps" were unmerged PRs — costed, refused](#test262-runs-ahead-of-the-specification-and-two-gaps-were-unmerged-prs--costed-refused)
 - [A sloppy eval's `var` lands in a running scope, and two clauses had nowhere to be — +49](#a-sloppy-evals-var-lands-in-a-running-scope-and-two-clauses-had-nowhere-to-be--49)
 - [An engine can fail by succeeding — §9.13, and the ratchets that cannot see it — DR-0029](#an-engine-can-fail-by-succeeding--913-and-the-ratchets-that-cannot-see-it--dr-0029)
@@ -181,6 +182,66 @@ cover, which is presumably why they survive:
 Neither has been reported. **Check them against a third engine before filing** — a lone
 disagreement with V8 in a corner test262 does not reach is exactly where a misreading of the
 grammar hides, and the argument above is a reading.
+
+### Reading the property table where the clause says `Get`, and three things it lost
+
+A built-in that wants a property of its argument has two ways to get it, and they are not the same
+question. `heap.own_property(object, key)` reads the table; `vm.get_property_key(value, key, heap)`
+runs `[[Get]]`. The first is right at install time, when nothing user-visible has happened yet, and
+wrong everywhere else — and the difference is invisible on an ordinary object, which is why it
+survives.
+
+**`Function.prototype.bind` was the instance.** §20.2.3.2 step 6.a and step 8 are `Get`; this read
+the target's own data properties. Three separate things went with it. An accessor decided nothing —
+a `length` getter returning 7 gave a bound function of 0. A getter that *threw* was swallowed, where
+the `?` propagates. And a Proxy target never saw its `get` trap, so `bind` reported what was behind
+the membrane rather than what the membrane says. Step 6.b.i's `ToIntegerOrInfinity` was missing too,
+so a `length` of 3.7 produced a function object whose `length` was 3.7.
+
+**And then the class.** Auditing every remaining call-time table read in `builtins/` found two more,
+of a worse kind: `Int8Array` and the six `NativeError` constructors each share one Rust body across
+several kinds, and both asked *which kind they were* by reading their own `name`. A `fn` pointer
+holds no state, so something has to answer — but §10.3.3's `name` is configurable, so what answered
+was whatever the program last wrote there:
+
+| what | what it did |
+| --- | --- |
+| `Int8Array.name = "Float64Array"` | `new Int8Array(2)` allocated 16 bytes and tagged itself `Float64Array` |
+| `delete Uint8Array.name` | every construction became a RangeError |
+| `TypeError.name = "RangeError"` | `Reflect.construct(TypeError, [], badTarget)` built a RangeError |
+
+The third needs a `new.target` whose `prototype` is not an object, because only then is §20.5.6.2's
+intrinsic default reached at all — and the comment beside that read had *predicted that shape* while
+the read itself stayed wrong. Both answer by object identity against the realm's own table now; the
+realm already held the eleven TypedArray constructors and holds the six error constructors for the
+same reason. **None of the three moved a conformance number**: test262 does not rename a built-in
+and then use it.
+
+**The rule worth keeping.** A built-in reading a property of something a program handed it is doing
+`Get` unless the clause says `HasOwnProperty` or `[[GetOwnProperty]]`. And a built-in asking *which
+built-in it is* must not read a property at all — there is no property in §19–§28 that a program
+cannot rewrite.
+
+### A BigInt comparison never ran `ToNumeric`
+
+§7.2.13 steps 3.d and 3.e convert **each** operand before comparing. The BigInt path went straight
+from the two primitives to a table of pairs — BigInt/BigInt, BigInt/Number, BigInt/String, and "not
+comparable" for anything else — so `1n <= true`, `0n <= false` and `1n >= null` were all false, and
+`1n < Symbol()` was false where `ToNumeric` refuses.
+
+Two things are worth taking from it. `undefined` is why it hid: `ToNumber` makes it NaN, NaN is not
+comparable to anything, and false is right — so the one case anybody tries by hand was already
+correct. And the conversion cannot simply be hoisted to the top, because step 3.a reads a BigInt
+against a **String** with `StringToBigInt`, which has no fraction: `1n < "1.5"` is not comparable and
+therefore false, where converting the String would make it true. The String pair has to
+short-circuit above the conversion.
+
+`compare_across_types` carried a comment saying a Boolean, `null` or `undefined` "reaches here having
+already been through `ToNumeric` at the call site". Nothing did. That is the third comment in this
+engine found stating a bug as a rule, and all three were found by measuring rather than by reading.
+
+Found with a 480-cell matrix: fifteen operators against every primitive type with a BigInt or a
+Symbol on one side, diffed against another engine. Sixteen cells differed and all sixteen were this.
 
 ### test262 runs ahead of the specification, and two "gaps" were unmerged PRs — costed, refused
 
