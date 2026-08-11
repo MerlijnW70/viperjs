@@ -175,6 +175,91 @@ fn bind_refuses_what_is_not_callable_and_answers_a_new_object_each_time() {
         run("Function.prototype.apply.bind(null, 1, 2, 3, 4).length"),
         "0"
     );
+    // **Both are `Get`, not a read of the property table**, which is where this was wrong. §20.2.3.2
+    // step 6.a and step 8 are internal method calls, so an accessor decides the answer and a
+    // throwing one propagates — where reading the own *data* property answered 0 and `"bound "`
+    // and swallowed the throw.
+    assert_eq!(
+        run(
+            "var f = function () {};              Object.defineProperty(f, 'name', { get: function () { return 'got'; } });              f.bind(null).name"
+        ),
+        "bound got"
+    );
+    assert_eq!(
+        run(
+            "var f = function () {};              Object.defineProperty(f, 'length', { get: function () { return 7; } });              f.bind(null, 1).length"
+        ),
+        "6"
+    );
+    for (property, expected) in [("name", "TypeError"), ("length", "TypeError")] {
+        assert_eq!(
+            run(&format!(
+                "(function () {{ var f = function () {{}};                   Object.defineProperty(f, '{property}',                     {{ get: function () {{ throw new TypeError('x'); }} }});                   try {{ f.bind(null); return 'no throw'; }}                   catch (e) {{ return e.constructor.name; }} }})()"
+            )),
+            expected,
+            "{property}"
+        );
+    }
+    // …and a Proxy target answers through its trap, which is the same fact from the other side.
+    assert_eq!(
+        run(
+            "var f = new Proxy(function () {},              { get: function (t, k) { return k === 'name' ? 'proxied' : t[k]; } });              f.bind(null).name"
+        ),
+        "bound proxied"
+    );
+    // Step 6.b.i is `ToIntegerOrInfinity`, so a fractional `length` **truncates** rather than
+    // carrying its fraction into the bound function's.
+    assert_eq!(
+        run(
+            "var f = function () {}; Object.defineProperty(f, 'length', { value: 3.7 });              f.bind(null).length"
+        ),
+        "3"
+    );
+    // …and only a Number is read at all, so a `length` that spells one is still 0.
+    assert_eq!(
+        run(
+            "var f = function () {}; Object.defineProperty(f, 'length', { value: '5' });              f.bind(null).length"
+        ),
+        "0"
+    );
+    // Both infinities, which §20.2.3.2 gives their own steps and this does not: the subtraction
+    // answers them, and an arm of its own for either was a branch no input could reach.
+    assert_eq!(
+        run(
+            "var f = function () {}; Object.defineProperty(f, 'length', { value: Infinity });              f.bind(null, 1, 2).length"
+        ),
+        "Infinity"
+    );
+    assert_eq!(
+        run(
+            "var f = function () {}; Object.defineProperty(f, 'length', { value: -Infinity });              f.bind(null).length"
+        ),
+        "0"
+    );
+    // **Step 5 is `HasOwnProperty`, so an inherited `length` is not the target's length.** Without
+    // that test the `Get` below it answers 3 here, and a `length` the target does not have becomes
+    // the bound function's.
+    assert_eq!(
+        run(
+            "var base = function (a, b, c) {}; var f = function () {};              Object.setPrototypeOf(f, base); delete f.length; f.bind(null).length"
+        ),
+        "0"
+    );
+    // …and the `Get` does not run at all, which an inherited getter that throws is the way to say.
+    assert_eq!(
+        run(
+            "(function () {              var base = function () {};              Object.defineProperty(base, 'length', { get: function () { throw new TypeError('x'); } });              var f = function () {}; Object.setPrototypeOf(f, base); delete f.length;              try { return f.bind(null).length; } catch (e) { return e.constructor.name; } })()"
+        ),
+        "0"
+    );
+    // Step 8 has no own-property test in front of it, unlike step 5 — so an **inherited** `name` is
+    // the target's name, where an inherited `length` is not the target's length.
+    assert_eq!(
+        run(
+            "var base = function () {}; Object.defineProperty(base, 'name', { value: 'inherited' });              var f = function () {}; Object.setPrototypeOf(f, base);              Object.defineProperty(f, 'name', { value: 0, configurable: true }); delete f.name;              f.bind(null).name"
+        ),
+        "bound inherited"
+    );
 }
 
 #[test]

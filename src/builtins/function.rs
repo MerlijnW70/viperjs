@@ -233,42 +233,42 @@ pub fn bind(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
         },
     );
 
-    // §20.2.3.2 steps 5 and 6 — the length is what a caller still has to supply, and it is only
-    // asked for when the target has one of its own. A target without `length` gives 0, which is
-    // what step 6.a says rather than a guess.
+    // §20.2.3.2 steps 5 and 6 — `HasOwnProperty` and then **`Get`**, which is two internal methods
+    // and not one read of the property table. Both halves matter and neither was here: the `Get`
+    // runs an accessor, so a `length` getter decides the answer and a throwing one propagates,
+    // and a Proxy target sees its traps. Reading the own *data* property instead answered 0 for
+    // every function whose `length` was not a plain value.
     let length_key = key(heap, "length");
-    let remaining = match heap
-        .object(target)
-        .and_then(|found| found.get_own_property(length_key))
-    {
-        Some(property) => match property.kind {
-            crate::heap::PropertyKind::Data {
-                value: Value::Number(length),
-                ..
-            } => (length - taken as f64).max(0.0),
-            _ => 0.0,
-        },
-        None => 0.0,
-    };
-    // §20.2.3.2 step 8 — `bound ` in front of the target's name, and in front of nothing when the
-    // target has no name to speak of.
     let name_key = key(heap, "name");
-    let target_name = match heap
-        .object(target)
-        .and_then(|found| found.get_own_property(name_key))
-    {
-        Some(property) => match property.kind {
-            crate::heap::PropertyKind::Data {
-                value: Value::String(name),
-                ..
-            } => String::from_utf16_lossy(heap.string(name).unwrap_or(&[])),
-            _ => String::new(),
-        },
-        None => String::new(),
+    let mut remaining = 0.0;
+    if vm.own_property_through(target, length_key, heap)?.is_some() {
+        let found = vm.get_property_key(Value::Object(target), length_key, heap)?;
+        // Step 6.b — only a Number is consulted at all, so a `length` of `"5"` leaves the bound
+        // function at 0 rather than being coerced.
+        if matches!(found, Value::Number(_)) {
+            // …and step 6.b.i is `ToIntegerOrInfinity`, which truncates: a `length` of 3.7 makes a
+            // bound function of 3, where subtracting straight from the Number made one of 3.7.
+            //
+            // Steps 6.b.ii and 6.b.iii spell out the two infinities and are not written here,
+            // because the subtraction already answers them: `+∞` less a count is `+∞`, and `-∞`
+            // less a count is `-∞`, which `max(…, 0)` makes 0. Written as their own arms they were
+            // branches no input could distinguish — a mutation of either left every answer
+            // unchanged, which is what said so.
+            let whole = found.to_integer_or_infinity(heap)?;
+            remaining = (whole - taken as f64).max(0.0);
+        }
+    }
+    // §20.2.3.2 steps 8 and 9 — `Get` again, and *unconditionally*: unlike `length` there is no
+    // own-property test in front of it, so an inherited `name` is the target's name and a Proxy's
+    // `get` trap decides it. Anything that is not a String is the empty String rather than
+    // coerced, which is why a `name` of `5` gives `"bound "` and not `"bound 5"`.
+    let found = vm.get_property_key(Value::Object(target), name_key, heap)?;
+    let target_name = match found {
+        Value::String(name) => String::from_utf16_lossy(heap.string(name).unwrap_or(&[])),
+        _ => String::new(),
     };
     let name = crate::builtins::text(heap, &format!("bound {target_name}"));
     crate::builtins::define_metadata(heap, bound, Value::Number(remaining), name);
-    let _ = vm;
     Ok(Value::Object(bound))
 }
 
