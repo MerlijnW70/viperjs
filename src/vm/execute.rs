@@ -1611,12 +1611,18 @@ impl Vm {
     ) -> Result<(), Fault> {
         let value = self.pop()?;
         let prototype = self.realm.array_prototype();
-        // Step 2 — `undefined` and `null` are not an error here, they are simply nothing to
-        // enumerate and the loop body never runs. Any other primitive is wrapped by `ToObject`,
-        // and a wrapper has no enumerable own properties except a String's, which has one per
-        // index (§10.4.3).
-        let keys = match value {
-            Value::Object(object) => {
+        // §14.7.5.9 steps 2 and 6 — `undefined` and `null` are not an error here, they are simply
+        // nothing to enumerate and the loop body never runs; **every other primitive is wrapped by
+        // `ToObject` and walked**. [`Vm::wrapped`] answers `None` for exactly those two, which is
+        // the question this needs asked and no other.
+        //
+        // The wrapping was missing and the comment here described it anyway, which made
+        // `for (var k in "ab")` visit nothing where a String object has one index per unit
+        // (§10.4.3) — and made an enumerable property put on `Number.prototype`, `String.prototype`
+        // or any of the other three invisible to a `for`-`in` over a primitive of that type, which
+        // is what extending a built-in prototype was ever for.
+        let keys = match self.wrapped(value, heap) {
+            Some(Value::Object(object)) => {
                 // §14.7.5.10's walk can throw, because a proxy anywhere in the chain answers it
                 // with traps — so this goes through the handler search like any other operation
                 // that may raise.

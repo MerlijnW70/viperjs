@@ -149,13 +149,46 @@ fn nothing_is_enumerated_over_undefined_or_null() {
         run("var r = 'no'; for (var k in undefined) { r = 'ran'; } r"),
         "no"
     );
-    // A primitive that is not nullish is wrapped by §14.7.5.6's `ToObject`, and a wrapper has no
-    // enumerable own properties — so these enumerate nothing rather than failing.
+    // A primitive that is not nullish is **wrapped** by step 6's `ToObject` and then walked like
+    // any other object. A Number's wrapper and a Boolean's have no enumerable own properties, so
+    // these two enumerate nothing — which is the answer either way and is why they held while the
+    // wrapping was missing entirely.
     assert_eq!(run("var r = 'no'; for (var k in 1) { r = 'ran'; } r"), "no");
     assert_eq!(
         run("var r = 'no'; for (var k in true) { r = 'ran'; } r"),
         "no"
     );
+    // **A String's wrapper has one per index** (§10.4.3), and that is the row the two above cannot
+    // stand in for: without the wrapping a primitive string enumerated nothing at all, and the
+    // comment here said a wrapper never has any.
+    assert_eq!(
+        run("var r = ''; for (var k in 'ab') { r = r + k; } r"),
+        "01"
+    );
+    assert_eq!(run("var r = ''; for (var k in '') { r = r + k; } r"), "");
+    // …and by code *unit*, so an astral character is two indices exactly as `.length` says.
+    assert_eq!(
+        run("var r = ''; for (var k in String.fromCharCode(0xD83D, 0xDE00)) { r = r + k; } r"),
+        "01"
+    );
+    // The **prototype** is walked too, which is the half a wrapper with no own properties still
+    // shows: an enumerable property put on a built-in's prototype is what a `for`-`in` over a
+    // primitive of that type is for, and it was invisible for every one of the five.
+    for (spelling, primitive) in [
+        ("Number", "1"),
+        ("Boolean", "true"),
+        ("String", "'ab'"),
+        ("Symbol", "Symbol()"),
+        ("BigInt", "1n"),
+    ] {
+        assert_eq!(
+            run(&format!(
+                "{spelling}.prototype.zz = 1; var r = '';                  for (var k in {primitive}) {{ if (k === 'zz') r = 'seen'; }}                  delete {spelling}.prototype.zz; r"
+            )),
+            "seen",
+            "{spelling}"
+        );
+    }
 }
 
 #[test]
