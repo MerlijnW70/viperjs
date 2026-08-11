@@ -89,6 +89,39 @@ fn a_native_error_inherits_twice_and_the_second_one_is_the_forgotten_half() {
     assert_eq!(run("new TypeError('x').constructor === TypeError"), "true");
     assert_eq!(run("new Error('x').constructor === Error"), "true");
     assert_eq!(run("TypeError.prototype.constructor.name"), "TypeError");
+    // §20.5.6.3.2 and §20.5.6.3.3 — each of the six prototypes carries **both** its `name` and an
+    // own empty `message`. Inheriting `message` from `Error.prototype` answers the same to
+    // `new TypeError().message` and to nothing else, which is how it went missing.
+    for name in [
+        "EvalError",
+        "RangeError",
+        "ReferenceError",
+        "SyntaxError",
+        "TypeError",
+        "URIError",
+        "AggregateError",
+    ] {
+        assert_eq!(
+            run(&format!(
+                "Object.getOwnPropertyNames({name}.prototype).sort().join(',')"
+            )),
+            "constructor,message,name"
+        );
+        assert_eq!(
+            run(&format!(
+                "var d = Object.getOwnPropertyDescriptor({name}.prototype, 'message'); \
+                 JSON.stringify(d.value) + ',' + d.writable + ',' + d.enumerable + ',' \
+                 + d.configurable"
+            )),
+            r#""",true,false,true"#
+        );
+    }
+    // The question the inherited one answers differently: with `Error.prototype`'s gone, an own
+    // property on each prototype still holds the empty String.
+    assert_eq!(
+        run("delete Error.prototype.message; JSON.stringify(new TypeError().message)"),
+        r#""""#
+    );
 }
 
 #[test]
@@ -490,4 +523,66 @@ fn a_name_that_would_not_parse_is_left_out_of_the_native_function_form() {
         run("var o = { [Symbol.iterator]() {} }; String(o[Symbol.iterator])"),
         "function [Symbol.iterator]() { [native code] }"
     );
+}
+
+#[test]
+fn every_object_the_specification_gives_a_tag_carries_it_with_the_same_attributes() {
+    // §20.1.3.6 answers `[object Object]` for anything with no `[[Class]]`-like slot and no tag,
+    // so an omitted `[@@toStringTag]` is invisible until a program asks — nothing throws and no
+    // other property is missing. **`Math` was the omission**: five copies of the defining block
+    // existed and none of them was for §21.3.1.9, which is why this is one sweep rather than a row
+    // per clause. A new intrinsic that needs a tag and does not get one fails here.
+    for (path, tag) in [
+        ("Math", "Math"),
+        ("JSON", "JSON"),
+        ("Reflect", "Reflect"),
+        ("Atomics", "Atomics"),
+    ] {
+        assert_eq!(
+            run(&format!("Object.prototype.toString.call({path})")),
+            format!("[object {tag}]")
+        );
+    }
+    // The prototypes carry theirs the same way, and it is the tag rather than the internal slot
+    // that answers: a plain object with the tag borrowed from one of them says the same thing.
+    for (path, tag) in [
+        ("Promise", "Promise"),
+        ("Map", "Map"),
+        ("Set", "Set"),
+        ("WeakMap", "WeakMap"),
+        ("WeakSet", "WeakSet"),
+        ("WeakRef", "WeakRef"),
+        ("FinalizationRegistry", "FinalizationRegistry"),
+        ("ArrayBuffer", "ArrayBuffer"),
+        ("SharedArrayBuffer", "SharedArrayBuffer"),
+        ("DataView", "DataView"),
+        ("BigInt", "BigInt"),
+        ("Symbol", "Symbol"),
+    ] {
+        assert_eq!(
+            run(&format!(
+                "Object.getOwnPropertyDescriptor({path}.prototype, Symbol.toStringTag).value"
+            )),
+            tag
+        );
+    }
+    // …and every one of them has the attributes the clause gives it. Writable would let a program
+    // rename a built-in kind, and non-configurable would make the tag impossible to remove — both
+    // are things a test that only reads the value would let through.
+    for path in [
+        "Math",
+        "JSON",
+        "Reflect",
+        "Atomics",
+        "Promise.prototype",
+        "Map.prototype",
+    ] {
+        assert_eq!(
+            run(&format!(
+                "var d = Object.getOwnPropertyDescriptor({path}, Symbol.toStringTag); \
+                 d.writable + ',' + d.enumerable + ',' + d.configurable"
+            )),
+            "false,false,true"
+        );
+    }
 }

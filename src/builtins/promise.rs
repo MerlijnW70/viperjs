@@ -116,22 +116,7 @@ fn define_species_getter(heap: &mut Heap, realm: &Realm, constructor: ObjectId) 
 /// §27.2.5.5 — `Promise.prototype[@@toStringTag]`, which is what makes
 /// `Object.prototype.toString.call(Promise.resolve())` say `[object Promise]`.
 fn define_tag(heap: &mut Heap, prototype: ObjectId) {
-    let Some(symbol) = heap.well_known(super::well_known_at("toStringTag")) else {
-        return;
-    };
-    let units: Vec<u16> = "Promise".encode_utf16().collect();
-    let value = Value::String(heap.intern(&units));
-    let _ = heap.define_own_property(
-        prototype,
-        PropertyKey::from_symbol(symbol),
-        &PropertyDescriptor {
-            value: Some(value),
-            writable: Some(false),
-            enumerable: Some(false),
-            configurable: Some(true),
-            ..PropertyDescriptor::EMPTY
-        },
-    );
+    super::tag_with(heap, prototype, "Promise");
 }
 
 /// §27.2.3.1 — `new Promise(executor)`.

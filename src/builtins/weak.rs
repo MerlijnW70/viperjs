@@ -22,7 +22,7 @@
 //! could not reach. A program cannot tell the difference by asking — only by not running out of
 //! memory — which is why the tests for it are in the collector rather than beside these methods.
 
-use super::collection::{collection_of, place, tag_with};
+use super::collection::{collection_of, place};
 use super::{define_method, define_value, key};
 use crate::heap::{Collection, CollectionKind, Heap, Native, NativeCall, ObjectId};
 use crate::realm::Realm;
@@ -274,6 +274,6 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         for (name, length, native) in methods {
             define_method(heap, realm, prototype, name, *length, *native);
         }
-        tag_with(heap, prototype, kind.name());
+        super::tag_with(heap, prototype, kind.name());
     }
 }

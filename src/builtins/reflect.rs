@@ -51,7 +51,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     ] {
         define_method(heap, realm, reflect, name, length, native);
     }
-    super::collection::tag_with(heap, reflect, "Reflect");
+    super::tag_with(heap, reflect, "Reflect");
 }
 
 /// The object `target` is, or the TypeError every one of these begins with.

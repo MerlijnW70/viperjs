@@ -317,23 +317,7 @@ pub fn install(heap: &mut Heap, realm: &Realm) {
         define_method(heap, realm, prototype, "next", 0, next);
         // §23.1.5.2.2 and §22.1.5.2.2 — the tag is what tells the two apart in a message, and it
         // is the only thing that does: they are otherwise the same shape.
-        let Some(symbol) = heap.well_known(super::well_known_at("toStringTag")) else {
-            continue;
-        };
-        let name = crate::heap::PropertyKey::from_symbol(symbol);
-        let units: Vec<u16> = tag.encode_utf16().collect();
-        let value = Value::String(heap.intern(&units));
-        let _ = heap.define_own_property(
-            prototype,
-            name,
-            &PropertyDescriptor {
-                value: Some(value),
-                writable: Some(false),
-                enumerable: Some(false),
-                configurable: Some(true),
-                ..PropertyDescriptor::EMPTY
-            },
-        );
+        super::tag_with(heap, prototype, tag);
     }
 }
 

@@ -305,6 +305,34 @@ pub(crate) fn prototype_from(
     Ok(default(&vm.realm_of(constructor, heap)))
 }
 
+/// `[@@toStringTag]`, which is what `Object.prototype.toString` reads to answer `"[object X]"`.
+///
+/// One function rather than the block written out per intrinsic, because there were six copies of
+/// it and `Math` was the one that never got a seventh — §21.3.1.9 was simply missed, and nothing
+/// about six identical blocks says which object is absent from the list. The attributes are the
+/// same everywhere the tag is a data property: not writable, not enumerable, configurable.
+///
+/// `%Iterator.prototype%` is deliberately not a caller. §27.1.2.1 makes its tag an **accessor**
+/// with a setter that shadows rather than assigns, which is a different property and not this one
+/// with different attributes.
+pub(crate) fn tag_with(heap: &mut Heap, object: ObjectId, text: &str) {
+    let Some(symbol) = heap.well_known(well_known_at("toStringTag")) else {
+        return;
+    };
+    let value = self::text(heap, text);
+    let _ = heap.define_own_property(
+        object,
+        PropertyKey::from_symbol(symbol),
+        &PropertyDescriptor {
+            value: Some(value),
+            writable: Some(false),
+            enumerable: Some(false),
+            configurable: Some(true),
+            ..PropertyDescriptor::EMPTY
+        },
+    );
+}
+
 /// An object's own property value, if it has one that is a value rather than an accessor.
 ///
 /// Own rather than inherited, and data rather than accessor. A built-in reading its own

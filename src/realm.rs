@@ -397,13 +397,21 @@ impl Realm {
         let empty = text(heap, "");
         define(heap, error_prototype, "message", empty);
 
-        // §20.5.6.3 — each native error's prototype inherits from `Error.prototype` and differs
-        // from it in one property: its `name`. The `message` it does *not* override, which is why
-        // `new TypeError().message` is the empty string that `Error.prototype` carries.
+        // §20.5.6.3 — each native error's prototype inherits from `Error.prototype` and carries
+        // **two** own properties of its own: §20.5.6.3.3's `name`, and §20.5.6.3.2's `message`,
+        // which is the empty String on each of the six.
+        //
+        // The `message` was left out here, on the reasoning that inheriting the empty one from
+        // `Error.prototype` answers the same — and it does, until a program asks a different
+        // question. `Object.getOwnPropertyNames(TypeError.prototype)` was short by one; and
+        // `delete Error.prototype.message` made `new TypeError().message` `undefined`, where an own
+        // property on each prototype keeps it the empty String.
         let native_error_prototypes = NATIVE_ERRORS.map(|kind| {
             let prototype = heap.new_object(Some(error_prototype));
             let name = text(heap, kind);
             define(heap, prototype, "name", name);
+            let empty = text(heap, "");
+            define(heap, prototype, "message", empty);
             prototype
         });
 
@@ -1189,9 +1197,19 @@ mod tests {
             panic!("an error is an object")
         };
         assert!(property(&heap, error, "message").is_none());
+        // …and it comes from **`TypeError.prototype`** rather than from `Error.prototype`, which is
+        // §20.5.6.3.2: each of the six carries its own empty `message`. This asserted the shared
+        // one for as long as the six did not have theirs, and the two are indistinguishable from
+        // the instance — which is exactly why the structural assertion is the one worth making.
         let key = PropertyKey::from_units(&mut heap, &"message".encode_utf16().collect::<Vec<_>>());
         let (owner, _) = heap.find_own(error, key).expect("inherited"); // the test is about it
-        assert_eq!(owner, realm.error_prototype());
+        assert_eq!(
+            owner,
+            realm
+                .native_error_prototype("TypeError")
+                .expect("a realm has TypeError") // the test is which prototype
+        );
+        assert_ne!(owner, realm.error_prototype());
     }
 
     #[test]

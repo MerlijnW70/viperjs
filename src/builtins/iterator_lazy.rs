@@ -468,5 +468,5 @@ pub(super) fn install(heap: &mut Heap, realm: &Realm, constructor: ObjectId) {
         define_method(heap, realm, target, "next", 0, helper_next);
         define_method(heap, realm, target, "return", 0, helper_return);
     }
-    super::collection::tag_with(heap, realm.iterator_helper_prototype(), "Iterator Helper");
+    super::tag_with(heap, realm.iterator_helper_prototype(), "Iterator Helper");
 }

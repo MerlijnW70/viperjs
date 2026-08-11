@@ -15,7 +15,7 @@
 
 use super::{define_function_metadata, define_method, define_value};
 use crate::bigint::BigInt;
-use crate::heap::{Heap, NativeCall, ObjectId, PropertyDescriptor, PropertyKey};
+use crate::heap::{Heap, NativeCall, ObjectId};
 use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
 use crate::vm::Vm;
@@ -41,22 +41,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
 
     // §21.2.3.5 — `[object BigInt]` comes from here rather than from §20.1.3.6's table, which is
     // why deleting this property makes a BigInt wrapper tag as an ordinary object.
-    if let Some(symbol) = heap.well_known(super::well_known_at("toStringTag")) {
-        let name = PropertyKey::from_symbol(symbol);
-        let units: Vec<u16> = "BigInt".encode_utf16().collect();
-        let value = Value::String(heap.intern(&units));
-        let _ = heap.define_own_property(
-            prototype,
-            name,
-            &PropertyDescriptor {
-                value: Some(value),
-                writable: Some(false),
-                enumerable: Some(false),
-                configurable: Some(true),
-                ..PropertyDescriptor::EMPTY
-            },
-        );
-    }
+    super::tag_with(heap, prototype, "BigInt");
 }
 
 /// §21.2.1 `BigInt(value)` — the explicit conversion, which the operators refuse to do implicitly.

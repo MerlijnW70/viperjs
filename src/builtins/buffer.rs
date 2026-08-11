@@ -83,7 +83,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     // §25.1.4.3 — `get ArrayBuffer[@@species]` answers the receiver, so `slice` on a subclass makes
     // another of that subclass.
     define_species(heap, realm, constructor);
-    super::collection::tag_with(heap, prototype, "ArrayBuffer");
+    super::tag_with(heap, prototype, "ArrayBuffer");
 }
 
 /// §25.1.4.3 — the species accessor, which answers whatever it is read on.

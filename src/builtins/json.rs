@@ -72,22 +72,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     );
     // §25.5.3 — the tag, which is what makes `Object.prototype.toString.call(JSON)` say `JSON`
     // rather than `Object`.
-    let Some(symbol) = heap.well_known(super::well_known_at("toStringTag")) else {
-        return;
-    };
-    let units: Vec<u16> = "JSON".encode_utf16().collect();
-    let value = Value::String(heap.intern(&units));
-    let _ = heap.define_own_property(
-        json,
-        PropertyKey::from_symbol(symbol),
-        &PropertyDescriptor {
-            value: Some(value),
-            writable: Some(false),
-            enumerable: Some(false),
-            configurable: Some(true),
-            ..PropertyDescriptor::EMPTY
-        },
-    );
+    super::tag_with(heap, json, "JSON");
 }
 
 /// §25.5.1 `JSON.parse(text[, reviver])`.

@@ -61,7 +61,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
             },
         );
     }
-    super::collection::tag_with(heap, prototype, "DataView");
+    super::tag_with(heap, prototype, "DataView");
 }
 
 /// The ten pairs, each with the two natives that read and write it.

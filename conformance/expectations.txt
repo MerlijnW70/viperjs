@@ -377,40 +377,26 @@ built-ins/Array/of/proto-from-ctor-realm.js :: it threw an object with no name: 
 built-ins/Array/of/proto-from-ctor-realm.js (strict) :: it threw an object with no name: Object.getPrototypeOf(Array.of.call(C, 1, 2, 3)) returns other.Object.prototype Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/Array/prototype/concat/create-proto-from-ctor-realm-array.js :: it threw an object with no name: The value of callCount is expected to be 0 Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/concat/create-proto-from-ctor-realm-array.js (strict) :: it threw an object with no name: The value of callCount is expected to be 0 Expected SameValue(«1», «0») to be true
-built-ins/Array/prototype/every/15.4.4.16-1-10.js :: it threw an object with no name: Array.prototype.every.call(Math, callbackfn) Expected SameValue(«true», «false») to be true
-built-ins/Array/prototype/every/15.4.4.16-1-10.js (strict) :: it threw an object with no name: Array.prototype.every.call(Math, callbackfn) Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/fill/coerced-indexes.js :: it threw an object with no name: Actual [0, 0] and expected [1, 1] should have the same contents. [0, 0].fill(1, 0, undefined) must return [1, 1]
 built-ins/Array/prototype/fill/coerced-indexes.js (strict) :: it threw an object with no name: Actual [0, 0] and expected [1, 1] should have the same contents. [0, 0].fill(1, 0, undefined) must return [1, 1]
 built-ins/Array/prototype/fill/resizable-buffer.js :: it threw an object with no name: Actual [0, 0, 0, 0] and expected [1, 1, 1, 1] should have the same contents.
 built-ins/Array/prototype/fill/resizable-buffer.js (strict) :: it threw an object with no name: Actual [0, 0, 0, 0] and expected [1, 1, 1, 1] should have the same contents.
 built-ins/Array/prototype/fill/typed-array-resize.js :: it threw an object with no name: Actual [0, 3] and expected [0, 0] should have the same contents.
 built-ins/Array/prototype/fill/typed-array-resize.js (strict) :: it threw an object with no name: Actual [0, 3] and expected [0, 0] should have the same contents.
-built-ins/Array/prototype/filter/15.4.4.20-1-10.js :: it threw an object with no name: newArr[0] Expected SameValue(«undefined», «1») to be true
-built-ins/Array/prototype/filter/15.4.4.20-1-10.js (strict) :: it threw an object with no name: newArr[0] Expected SameValue(«undefined», «1») to be true
 built-ins/Array/prototype/filter/create-proto-from-ctor-realm-array.js :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/filter/create-proto-from-ctor-realm-array.js (strict) :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.js :: it threw an object with no name: it does not define an own length property Expected SameValue(«true», «false») to be true
 built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.js (strict) :: it threw an object with no name: it does not define an own length property Expected SameValue(«true», «false») to be true
-built-ins/Array/prototype/forEach/15.4.4.18-1-10.js :: it threw an object with no name: result !== true
-built-ins/Array/prototype/forEach/15.4.4.18-1-10.js (strict) :: it threw an object with no name: result !== true
 built-ins/Array/prototype/includes/length-zero-returns-false.js :: it threw an object with no name: length is checked before ToInteger(fromIndex) Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/includes/length-zero-returns-false.js (strict) :: it threw an object with no name: length is checked before ToInteger(fromIndex) Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/indexOf/length-zero-returns-minus-one.js :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
 built-ins/Array/prototype/indexOf/length-zero-returns-minus-one.js (strict) :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
 built-ins/Array/prototype/lastIndexOf/length-zero-returns-minus-one.js :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
 built-ins/Array/prototype/lastIndexOf/length-zero-returns-minus-one.js (strict) :: it threw an object with no name: Length should be checked before ToInteger(fromIndex).
-built-ins/Array/prototype/map/15.4.4.19-1-10.js :: it threw an object with no name: testResult[0] Expected SameValue(«false», «true») to be true
-built-ins/Array/prototype/map/15.4.4.19-1-10.js (strict) :: it threw an object with no name: testResult[0] Expected SameValue(«false», «true») to be true
 built-ins/Array/prototype/map/create-proto-from-ctor-realm-array.js :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/map/create-proto-from-ctor-realm-array.js (strict) :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
-built-ins/Array/prototype/reduce/15.4.4.21-1-10.js :: it threw an object with no name: Array.prototype.reduce.call(Math, callbackfn, 1) !== true
-built-ins/Array/prototype/reduce/15.4.4.21-1-10.js (strict) :: it threw an object with no name: Array.prototype.reduce.call(Math, callbackfn, 1) !== true
-built-ins/Array/prototype/reduceRight/15.4.4.22-1-10.js :: it threw an object with no name: Array.prototype.reduceRight.call(Math, callbackfn, 1) !== true
-built-ins/Array/prototype/reduceRight/15.4.4.22-1-10.js (strict) :: it threw an object with no name: Array.prototype.reduceRight.call(Math, callbackfn, 1) !== true
 built-ins/Array/prototype/slice/create-proto-from-ctor-realm-array.js :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/slice/create-proto-from-ctor-realm-array.js (strict) :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
-built-ins/Array/prototype/some/15.4.4.17-1-10.js :: it threw an object with no name: Array.prototype.some.call(Math, callbackfn) !== true
-built-ins/Array/prototype/some/15.4.4.17-1-10.js (strict) :: it threw an object with no name: Array.prototype.some.call(Math, callbackfn) !== true
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/splice/create-proto-from-ctor-realm-array.js (strict) :: it threw an object with no name: Species constructor is not referenced Expected SameValue(«1», «0») to be true
 built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js :: it threw an object with no name: // deleteCount argument exceeding 2^53-1. Array.prototype.splice.call(source, 0, 2 ** 53 + 4) throws a StopSplice exception Expected a StopSplice but got a RangeError
@@ -1580,8 +1566,6 @@ built-ins/Map/prototype/getOrInsertComputed/returns-value-if-key-is-present-diff
 built-ins/Map/prototype/getOrInsertComputed/returns-value-if-key-is-present-different-key-types.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Map/prototype/getOrInsertComputed/returns-value-normalized-zero-key.js :: it threw TypeError: what was called is not a function
 built-ins/Map/prototype/getOrInsertComputed/returns-value-normalized-zero-key.js (strict) :: it threw TypeError: what was called is not a function
-built-ins/Math/Symbol.toStringTag.js :: it threw an object with no name: Expected SameValue(«undefined», «"Math"») to be true
-built-ins/Math/Symbol.toStringTag.js (strict) :: it threw an object with no name: Expected SameValue(«undefined», «"Math"») to be true
 built-ins/Math/f16round/length.js :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Math/f16round/length.js (strict) :: it threw TypeError: undefined and null cannot be converted to an object
 built-ins/Math/f16round/name.js :: it threw TypeError: undefined and null cannot be converted to an object
@@ -1612,18 +1596,6 @@ built-ins/Math/sumPrecise/takes-iterable.js :: it threw TypeError: what was call
 built-ins/Math/sumPrecise/takes-iterable.js (strict) :: it threw TypeError: what was called is not a function
 built-ins/Math/sumPrecise/throws-on-non-number.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/Math/sumPrecise/throws-on-non-number.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/NativeErrors/EvalError/prototype/message.js :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/EvalError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/RangeError/prototype/message.js :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/RangeError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/ReferenceError/prototype/message.js :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/ReferenceError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/SyntaxError/prototype/message.js :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/SyntaxError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/TypeError/prototype/message.js :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/TypeError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/URIError/prototype/message.js :: it threw an object with no name: message should be an own property
-built-ins/NativeErrors/URIError/prototype/message.js (strict) :: it threw an object with no name: message should be an own property
 built-ins/Object/freeze/typedarray-backed-by-resizable-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/freeze/typedarray-backed-by-resizable-buffer.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/Object/keys/proxy-keys.js :: it threw an object with no name: Expected SameValue(«12», «10») to be true
@@ -2030,8 +2002,6 @@ built-ins/String/prototype/search/regexp-prototype-search-v-flag.js :: it threw 
 built-ins/String/prototype/search/regexp-prototype-search-v-flag.js (strict) :: it threw an object with no name: Search for surrogate pair without v flag Expected SameValue(«-1», «0») to be true
 built-ins/String/prototype/search/regexp-prototype-search-v-u-flag.js :: it threw an object with no name: Search for surrogate pair without flags Expected SameValue(«-1», «0») to be true
 built-ins/String/prototype/search/regexp-prototype-search-v-u-flag.js (strict) :: it threw an object with no name: Search for surrogate pair without flags Expected SameValue(«-1», «0») to be true
-built-ins/String/prototype/split/instance-is-math.js :: it threw an object with no name: The value of __split[0] is "[object Math]" Expected SameValue(«"[object Object]"», «"[object Math]"») to be true
-built-ins/String/prototype/split/instance-is-math.js (strict) :: it threw an object with no name: The value of __split[0] is "[object Math]" Expected SameValue(«"[object Object]"», «"[object Math]"») to be true
 built-ins/String/prototype/split/separator-tostring-error.js :: it threw an object with no name: ToString should be called on the separator before checking if the limit is zero. Expected a ExpectedError to be thrown but no exception was thrown at all
 built-ins/String/prototype/split/separator-tostring-error.js (strict) :: it threw an object with no name: ToString should be called on the separator before checking if the limit is zero. Expected a ExpectedError to be thrown but no exception was thrown at all
 built-ins/String/prototype/toLocaleLowerCase/Final_Sigma_U180E.js :: it threw an object with no name: Sigma preceded by LATIN CAPITAL LETTER A, MONGOLIAN VOWEL SEPARATOR Expected SameValue(«"a᠎σ"», «"a᠎ς"») to be true

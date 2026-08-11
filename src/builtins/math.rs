@@ -30,6 +30,10 @@ use std::cmp::Ordering;
 pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let math = heap.new_object(Some(realm.object_prototype()));
     define_value(heap, global, "Math", Value::Object(math));
+    // §21.3.1.9 — without this `Object.prototype.toString.call(Math)` answers `[object Object]`,
+    // and `Math` is an ordinary object with nothing else to tell it apart. It is the tag or
+    // nothing: §20.1.3.6's table has no row for it, unlike Array or Function or Error.
+    super::tag_with(heap, math, "Math");
     seed_random();
 
     // §21.3.1 — every constant is non-writable, non-enumerable and non-configurable. A program

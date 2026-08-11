@@ -152,12 +152,12 @@ fn build(
             ..PropertyDescriptor::EMPTY
         },
     );
-    tag_with(heap, prototype, name);
+    super::tag_with(heap, prototype, name);
 
     // §24.1.5 and §24.2.5 — the iterator prototypes, which inherit from %IteratorPrototype% and so
     // get `[@@iterator]` from it.
     define_method(heap, realm, iterator_prototype, "next", 0, next);
-    tag_with(
+    super::tag_with(
         heap,
         iterator_prototype,
         if map { "Map Iterator" } else { "Set Iterator" },
@@ -186,25 +186,6 @@ fn alias_symbol(heap: &mut Heap, prototype: ObjectId, symbol: &str, existing: &s
         &PropertyDescriptor {
             value: Some(value),
             writable: Some(true),
-            enumerable: Some(false),
-            configurable: Some(true),
-            ..PropertyDescriptor::EMPTY
-        },
-    );
-}
-
-/// `[@@toStringTag]`, which is what `Object.prototype.toString` reads.
-pub(super) fn tag_with(heap: &mut Heap, object: ObjectId, text: &str) {
-    let Some(symbol) = heap.well_known(super::well_known_at("toStringTag")) else {
-        return;
-    };
-    let value = super::text(heap, text);
-    let _ = heap.define_own_property(
-        object,
-        PropertyKey::from_symbol(symbol),
-        &PropertyDescriptor {
-            value: Some(value),
-            writable: Some(false),
             enumerable: Some(false),
             configurable: Some(true),
             ..PropertyDescriptor::EMPTY

@@ -810,7 +810,7 @@ pub(super) fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
         );
     }
     super::buffer::define_species(heap, realm, constructor);
-    super::collection::tag_with(heap, prototype, "SharedArrayBuffer");
+    super::tag_with(heap, prototype, "SharedArrayBuffer");
 
     // §25.4 — an ordinary object rather than a constructor, like `Math` and `JSON`.
     let atomics = heap.new_object(Some(realm.object_prototype()));
@@ -832,7 +832,7 @@ pub(super) fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     ] {
         define_method(heap, realm, atomics, name, length, native);
     }
-    super::collection::tag_with(heap, atomics, "Atomics");
+    super::tag_with(heap, atomics, "Atomics");
 }
 
 /// §25.4.3.1 `Atomics.add`.

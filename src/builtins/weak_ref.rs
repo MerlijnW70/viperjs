@@ -24,7 +24,6 @@
 //! registry. A caller holding one cannot then ask a second time and have to say what it would do
 //! if the answer had changed — which is where the unreachable arm would have been.
 
-use super::collection::tag_with;
 use super::{define_method, define_value};
 use crate::heap::{Cell, Heap, Holdable, NativeCall, ObjectId, Registry, Weak};
 use crate::realm::Realm;
@@ -217,7 +216,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     define_value(heap, global, "WeakRef", Value::Object(constructor));
     define_value(heap, reference, "constructor", Value::Object(constructor));
     define_method(heap, realm, reference, "deref", 0, deref);
-    tag_with(heap, reference, "WeakRef");
+    super::tag_with(heap, reference, "WeakRef");
 
     let registry = realm.finalization_registry_prototype();
     let constructor =
@@ -233,5 +232,5 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     define_value(heap, registry, "constructor", Value::Object(constructor));
     define_method(heap, realm, registry, "register", 2, register);
     define_method(heap, realm, registry, "unregister", 1, unregister);
-    tag_with(heap, registry, "FinalizationRegistry");
+    super::tag_with(heap, registry, "FinalizationRegistry");
 }
