@@ -256,6 +256,35 @@ fn symbol_is_the_one_constructor_that_refuses_itself() {
              catch (e) { return e.constructor.name; } })()"),
         "TypeError"
     );
+    // …and it refuses **as a constructor**, which is the distinction the row above cannot see.
+    // §20.4.1 says `Symbol` "may be used as the value of an `extends` clause of a class definition
+    // but a `super` call to it will cause an exception" — so it has a `[[Construct]]` that throws,
+    // not an absent one. Answering the same TypeError by having none at all moved the refusal to
+    // the class definition, where the clause allows the definition and refuses the `super` call.
+    assert_eq!(
+        run(
+            "(function () { try { Reflect.construct(function () {}, [], Symbol); return true; } \
+             catch (e) { return false; } })()"
+        ),
+        "true"
+    );
+    assert_eq!(
+        run("(function () { class A extends Symbol {} return typeof A; })()"),
+        "function"
+    );
+    assert_eq!(
+        run("(function () { class A extends Symbol {} \
+             try { new A(); return 'ok'; } catch (e) { return e.constructor.name; } })()"),
+        "TypeError"
+    );
+    // The check is step 1 and therefore before step 2's coercion: a description that would run
+    // JavaScript never gets to.
+    assert_eq!(
+        run("(function () { var ran = false; \
+             try { new Symbol({ toString: function () { ran = true; return 'x'; } }); } \
+             catch (e) {} return ran; })()"),
+        "false"
+    );
     // §20.4.3.2 — `description` is an accessor, not enumerable and *configurable*: a script may
     // delete it, which is the one of the three attributes that surprises.
     assert_eq!(

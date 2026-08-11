@@ -238,8 +238,8 @@ fn the_constructor_converts_on_purpose_what_the_operators_refuse_by_accident() {
         ("BigInt(undefined)", "TypeError"),
         ("BigInt(null)", "TypeError"),
         ("BigInt(Symbol())", "TypeError"),
-        // §21.2.1 step 1 — not a constructor, like `Symbol`. A wrapper is what a method call makes
-        // for itself; there is no reason to ask for one.
+        // §21.2.1 step 1 — refuses `new`, like `Symbol`. A wrapper is what a method call makes for
+        // itself; there is no reason to ask for one.
         ("new BigInt(1)", "TypeError"),
     ] {
         assert_eq!(
@@ -250,6 +250,30 @@ fn the_constructor_converts_on_purpose_what_the_operators_refuse_by_accident() {
             "{source}"
         );
     }
+    // …and step 1 is a check inside a `[[Construct]]` rather than the absence of one, which the
+    // row above cannot tell apart. §21.2.1 says `BigInt` "may be used as the value of an `extends`
+    // clause of a class definition but a `super` call to it will cause an exception" — and built
+    // without a `[[Construct]]`, `class B extends BigInt {}` was refused at the definition.
+    assert_eq!(
+        run(
+            "(function () { try { Reflect.construct(function () {}, [], BigInt); return true; }              catch (e) { return false; } })()"
+        ),
+        "true"
+    );
+    assert_eq!(
+        run(
+            "(function () { class B extends BigInt {}              try { new B(); return 'ok'; } catch (e) { return e.constructor.name; } })()"
+        ),
+        "TypeError"
+    );
+    // Step 1 comes before step 2's `ToPrimitive`, which is what test262 asks by handing `new` an
+    // object whose `valueOf` would be noticed if it ran.
+    assert_eq!(
+        run(
+            "(function () { var ran = false;              try { new BigInt({ valueOf: function () { ran = true; return 1; } }); }              catch (e) {} return ran; })()"
+        ),
+        "false"
+    );
 }
 
 #[test]

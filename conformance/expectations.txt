@@ -763,8 +763,6 @@ built-ins/Atomics/waitAsync/was-woken-before-timeout.js :: the test called $DONE
 built-ins/Atomics/waitAsync/was-woken-before-timeout.js (strict) :: the test called $DONE with Test262Error: Atomics.notify(new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 4)), 0) must return 1 Expected SameValue(«0», «1») to be true
 built-ins/Atomics/xor/immutable-buffer.js :: it threw an object with no name: no arg factories match include immutable and exclude undefined
 built-ins/Atomics/xor/immutable-buffer.js (strict) :: it threw an object with no name: no arg factories match include immutable and exclude undefined
-built-ins/BigInt/is-a-constructor.js :: it threw an object with no name: isConstructor(BigInt) must return true Expected SameValue(«false», «true») to be true
-built-ins/BigInt/is-a-constructor.js (strict) :: it threw an object with no name: isConstructor(BigInt) must return true Expected SameValue(«false», «true») to be true
 built-ins/BigInt/wrapper-object-ordinary-toprimitive.js :: it threw an object with no name: hint: default
 built-ins/BigInt/wrapper-object-ordinary-toprimitive.js (strict) :: it threw an object with no name: hint: default
 built-ins/DataView/custom-proto-access-detaches-buffer.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
@@ -2068,8 +2066,6 @@ built-ins/Symbol/dispose/no-key.js :: it threw TypeError: Symbol.keyFor requires
 built-ins/Symbol/dispose/no-key.js (strict) :: it threw TypeError: Symbol.keyFor requires a Symbol
 built-ins/Symbol/dispose/prop-desc.js :: it threw an object with no name: Expected SameValue(«"undefined"», «"symbol"») to be true
 built-ins/Symbol/dispose/prop-desc.js (strict) :: it threw an object with no name: Expected SameValue(«"undefined"», «"symbol"») to be true
-built-ins/Symbol/is-constructor.js :: it threw an object with no name: Expected true but got false
-built-ins/Symbol/is-constructor.js (strict) :: it threw an object with no name: Expected true but got false
 built-ins/Temporal/Duration/basic.js :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/basic.js (strict) :: it threw ReferenceError: Temporal is not defined
 built-ins/Temporal/Duration/builtin.js :: it threw ReferenceError: Temporal is not defined
@@ -12367,10 +12363,6 @@ language/statements/class/static-init-arguments-functions.js :: it did not parse
 language/statements/class/static-init-arguments-functions.js (strict) :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
 language/statements/class/static-init-arguments-methods.js :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
 language/statements/class/static-init-arguments-methods.js (strict) :: it did not parse: `arguments` is not allowed in a class field initialiser or static block
-language/statements/class/subclass/builtin-objects/Symbol/new-symbol-with-super-throws.js :: it threw TypeError: a class may only extend a constructor or null
-language/statements/class/subclass/builtin-objects/Symbol/new-symbol-with-super-throws.js (strict) :: it threw TypeError: a class may only extend a constructor or null
-language/statements/class/subclass/builtin-objects/Symbol/symbol-valid-as-extends-value.js :: it threw TypeError: a class may only extend a constructor or null
-language/statements/class/subclass/builtin-objects/Symbol/symbol-valid-as-extends-value.js (strict) :: it threw TypeError: a class may only extend a constructor or null
 language/statements/class/subclass/default-constructor-spread-override.js :: it threw an object with no name: @@iterator invoked
 language/statements/class/subclass/default-constructor-spread-override.js (strict) :: it threw an object with no name: @@iterator invoked
 language/statements/class/subclass/private-class-field-on-nonextensible-return-override.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all

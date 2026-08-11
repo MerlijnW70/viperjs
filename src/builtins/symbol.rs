@@ -59,7 +59,7 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let prototype = realm.symbol_prototype();
     // §20.4.1 — callable and *not* constructible, which is the only constructor of which that is
     // true. See the module comment for why.
-    let symbol = heap.new_native_function(realm.function_prototype(), make_symbol, realm.id());
+    let symbol = heap.new_native_constructor(realm.function_prototype(), make_symbol, realm.id());
     define_function_metadata(heap, symbol, "Symbol", 0);
     super::define_fixed(heap, symbol, "prototype", Value::Object(prototype));
     define_value(heap, prototype, "constructor", Value::Object(symbol));
@@ -146,11 +146,16 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
 
 /// §20.4.1.1 `Symbol([description])`.
 ///
-/// No check for `new` here. §20.4.1 step 1's refusal is expressed by `Symbol` not having a
-/// `[[Construct]]` at all — which is what §10.3.2 means and what [`install`] does by reaching for
-/// [`Heap::new_native_function`] rather than its constructor-making sibling. The call never gets
-/// this far, so a guard here would be a branch no input could take.
+/// Step 1 is the check below and **not** the absence of a `[[Construct]]`, which is what this said
+/// and built for a long time. §20.4.1 says the constructor "may be used as the value of an
+/// `extends` clause of a class definition but a `super` call to it will cause an exception" — a
+/// sentence about something that has one. Without it `class A extends Symbol {}` was refused at the
+/// definition, where the exception the clause describes belongs to the `super` call in `new A()`.
 fn make_symbol(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
+    // Step 1 — before the coercion, so `new Symbol({ toString() { … } })` throws without running it.
+    if call.constructing() {
+        return Err(Abrupt::type_error("Symbol is not a constructor"));
+    }
     // Step 2 — *no argument* is no description, and an explicit `undefined` is the same. Both
     // differ from `Symbol("")`, which has one and it is empty.
     let description = match call.argument(0) {

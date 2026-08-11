@@ -23,7 +23,7 @@ use crate::vm::Vm;
 /// Build §21.2.1's constructor and §21.2.3's prototype.
 pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
     let prototype = realm.bigint_prototype();
-    let constructor = heap.new_native_function(realm.function_prototype(), convert, realm.id());
+    let constructor = heap.new_native_constructor(realm.function_prototype(), convert, realm.id());
     define_function_metadata(heap, constructor, "BigInt", 1);
     super::define_fixed(heap, constructor, "prototype", Value::Object(prototype));
     define_value(heap, prototype, "constructor", Value::Object(constructor));
@@ -46,10 +46,18 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
 
 /// §21.2.1 `BigInt(value)` — the explicit conversion, which the operators refuse to do implicitly.
 fn convert(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
-    // Step 1's `NewTarget is not undefined` is not checked here, and it is still true: a native
-    // function has no `[[Construct]]` in this engine, so `new BigInt(1)` is refused before this
-    // body runs. A check of its own answered the same on every input — which is the difference
-    // between a rule being enforced twice and being enforced once.
+    // Step 1 — `new BigInt(x)` is a TypeError, and it is **this check** that says so rather than
+    // the absence of a `[[Construct]]`. §21.2.1 says the constructor "may be used as the value of
+    // an `extends` clause of a class definition but a `super` call to it will cause an exception",
+    // which is only true of something that has one. Built without it, `class B extends BigInt {}`
+    // was refused where the clause allows it — and the refusal moved from `new B()`, where it
+    // belongs, to the class definition.
+    //
+    // It comes **before** the coercion, which is what makes `new BigInt({ valueOf() { … } })`
+    // throw without running `valueOf`.
+    if call.constructing() {
+        return Err(Abrupt::type_error("BigInt is not a constructor"));
+    }
     let primitive = vm.to_primitive(call.argument(0), crate::value::Hint::Number, heap)?;
     // Step 3 — a Number is *converted* here, where §7.1.13's table refuses one outright. That is
     // the difference between asking for a BigInt and being handed one: `BigInt(1)` is `1n`, and
