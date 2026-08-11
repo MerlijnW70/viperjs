@@ -11,6 +11,7 @@ in.
 ## Index
 
 - [Differential testing is a fourth instrument, and it found six bugs the ratchet cannot see](#differential-testing-is-a-fourth-instrument-and-it-found-six-bugs-the-ratchet-cannot-see)
+- [The intrinsics and the grammar, swept structurally: five bugs, and two the other engine has](#the-intrinsics-and-the-grammar-swept-structurally-five-bugs-and-two-the-other-engine-has)
 - [test262 runs ahead of the specification, and two "gaps" were unmerged PRs — costed, refused](#test262-runs-ahead-of-the-specification-and-two-gaps-were-unmerged-prs--costed-refused)
 - [A sloppy eval's `var` lands in a running scope, and two clauses had nowhere to be — +49](#a-sloppy-evals-var-lands-in-a-running-scope-and-two-clauses-had-nowhere-to-be--49)
 - [An engine can fail by succeeding — §9.13, and the ratchets that cannot see it — DR-0029](#an-engine-can-fail-by-succeeding--913-and-the-ratchets-that-cannot-see-it--dr-0029)
@@ -106,6 +107,80 @@ table of contents whatever anchor is asked for — but
 `curl https://raw.githubusercontent.com/tc39/ecma262/main/spec.html` is 3 MB of plain source and
 greps fine. That is the fastest route to a clause when test262's `info:` blocks do not quote it, and
 it is what settled the Proxy question above.
+
+### The intrinsics and the grammar, swept structurally: five bugs, and two the other engine has
+
+The section above compares *answers* to expressions. This one compares **structure** — the shape of
+the intrinsic graph, and which sources a parser accepts — and it is a different instrument again,
+because a structural fact is enumerable. Where an expression sweep is a sample, these two are
+closed: every path, every context.
+
+**Sweep one: the aliasing graph.** ECMA-262 says in a dozen places that one property *is* another —
+"the initial value of the `toString` property is %Array.prototype.toString%" — rather than that it
+behaves the same. So: walk everything reachable from ECMA-262's own globals, prototype links
+included, group the paths by object identity, and diff the classes against another engine's. One
+class differed: `%TypedArray%.prototype.toString`, which was a copy. Being a copy cost the identity
+`ta.toString === Array.prototype.toString`, which test262 compares — and §23.1.3.36 step 3, which
+the copy did not have, so a TypedArray whose `join` had been shadowed by a number threw where it
+should answer `"[object Int8Array]"`.
+
+Two things made the sweep worth more than the bug. **The roots are named rather than taken from the
+global object**, because a host adds globals of its own and every one of those reads as an engine
+difference when it is a difference between hosts. And **the walk is breadth-first over sorted keys**,
+so an object is named by the lexicographically smallest shortest path: built-in property order is
+insertion order, the two engines do not agree on it, and a depth-first walk names the same object
+differently in each — after which every fact about it looks like a difference.
+
+**Sweep two: the structural facts.** Same walk, now emitting one line per fact — a property's
+attributes, a function's `length` and `name`, the prototype, whether `[[Construct]]` exists, the key
+set. 4,537 facts on paths the two engines share; fifteen differed, and once the proposals one side
+has were struck out, three were real:
+
+| what | how it showed | ratchet |
+| --- | --- | --- |
+| `Math[@@toStringTag]` absent — §21.3.1.9 | `Object.prototype.toString.call(Math)` said `[object Object]` | +2 |
+| `message` absent from all six NativeError prototypes — §20.5.6.3.2 | `getOwnPropertyNames(TypeError.prototype)` short by one | +28 |
+| `Symbol` and `BigInt` had no `[[Construct]]` | `class A extends Symbol {}` refused at the *definition* | +8 |
+
+`Reflect.construct(function () {}, [], f)` is how the third was asked: `f` in the **newTarget**
+position is refused before anything runs, so it tests for `[[Construct]]` without invoking it. The
+first probe written for it put `f` in the target position and defined a throwing `prototype` getter
+on the newTarget — which fails, because a plain function's `prototype` is not configurable, so every
+answer was `false` and every answer agreed.
+
+Each of the three is the same shape: **a property whose absence answers correctly to the obvious
+question and wrongly to every other one.** `new TypeError().message` is `""` whether the property is
+own or inherited; `new Symbol()` throws whether or not there is a `[[Construct]]` to throw from.
+None of them was a broken program until something asked structurally.
+
+**Sweep three: the parser grid.** 46 contexts × 36 constructs = 1,620 sources, each context a
+position that sets a grammar parameter and each construct something a parameter governs. Nine
+differed; four were ours and are written up under the early-error section. The oracle matters:
+`new vm.Script(source)` and nothing else, because `node --check` accepts an ES module and so says
+yes to sources that are syntax errors in Script goal.
+
+**And five of the nine are the other engine's, in two groups.** Both are corners test262 does not
+cover, which is presumably why they survive:
+
+- **A class's parts are strict mode code, and only its method bodies were treated so.** §11.2.2:
+  "All parts of a |ClassDeclaration| or a |ClassExpression| are strict mode code." So `01` is a
+  Syntax Error in a heritage, a computed key, a field initialiser and a static block, exactly as it
+  is in a method body. V8 accepts all four and refuses the fifth. The divergence is precisely the
+  two **lexical** Annex B rules — §12.9.3.1's legacy octal literal and §12.9.4.1's legacy octal
+  escape — and no syntactic one: `with`, assignment to `eval`, duplicate parameters and unqualified
+  `delete` are all refused correctly in the same positions. That reads like a scanner flag set on
+  entry to a method body and not on entry to the class.
+- **`await` is a name in a static field initialiser.** `FieldDefinition[Yield, Await] :
+  ClassElementName[?Yield, ?Await] Initializer[+In, ?Yield, ?Await]?` — the initialiser *inherits*,
+  so in a sloppy Script `class C { static f = await; }` reads `await` as an ordinary
+  IdentifierReference. The asymmetry is deliberate and visible: the only `Contains await` rule in
+  §15.7.1 is on `ClassStaticBlockStatementList`, and a static **block** does refuse it. V8 refuses
+  the field too. ViperJS agrees with V8 on the non-static field and with the grammar on the static
+  one, which is the tell that the rule is being applied by position rather than by production.
+
+Neither has been reported. **Check them against a third engine before filing** — a lone
+disagreement with V8 in a corner test262 does not reach is exactly where a misreading of the
+grammar hides, and the argument above is a reading.
 
 ### test262 runs ahead of the specification, and two "gaps" were unmerged PRs — costed, refused
 

@@ -232,7 +232,17 @@ traps are in `notes/FINDINGS.md`; the shortest version is that each probe answer
 self-describing string so the two engines are compared on *answers* rather than on message wording,
 and that the oracle has to be validated before the diff is believed.
 
-Conformance as of this commit is **86.22% of test262** — 80,321 of 93,161 runs, the same figure on
+**A sweep can compare *structure* rather than answers, and then it is closed rather than a sample.**
+Three of them are written up in `notes/FINDINGS.md`: the intrinsics' aliasing graph (which paths are
+the same object), their structural facts (attributes, `length`, `name`, prototype, whether it
+constructs), and a grid of 46 parser contexts × 36 constructs. Five more bugs, and two findings that
+are the *other* engine's — a class's parts being strict mode code, which V8 applies only to method
+bodies, and `await` in a static field initialiser. Read that section before repeating any of it; the
+two traps that cost the most are that the roots must be *named* rather than taken from the global
+object, and that the walk must be breadth-first over sorted keys or the same object gets a different
+name in each engine.
+
+Conformance as of this commit is **86.30% of test262** — 80,401 of 93,161 runs, the same figure on
 three consecutive runs alone. Treat that number as perishable and re-measure rather than quoting it;
 the point of the figure is the work list under it. Only 306 runs are now *stopped* before anything
 executes. **One of them was misfiled here for a long time and it matters:** `(?i:…)` 170 is the
