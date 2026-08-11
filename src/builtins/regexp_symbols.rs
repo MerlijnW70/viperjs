@@ -92,6 +92,9 @@ fn symbol_match(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completi
     if !has_flag(vm, heap, object, b'g')? {
         return regexp_exec(vm, heap, object, &subject);
     }
+    // Step 6 — `fullUnicode`, which decides how far an empty match steps below. Read from the
+    // *flags* the receiver reports, as the clause says, and not from the pattern's own slots.
+    let unicode = has_flag(vm, heap, object, b'u')? || has_flag(vm, heap, object, b'v')?;
     set_last_index(vm, heap, object, 0)?;
     let mut found = Vec::new();
     loop {
@@ -104,12 +107,14 @@ fn symbol_match(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completi
         let text = Value::String(vm.to_string(text, heap)?);
         // Step 8.d.iii.2 — an *empty* match would leave `lastIndex` where it was, so it is
         // advanced by hand. Without this the loop never ends for a pattern like `/(?:)/g`.
+        // **By `AdvanceStringIndex` and not by one**: under `u` or `v` that is a whole code
+        // point, and a step of one unit lands between the halves of a surrogate pair.
         if matches!(text, Value::String(id) if heap.string(id).is_none_or(<[u16]>::is_empty)) {
             let name = key(heap, "lastIndex");
             let held = vm.get_property_key(Value::Object(object), name, heap)?;
             let at = vm.to_number(held, heap)?;
             let next = usize::try_from(at.max(0.0) as u64).unwrap_or(usize::MAX);
-            set_last_index(vm, heap, object, next.saturating_add(1))?;
+            set_last_index(vm, heap, object, advanced(&subject, next, unicode))?;
         }
         found.push(text);
     }
@@ -152,6 +157,8 @@ fn symbol_replace(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comple
         false => Value::String(vm.to_string(with, heap)?),
     };
     let global = has_flag(vm, heap, object, b'g')?;
+    // Step 10 — `fullUnicode`, for the empty-match advance below.
+    let unicode = has_flag(vm, heap, object, b'u')? || has_flag(vm, heap, object, b'v')?;
     if global {
         set_last_index(vm, heap, object, 0)?;
     }
@@ -176,7 +183,9 @@ fn symbol_replace(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Comple
             let held = vm.get_property_key(Value::Object(object), name, heap)?;
             let at = vm.to_number(held, heap)?;
             let next = usize::try_from(at.max(0.0) as u64).unwrap_or(usize::MAX);
-            set_last_index(vm, heap, object, next.saturating_add(1))?;
+            // Step 13.c.iii.2.b — `AdvanceStringIndex` again. Advancing by one made an empty
+            // match under `u` insert its replacement between the halves of a surrogate pair.
+            set_last_index(vm, heap, object, advanced(&subject, next, unicode))?;
         }
     }
     let mut built: Vec<u16> = Vec::with_capacity(subject.len());

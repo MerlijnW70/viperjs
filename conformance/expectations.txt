@@ -1816,30 +1816,20 @@ built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Unknown.js :: it
 built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Unknown.js (strict) :: it did not parse: this is not a Unicode property
 built-ins/RegExp/property-escapes/special-property-value-Script_Extensions-Unknown.js :: it did not parse: this is not a Unicode property
 built-ins/RegExp/property-escapes/special-property-value-Script_Extensions-Unknown.js (strict) :: it did not parse: this is not a Unicode property
-built-ins/RegExp/prototype/Symbol.match/builtin-infer-unicode.js :: it threw an object with no name: Expected SameValue(«�», «null») to be true
-built-ins/RegExp/prototype/Symbol.match/builtin-infer-unicode.js (strict) :: it threw an object with no name: Expected SameValue(«�», «null») to be true
-built-ins/RegExp/prototype/Symbol.match/u-advance-after-empty.js :: it threw an object with no name: Expected SameValue(«2», «1») to be true
-built-ins/RegExp/prototype/Symbol.match/u-advance-after-empty.js (strict) :: it threw an object with no name: Expected SameValue(«2», «1») to be true
 built-ins/RegExp/prototype/Symbol.replace/coerce-global.js :: it threw ReferenceError: print is not defined
 built-ins/RegExp/prototype/Symbol.replace/coerce-global.js (strict) :: it threw ReferenceError: print is not defined
 built-ins/RegExp/prototype/Symbol.replace/coerce-lastindex.js :: it threw an object with no name: Expected SameValue(«4294967295», «9007199254740992») to be true
 built-ins/RegExp/prototype/Symbol.replace/coerce-lastindex.js (strict) :: it threw an object with no name: Expected SameValue(«4294967295», «9007199254740992») to be true
-built-ins/RegExp/prototype/Symbol.replace/coerce-unicode.js :: it threw an object with no name: Expected SameValue(«"XXX\ud834XXX"», «"XXX𝌆"») to be true
-built-ins/RegExp/prototype/Symbol.replace/coerce-unicode.js (strict) :: it threw an object with no name: Expected SameValue(«"XXX\ud834XXX"», «"XXX𝌆"») to be true
 built-ins/RegExp/prototype/Symbol.replace/named-groups-fn.js :: it threw an object with no name: Expected SameValue(«"a"», «null») to be true
 built-ins/RegExp/prototype/Symbol.replace/named-groups-fn.js (strict) :: it threw an object with no name: Expected SameValue(«"a"», «null») to be true
 built-ins/RegExp/prototype/Symbol.replace/result-coerce-groups-err.js :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/RegExp/prototype/Symbol.replace/result-coerce-groups-err.js (strict) :: it threw an object with no name: Expected a TypeError to be thrown but no exception was thrown at all
 built-ins/RegExp/prototype/Symbol.replace/result-coerce-groups.js :: it threw an object with no name: Expected SameValue(«"a[$<length>]"», «"a[3]"») to be true
 built-ins/RegExp/prototype/Symbol.replace/result-coerce-groups.js (strict) :: it threw an object with no name: Expected SameValue(«"a[$<length>]"», «"a[3]"») to be true
-built-ins/RegExp/prototype/Symbol.replace/u-advance-after-empty.js :: it threw an object with no name: Expected SameValue(«"XXX\ud834XXX"», «"XXX𝌆"») to be true
-built-ins/RegExp/prototype/Symbol.replace/u-advance-after-empty.js (strict) :: it threw an object with no name: Expected SameValue(«"XXX\ud834XXX"», «"XXX𝌆"») to be true
 built-ins/RegExp/prototype/Symbol.search/lastindex-no-restore.js :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 built-ins/RegExp/prototype/Symbol.search/lastindex-no-restore.js (strict) :: it threw an object with no name: Expected SameValue(«1», «2») to be true
 built-ins/RegExp/prototype/Symbol.search/match-err.js :: it threw an object with no name: `lastIndex` property is not restored Expected SameValue(«86», «0») to be true
 built-ins/RegExp/prototype/Symbol.search/match-err.js (strict) :: it threw an object with no name: `lastIndex` property is not restored Expected SameValue(«86», «0») to be true
-built-ins/RegExp/prototype/Symbol.search/u-lastindex-advance.js :: it threw an object with no name: Expected SameValue(«1», «-1») to be true
-built-ins/RegExp/prototype/Symbol.search/u-lastindex-advance.js (strict) :: it threw an object with no name: Expected SameValue(«1», «-1») to be true
 built-ins/RegExp/prototype/Symbol.split/splitter-proto-from-ctor-realm.js :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/RegExp/prototype/Symbol.split/splitter-proto-from-ctor-realm.js (strict) :: it threw an object with no name: Expected SameValue(«[object Object]», «[object Object]») to be true
 built-ins/RegExp/prototype/exec/failure-lastindex-access.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
@@ -1848,8 +1838,6 @@ built-ins/RegExp/prototype/exec/regexp-builtin-exec-v-u-flag.js :: it threw an o
 built-ins/RegExp/prototype/exec/regexp-builtin-exec-v-u-flag.js (strict) :: it threw an object with no name: Actual argument [null] shouldn't be primitive. Basic exec without v flag
 built-ins/RegExp/prototype/exec/success-lastindex-access.js :: it threw an object with no name: Expected SameValue(«0», «1») to be true
 built-ins/RegExp/prototype/exec/success-lastindex-access.js (strict) :: it threw an object with no name: Expected SameValue(«0», «1») to be true
-built-ins/RegExp/prototype/exec/u-lastindex-adv.js :: it threw an object with no name: Expected SameValue(«�», «null») to be true
-built-ins/RegExp/prototype/exec/u-lastindex-adv.js (strict) :: it threw an object with no name: Expected SameValue(«�», «null») to be true
 built-ins/Set/prototype/isDisjointFrom/set-like-class-mutation.js :: it threw an object with no name: Set.prototype.isDisjointFrom should not call its argument's has method with values from this which have been deleted before visiting
 built-ins/Set/prototype/isDisjointFrom/set-like-class-mutation.js (strict) :: it threw an object with no name: Set.prototype.isDisjointFrom should not call its argument's has method with values from this which have been deleted before visiting
 built-ins/Set/prototype/isSubsetOf/set-like-class-mutation.js :: it threw an object with no name: Expected SameValue(«false», «true») to be true
@@ -12126,8 +12114,6 @@ language/literals/regexp/S7.8.5_A2.1_T2.js :: it threw an object with no name: C
 language/literals/regexp/S7.8.5_A2.1_T2.js (strict) :: it threw an object with no name: Code unit: d800 Expected SameValue(«"nnnn�"», «"nnnn\ud800"») to be true
 language/literals/regexp/S7.8.5_A2.4_T2.js :: it threw an object with no name: Code unit: d800 Expected SameValue(«"a\\�"», «"a\\\ud800"») to be true
 language/literals/regexp/S7.8.5_A2.4_T2.js (strict) :: it threw an object with no name: Code unit: d800 Expected SameValue(«"a\\�"», «"a\\\ud800"») to be true
-language/literals/regexp/u-astral-char-class-invert.js :: it threw an object with no name: Expected SameValue(«�», «null») to be true
-language/literals/regexp/u-astral-char-class-invert.js (strict) :: it threw an object with no name: Expected SameValue(«�», «null») to be true
 language/module-code/ambiguous-export-bindings/namespace-unambiguous-if-export-star-as-from-and-import-star-as-and-export.js :: it did not parse: "./namespace-unambiguous-if-import-star-as-and-export.js" does not export "foo"
 language/module-code/ambiguous-export-bindings/namespace-unambiguous-if-import-star-as-and-export.js :: it did not parse: "./namespace-unambiguous-if-import-star-as-and-export.js" does not export "foo"
 language/module-code/eval-export-dflt-expr-err-eval.js :: expected a Test262Error and it threw an object with no name

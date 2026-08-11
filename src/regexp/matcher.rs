@@ -213,9 +213,30 @@ impl<'a> Matcher<'a> {
     /// Answers `None` for no match anywhere. A sticky pattern tries exactly one position, which is
     /// the whole of what `y` means and the reason this is one function and not two.
     pub fn find(&mut self, start: usize) -> Option<Match> {
-        // No guard for a start past the end: the range is then empty and the answer is `None` of
-        // its own accord.
-        for at in start..=self.input.len() {
+        // No guard for a start past the end: the loop is then not entered and the answer is `None`
+        // of its own accord.
+        //
+        // §22.2.7.2 step 12.c.ii — the next attempt begins at `AdvanceStringIndex`, which under `u`
+        // or `v` is a whole **code point**. Stepping one unit at a time put an attempt between the
+        // halves of a surrogate pair: `[^X]` where `X` is an astral character declined the whole
+        // character at 0, then matched its *trail surrogate* at 1 and reported that as the answer.
+        //
+        // **The first attempt is snapped too**, which is step 11 rather than step 12: under `u` or
+        // `v` the matcher runs over `StringToCodePoints(S)`, and step 13.b starts it at "the index
+        // into input of the character that was obtained from element lastIndex of S". A
+        // `lastIndex` pointing at a trail surrogate was obtained from the *pair*, so it names the
+        // character beginning one unit earlier. `re.lastIndex = 1` on a two-unit character
+        // therefore matches at 0, and this read the other way round for one commit.
+        let by_point = self.pattern.flags.unicode || self.pattern.flags.unicode_sets;
+        let mut at = match by_point
+            && start > 0
+            && matches!(self.input.get(start), Some(0xDC00..=0xDFFF))
+            && matches!(self.input.get(start - 1), Some(0xD800..=0xDBFF))
+        {
+            true => start - 1,
+            false => start,
+        };
+        while at <= self.input.len() {
             for slot in &mut self.captures {
                 *slot = None;
             }
@@ -234,6 +255,13 @@ impl<'a> Matcher<'a> {
             if self.pattern.flags.sticky {
                 return None;
             }
+            at += match by_point
+                && matches!(self.input.get(at), Some(0xD800..=0xDBFF))
+                && matches!(self.input.get(at + 1), Some(0xDC00..=0xDFFF))
+            {
+                true => 2,
+                false => 1,
+            };
         }
         None
     }

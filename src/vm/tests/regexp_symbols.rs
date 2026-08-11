@@ -539,6 +539,78 @@ fn the_iterator_is_an_ordinary_iterator_and_says_what_it_is() {
 }
 
 #[test]
+fn the_other_three_places_a_unicode_step_is_a_code_point() {
+    // `AdvanceStringIndex` was written once and used by `Symbol.split` and `matchAll`; the three
+    // below stepped a single code unit instead, and each shows it differently.
+    //
+    // **`Symbol.replace`'s empty-match advance** — §22.2.7.11 step 13.c.iii.2.b. Stepping one unit
+    // put the replacement *between* the halves of a surrogate pair, so the answer contained two
+    // lone surrogates where the subject had one character.
+    assert_eq!(run("'\u{1F600}'.replace(/a*/gu, '<>')"), "<>\u{1F600}<>");
+    assert_eq!(run("'\u{1F600}'.replace(/a*/gv, '<>')"), "<>\u{1F600}<>");
+    // …and without the flag it *is* one unit, which is what makes the row above a difference
+    // rather than an assertion about surrogates in general.
+    assert_eq!(run("'\u{1F600}'.replace(/a*/g, '<>').length"), "8");
+    // **`Symbol.match`'s**, §22.2.7.9 step 8.d.iii.2, which answers strings rather than positions.
+    assert_eq!(run("'\u{1F600}'.match(/a*/gu).length"), "2");
+    assert_eq!(run("'\u{1F600}'.match(/a*/g).length"), "3");
+    // **The matcher's own scan** — §22.2.7.2 step 12.c.ii. A class that declines the whole
+    // character used to be retried one unit along, where the *trail surrogate* matched: the engine
+    // reported a match inside a character it had just refused.
+    assert_eq!(run("String(/[^\u{1F600}]/u.exec('\u{1F600}'))"), "null");
+    assert_eq!(run("/[^\u{1F600}]/u.exec('\u{1F600}a').index"), "2");
+    // The no-flag spelling of that class is deliberately *not* asserted here: a literal astral
+    // character in a pattern with no `u` is its own question, and answering it is a separate slice.
+}
+
+#[test]
+fn a_last_index_inside_a_surrogate_pair_names_the_character_it_is_inside() {
+    // §22.2.7.2 step 11 makes the matcher run over `StringToCodePoints(S)` under `u` or `v`, and
+    // step 13.b starts it at "the index into input of the character that was obtained from element
+    // lastIndex of S". A `lastIndex` of 1 in a two-unit character was obtained from that character,
+    // so it names the character — the attempt begins at 0 and not at 1.
+    //
+    // This is the half that is *not* `AdvanceStringIndex`: it is about where a walk begins rather
+    // than how far it steps, and it was written the other way round first.
+    assert_eq!(
+        run(
+            "var re = /a*/gu; re.lastIndex = 1; var m = re.exec('\u{1F600}'); \
+             m.index + '/' + re.lastIndex"
+        ),
+        "0/0"
+    );
+    // A sticky one too, where there is no forward search to hide it.
+    assert_eq!(
+        run(
+            "var re = /a*/yu; re.lastIndex = 1; var m = re.exec('\u{1F600}'); \
+             m.index + '/' + re.lastIndex"
+        ),
+        "0/0"
+    );
+    // …and the snap is only under the flags: without them index 1 is an ordinary position.
+    assert_eq!(
+        run(
+            "var re = /a*/g; re.lastIndex = 1; var m = re.exec('\u{1F600}'); \
+             m.index + '/' + re.lastIndex"
+        ),
+        "1/1"
+    );
+    // …and the step tests for a **pair**, not for either half alone. A trail surrogate that no
+    // lead precedes is one position of its own: a scan that stepped two whenever the *next* unit
+    // was a trail would jump straight over it, and this subject is the one where that shows —
+    // `a`, a lone trail, `b`, with the class matching only the middle.
+    assert_eq!(run(r"/[\uDE00]/u.exec('a\uDE00b').index"), "1");
+    // The mirror: a lead with no trail after it is also one position.
+    assert_eq!(run(r"/[\uD83D]/u.exec('a\uD83Db').index"), "1");
+    // A `lastIndex` that already begins a character is left alone, which is what says the snap
+    // tests for a *trail* surrogate rather than moving every start backwards.
+    assert_eq!(
+        run("var re = /a*/gu; re.lastIndex = 2; var m = re.exec('\u{1F600}b'); m.index"),
+        "2"
+    );
+}
+
+#[test]
 fn an_empty_match_steps_a_whole_code_point_under_the_unicode_flags() {
     // §22.2.7.3 `AdvanceStringIndex`. Without it the walk stops *inside* a surrogate pair, which
     // is a position no code point begins at — so the same astral character is reported twice and
