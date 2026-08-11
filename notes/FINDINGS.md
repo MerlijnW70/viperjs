@@ -10,6 +10,7 @@ in.
 
 ## Index
 
+- [Splitting a file removes it from the coverage ratchet, and an audit found four more](#splitting-a-file-removes-it-from-the-coverage-ratchet-and-an-audit-found-four-more)
 - [One clause, two implementations, and only one of them was fixed — §10.1.13 and §10.3.1](#one-clause-two-implementations-and-only-one-of-them-was-fixed--10113-and-1031)
 - [A comment that was true when it was written — §23.1.3.21 step 5.c, and the hole under the fix](#a-comment-that-was-true-when-it-was-written--231321-step-5c-and-the-hole-under-the-fix)
 - [The harness swallowed the flag after `--summary`, and three runs agreed on a number none measured](#the-harness-swallowed-the-flag-after---summary-and-three-runs-agreed-on-a-number-none-measured)
@@ -53,6 +54,118 @@ in.
 - [What is left, in the order the numbers put it](#what-is-left-in-the-order-the-numbers-put-it)
 
 ---
+
+### Splitting a file removes it from the coverage ratchet, and an audit found four more
+
+`src/vm/execute.rs` was 2,911 lines, of which 1,320 were the interpreter loop and the rest were
+helpers belonging to one of two other subjects. Splitting out `classes.rs` (§15.7 and the private
+names) and `names.rs` (§9.4.2's `ResolveBinding`) took it to 2,071, and moving two inline
+`#[cfg(test)] mod tests` blocks into sibling files took `regexp/parser.rs` from 2,538 to 1,448 and
+`api.rs` from 2,024 to 803. Every one is a pure move: identical test counts, a conformance figure
+identical to the test, and an expectations file reported exact.
+
+**And the first ratchet stopped covering 880 lines without saying so.** The mutation-coverage config
+names its sources file by file — deliberately, because some are plumbing whose mutants no test could
+kill — so a path it does not name is not probed. The run reported `scoping to 8 changed line(s)`
+where `git diff HEAD` reports 886; the eight were the `pub(super)` keywords and the new `use` lines,
+which is all of a new file the tool can see. `git add -N` does not fix this one, because the
+omission is in the config rather than in git.
+
+**This is not a discovery. It is the same trap again** — the record lists at least five earlier
+occurrences — and the honest lesson is
+about the countermeasure rather than about the trap. It has been hit on `execute.rs` itself, on
+`array_sort.rs`, on five generator/async files at once, and on `fuzz.rs` — whose config comment
+records it being added "the same hour it was written, because the list's own warning fired". Each
+time the recorded fix was "remember to add the file". Each time the next new file was missed.
+
+**What works is the mechanical audit, and running it here found four more.** Walk `src/` and
+`conformance/src/`, drop the test files, diff against the list:
+
+- `src/unicode_normalize.rs` — UAX #15 itself, written earlier the same day and **never probed**,
+  while `unicode_id.rs` and `unicode_property.rs` sit beside it on the list in exactly that shape.
+- `src/unicode_normalize_table.rs` and `src/unicode_case_table.rs` — the tables belonging to it and
+  to §22.2.2.9's `Canonicalize`, where the two older tables are listed.
+- `conformance/src/main.rs` — excluded, in writing, as "argv parsing". That reason had quietly gone
+  stale: `src/bin/viper.rs` is listed *because* "`read_arguments` is a pure decision about what the
+  user asked for, and that is worth guarding", and a fail-closed argument reader had just been added
+  to the harness. Two entries about the same kind of code, disagreeing.
+
+So the rule is not "remember", it is **"never audit this list from memory"** — the walk takes
+seconds and it is the only thing that has ever caught an omission before the omission mattered. A
+refactor is the shape that hides it best, because a refactor is the one change where nothing else
+can go red: the tests pass with the same count and the conformance number does not move, which is
+what you were hoping for.
+
+And it does fail closed when *asked* directly. Scoping a run to one path by name, where that path is
+not on the list, refuses outright — "a typo'd shard would probe nothing and report green; refusing
+the vacuous run" — rather than reporting a vacuous hundred per cent. That refusal is the quickest
+way to ask whether a file is being looked at at all, and it is what turned the mysterious 8 into an
+answer in one command. The asymmetry is worth naming: the tool refuses a *request* it cannot honour
+and accepts a *diff* it can only partly read.
+
+**And then the split paid for itself, which is the part worth generalising.** Probing the two new
+modules for the first time scored 55/56 and reported one survivor: `_ => false` in `inheritance`,
+§15.7.14 step 10. Flipping it to `true` changed nothing any test could see — and the reason is that
+the arm was never a decision. `constructs` was consumed by
+
+```rust
+let (Value::Object(parent), true) = (heritage, constructs) else { … };
+```
+
+which already required an Object, so "not an object" and "an object that does not construct" were
+one refusal written as two questions, and the first had no answer that mattered. An equivalent
+mutant, and the fix is to delete the branch rather than to test it. `class extends 1`,
+`extends {}`, `extends Math.max` and `extends Symbol()` all still refuse, and `extends null` still
+builds a derived class.
+
+**That code was correct and untouched since the class work, and it had never been mutated once.**
+`--diff` mutates *changed* lines; a full sweep is a multi-hour job that is rarely run. So the first
+ratchet's coverage is a function of **churn, not of code**: a line written right the first time and
+never edited is guarded by whatever tests happen to exist and by nothing else. The split is what
+forced the sweep, and the sweep is what found the dead arm.
+
+Which turns the trap above into an argument for the refactor rather than against it: **splitting a
+file is one of the few things that makes a diff-scoped ratchet look at old code.** The cost is that
+the file must be added to the list in the same commit; the benefit is a first deep probe of
+everything that moved.
+
+**And the four files the audit added were worth far more than the two the split created.** Probed
+for the first time, `src/unicode_normalize.rs` — UAX #15, shipped that morning — produced **27
+survivors**, in five clusters, every one of them real:
+
+- **The four forms were interchangeable.** `compatibility` and `compose` are two independent
+  booleans, and all four could be flipped without a test noticing: NFD behaving as NFKD passed
+  everything. The existing rows tested `é` and `é`, which separate C from D and say
+  nothing at all about K.
+- **Every index calculation in the Hangul block.** Six operators across decomposition and
+  composition, and none was exercised, because every syllable that had been tested was `가` —
+  the *first* syllable, whose leading, vowel and trailing indices are all zero, so `+` and `-`,
+  `*` and `/` all answer the same thing. A test needs `개` (nonzero vowel) and `나`
+  (nonzero leading) before the arithmetic means anything.
+- **Both edges of that block**, where `>=` off by one reads `힤` as a syllable.
+- **The canonical ordering's two invariants** — that a starter is a wall, and that the insertion
+  walk stops at the front of the string rather than reading before it.
+- **The blocking rule**, where `seen < class` decides whether an equal combining class blocks. Both
+  `<=` and `>` survived, and the row that separates them is `a̅́` — two marks of class
+  230, where the acute must *not* reach the `a`.
+
+Five tests were written from the algorithm, one per cluster, with every expected value checked
+against ICU before being written down. **All five passed on the first run**: the implementation was
+right, it had simply never been witnessed. That is the honest shape of this kind of finding — the
+ratchet was not hiding a bug, it was failing to hold anything in place, and the next edit to that
+file would have been the dangerous one.
+
+**The other newly-listed file went the other way, and the lesson is different.**
+`conformance/src/main.rs` was added because a fail-closed argument reader had gone into it, and it
+came back with **64 survivors** — every one a branch in `main` itself or in the report. Those cannot
+be killed: an integration test drives the binary as a *subprocess*, so a mutant reaches the binary
+the sandbox built and not the one the test ran, which this repository has recorded once already.
+The file was not the unit of judgement. `conformance/src/options.rs` is — the two pure decisions
+that were buried in `main`, with their tests beside them — and the orchestration stays off the list
+with a reason that has now been measured rather than asserted.
+
+So a survivor count answers a question the list cannot: **not "is this file tested" but "is this
+file the right thing to be testing".** 27 said write the tests; 64 said move the code.
 
 ### One clause, two implementations, and only one of them was fixed — §10.1.13 and §10.3.1
 

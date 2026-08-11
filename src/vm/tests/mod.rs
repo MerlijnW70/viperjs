@@ -32,6 +32,8 @@
 //! - `private` — §15.7's `#x`, which is not a property by any test a program can make.
 //! - `modules` — §16.2's goal symbol, and the four things it does not share with a Script.
 //! - `names` — §10.2.9 and §8.6.3, and the positions that do *not* name a function.
+//! - `normalize` — UAX #15's algorithm underneath `String.prototype.normalize`: decomposition,
+//!   canonical ordering, composition and the Hangul arithmetic that bypasses the tables.
 //! - `strict` — §11.2.1, and the three places sloppy mode is silent where strict throws.
 //! - `destructuring` — §14.3.3, and the default that is for `undefined` rather than for absence.
 //! - `eval` — §19.2.1's indirect half, and the call site that tells direct from indirect.
@@ -123,6 +125,7 @@ mod lexical;
 mod math;
 mod modules;
 mod names;
+mod normalize;
 mod number_format;
 mod object_state;
 mod objects;

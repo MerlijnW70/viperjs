@@ -29,6 +29,7 @@ pub mod drive;
 pub mod expectations;
 pub mod frontmatter;
 pub mod fuzz;
+pub mod options;
 pub mod runner;
 pub mod wire;
 

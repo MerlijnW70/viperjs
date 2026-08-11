@@ -17,6 +17,8 @@
 //!
 //! - `call` — what happens when a function is entered: a frame, an environment, a `this`.
 //! - `execute` — the loop itself, which is one `match` and long enough to want its own file.
+//! - `classes` — §15.7's class definition and the three private-name operations, which are what
+//!   one arm of that `match` needs and are not property lookups however much `o.#x` reads as one.
 //! - `property` — the object's internal methods a running program reaches: `[[Get]]`, `[[Set]]`,
 //!   `[[Delete]]` and `[[HasProperty]]`, each of which can throw.
 //! - `suspend` — taking an execution out of the loop and putting it back, which is what a
@@ -30,6 +32,8 @@
 //! - `eval` — §19.2.1.1's **direct** mode, which resolves into the scopes the caller is *running*
 //!   in. The indirect half is a built-in; this one cannot be, because a native call has no handle
 //!   on its caller's environment.
+//! - `names` — §9.4.2's `ResolveBinding` as the loop performs it, and the one spelling —
+//!   `typeof` — for which an unresolvable name is not an error.
 //! - `global` — §9.1.1.4's Global Environment Record, where a name falls when it falls out of
 //!   every scope.
 //! - `jobs` — §9.5's queue, and what it means for a job to run "later" (DR-0016).
@@ -51,6 +55,7 @@
 mod async_fn;
 mod async_generator;
 mod call;
+mod classes;
 mod coerce;
 mod dynamic;
 mod eval;
@@ -60,6 +65,7 @@ mod global;
 mod jobs;
 mod loader;
 mod module;
+mod names;
 mod property;
 mod proxy;
 mod proxy_call;
