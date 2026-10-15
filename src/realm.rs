@@ -973,7 +973,7 @@ impl Realm {
     /// size of whatever ran before `create_realm`. The floor is `0` for the first realm, which is
     /// why this is the same set it always was. DR-0025.
     pub fn intrinsics(&self) -> impl Iterator<Item = crate::heap::ObjectId> {
-        (self.first_intrinsic..self.intrinsics).map(crate::heap::ObjectId)
+        (self.first_intrinsic..self.intrinsics).map(|index| crate::heap::ObjectId(index as u64))
     }
 
     /// Record the far end of that range, once everything the realm builds is built.

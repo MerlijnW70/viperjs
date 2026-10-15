@@ -57,6 +57,31 @@ fn a_loop_that_fills_arrays_is_stopped_by_the_heap_budget_rather_than_the_clock(
 }
 
 #[test]
+fn a_live_symbol_in_a_reused_slot_survives_a_collection() {
+    // `SymbolId` had an `index` of its own that answered the raw handle, generation and all, and
+    // being inherent it won over DR-0019's unpacking. A Symbol made in a reused slot therefore
+    // looked past the end of the mark set, read as unmarked, and was swept while a program held
+    // it — measured as 21 of 40 kept Symbols answering another Symbol's description.
+    let mut engine = Engine::new();
+    let answer = engine
+        .eval(
+            "var keep = []; \
+             for (var r = 0; r < 40; r++) { \
+               for (var i = 0; i < 5000; i++) Symbol('junk'); \
+               keep.push(Symbol('keep' + r)); \
+               for (var j = 0; j < 30000; j++) ({ a: j }); \
+             } \
+             for (var r = 0; r < 20; r++) { \
+               for (var i = 0; i < 5000; i++) Symbol('junk'); \
+               for (var j = 0; j < 30000; j++) ({ a: j }); \
+             } \
+             keep.filter(function (s, k) { return s.description !== 'keep' + k; }).length",
+        )
+        .expect("it runs");
+    assert_eq!(engine.text(answer).as_deref(), Ok("0"));
+}
+
+#[test]
 fn one_fill_larger_than_the_budget_is_refused_inside_the_call() {
     // A million properties from one call and three instructions around it: the interpreter's own
     // check never comes round, so only the walk asking for itself stops it near the budget.

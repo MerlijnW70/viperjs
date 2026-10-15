@@ -34,14 +34,7 @@ use crate::heap::StringId;
 /// Comparison is on this and nothing else, so two Symbols are equal exactly when they are the
 /// same Symbol. Deriving `PartialEq` here is the whole of §7.2.10's rule for the type.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct SymbolId(pub(super) usize);
-
-impl SymbolId {
-    /// Where this Symbol sits in the arena, for the collector's mark set.
-    pub(super) fn index(self) -> usize {
-        self.0
-    }
-}
+pub struct SymbolId(pub(super) u64);
 
 /// What a Symbol carries — §20.4's `[[Description]]`, and nothing else.
 #[derive(Debug, Clone)]

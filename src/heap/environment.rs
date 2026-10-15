@@ -38,7 +38,7 @@ use std::rc::Rc;
 ///
 /// Meaningful only to the [`Heap`] that issued it, on the same terms as every other handle here.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct EnvironmentId(pub(super) usize);
+pub struct EnvironmentId(pub(super) u64);
 
 /// What a source called one slot, for the one reader that has to ask by name — DR-0018.
 ///

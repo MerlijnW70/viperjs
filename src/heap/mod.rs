@@ -240,7 +240,7 @@ pub const MAX_HEAP_BYTES: usize = 1 << 26;
 /// Meaningful only to the [`Heap`] that issued it. See [`Heap::string`] for what happens when it
 /// is given to another one.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct StringId(pub(super) usize);
+pub struct StringId(pub(super) u64);
 
 /// Where a BigInt lives on the heap.
 ///
@@ -249,7 +249,7 @@ pub struct StringId(pub(super) usize);
 /// *value* — two handles to equal digits are the same BigInt, and every comparison reads through
 /// them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct BigIntId(pub(super) usize);
+pub struct BigIntId(pub(super) u64);
 
 /// Which §9.3 realm a function belongs to — its `[[Realm]]`, as an index rather than the realm.
 ///
@@ -395,10 +395,14 @@ pub struct Heap {
 
 /// A handle into an [`arena::Arena`] — DR-0019's packed index and generation.
 ///
-/// One word, split: the low 32 bits say which slot and the high 32 say which *use* of it. Packed
+/// Sixty-four bits, split: the low 32 say which slot and the high 32 say which *use* of it. Packed
 /// rather than two fields because a second word per handle is paid by every value in every
 /// program, to detect a mistake in the collector — and neither half is tight, since DR-0013's
 /// budget cannot hold four billion of anything.
+///
+/// A `u64` and not a `usize`, because the split needs 64 bits whatever the target's word is: on a
+/// 32-bit target, `wasm32` among them, a `usize` shifted by 32 does not compile, so the engine did
+/// not build there at all. On a 64-bit target the two are the same size and nothing moves.
 pub(super) trait Handle: Copy {
     /// A handle for slot `index` on its `generation`th use.
     fn at(index: usize, generation: u32) -> Self;
@@ -411,7 +415,7 @@ pub(super) trait Handle: Copy {
 /// How many low bits of a handle are the index.
 const HANDLE_INDEX_BITS: u32 = 32;
 
-/// Implement [`Handle`] for a one-field newtype over `usize`.
+/// Implement [`Handle`] for a one-field newtype over `u64`.
 ///
 /// A macro because it is the same three lines five times, and because the two halves must be
 /// split against the same constant in every one of them — five hand-written copies is five
@@ -420,10 +424,10 @@ macro_rules! packed_handle {
     ($name:ty) => {
         impl Handle for $name {
             fn at(index: usize, generation: u32) -> Self {
-                Self(index | ((generation as usize) << HANDLE_INDEX_BITS))
+                Self(index as u64 | (u64::from(generation) << HANDLE_INDEX_BITS))
             }
             fn index(self) -> usize {
-                self.0 & ((1 << HANDLE_INDEX_BITS) - 1)
+                (self.0 & ((1 << HANDLE_INDEX_BITS) - 1)) as usize
             }
             fn generation(self) -> u32 {
                 (self.0 >> HANDLE_INDEX_BITS) as u32
@@ -1110,7 +1114,7 @@ mod tests {
         assert_eq!(heap.string_count(), before);
         // A handle this heap never issued has no contents, so it interns as the empty String —
         // the same answer `Heap::string` gives it, rather than a panic on the way past.
-        let elsewhere = StringId(heap.string_count() + 100);
+        let elsewhere = StringId(heap.string_count() as u64 + 100);
         let interned = heap.intern_id(elsewhere);
         assert_eq!(heap.string(interned), Some(&[][..]));
     }
