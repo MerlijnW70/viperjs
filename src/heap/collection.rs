@@ -233,9 +233,7 @@ impl Collection {
     /// does: an iterator part-way through a cleared collection must find nothing more, not start
     /// again at whatever is added next.
     pub fn clear(&mut self) {
-        for entry in &mut self.entries {
-            *entry = None;
-        }
+        self.entries.fill(None);
         self.live = 0;
     }
 }

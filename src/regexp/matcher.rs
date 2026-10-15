@@ -237,9 +237,7 @@ impl<'a> Matcher<'a> {
             false => start,
         };
         while at <= self.input.len() {
-            for slot in &mut self.captures {
-                *slot = None;
-            }
+            self.captures.fill(None);
             // The budget is per **attempt**, and resetting here is what makes that true. A count
             // carried across positions would abandon a pattern that genuinely matches late in a
             // long subject, reporting `null` for a real match — which is worse than slow. What it
