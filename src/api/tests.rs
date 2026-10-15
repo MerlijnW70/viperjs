@@ -42,6 +42,83 @@ fn the_heap_budget_is_the_hosts_to_choose_and_defaults_to_something_useful() {
 }
 
 #[test]
+fn a_loop_that_fills_arrays_is_stopped_by_the_heap_budget_rather_than_the_clock() {
+    // One object slot an iteration and ten thousand properties: a footprint of slots alone let
+    // this reach gigabytes, and only a time budget ever ended it. The clock here is a backstop
+    // that makes the old behaviour a failed assertion rather than a hung test.
+    let mut engine = Engine::new();
+    engine.set_heap_budget(1 << 22);
+    engine.set_time_budget(Some(std::time::Duration::from_secs(20)));
+    let refused = engine.eval("var held = []; for (;;) held.push(new Array(10000).fill(0));");
+    assert!(
+        matches!(&refused, Err(Error::Thrown(said)) if said.contains("heap has grown past")),
+        "{refused:?}"
+    );
+}
+
+#[test]
+fn a_live_symbol_in_a_reused_slot_survives_a_collection() {
+    // `SymbolId` had an `index` of its own that answered the raw handle, generation and all, and
+    // being inherent it won over DR-0019's unpacking. A Symbol made in a reused slot therefore
+    // looked past the end of the mark set, read as unmarked, and was swept while a program held
+    // it — measured as 21 of 40 kept Symbols answering another Symbol's description.
+    let mut engine = Engine::new();
+    let answer = engine
+        .eval(
+            "var keep = []; \
+             for (var r = 0; r < 40; r++) { \
+               for (var i = 0; i < 5000; i++) Symbol('junk'); \
+               keep.push(Symbol('keep' + r)); \
+               for (var j = 0; j < 30000; j++) ({ a: j }); \
+             } \
+             for (var r = 0; r < 20; r++) { \
+               for (var i = 0; i < 5000; i++) Symbol('junk'); \
+               for (var j = 0; j < 30000; j++) ({ a: j }); \
+             } \
+             keep.filter(function (s, k) { return s.description !== 'keep' + k; }).length",
+        )
+        .expect("it runs");
+    assert_eq!(engine.text(answer).as_deref(), Ok("0"));
+}
+
+#[test]
+fn one_fill_larger_than_the_budget_is_refused_inside_the_call() {
+    // A million properties from one call and three instructions around it: the interpreter's own
+    // check never comes round, so only the walk asking for itself stops it near the budget.
+    let mut engine = Engine::new();
+    engine.set_heap_budget(1 << 22);
+    let refused = engine.eval("new Array(1000000).fill(0); 1");
+    assert!(
+        matches!(&refused, Err(Error::Thrown(said)) if said.contains("heap has grown past")),
+        "{refused:?}"
+    );
+    assert!(
+        engine.footprint() < 2 << 22,
+        "stopped at {} bytes against a budget of {}",
+        engine.footprint(),
+        1 << 22
+    );
+}
+
+#[test]
+fn properties_given_up_give_their_share_of_the_budget_back() {
+    // Each loop holds a few properties at any moment and passes millions through. A budget that
+    // charged them and never refunded would refuse all three — by delete, by truncating an
+    // array's length, and by a collection sweeping the object that held them.
+    let programs = [
+        "var o = {}; for (var i = 0; i < 1000000; i++) { o.k = i; delete o.k; } 1",
+        "var a = []; for (var r = 0; r < 1000; r++) { for (var i = 0; i < 1000; i++) a[i] = i; a.length = 0; } 1",
+        "for (var i = 0; i < 300000; i++) { var t = {a: i, b: i, c: i, d: i}; } 1",
+    ];
+    for program in programs {
+        let mut engine = Engine::new();
+        engine.set_heap_budget(1 << 24);
+        let answer = engine.eval(program);
+        assert!(answer.is_ok(), "{program}: {answer:?}");
+    }
+}
+
+#[test]
 fn a_namespace_of_host_functions_is_an_ordinary_object_with_named_methods() {
     fn answer(_: &mut Vm, _: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
         Ok(call.argument(0))

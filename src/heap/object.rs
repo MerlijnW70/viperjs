@@ -44,7 +44,7 @@ use std::collections::HashMap;
 ///
 /// Meaningful only to the [`crate::heap::Heap`] that issued it, on the same terms as [`crate::heap::StringId`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct ObjectId(pub(crate) usize);
+pub struct ObjectId(pub(crate) u64);
 
 /// Which kind of execution an object holds parked — §27.5.1's or §27.7's.
 ///
@@ -892,6 +892,18 @@ impl Object {
     /// not — `Object.keys().length` is a different and smaller number.
     pub fn property_count(&self) -> usize {
         self.properties.len()
+    }
+
+    /// The bytes this object's own properties hold — what DR-0013 charges for them.
+    ///
+    /// Capacity rather than length: a `Vec` that has doubled holds the memory whether or not it is
+    /// used, and counting entries alone left a filled array at a fraction of what it cost. The key
+    /// index past `INDEXED_ABOVE` is a table of its own and is charged beside it.
+    pub fn property_bytes(&self) -> usize {
+        let index = self.index.as_ref().map_or(0, |index| {
+            index.capacity() * size_of::<(PropertyKey, usize)>()
+        });
+        self.properties.capacity() * size_of::<(PropertyKey, Property)>() + index
     }
 }
 

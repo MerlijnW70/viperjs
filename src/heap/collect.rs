@@ -680,7 +680,14 @@ impl Heap {
         // Zipped rather than indexed. The marks were sized from the arenas and nothing allocates
         // between, so the two are the same length — and `zip` says that rather than an index with
         // a default for a case that cannot happen.
-        freed.objects += self.objects.sweep(&marked.objects, |_| {});
+        // A swept object's properties go back to DR-0013 with it, for the reason the String units
+        // below do: the `Vec` is dropped, and a budget that kept charging for it would refuse a
+        // long program for memory it no longer holds.
+        let mut properties = 0;
+        freed.objects += self.objects.sweep(&marked.objects, |object| {
+            properties += object.property_bytes()
+        });
+        self.property_bytes = self.property_bytes.saturating_sub(properties);
         // DR-0019 — an environment's slot goes back on the free list and its generation moves on,
         // which is what stops `environments.len()` growing and with it DR-0013's footprint. The
         // generation is what makes the reuse safe to look at: a handle issued for the *previous*

@@ -240,7 +240,7 @@ pub const MAX_HEAP_BYTES: usize = 1 << 26;
 /// Meaningful only to the [`Heap`] that issued it. See [`Heap::string`] for what happens when it
 /// is given to another one.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct StringId(pub(super) usize);
+pub struct StringId(pub(super) u64);
 
 /// Where a BigInt lives on the heap.
 ///
@@ -249,7 +249,7 @@ pub struct StringId(pub(super) usize);
 /// *value* — two handles to equal digits are the same BigInt, and every comparison reads through
 /// them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct BigIntId(pub(super) usize);
+pub struct BigIntId(pub(super) u64);
 
 /// Which §9.3 realm a function belongs to — its `[[Realm]]`, as an index rather than the realm.
 ///
@@ -382,14 +382,27 @@ pub struct Heap {
     /// this, `while (true) { new ArrayBuffer(1 << 20); }` allocates until the process dies, since
     /// none of the other three terms grows by anything like what one costs.
     buffer_bytes: usize,
+    /// How many bytes the own properties of every object on this heap hold between them — see
+    /// [`Object::property_bytes`].
+    ///
+    /// Counted for the reason `buffer_bytes` is: `while (true) { new Array(1e5).fill(0); }` adds
+    /// one object slot an iteration and a hundred thousand properties, so a footprint of slots
+    /// alone grew by 96 bytes while the process grew by megabytes — measured at **4.6 GB** against
+    /// a 64 MiB budget before the time budget, not this one, stopped it. Every door a property
+    /// enters or leaves by goes through [`Heap::reshape`], and a swept object hands its back.
+    property_bytes: usize,
 }
 
 /// A handle into an [`arena::Arena`] — DR-0019's packed index and generation.
 ///
-/// One word, split: the low 32 bits say which slot and the high 32 say which *use* of it. Packed
+/// Sixty-four bits, split: the low 32 say which slot and the high 32 say which *use* of it. Packed
 /// rather than two fields because a second word per handle is paid by every value in every
 /// program, to detect a mistake in the collector — and neither half is tight, since DR-0013's
 /// budget cannot hold four billion of anything.
+///
+/// A `u64` and not a `usize`, because the split needs 64 bits whatever the target's word is: on a
+/// 32-bit target, `wasm32` among them, a `usize` shifted by 32 does not compile, so the engine did
+/// not build there at all. On a 64-bit target the two are the same size and nothing moves.
 pub(super) trait Handle: Copy {
     /// A handle for slot `index` on its `generation`th use.
     fn at(index: usize, generation: u32) -> Self;
@@ -402,7 +415,7 @@ pub(super) trait Handle: Copy {
 /// How many low bits of a handle are the index.
 const HANDLE_INDEX_BITS: u32 = 32;
 
-/// Implement [`Handle`] for a one-field newtype over `usize`.
+/// Implement [`Handle`] for a one-field newtype over `u64`.
 ///
 /// A macro because it is the same three lines five times, and because the two halves must be
 /// split against the same constant in every one of them — five hand-written copies is five
@@ -411,10 +424,10 @@ macro_rules! packed_handle {
     ($name:ty) => {
         impl Handle for $name {
             fn at(index: usize, generation: u32) -> Self {
-                Self(index | ((generation as usize) << HANDLE_INDEX_BITS))
+                Self(index as u64 | (u64::from(generation) << HANDLE_INDEX_BITS))
             }
             fn index(self) -> usize {
-                self.0 & ((1 << HANDLE_INDEX_BITS) - 1)
+                (self.0 & ((1 << HANDLE_INDEX_BITS) - 1)) as usize
             }
             fn generation(self) -> u32 {
                 (self.0 >> HANDLE_INDEX_BITS) as u32
@@ -467,10 +480,11 @@ impl Heap {
     /// is what a runaway loop actually grows — a slot per allocation, which DR-0010 never gives
     /// back, plus the contents of every String.
     ///
-    /// What it does not count is the storage an object's own properties take. A program can
-    /// therefore hold more than this says, and the budget is a bound on the shape of failure
-    /// rather than a precise ceiling: a loop that allocates is stopped, which is the case that
-    /// ends in an abort.
+    /// An object's own properties are counted by what their storage holds, spare capacity and key
+    /// index included. What it still does not count is the allocator's own overhead and the
+    /// hash table's control bytes, so a program can hold somewhat more than this says, and the
+    /// budget is a bound on the shape of failure rather than a precise ceiling: a loop that
+    /// allocates is stopped, which is the case that ends in an abort.
     pub fn footprint(&self) -> usize {
         // Slots rather than live values, and the two differ by less than they did: DR-0019 hands a
         // swept slot out again, so a collection stops the arena *growing* even though `len` is a
@@ -481,6 +495,7 @@ impl Heap {
             + self.strings.len() * size_of::<Option<Box<[u16]>>>()
             + self.string_units * size_of::<u16>()
             + self.buffer_bytes
+            + self.property_bytes
     }
 
     /// The same measure over the slots that **hold something** — what a collection cannot reclaim.
@@ -506,6 +521,31 @@ impl Heap {
             + self.strings.live() * size_of::<Option<Box<[u16]>>>()
             + self.string_units * size_of::<u16>()
             + self.buffer_bytes
+            + self.property_bytes
+    }
+
+    /// Change `object`'s own properties with `change`, and charge the difference to DR-0013.
+    ///
+    /// The one door a property enters or leaves an object by, because an [`Object`] cannot reach
+    /// the heap that counts it. Measured as the bytes before and after rather than trusted from the
+    /// closure, so a change that adds, replaces or removes is charged what it really did. A
+    /// missing object answers `false` and changes nothing.
+    pub(super) fn reshape(
+        &mut self,
+        object: ObjectId,
+        change: impl FnOnce(&mut Object) -> bool,
+    ) -> bool {
+        let Some(found) = self.objects.get_mut(object) else {
+            return false;
+        };
+        let before = found.property_bytes();
+        let answer = change(found);
+        let after = found.property_bytes();
+        self.property_bytes = self
+            .property_bytes
+            .saturating_sub(before)
+            .saturating_add(after);
+        answer
     }
 
     /// Note that a buffer of `length` bytes now exists — see [`Heap::allowance`].
@@ -1074,7 +1114,7 @@ mod tests {
         assert_eq!(heap.string_count(), before);
         // A handle this heap never issued has no contents, so it interns as the empty String —
         // the same answer `Heap::string` gives it, rather than a panic on the way past.
-        let elsewhere = StringId(heap.string_count() + 100);
+        let elsewhere = StringId(heap.string_count() as u64 + 100);
         let interned = heap.intern_id(elsewhere);
         assert_eq!(heap.string(interned), Some(&[][..]));
     }

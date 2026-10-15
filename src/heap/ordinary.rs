@@ -300,8 +300,7 @@ impl Heap {
         {
             return false;
         }
-        self.object_mut(object)
-            .is_some_and(|found| found.delete(key))
+        self.reshape(object, |found| found.delete(key))
     }
 
     /// The one-character String at `index` of `data`, interned so a later read can find it.
@@ -590,9 +589,10 @@ impl Heap {
                 // The reason used to be "an arena only grows", which DR-0019 made false: a swept
                 // slot is handed out again. What holds the conclusion up is that a sweep runs only
                 // from `Heap::collect`, and validating and applying a descriptor does not call it.
-                if let Some(found) = self.object_mut(object) {
+                self.reshape(object, |found| {
                     found.insert(key, updated);
-                }
+                    true
+                });
                 true
             }
         }
