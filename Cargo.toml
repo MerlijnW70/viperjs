@@ -33,7 +33,7 @@ include = ["/src", "/examples", "/tests", "/Cargo.toml", "/README.md", "/CHANGEL
 # engine alone. The lab (see lab/README.md) holds experiments; `conformance/` runs test262 and
 # depends on the engine one way only, which is what keeps the engine's dependency table empty.
 [workspace]
-members = ["conformance", "lab"]
+members = ["conformance", "judge", "lab"]
 
 [profile.release]
 # The engine is embedded in other people's binaries: size and predictability beat the last

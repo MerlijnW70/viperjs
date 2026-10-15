@@ -1,0 +1,14 @@
+[package]
+name = "viperjs-judge"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Runs a delivered module's default export against cases, inside a WebAssembly module with no imports."
+license = "MIT OR Apache-2.0"
+
+# The engine and nothing else, so the module this builds has nothing to call outside itself.
+[dependencies]
+viperjs = { path = ".." }
+
+[lib]
+crate-type = ["cdylib", "rlib"]

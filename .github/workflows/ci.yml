@@ -88,6 +88,29 @@ jobs:
       # module still compiles and panics only when it runs, which a build cannot see.
       - run: cargo build --lib --target wasm32-unknown-unknown
 
+  judge:
+    name: the judge as a module with no imports
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: cargo build -p viperjs-judge --release --target wasm32-unknown-unknown
+      # The built module, not the crate: that it imports nothing, that its memory stops at the
+      # ceiling, and that it judges the attacks the way the native tests say — run under Node's
+      # permission model, so the host could not have handed it anything either. The hash is printed
+      # so a host pinning the module can compare it with what it ships.
+      - name: the module is what the crate says it is
+        run: |
+          wasm=target/wasm32-unknown-unknown/release/viperjs_judge.wasm
+          sha256sum "$wasm"
+          node --permission --allow-fs-read="$PWD/$wasm" --allow-fs-read="$PWD/judge/host.mjs" judge/host.mjs "$wasm"
+
   invariants:
     name: zero dependencies, no unsafe
     runs-on: ubuntu-latest
