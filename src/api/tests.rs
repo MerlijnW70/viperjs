@@ -589,6 +589,10 @@ fn a_single_enormous_string_build_is_stopped_like_any_other_walk() {
     // what keeps this from being a test about how fast the machine is.
     let mut engine = Engine::new();
     engine.set_time_budget(Some(std::time::Duration::from_millis(50)));
+    // A heap budget the build fits inside, so that what stops it is the deadline: under the
+    // default budget the same call is refused before a unit is written, which
+    // `a_string_too_big_for_the_heap_budget_is_refused_before_it_is_built` pins.
+    engine.set_heap_budget(1 << 30);
     let started = std::time::Instant::now();
     let answer = engine.eval("'a'.repeat(268435455).length");
     let took = started.elapsed();
@@ -1492,4 +1496,31 @@ fn a_host_call_that_spends_its_budget_is_interrupted_and_the_next_one_runs() {
     assert_eq!(engine.get(getter, "stuck").err(), Some(Error::Interrupted));
     let printed = engine.get(global, "printed").expect("printed");
     assert_eq!(engine.text(printed).err(), Some(Error::Interrupted));
+}
+
+#[test]
+fn a_string_too_big_for_the_heap_budget_is_refused_before_it_is_built() {
+    // DR-0012's cap is half a gigabyte, the whole of a judge's WebAssembly memory, so a doubling
+    // loop passed it while the allocation failed — an abort nothing catches. Each of these is
+    // refused with a RangeError the script can catch, and the heap never holds the string: its
+    // footprint stays within the budget rather than past it by the size of the last doubling.
+    const BUDGET: usize = 16 << 20;
+    for source in [
+        "var s = 'a'; for (;;) s += s;",
+        "var s = 'a'; for (;;) s = s.concat(s);",
+        "'ab'.repeat(1e8);",
+        "'a'.padStart(1e8);",
+        "'a'.padEnd(1e8, 'xyz');",
+    ] {
+        let mut engine = Engine::new();
+        engine.set_heap_budget(BUDGET);
+        let caught = format!("var r = 'none'; try {{ {source} }} catch (e) {{ r = e.name; }} r");
+        let answer = engine.eval(&caught).expect("the refusal is catchable");
+        assert_eq!(engine.text(answer).as_deref(), Ok("RangeError"), "{source}");
+        assert!(
+            engine.footprint() <= BUDGET + (1 << 20),
+            "{source}: the heap holds {} bytes against a budget of {BUDGET}",
+            engine.footprint()
+        );
+    }
 }
