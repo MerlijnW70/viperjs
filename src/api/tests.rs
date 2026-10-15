@@ -1378,3 +1378,37 @@ fn the_step_budget_reaches_a_built_ins_own_loop() {
         Error::Interrupted
     );
 }
+
+#[test]
+fn a_host_may_fix_the_time_date_reads() {
+    // What makes a run that reads the clock reproducible: every way a program asks the time
+    // answers the host's number, and a refusal of nonsense leaves the clock as it was. Thread-local,
+    // so this thread's engines see it and the clock is handed back before the test ends.
+    let read = |engine: &mut Engine| {
+        let answer = engine
+            .eval("[Date.now(), new Date().getTime(), Date()].join('|')")
+            .expect("it runs");
+        engine.text(answer).unwrap_or_default()
+    };
+    crate::set_clock(Some(1_700_000_000_000.9));
+    let mut engine = Engine::new();
+    assert_eq!(
+        read(&mut engine),
+        "1700000000000|1700000000000|Tue Nov 14 2023 22:13:20 GMT+0000 (Coordinated Universal Time)"
+    );
+    crate::set_clock(Some(f64::NAN));
+    assert!(read(&mut engine).starts_with("1700000000000|"));
+    crate::set_clock(Some(-1_000.0));
+    assert!(read(&mut engine).starts_with("-1000|-1000|"));
+    crate::set_clock(None);
+    let answer = engine.eval("Date.now()").expect("it runs");
+    let now: f64 = engine
+        .text(answer)
+        .ok()
+        .and_then(|text| text.parse().ok())
+        .unwrap_or(0.0);
+    assert!(
+        now > 1_700_000_000_000.0,
+        "the platform's clock again: {now}"
+    );
+}

@@ -908,7 +908,7 @@ impl Vm {
         self.unhandled.clear();
         self.expires_at = self
             .time_budget
-            .map(|budget| std::time::Instant::now() + budget);
+            .and_then(|budget| crate::clock::now().and_then(|now| now.checked_add(budget)));
         self.steps_left = self.step_budget;
         // The growth the schedule measures is this run's, so the base is taken here for the same
         // reason the deadline is: a machine that ran once already has a footprint, and counting it
@@ -1392,7 +1392,8 @@ impl Vm {
             // `checked_add` and not `+`: a timeout of a few hundred years is a legal argument and
             // adding one to the clock is a panic, which DR-0002 does not allow however absurd the
             // input. A deadline the clock cannot name is the wait that never ends.
-            deadline: timeout.and_then(|timeout| std::time::Instant::now().checked_add(timeout)),
+            deadline: timeout
+                .and_then(|timeout| crate::clock::now().and_then(|now| now.checked_add(timeout))),
         });
     }
 
@@ -1513,7 +1514,11 @@ impl Vm {
     /// arrange and mutation coverage is right to report as uncovered — DR-0022's own deadline check
     /// is written this way for the same reason.
     pub(crate) fn expire_waiters(&mut self, heap: &mut Heap) -> bool {
-        let now = std::time::Instant::now();
+        // No clock, no deadline: every waiter's `deadline` is `None` on such a platform, so there
+        // is nothing for a reading to expire.
+        let Some(now) = crate::clock::now() else {
+            return false;
+        };
         let mut expired = Vec::new();
         self.waiters.retain(|waiter| {
             let passed = waiter
