@@ -685,9 +685,9 @@ impl Heap {
         // long program for memory it no longer holds.
         let mut properties = 0;
         freed.objects += self.objects.sweep(&marked.objects, |object| {
-            properties += object.property_count()
+            properties += object.property_bytes()
         });
-        self.property_entries = self.property_entries.saturating_sub(properties);
+        self.property_bytes = self.property_bytes.saturating_sub(properties);
         // DR-0019 — an environment's slot goes back on the free list and its generation moves on,
         // which is what stops `environments.len()` growing and with it DR-0013's footprint. The
         // generation is what makes the reuse safe to look at: a handle issued for the *previous*

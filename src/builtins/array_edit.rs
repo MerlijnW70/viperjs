@@ -13,7 +13,7 @@
 
 use super::array_methods::{
     array_species_create, create_index, fits, get_index, has_index, index_key, length_of,
-    spliced_length, start_index, this_object,
+    spliced_length, start_index, this_object, within_budget,
 };
 use super::{delete_or_throw, key, set_or_throw};
 use crate::heap::{Heap, NativeCall, ObjectId};
@@ -360,9 +360,13 @@ pub fn fill(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
         true => start_index(vm, heap, call.argument(2), length)?,
         false => length,
     };
+    // Asked per index for the reason `copyWithin` asks: the length is a number a program chose, so
+    // one call can make a hundred thousand properties, and the interpreter's own check comes only
+    // every thousand instructions — a loop of `fill`s reached half a gigabyte between two of them.
     for index in from..to.max(from) {
         let name = index_key(heap, index);
         set_or_throw(vm, heap, object, name, value)?;
+        within_budget(vm, heap)?;
     }
     Ok(Value::Object(object))
 }

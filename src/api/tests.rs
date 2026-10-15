@@ -57,6 +57,25 @@ fn a_loop_that_fills_arrays_is_stopped_by_the_heap_budget_rather_than_the_clock(
 }
 
 #[test]
+fn one_fill_larger_than_the_budget_is_refused_inside_the_call() {
+    // A million properties from one call and three instructions around it: the interpreter's own
+    // check never comes round, so only the walk asking for itself stops it near the budget.
+    let mut engine = Engine::new();
+    engine.set_heap_budget(1 << 22);
+    let refused = engine.eval("new Array(1000000).fill(0); 1");
+    assert!(
+        matches!(&refused, Err(Error::Thrown(said)) if said.contains("heap has grown past")),
+        "{refused:?}"
+    );
+    assert!(
+        engine.footprint() < 2 << 22,
+        "stopped at {} bytes against a budget of {}",
+        engine.footprint(),
+        1 << 22
+    );
+}
+
+#[test]
 fn properties_given_up_give_their_share_of_the_budget_back() {
     // Each loop holds a few properties at any moment and passes millions through. A budget that
     // charged them and never refunded would refuse all three — by delete, by truncating an

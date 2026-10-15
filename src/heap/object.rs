@@ -893,6 +893,18 @@ impl Object {
     pub fn property_count(&self) -> usize {
         self.properties.len()
     }
+
+    /// The bytes this object's own properties hold — what DR-0013 charges for them.
+    ///
+    /// Capacity rather than length: a `Vec` that has doubled holds the memory whether or not it is
+    /// used, and counting entries alone left a filled array at a fraction of what it cost. The key
+    /// index past `INDEXED_ABOVE` is a table of its own and is charged beside it.
+    pub fn property_bytes(&self) -> usize {
+        let index = self.index.as_ref().map_or(0, |index| {
+            index.capacity() * size_of::<(PropertyKey, usize)>()
+        });
+        self.properties.capacity() * size_of::<(PropertyKey, Property)>() + index
+    }
 }
 
 /// How far any prototype walk goes before giving up.
