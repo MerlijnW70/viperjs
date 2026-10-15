@@ -157,9 +157,10 @@ impl Heap {
             .filter(|index| *index >= reached)
             .map(|index| self.index_key(index))
             .collect();
-        if let Some(found) = self.object_mut(object) {
+        self.reshape(object, |found| {
             found.delete_all(&doomed);
-        }
+            true
+        });
         reached
     }
 

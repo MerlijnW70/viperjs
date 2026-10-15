@@ -80,9 +80,11 @@ fn a_job_that_runs_out_of_heap_leaves_the_rejection_that_says_so() {
     // reaches DR-0013's budget, the RangeError is thrown *inside a job*, and §9.5 step 3 discards
     // the completion. The queue empties, `run` answers normally, and the exit status is zero.
     //
-    // What is left behind is exactly one rejected promise nobody claimed — the last link, whose
-    // handler threw before it could arm the next. So a host that reads this list finds out; before
-    // it existed there was nothing in the engine that could have told anyone.
+    // What is left behind is a rejected promise nobody claimed — the last link, whose handler threw.
+    // One or two of them: DR-0013's check runs every thousand instructions, so whether the handler
+    // that crossed the budget had already armed the next link is where that check happens to land,
+    // and counting properties moved it. So a host that reads this list finds out; before it existed
+    // there was nothing in the engine that could have told anyone.
     let mut heap = Heap::new();
     heap.set_budget(3 << 20);
     let mut vm = Vm::new(&mut heap);
@@ -101,27 +103,33 @@ fn a_job_that_runs_out_of_heap_leaves_the_rejection_that_says_so() {
     // program stopped two million turns short of what it asked for.
     assert!(matches!(outcome, Outcome::Value(_)));
     let left = vm.unhandled_rejections().to_vec();
-    assert_eq!(left.len(), 1, "one link should have been left rejected");
-    // …and it carries the reason, which is what makes the list worth reading rather than a count
+    assert!(
+        (1..=2).contains(&left.len()),
+        "the last link, and at most the one it had armed, should have been left rejected: {}",
+        left.len()
+    );
+    // …and each carries the reason, which is what makes the list worth reading rather than a count
     // of something odd having happened. Read as a property because a thrown Error object has no
     // `toString` a test can call — see `describe`, which answers `[object]` for exactly that reason.
-    let Value::Object(error) = heap
-        .promise(left[0])
-        .map_or(Value::Undefined, |found| found.result)
-    else {
-        panic!("the reason should be the Error the engine refused with");
-    };
-    let message = match own(&mut heap, error, "message").map(|found| found.kind) {
-        Some(PropertyKind::Data { value, .. }) => value,
-        _ => Value::Undefined,
-    };
-    let Value::String(text) = message else {
-        panic!("an Error's message is a String");
-    };
-    assert_eq!(
-        heap.string(text).map(String::from_utf16_lossy),
-        Some("the heap has grown past what this engine will allocate".to_string())
-    );
+    for promise in left {
+        let Value::Object(error) = heap
+            .promise(promise)
+            .map_or(Value::Undefined, |found| found.result)
+        else {
+            panic!("the reason should be the Error the engine refused with");
+        };
+        let message = match own(&mut heap, error, "message").map(|found| found.kind) {
+            Some(PropertyKind::Data { value, .. }) => value,
+            _ => Value::Undefined,
+        };
+        let Value::String(text) = message else {
+            panic!("an Error's message is a String");
+        };
+        assert_eq!(
+            heap.string(text).map(String::from_utf16_lossy),
+            Some("the heap has grown past what this engine will allocate".to_string())
+        );
+    }
 }
 
 #[test]

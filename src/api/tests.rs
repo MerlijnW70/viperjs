@@ -42,6 +42,39 @@ fn the_heap_budget_is_the_hosts_to_choose_and_defaults_to_something_useful() {
 }
 
 #[test]
+fn a_loop_that_fills_arrays_is_stopped_by_the_heap_budget_rather_than_the_clock() {
+    // One object slot an iteration and ten thousand properties: a footprint of slots alone let
+    // this reach gigabytes, and only a time budget ever ended it. The clock here is a backstop
+    // that makes the old behaviour a failed assertion rather than a hung test.
+    let mut engine = Engine::new();
+    engine.set_heap_budget(1 << 22);
+    engine.set_time_budget(Some(std::time::Duration::from_secs(20)));
+    let refused = engine.eval("var held = []; for (;;) held.push(new Array(10000).fill(0));");
+    assert!(
+        matches!(&refused, Err(Error::Thrown(said)) if said.contains("heap has grown past")),
+        "{refused:?}"
+    );
+}
+
+#[test]
+fn properties_given_up_give_their_share_of_the_budget_back() {
+    // Each loop holds a few properties at any moment and passes millions through. A budget that
+    // charged them and never refunded would refuse all three — by delete, by truncating an
+    // array's length, and by a collection sweeping the object that held them.
+    let programs = [
+        "var o = {}; for (var i = 0; i < 1000000; i++) { o.k = i; delete o.k; } 1",
+        "var a = []; for (var r = 0; r < 1000; r++) { for (var i = 0; i < 1000; i++) a[i] = i; a.length = 0; } 1",
+        "for (var i = 0; i < 300000; i++) { var t = {a: i, b: i, c: i, d: i}; } 1",
+    ];
+    for program in programs {
+        let mut engine = Engine::new();
+        engine.set_heap_budget(1 << 24);
+        let answer = engine.eval(program);
+        assert!(answer.is_ok(), "{program}: {answer:?}");
+    }
+}
+
+#[test]
 fn a_namespace_of_host_functions_is_an_ordinary_object_with_named_methods() {
     fn answer(_: &mut Vm, _: &mut Heap, call: &NativeCall<'_>) -> Completion<Value> {
         Ok(call.argument(0))

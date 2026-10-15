@@ -382,6 +382,14 @@ pub struct Heap {
     /// this, `while (true) { new ArrayBuffer(1 << 20); }` allocates until the process dies, since
     /// none of the other three terms grows by anything like what one costs.
     buffer_bytes: usize,
+    /// How many own properties every object on this heap holds between them.
+    ///
+    /// Counted for the reason `buffer_bytes` is: `while (true) { new Array(1e5).fill(0); }` adds
+    /// one object slot an iteration and a hundred thousand properties, so a footprint of slots
+    /// alone grew by 96 bytes while the process grew by megabytes — measured at **4.6 GB** against
+    /// a 64 MiB budget before the time budget, not this one, stopped it. Every door a property
+    /// enters or leaves by goes through [`Heap::reshape`], and a swept object hands its back.
+    property_entries: usize,
 }
 
 /// A handle into an [`arena::Arena`] — DR-0019's packed index and generation.
@@ -467,10 +475,11 @@ impl Heap {
     /// is what a runaway loop actually grows — a slot per allocation, which DR-0010 never gives
     /// back, plus the contents of every String.
     ///
-    /// What it does not count is the storage an object's own properties take. A program can
-    /// therefore hold more than this says, and the budget is a bound on the shape of failure
-    /// rather than a precise ceiling: a loop that allocates is stopped, which is the case that
-    /// ends in an abort.
+    /// An object's own properties are counted by entry, at the size of one entry. What it still
+    /// does not count is the spare capacity of those `Vec`s and the key index past
+    /// `INDEXED_ABOVE`, so a program can hold somewhat more than this says, and the budget is a
+    /// bound on the shape of failure rather than a precise ceiling: a loop that allocates is
+    /// stopped, which is the case that ends in an abort.
     pub fn footprint(&self) -> usize {
         // Slots rather than live values, and the two differ by less than they did: DR-0019 hands a
         // swept slot out again, so a collection stops the arena *growing* even though `len` is a
@@ -481,6 +490,7 @@ impl Heap {
             + self.strings.len() * size_of::<Option<Box<[u16]>>>()
             + self.string_units * size_of::<u16>()
             + self.buffer_bytes
+            + self.property_entries * size_of::<(PropertyKey, Property)>()
     }
 
     /// The same measure over the slots that **hold something** — what a collection cannot reclaim.
@@ -506,6 +516,31 @@ impl Heap {
             + self.strings.live() * size_of::<Option<Box<[u16]>>>()
             + self.string_units * size_of::<u16>()
             + self.buffer_bytes
+            + self.property_entries * size_of::<(PropertyKey, Property)>()
+    }
+
+    /// Change `object`'s own properties with `change`, and charge the difference to DR-0013.
+    ///
+    /// The one door a property enters or leaves an object by, because an [`Object`] cannot reach
+    /// the heap that counts it. Measured as the count before and after rather than trusted from the
+    /// closure, so a change that adds, replaces or removes is charged what it really did. A
+    /// missing object answers `false` and changes nothing.
+    pub(super) fn reshape(
+        &mut self,
+        object: ObjectId,
+        change: impl FnOnce(&mut Object) -> bool,
+    ) -> bool {
+        let Some(found) = self.objects.get_mut(object) else {
+            return false;
+        };
+        let before = found.property_count();
+        let answer = change(found);
+        let after = found.property_count();
+        self.property_entries = self
+            .property_entries
+            .saturating_sub(before)
+            .saturating_add(after);
+        answer
     }
 
     /// Note that a buffer of `length` bytes now exists — see [`Heap::allowance`].

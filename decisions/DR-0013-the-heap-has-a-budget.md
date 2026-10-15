@@ -89,3 +89,18 @@ a collection on a schedule. The numbers that said no — 318 conformance files l
 to buy six passes — were taken when a collection could not reclaim an object's slot at all. They have
 not been taken since. `lab/NOTES.md`'s `hot-shapes` is the experiment and it predates DR-0019 as
 well; the comment in `Vm::execute` beside the budget check says the same thing at the site.
+
+## Note added 2026-10-15: an object's properties are counted
+
+"It leaves out the storage an object's own properties take" is no longer true. Measured from a host
+that kept what it built — `var held = []; for (;;) held.push(new Array(1e5).fill(0));` — the
+footprint grew by one slot an iteration while the process grew by megabytes, and it reached
+**4.6 GB** against a 64 MiB budget before a time budget, not this one, ended it. The factor of four
+this record carried as headroom was measured on `[]`, where an object is mostly its slot; one
+`fill` can put a hundred thousand properties behind a single slot, and no fixed factor covers that.
+
+`Heap::footprint` now counts every own property at the size of one entry. The count changes in one
+place, `Heap::reshape`, which measures an object's properties before and after the change it runs,
+so a delete and an array's truncation hand theirs back; a swept object hands back all of its own.
+Refunding is what keeps a long program that passes properties through from reading as a runaway —
+the same reason String units are refunded. The pinned test262 run is unchanged at 80,500.
