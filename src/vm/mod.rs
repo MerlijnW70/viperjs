@@ -901,15 +901,11 @@ impl Vm {
         // interrupted machine usable again: the flag has to survive the unwinding of every nested
         // execution above, and the only moment it is certainly finished doing that is the next
         // time a run begins.
-        self.stopped = false;
+        self.begin_budgets();
         // …and §9.13's list for the same reason: it describes a run, and a host reads it after the
         // one that produced it. Cleared here rather than at the end of the previous run so that
         // reading it is not a race with whatever the machine is asked to do next.
         self.unhandled.clear();
-        self.expires_at = self
-            .time_budget
-            .and_then(|budget| crate::clock::now().and_then(|now| now.checked_add(budget)));
-        self.steps_left = self.step_budget;
         // The growth the schedule measures is this run's, so the base is taken here for the same
         // reason the deadline is: a machine that ran once already has a footprint, and counting it
         // as growth would collect on the first check of every later run.
@@ -1162,6 +1158,26 @@ impl Vm {
     /// is honoured to within one check interval and covers what that covers.
     pub fn set_step_budget(&mut self, budget: Option<u64>) {
         self.step_budget = budget;
+    }
+
+    /// Begin DR-0022's deadline and DR-0031's count, and clear the last run's stop.
+    ///
+    /// What makes something *a run* as far as the budgets are concerned. [`Vm::run`] does it, and
+    /// so does every [`crate::api::Engine`] method that calls into script on the host's behalf —
+    /// a call, a read that may run a getter, a conversion that may run `toString` — because each of
+    /// those runs code nobody has bounded otherwise, and without it a call inherited whatever the
+    /// previous run had left of the count and the stop it had ended with.
+    pub(crate) fn begin_budgets(&mut self) {
+        self.stopped = false;
+        self.expires_at = self
+            .time_budget
+            .and_then(|budget| crate::clock::now().and_then(|now| now.checked_add(budget)));
+        self.steps_left = self.step_budget;
+    }
+
+    /// Whether the run in progress, or the last one, was stopped by a budget.
+    pub(crate) fn was_stopped(&self) -> bool {
+        self.stopped
     }
 
     /// Take `steps` from DR-0031's budget, and answer whether it is now spent.

@@ -72,9 +72,9 @@
 //! embedder**, who links whatever they like and can bind it in three lines. `crypto-js` is the
 //! package that wants it.
 
-use crate::compile::{Chunk, compile_script};
+use crate::compile::{Chunk, compile_module, compile_script};
 use crate::heap::{Heap, Native, ObjectId, PropertyDescriptor, PropertyKey};
-use crate::parser::parse_script;
+use crate::parser::{parse_module, parse_script};
 use crate::value::{Completion, Value};
 use crate::vm::{Fault, Outcome, Vm};
 use std::rc::Rc;
@@ -95,6 +95,8 @@ pub struct Engine {
     /// chunk itself so that running it does not borrow `self` while `self.vm` is borrowed
     /// mutably — the clone is a refcount and the alternative is moving the chunk out and back.
     last: Rc<Chunk>,
+    /// How many modules [`Engine::eval_module`] has run, which is what names the next one.
+    modules: u32,
 }
 
 /// The engine, as a **host function** sees it — the other half of [`Engine::bind`].
@@ -324,6 +326,7 @@ impl Engine {
             vm,
             heap,
             last: Rc::new(chunk),
+            modules: 0,
         }
     }
 
@@ -370,6 +373,65 @@ impl Engine {
         self.last = Rc::new(chunk);
         let chunk = Rc::clone(&self.last);
         self.vm.run(&chunk, &mut self.heap).map_err(Error::Engine)
+    }
+
+    /// A JavaScript String from Rust text, to hand to [`Engine::call`] or [`Engine::set_global`].
+    ///
+    /// **Not** interned, unlike [`Host::string`]: a native answers the same short words over and
+    /// over, and a host passing an argument passes data — a document, an input — that would sit in
+    /// the property-key table for the life of the engine for nothing.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Thrown`] with a `RangeError` if the text is longer than DR-0012 lets a String be.
+    pub fn string(&mut self, text: &str) -> Result<Value, Error> {
+        let units: Vec<u16> = text.encode_utf16().collect();
+        self.heap
+            .new_string_checked(units)
+            .map(Value::String)
+            .ok_or_else(|| Error::Thrown("RangeError: the string is too long".to_string()))
+    }
+
+    /// Run `source` as a Module and answer its namespace object — what `import * as m` would bind.
+    ///
+    /// §16.2.1.6's `Evaluate` over a graph of one, followed by §16.2.1.10 `GetModuleNamespace`, so
+    /// a host reads an export the way a script would: `engine.get(namespace, "default")`. The
+    /// module is a run, held to DR-0022 and DR-0031 like a Script, and it has no loader: a static
+    /// `import` is refused, because a host that wanted one to resolve would supply the graph
+    /// itself through [`Vm::run_module_graph`].
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Syntax`] if it does not parse or compile, [`Error::Thrown`] if its body threw or
+    /// an import could not be resolved, [`Error::Interrupted`] if a budget stopped it.
+    pub fn eval_module(&mut self, source: &str) -> Result<Value, Error> {
+        let module = parse_module(source).map_err(|error| Error::Syntax {
+            message: error.kind.to_string(),
+            span: error.span,
+        })?;
+        let chunk = compile_module(&module, &mut self.heap).map_err(|error| Error::Syntax {
+            message: error.message(),
+            span: error.span,
+        })?;
+        let chunk = Rc::new(chunk);
+        // A name of its own each time, because the machine keeps every module it has linked and a
+        // second module under the first one's name would be found already evaluated.
+        self.modules = self.modules.wrapping_add(1);
+        let specifier = format!("<module {}>", self.modules);
+        let mut graph = crate::vm::Graph::new();
+        graph.insert(&specifier, Rc::clone(&chunk));
+        match self
+            .vm
+            .run_module_graph(&specifier, &graph, &mut self.heap)
+            .map_err(Error::Engine)?
+        {
+            Err(link) => Err(Error::Thrown(format!("SyntaxError: {}", link.message()))),
+            Ok(Outcome::Thrown(value)) => Err(Error::Thrown(self.describe(value))),
+            Ok(Outcome::Interrupted) => Err(Error::Interrupted),
+            Ok(Outcome::Value(_)) => Ok(Value::Object(
+                self.vm.module_namespace(&chunk, &mut self.heap),
+            )),
+        }
     }
 
     /// Fix what `Math.random` will answer, instead of letting the clock decide.
@@ -434,17 +496,15 @@ impl Engine {
         if !self.live(value) {
             return Err(Error::Collected);
         }
-        match self.vm.to_string(value, &mut self.heap) {
-            Ok(id) => Ok(self
-                .heap
-                .string(id)
-                .map(String::from_utf16_lossy)
-                // A String the heap does not hold is a handle the collector has taken, which
-                // DR-0019 makes answerable rather than dangerous. Empty is the honest reading:
-                // there is no text there.
-                .unwrap_or_default()),
-            Err(abrupt) => Err(self.raised(abrupt)),
-        }
+        let id = self.bounded(|engine| engine.vm.to_string(value, &mut engine.heap))?;
+        Ok(self
+            .heap
+            .string(id)
+            .map(String::from_utf16_lossy)
+            // A String the heap does not hold is a handle the collector has taken, which DR-0019
+            // makes answerable rather than dangerous. Empty is the honest reading: there is no text
+            // there.
+            .unwrap_or_default())
     }
 
     /// Read `name` off `value`, exactly as `value.name` would.
@@ -460,9 +520,7 @@ impl Engine {
             return Err(Error::Collected);
         }
         let key = self.key(name);
-        self.vm
-            .get_property_key(value, key, &mut self.heap)
-            .map_err(|abrupt| self.raised(abrupt))
+        self.bounded(|engine| engine.vm.get_property_key(value, key, &mut engine.heap))
     }
 
     /// Call `callee` with `this_value` and `arguments`, as a method call would.
@@ -482,9 +540,11 @@ impl Engine {
         {
             return Err(Error::Collected);
         }
-        self.vm
-            .call_value(callee, this_value, arguments, &mut self.heap)
-            .map_err(|abrupt| self.raised(abrupt))
+        self.bounded(|engine| {
+            engine
+                .vm
+                .call_value(callee, this_value, arguments, &mut engine.heap)
+        })
     }
 
     /// Bind a host function into the global object under `name`.
@@ -758,6 +818,24 @@ impl Engine {
     /// script catching the same failure would read. §6.2.4's throw completion comes in two shapes —
     /// an error the engine names and a value already built — and only the machine knows how to turn
     /// the first into the second, because it owns the realm the constructor lives in.
+    /// Run `op` as a run of its own as far as DR-0022 and DR-0031 are concerned: a fresh deadline
+    /// and count, and a stop reported as [`Error::Interrupted`] however the operation answered.
+    ///
+    /// A budget that ran out inside a host's call surfaced as `TypeError: a call answered with
+    /// nothing` — a script's error, where nothing in the script had erred — and left the machine
+    /// stopped, so every later call answered the same until the next `eval` cleared it.
+    ///
+    /// The stop is asked **before** a throw is turned into text, because describing a thrown value
+    /// may run its `toString`, which is a host call of its own and begins its own budgets.
+    fn bounded<T>(&mut self, op: impl FnOnce(&mut Self) -> Completion<T>) -> Result<T, Error> {
+        self.vm.begin_budgets();
+        let answer = op(self);
+        if self.vm.was_stopped() {
+            return Err(Error::Interrupted);
+        }
+        answer.map_err(|abrupt| self.raised(abrupt))
+    }
+
     fn raised(&mut self, abrupt: crate::value::Abrupt) -> Error {
         let value = self.vm.thrown_value(abrupt, &mut self.heap);
         Error::Thrown(self.describe(value))
