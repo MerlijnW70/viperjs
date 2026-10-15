@@ -102,9 +102,8 @@ pub fn install(heap: &mut Heap, realm: &Realm, global: ObjectId) {
 /// interval and not about unpredictability. Anything that needs unpredictability has to be given
 /// it by its host.
 fn seed_random() {
-    let now = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_or(SEEDLESS, |since| since.as_nanos() as u64);
+    let now =
+        crate::clock::platform_since_epoch().map_or(SEEDLESS, |since| since.as_nanos() as u64);
     set_seed(now);
 }
 

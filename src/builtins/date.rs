@@ -271,14 +271,12 @@ pub(super) fn time_clip(time: f64) -> f64 {
     to_integer(time) + 0.0
 }
 
-/// The current time, in milliseconds since the epoch.
+/// The current time, in milliseconds since the epoch — the host's fixed one, if it set one.
 ///
 /// A clock that cannot be read answers NaN, which every Date operation already handles — an engine
 /// on a host with no clock produces invalid dates rather than refusing to run.
 pub(super) fn now_ms() -> f64 {
-    std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_or(f64::NAN, |since| since.as_millis() as f64)
+    crate::clock::epoch_ms().unwrap_or(f64::NAN)
 }
 
 /// Build `Date` and its prototype into `heap`.

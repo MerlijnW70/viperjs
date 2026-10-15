@@ -211,7 +211,8 @@ impl Block {
         }
         // A timeout so large that the clock cannot name the moment it ends is one no program will
         // outlive, so `checked_add` declining makes it the infinite wait rather than an error.
-        let deadline = timeout.and_then(|timeout| Instant::now().checked_add(timeout));
+        let deadline = timeout
+            .and_then(|timeout| crate::clock::now().and_then(|now| now.checked_add(timeout)));
         let id = state.next;
         state.next = state.next.wrapping_add(1);
         state.waiters.push(Waiter { offset, id });

@@ -73,6 +73,21 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo check --workspace --all-targets
 
+  no-clock:
+    name: builds where there is no clock
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      # `wasm32-unknown-unknown` with no imports has no clock, and its standard library panics on
+      # both `Instant::now` and `SystemTime::now`. The engine asks the time through `src/clock.rs`,
+      # which answers `None` there. This job keeps the target *compiling*; a read that bypasses the
+      # module still compiles and panics only when it runs, which a build cannot see.
+      - run: cargo build --lib --target wasm32-unknown-unknown
+
   invariants:
     name: zero dependencies, no unsafe
     runs-on: ubuntu-latest

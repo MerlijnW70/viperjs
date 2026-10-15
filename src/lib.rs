@@ -23,7 +23,9 @@
 pub mod api;
 pub mod ast;
 pub mod builtins;
+mod clock;
 pub use crate::builtins::date::{local_offset, set_local_offset};
+pub use crate::clock::set_clock;
 pub mod bigint;
 pub mod compile;
 pub mod heap;
