@@ -14,6 +14,13 @@ name = "viperjs"
 version = "0.3.0"
 
 [[package]]
+name = "viperjs-judge"
+version = "0.1.0"
+dependencies = [
+ "viperjs",
+]
+
+[[package]]
 name = "viperjs-lab"
 version = "0.0.0"
 dependencies = [
