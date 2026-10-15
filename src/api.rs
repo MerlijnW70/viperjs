@@ -44,9 +44,9 @@
 //! `while (true) {}` runs until the process does not", which was true of DR-0021 and was answered
 //! by the very next record.
 //!
-//! What the budget does **not** reach is a §22.2 match already running and a host function that
-//! blocks: `/(a+)+b/` against 22 `a`s takes about 700 ms against a 10 ms budget, which is a test
-//! rather than a sentence.
+//! What the budget does **not** reach is a host function that blocks. A §22.2 match already
+//! running is reached: the matcher reports its work to the run, so `/(a+)+b/` against a long run of
+//! `a`s is stopped by either budget rather than running for minutes.
 //!
 //! # What a host still cannot bind, measured against two real packages
 //!
@@ -670,9 +670,9 @@ impl Engine {
     /// assert_eq!(engine.text(answer).as_deref(), Ok("2"));
     /// ```
     ///
-    /// **It does not cover** the regular expression matcher — a pattern that backtracks
-    /// catastrophically still runs to completion — nor a single long-running built-in, nor a host
-    /// function that blocks. DR-0022 says why each is a separate piece of work.
+    /// It covers the regular expression matcher, which reports its work to the run. **It does not
+    /// cover** a single long-running built-in that does not walk a length, nor a host function
+    /// that blocks. DR-0022 says why each is a separate piece of work.
     pub fn set_time_budget(&mut self, budget: Option<std::time::Duration>) {
         self.vm.set_time_budget(budget);
     }

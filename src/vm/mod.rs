@@ -1143,8 +1143,9 @@ impl Vm {
     /// suggestion — see the record for why the heap's budget is catchable and this one is not.
     ///
     /// The bound is honoured to within one check interval, which is a thousand instructions.
-    /// **It does not cover** the regular expression matcher, a single long-running built-in, or a
-    /// host function that blocks; DR-0022 says why each is a separate piece of work.
+    /// It covers the regular expression matcher, through `Vm::charge`. **It does not cover** a
+    /// single long-running built-in, or a host function that blocks; DR-0022 says why each is a
+    /// separate piece of work.
     pub fn set_time_budget(&mut self, budget: Option<std::time::Duration>) {
         self.time_budget = budget;
     }
@@ -1173,6 +1174,21 @@ impl Vm {
             .time_budget
             .and_then(|budget| crate::clock::now().and_then(|now| now.checked_add(budget)));
         self.steps_left = self.step_budget;
+    }
+
+    /// Charge `steps` of work done outside the interpreter's loop, and answer whether the run must
+    /// stop — DR-0022's deadline and DR-0031's count, asked together.
+    ///
+    /// For a native whose loop is not a walk over an array-like — the regular expression matcher
+    /// is the one — and which reports its work in batches rather than turn by turn.
+    pub(crate) fn charge(&mut self, steps: u64) -> bool {
+        if !self.stopped {
+            self.stopped = self.expires_at.is_some_and(|deadline| {
+                crate::clock::now()
+                    .is_some_and(|now| deadline.saturating_duration_since(now).is_zero())
+            }) || self.spend(steps);
+        }
+        self.stopped
     }
 
     /// Whether the run in progress, or the last one, was stopped by a budget.

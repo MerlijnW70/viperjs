@@ -638,27 +638,32 @@ fn a_sort_with_no_comparator_is_stopped_although_nothing_it_runs_is_a_program() 
 }
 
 #[test]
-fn the_budget_does_not_reach_the_regular_expression_matcher() {
-    // DR-0022 says this in its "what this does not stop", and a limitation stated only in prose
-    // is one nobody finds out has changed. §22.2's backtracking is its own loop and does not
-    // read the stop flag, so a hostile pattern runs to completion however small the budget is.
-    //
-    // `/(a+)+b/` against a subject of `a`s that can never match is the classic: every extra `a`
-    // doubles the work. Measured here at 52 ms, 210 ms and 689 ms for widths 18, 20 and 22
-    // against a 10 ms budget — so 22 leaves a margin of about seventy times over, which is what
-    // keeps this from being a test about how fast the machine is.
-    //
-    // **If this fails, the matcher has gained a check and that is good news** — update
-    // DR-0022's list and this row rather than the budget.
+fn the_budgets_reach_a_regular_expression_already_running() {
+    // §22.2's backtracking is its own loop, and it used to read no stop flag: `/(a+)+b/` against a
+    // subject of `a`s ran to the end however small the budget, so a delivery could spend a judge's
+    // whole wall clock inside one `test` and still answer correctly. The matcher now reports its
+    // work to the run, so both budgets stop it where it is. 30 `a`s is about a billion steps
+    // unbounded — minutes — and the assertions are the outcome, not a duration.
+    let hostile = "var s = 'none'; try { /(a+)+b/.test('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'); } catch (e) { s = 'caught'; } s";
     let mut engine = Engine::new();
-    engine.set_time_budget(Some(std::time::Duration::from_millis(10)));
+    engine.set_step_budget(Some(5_000_000));
+    assert_eq!(engine.eval(hostile).err(), Some(Error::Interrupted));
+    let answer = engine.eval("s").expect("the engine still runs");
+    assert_eq!(engine.text(answer).as_deref(), Ok("none"));
+    let mut timed = Engine::new();
+    timed.set_time_budget(Some(std::time::Duration::from_millis(50)));
+    let started = std::time::Instant::now();
+    assert_eq!(timed.eval(hostile).err(), Some(Error::Interrupted));
+    assert!(
+        started.elapsed() < std::time::Duration::from_secs(10),
+        "the search ran for {:?}, so the deadline did not reach it",
+        started.elapsed()
+    );
+    // …and an honest pattern under the same budget is untouched, including a match found late.
     let answer = engine
-        .eval("/(a+)+b/.test('aaaaaaaaaaaaaaaaaaaaaa')")
-        .expect("the matcher runs to the end, budget or no budget");
-    assert_eq!(engine.text(answer).as_deref(), Ok("false"));
-    // …and the machine was never stopped, so the very next statement runs in the same breath.
-    let answer = engine.eval("1 + 1").expect("it runs");
-    assert_eq!(engine.text(answer).as_deref(), Ok("2"));
+        .eval("/b$/.test('a'.repeat(100000) + 'b')")
+        .expect("it runs");
+    assert_eq!(engine.text(answer).as_deref(), Ok("true"));
 }
 
 #[test]
