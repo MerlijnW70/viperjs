@@ -255,7 +255,15 @@ pub(super) fn builtin_exec(
     let Some(pattern) = pattern else {
         return Err(Abrupt::type_error("this is not a regular expression"));
     };
-    let found = Matcher::new(&pattern, subject).find(start);
+    // The run's budgets reach the search: a pattern that backtracks without end is charged step by
+    // step like any other work, and a spent budget ends the search and the run together.
+    let mut meter = |steps: u64| vm.charge(steps);
+    let found = Matcher::new(&pattern, subject)
+        .metered(&mut meter)
+        .find(start);
+    if vm.was_stopped() {
+        return Ok(Value::Null);
+    }
     let Some(found) = found else {
         // Step 6.a.ii — a failed search resets `lastIndex`, so the next call starts over rather
         // than being stuck past the end.

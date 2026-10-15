@@ -36,8 +36,7 @@ checks.
 
 ## What it does not cover
 
-What DR-0022 does not: the regular expression matcher, which has its own per-attempt bound; a
-host function that blocks; and an `Atomics.wait`, which reads no instructions while it waits. A
+What DR-0022 does not: a host function that blocks; and an `Atomics.wait`, which reads no instructions while it waits. A
 host that needs a run to be reproducible should also fix what a run can observe of the world —
 `Math.random`'s seed, and the clock `Date` reads — because a program that branches on either is
 reproducible under no budget.

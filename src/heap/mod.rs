@@ -609,7 +609,20 @@ impl Heap {
     /// The check [`Heap::concat`] makes, for the callers that build their units themselves rather
     /// than by joining two Strings — `String.fromCharCode` and the methods that assemble one.
     pub fn new_string_checked(&mut self, units: Vec<u16>) -> Option<StringId> {
-        string_fits(units.len(), 0).then(|| self.new_string(units))
+        (string_fits(units.len(), 0) && self.affords_string(units.len() as f64))
+            .then(|| self.new_string(units))
+    }
+
+    /// Whether DR-0013's budget has room for a String of `units` code units, asked before one is
+    /// built.
+    ///
+    /// DR-0012's cap is a property of the String type and is far larger than any budget: 2^28 code
+    /// units is half a gigabyte, which is the whole of a judge's WebAssembly memory. So a doubling
+    /// loop passed the cap while the allocation itself failed, and a failed allocation is an abort
+    /// that nothing catches. Asked in `f64` for the reason [`fits_in_a_string`] is.
+    #[must_use]
+    pub fn affords_string(&self, units: f64) -> bool {
+        units * 2.0 <= self.allowance() as f64
     }
 
     /// Join two Strings, or refuse because the result would be longer than one may be.
@@ -629,7 +642,9 @@ impl Heap {
         // is a wrong string, never a panic.
         let left_units = self.string(left).map_or(0, <[u16]>::len);
         let right_units = self.string(right).map_or(0, <[u16]>::len);
-        if !string_fits(left_units, right_units) {
+        if !string_fits(left_units, right_units)
+            || !self.affords_string(left_units as f64 + right_units as f64)
+        {
             return None;
         }
         let mut units = Vec::with_capacity(left_units + right_units);
@@ -951,7 +966,8 @@ mod tests {
         // Affordable because nothing here is ever *written*: the operand is one zeroed allocation
         // the operating system may back lazily, `concat` only reads its length, and the join it
         // refuses is the one that would have cost half a gigabyte.
-        let mut heap = Heap::new();
+        // A budget past the cap, so that the cap is the only thing that can refuse.
+        let mut heap = Heap::with_budget(usize::MAX);
         let half = heap.new_string(vec![0; MAX_STRING_LENGTH / 2 + 1]);
         assert!(heap.concat(half, half).is_none());
         // …while the same operand joined to an empty String is still under the maximum and is

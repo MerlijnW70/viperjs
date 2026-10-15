@@ -39,10 +39,11 @@
 //! as a bound on the search.
 //!
 //! The real answer is not a smaller number, because a global budget makes a legitimate late match
-//! into a `null`. It is for this loop to read the interpreter's interruption flag, so DR-0022's
-//! time budget reaches a matcher that is already running — which it does not today, and which
-//! `a_pattern_that_backtracks_is_not_stopped_by_the_time_budget` pins as a *known* limit rather
-//! than an accident.
+//! into a `null`. It is for this loop to answer to the run's own budgets, and it does: a matcher
+//! given a [`Matcher::metered`] meter reports its work every `METER_INTERVAL` steps, and the
+//! interpreter charges it to DR-0031's count and asks DR-0022's deadline, so a run that has spent
+//! either stops the search where it is. The per-attempt budget above still bounds one attempt
+//! when no run budget is set.
 
 use super::syntax::{
     Assertion, ClassEscape, ClassItem, ClassOperation, First, GroupKind, Node, Pattern,
@@ -60,6 +61,13 @@ use super::syntax::{
 /// the tests pin is that *a* budget stops an exponential pattern, which
 /// [`Matcher::with_budget`] lets them show without spending ten million steps to do it.
 const MAX_STEPS: u64 = 10_000_000;
+
+/// How many steps pass between two reports to a [`Matcher::metered`] meter.
+///
+/// Often enough that a stop lands within a millisecond or so of matching, and rarely enough that a
+/// report costs nothing beside the steps between — the same trade the interpreter's own check makes
+/// every thousand instructions.
+pub const METER_INTERVAL: u64 = 1024;
 
 /// Where a capture reached, in code units.
 ///
@@ -128,6 +136,13 @@ pub struct Matcher<'a> {
     captures: Vec<Capture>,
     steps: u64,
     budget: u64,
+    /// The run's meter, if the caller has one: told how many steps have passed since it was last
+    /// told, and answering `true` once the run must stop.
+    meter: Option<&'a mut dyn FnMut(u64) -> bool>,
+    /// Steps not yet reported to the meter.
+    unreported: u64,
+    /// Whether the meter has said stop. Once it has, every attempt fails and no position is tried.
+    halted: bool,
 }
 
 /// What one attempt answered.
@@ -205,7 +220,21 @@ impl<'a> Matcher<'a> {
             captures: vec![None; pattern.groups as usize],
             steps: 0,
             budget,
+            meter: None,
+            unreported: 0,
+            halted: false,
         }
+    }
+
+    /// The same matcher, answering to `meter` — the run's budgets, as the interpreter keeps them.
+    ///
+    /// The meter is told every `METER_INTERVAL` steps how many have passed and answers whether
+    /// the run must stop. When it says so, the search ends with no match, and the caller is the
+    /// one that knows the run was stopped rather than that nothing matched.
+    #[must_use]
+    pub fn metered(mut self, meter: &'a mut dyn FnMut(u64) -> bool) -> Self {
+        self.meter = Some(meter);
+        self
     }
 
     /// §22.2.7.2's loop — try at `start`, and at every later position unless `y` forbids it.
@@ -250,7 +279,7 @@ impl<'a> Matcher<'a> {
                     captures: self.captures.clone(),
                 });
             }
-            if self.pattern.flags.sticky {
+            if self.pattern.flags.sticky || self.halted {
                 return None;
             }
             at += match by_point
@@ -468,7 +497,14 @@ impl<'a> Matcher<'a> {
     /// with the wrong edge.
     fn afford(&mut self) -> bool {
         self.steps += 1;
-        self.steps <= self.budget
+        self.unreported += 1;
+        if self.unreported == METER_INTERVAL
+            && let Some(meter) = self.meter.as_mut()
+        {
+            self.unreported = 0;
+            self.halted = meter(METER_INTERVAL);
+        }
+        !self.halted && self.steps <= self.budget
     }
 
     /// The terms of a sequence, one at a time, each continuing into the rest.

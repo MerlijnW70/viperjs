@@ -102,7 +102,8 @@ fn repeat(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Val
             "a string may be repeated a finite, non-negative number of times",
         ));
     }
-    let Some(total) = grown(&units, count) else {
+    let Some(total) = grown(&units, count).filter(|&total| heap.affords_string(total as f64))
+    else {
         return Err(Abrupt::range_error(
             "the resulting string would be too long",
         ));
@@ -262,6 +263,11 @@ fn padded(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>, before: bool) -> 
     };
     let gap = match gap_to_fill(wanted, units.len()) {
         Pad::Nothing => return Ok(Value::String(heap.intern(&units))),
+        Pad::Fill(_) if !heap.affords_string(wanted) => {
+            return Err(Abrupt::range_error(
+                "the resulting string would be too long",
+            ));
+        }
         Pad::TooLong => {
             return Err(Abrupt::range_error(
                 "the resulting string would be too long",

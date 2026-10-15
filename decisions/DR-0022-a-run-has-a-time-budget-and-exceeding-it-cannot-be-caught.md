@@ -159,3 +159,12 @@ rather than a host that changed its mind.
 While a time budget is set, an interpreter loop reads at most `HEAP_CHECK_INTERVAL` instructions
 after the deadline has passed, and then no more until the next `run` — whatever the code does, and
 whatever any handler, native or job it reaches would otherwise do.
+
+## Note added 2026-10-15: the matcher is reached
+
+The first entry of "what this does not stop" is closed. A red-team of a judge built on DR-0031 found
+a delivery that ran `/(a+)+$/` against forty `a`s in every case and still answered correctly: 3.5 s a
+case, uncounted, so a passing delivery could spend the judge's whole wall clock. The matcher now
+takes a meter (`Matcher::metered`) and reports every 1024 steps; the interpreter charges them to
+DR-0031's count and asks this record's deadline (`Vm::charge`), and a spent budget ends the search
+and the run together. The per-attempt budget still bounds an attempt when no run budget is set.

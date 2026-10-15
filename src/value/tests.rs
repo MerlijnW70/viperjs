@@ -784,7 +784,8 @@ fn adding_two_strings_that_would_be_too_long_throws_a_range_error() {
     //
     // Cheap for the reason DR-0012 gives: the operand is one zeroed allocation nothing writes to,
     // and the join that would have cost half a gigabyte is refused before it is made.
-    let mut heap = Heap::new();
+    // A budget past the cap, so that the cap is the only thing that can refuse.
+    let mut heap = Heap::with_budget(usize::MAX);
     let half = Value::String(heap.new_string(vec![0; crate::heap::MAX_STRING_LENGTH / 2 + 1]));
     assert!(matches!(
         apply_binary(crate::ast::BinaryOperator::Add, half, half, &mut heap),
