@@ -1307,3 +1307,74 @@ fn reverse_reads_each_end_before_the_other() {
         "get:length,has:0,get:0,has:2,get:2",
     );
 }
+
+#[test]
+fn a_step_budget_stops_a_loop_the_script_cannot_catch_and_resets_each_run() {
+    // DR-0031 stops a run the way DR-0022 does, so the same two promises hold: a `try` sees
+    // nothing, and the engine is usable afterwards. The second runaway is stopped as well, which
+    // is what says the count began again rather than staying spent.
+    let mut engine = Engine::new();
+    engine.set_step_budget(Some(1_000_000));
+    assert_eq!(
+        engine
+            .eval("var s = 'none'; try { while (true) {} } catch (e) { s = 'caught'; } s")
+            .unwrap_err(),
+        Error::Interrupted
+    );
+    let answer = engine.eval("s").expect("the engine still runs");
+    assert_eq!(engine.text(answer).as_deref(), Ok("none"));
+    assert_eq!(
+        engine.eval("while (true) {}").unwrap_err(),
+        Error::Interrupted
+    );
+    engine.set_step_budget(None);
+    let answer = engine
+        .eval("var n = 0; for (var i = 0; i < 2000000; i++) n++; n")
+        .expect("no budget, so it finishes");
+    assert_eq!(engine.text(answer).as_deref(), Ok("2000000"));
+}
+
+#[test]
+fn the_same_program_is_stopped_at_the_same_step_on_every_run() {
+    // The reason DR-0031 exists beside DR-0022: a clock stops this loop at a different count on a
+    // busy machine than on a quiet one, and a count of steps cannot. Two fresh engines must agree
+    // exactly, and twice the budget must get about twice as far, which is what says the count is
+    // what stopped it rather than something else.
+    let reached = |budget: u64| {
+        let mut engine = Engine::new();
+        engine.set_step_budget(Some(budget));
+        assert_eq!(
+            engine.eval("var n = 0; while (true) n++;").unwrap_err(),
+            Error::Interrupted
+        );
+        let n = engine.eval("n").expect("the engine still runs");
+        engine
+            .text(n)
+            .ok()
+            .and_then(|text| text.parse::<u64>().ok())
+            .unwrap_or(0)
+    };
+    let once = reached(4_000_000);
+    assert!(once > 0, "the loop never ran");
+    assert_eq!(reached(4_000_000), once);
+    let twice = reached(8_000_000);
+    assert!(
+        twice > once * 3 / 2 && twice < once * 5 / 2,
+        "{once} then {twice}"
+    );
+}
+
+#[test]
+fn the_step_budget_reaches_a_built_ins_own_loop() {
+    // A walk over an array-like's `length` is turns inside Rust with no instruction boundary, so
+    // only the count a built-in takes for itself can stop it — the same hole DR-0022 closed for
+    // the clock. Unbounded, the walk below is two hundred million turns.
+    let mut engine = Engine::new();
+    engine.set_step_budget(Some(10_000_000));
+    assert_eq!(
+        engine
+            .eval("var a = []; a.length = 200000000; a.join('')")
+            .unwrap_err(),
+        Error::Interrupted
+    );
+}
