@@ -415,6 +415,15 @@ pub struct Vm {
     ///
     /// Read only inside the periodic check, so a run with no budget never asks the clock at all.
     expires_at: Option<std::time::Instant>,
+    /// How many steps a single [`Vm::run`] may take, if the host has said — DR-0031.
+    ///
+    /// The time budget's deterministic sibling. A clock answers differently on a busy machine and
+    /// a quiet one, so the same program can finish under one and be stopped under the other; a
+    /// count of steps answers the same everywhere, which is what a host needs when the verdict is
+    /// something a second party must be able to reproduce.
+    step_budget: Option<u64>,
+    /// What is left of `step_budget` in the run in progress, set from it when the run began.
+    steps_left: Option<u64>,
     /// How much the arena may **grow** between collections before the loop runs one itself.
     ///
     /// `None` is the historical behaviour: no collection happens unless a host asks for one.
@@ -556,6 +565,8 @@ impl Vm {
             collected_at: 0,
             collect_next: 0,
             expires_at: None,
+            step_budget: None,
+            steps_left: None,
             stopped: false,
             templates: std::collections::HashMap::new(),
             reentries: 0,
@@ -898,6 +909,7 @@ impl Vm {
         self.expires_at = self
             .time_budget
             .map(|budget| std::time::Instant::now() + budget);
+        self.steps_left = self.step_budget;
         // The growth the schedule measures is this run's, so the base is taken here for the same
         // reason the deadline is: a machine that ran once already has a footprint, and counting it
         // as growth would collect on the first check of every later run.
@@ -1139,6 +1151,28 @@ impl Vm {
     /// host function that blocks; DR-0022 says why each is a separate piece of work.
     pub fn set_time_budget(&mut self, budget: Option<std::time::Duration>) {
         self.time_budget = budget;
+    }
+
+    /// Bound how many steps a single [`Vm::run`] may take — DR-0031, and `None` to remove the bound.
+    ///
+    /// Stops the run exactly as [`Vm::set_time_budget`] does — [`Outcome::Interrupted`], nothing
+    /// catches it and no job runs — but counts instead of reading a clock, so a program is stopped
+    /// at the same point on every machine and every run. A step is an interpreter instruction or a
+    /// turn of a built-in's own loop, and the count is taken where the time budget is asked, so it
+    /// is honoured to within one check interval and covers what that covers.
+    pub fn set_step_budget(&mut self, budget: Option<u64>) {
+        self.step_budget = budget;
+    }
+
+    /// Take `steps` from DR-0031's budget, and answer whether it is now spent.
+    ///
+    /// A run with no step budget never runs out. Saturating, so a budget smaller than one check
+    /// interval is spent at the first check rather than wrapping round to an enormous one.
+    pub(super) fn spend(&mut self, steps: u64) -> bool {
+        self.steps_left.as_mut().is_some_and(|left| {
+            *left = left.saturating_sub(steps);
+            *left == 0
+        })
     }
 
     /// Start a run's collection window — DR-0023's base, taken where a run begins.
@@ -1411,7 +1445,7 @@ impl Vm {
             deadline
                 .saturating_duration_since(std::time::Instant::now())
                 .is_zero()
-        });
+        }) || self.spend(u64::from(NATIVE_CHECK_INTERVAL));
         self.stopped
     }
 

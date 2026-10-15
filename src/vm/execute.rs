@@ -79,7 +79,8 @@ impl Vm {
                     deadline
                         .saturating_duration_since(std::time::Instant::now())
                         .is_zero()
-                }) {
+                }) || self.spend(HEAP_CHECK_INTERVAL as u64)
+                {
                     self.stopped = true;
                     return Ok(());
                 }

@@ -617,6 +617,24 @@ impl Engine {
         self.vm.set_time_budget(budget);
     }
 
+    /// Bound how many steps a single run may take — DR-0031, and `None` to remove the bound.
+    ///
+    /// The deterministic sibling of [`Engine::set_time_budget`]: the same stop, which nothing in
+    /// the script can catch, but at the same point on every machine and every run, because it
+    /// counts instructions and built-in loop turns rather than reading a clock. What a host wants
+    /// when someone else must be able to run the same program and get the same answer.
+    ///
+    /// ```
+    /// use viperjs::api::{Engine, Error};
+    ///
+    /// let mut engine = Engine::new();
+    /// engine.set_step_budget(Some(1_000_000));
+    /// assert_eq!(engine.eval("while (true) {}").unwrap_err(), Error::Interrupted);
+    /// ```
+    pub fn set_step_budget(&mut self, budget: Option<u64>) {
+        self.vm.set_step_budget(budget);
+    }
+
     /// Say whether this agent may be **suspended** — §9.7's `[[CanBlock]]`.
     ///
     /// `false` is the default and is a claim about the shape of the embedding rather than caution:
