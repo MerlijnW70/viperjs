@@ -735,6 +735,17 @@ enum ExportResolution {
 }
 
 impl Vm {
+    /// §16.2.1.10 for a host: the namespace of a module this machine has linked.
+    ///
+    /// The same object every time for the same module, and the one `import * as n` would bind.
+    pub(crate) fn module_namespace(
+        &mut self,
+        chunk: &Rc<Chunk>,
+        heap: &mut Heap,
+    ) -> crate::heap::ObjectId {
+        self.namespace_of(chunk, heap)
+    }
+
     /// §16.2.1.10 `GetModuleNamespace` — the object `import * as n` binds, memoised per module.
     ///
     /// The object is made and recorded **before** its names are resolved, because §16.2.1.6.3 can

@@ -1412,3 +1412,79 @@ fn a_host_may_fix_the_time_date_reads() {
         "the platform's clock again: {now}"
     );
 }
+
+#[test]
+fn a_host_runs_a_module_and_calls_what_it_exports() {
+    // §16.2.1.10's namespace is how a host reads a module, the same object `import * as m` binds,
+    // so a default export is `get(namespace, "default")` and a named one is read by its name.
+    let mut engine = Engine::new();
+    let namespace = engine
+        .eval_module(
+            "export default function count(text) { const words = text.match(/\\S+/g); \
+             return words === null ? 0 : words.length; } export const seven = 7;",
+        )
+        .expect("the module runs");
+    let count = engine.get(namespace, "default").expect("a default export");
+    let text = engine.string("one  two\tthree").expect("a short string");
+    let answer = engine
+        .call(count, Value::Undefined, &[text])
+        .expect("the call answers");
+    assert_eq!(engine.text(answer).as_deref(), Ok("3"));
+    let seven = engine.get(namespace, "seven").expect("a named export");
+    assert_eq!(engine.text(seven).as_deref(), Ok("7"));
+    // A second module is a module of its own, not the first one found already evaluated.
+    let other = engine
+        .eval_module("export default 'second';")
+        .expect("it runs");
+    let second = engine.get(other, "default").expect("its export");
+    assert_eq!(engine.text(second).as_deref(), Ok("second"));
+}
+
+#[test]
+fn a_module_with_no_loader_refuses_an_import_and_is_held_to_its_budget() {
+    let mut engine = Engine::new();
+    let refused = engine.eval_module("import x from 'elsewhere'; export default x;");
+    assert!(
+        matches!(&refused, Err(Error::Thrown(said)) if said.starts_with("SyntaxError")),
+        "{refused:?}"
+    );
+    engine.set_step_budget(Some(1_000_000));
+    assert_eq!(
+        engine.eval_module("while (true) {}").err(),
+        Some(Error::Interrupted)
+    );
+}
+
+#[test]
+fn a_host_call_that_spends_its_budget_is_interrupted_and_the_next_one_runs() {
+    // A stop inside a host's own call surfaced as `TypeError: a call answered with nothing` and
+    // left the machine stopped, so the next call failed the same way. And a call had no budget of
+    // its own: it spent whatever the previous run had left.
+    let mut engine = Engine::new();
+    engine.set_step_budget(Some(2_000_000));
+    engine
+        .eval(
+            "function spin() { while (true) {} } \
+             function burn(n) { for (var i = 0; i < n; i++) {} return n; } \
+             var getter = { get stuck() { while (true) {} } }; \
+             var printed = { toString() { while (true) {} } };",
+        )
+        .expect("the setup runs");
+    let global = Value::Object(engine.global());
+    let spin = engine.get(global, "spin").expect("spin");
+    assert_eq!(
+        engine.call(spin, Value::Undefined, &[]).err(),
+        Some(Error::Interrupted)
+    );
+    let burn = engine.get(global, "burn").expect("burn");
+    for _ in 0..5 {
+        let answer = engine
+            .call(burn, Value::Undefined, &[Value::Number(100_000.0)])
+            .expect("each call has a budget of its own");
+        assert_eq!(engine.text(answer).as_deref(), Ok("100000"));
+    }
+    let getter = engine.get(global, "getter").expect("getter");
+    assert_eq!(engine.get(getter, "stuck").err(), Some(Error::Interrupted));
+    let printed = engine.get(global, "printed").expect("printed");
+    assert_eq!(engine.text(printed).err(), Some(Error::Interrupted));
+}
