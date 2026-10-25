@@ -1924,14 +1924,6 @@ built-ins/String/prototype/localeCompare/15.5.4.9_CE.js :: it threw an object wi
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js (strict) :: it threw an object with no name: String.prototype.localeCompare considers ö (\u006f\u0308) ≠ ö (\u00f6).
 built-ins/String/prototype/split/separator-tostring-error.js :: it threw an object with no name: ToString should be called on the separator before checking if the limit is zero. Expected a ExpectedError to be thrown but no exception was thrown at all
 built-ins/String/prototype/split/separator-tostring-error.js (strict) :: it threw an object with no name: ToString should be called on the separator before checking if the limit is zero. Expected a ExpectedError to be thrown but no exception was thrown at all
-built-ins/String/prototype/toLocaleLowerCase/Final_Sigma_U180E.js :: it threw an object with no name: Sigma preceded by LATIN CAPITAL LETTER A, MONGOLIAN VOWEL SEPARATOR Expected SameValue(«"a᠎σ"», «"a᠎ς"») to be true
-built-ins/String/prototype/toLocaleLowerCase/Final_Sigma_U180E.js (strict) :: it threw an object with no name: Sigma preceded by LATIN CAPITAL LETTER A, MONGOLIAN VOWEL SEPARATOR Expected SameValue(«"a᠎σ"», «"a᠎ς"») to be true
-built-ins/String/prototype/toLocaleLowerCase/special_casing_conditional.js :: it threw an object with no name: Sigma preceded by LATIN CAPITAL LETTER A Expected SameValue(«"aσ"», «"aς"») to be true
-built-ins/String/prototype/toLocaleLowerCase/special_casing_conditional.js (strict) :: it threw an object with no name: Sigma preceded by LATIN CAPITAL LETTER A Expected SameValue(«"aσ"», «"aς"») to be true
-built-ins/String/prototype/toLowerCase/Final_Sigma_U180E.js :: it threw an object with no name: Sigma preceded by LATIN CAPITAL LETTER A, MONGOLIAN VOWEL SEPARATOR Expected SameValue(«"a᠎σ"», «"a᠎ς"») to be true
-built-ins/String/prototype/toLowerCase/Final_Sigma_U180E.js (strict) :: it threw an object with no name: Sigma preceded by LATIN CAPITAL LETTER A, MONGOLIAN VOWEL SEPARATOR Expected SameValue(«"a᠎σ"», «"a᠎ς"») to be true
-built-ins/String/prototype/toLowerCase/special_casing_conditional.js :: it threw an object with no name: Sigma preceded by LATIN CAPITAL LETTER A Expected SameValue(«"aσ"», «"aς"») to be true
-built-ins/String/prototype/toLowerCase/special_casing_conditional.js (strict) :: it threw an object with no name: Sigma preceded by LATIN CAPITAL LETTER A Expected SameValue(«"aσ"», «"aς"») to be true
 built-ins/String/prototype/toString/non-generic-realm.js :: it threw an object with no name: Expected a TypeError but got a different error constructor with the same name
 built-ins/String/prototype/toString/non-generic-realm.js (strict) :: it threw an object with no name: Expected a TypeError but got a different error constructor with the same name
 built-ins/String/prototype/valueOf/non-generic-realm.js :: it threw an object with no name: Expected a TypeError but got a different error constructor with the same name

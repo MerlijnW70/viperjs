@@ -35,6 +35,8 @@ pub mod realm;
 pub mod regexp;
 pub mod span;
 pub mod static_semantics;
+mod unicode_case_map;
+mod unicode_case_map_table;
 mod unicode_case_table;
 mod unicode_id;
 mod unicode_id_table;

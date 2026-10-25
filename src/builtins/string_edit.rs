@@ -184,7 +184,7 @@ fn cycled_into(
 /// `char` to route it through: an **unpaired** surrogate is a code point of its own here, kept as
 /// itself rather than replaced. It has no decomposition, and a `�` in its place would make
 /// `normalize` lose data on a String this engine is perfectly able to hold.
-fn code_points(units: &[u16]) -> Vec<u32> {
+pub(super) fn code_points(units: &[u16]) -> Vec<u32> {
     let mut out = Vec::with_capacity(units.len());
     let mut at = 0;
     while at < units.len() {

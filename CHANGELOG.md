@@ -36,6 +36,12 @@ suite revision the expectations file names, up from 86.01% at 0.3.0.
 
 ### Fixed
 
+- **`toLowerCase` and `toUpperCase` follow the full Unicode case mappings, `Final_Sigma`
+  included.** `'ΟΔΟΣ'.toLowerCase()` was `"οδοσ"` and is `"οδος"`: §22.1.3.30 names
+  `SpecialCasing.txt`, whose one locale-independent conditional mapping lowers `Σ` to `ς` at
+  the end of a word. The mappings themselves moved from the compiler's `char` methods, whose
+  Unicode edition is whatever the toolchain shipped, to tables generated from UCD 17.0.0 — the
+  edition every other table pins. The locale variants without a locale share both. +8 runs.
 - **A step under `u` is a code point in all four places it is taken.** §22.2.7.8
   `AdvanceStringIndex` was written once and three callers ignored it, so an empty match under `u`
   put its replacement *between* the halves of a surrogate pair, and the matcher's own scan retried
