@@ -1661,8 +1661,10 @@ impl Vm {
             // a chunk that does not make sense as instructions.
             return Err(Fault::MissingFunction);
         };
-        let source = String::from_utf16_lossy(heap.string(source).unwrap_or(&[]));
-        let flags = String::from_utf16_lossy(heap.string(flags).unwrap_or(&[]));
+        // As units and not as text: a literal `eval` was handed may hold an unpaired surrogate,
+        // and §13.2.7.3's `BodyText` is the pattern's `source` exactly.
+        let source = heap.string(source).unwrap_or(&[]).to_vec();
+        let flags = heap.string(flags).unwrap_or(&[]).to_vec();
         let made =
             crate::builtins::regexp::from_literal(self, heap, &source, &flags).map(Value::Object);
         if let Some(value) = self.settle(made, heap, root, current, at)? {

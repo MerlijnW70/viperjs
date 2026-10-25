@@ -27,6 +27,9 @@ pub struct Chunk {
     /// everything: a program using `String(f)` to re-read a function got nothing. Every engine
     /// pays the same cost for the same reason, and one `Rc` per chunk is the whole of it here.
     pub(super) source: std::rc::Rc<str>,
+    /// The unpaired surrogates [`Chunk::source`] stands in for, when the parse was of a String —
+    /// see [`crate::lexer::UnitSource`]. Shared the way the text is.
+    pub(super) lone: std::rc::Rc<[crate::lexer::LoneSurrogate]>,
     /// Where in [`Chunk::source`] this body's *production* begins and ends.
     ///
     /// The production and not the body: `function f() {}` starts at `function`, an arrow at its
@@ -1314,6 +1317,13 @@ impl Chunk {
         // chunk holds, so it fits — and a slice that panicked would break DR-0002 on a fact no
         // input controls.
         self.source.get(from..to).unwrap_or("")
+    }
+
+    /// [`Chunk::source_text`] as the code units it is, with any unpaired surrogate of a source
+    /// handed to `eval` or `Function` put back — which is what §20.2.3.5 answers.
+    #[must_use]
+    pub fn source_units(&self) -> Vec<u16> {
+        crate::lexer::source_units(&self.source, self.source_span, &self.lone).unwrap_or_default()
     }
 
     /// §10.2.9's `name`, or `None` where the specification asks for the empty string.

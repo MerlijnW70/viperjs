@@ -180,8 +180,7 @@ fn compile_script_bindings(
     let mut compiler = Compiler::new(heap);
     // §20.2.3.5's `[[SourceText]]` starts here and is handed to every body below.
     compiler.chunk.source = script.source.clone();
-    // §20.2.3.5's `[[SourceText]]` starts here and is handed to every body below.
-    compiler.chunk.source = script.source.clone();
+    compiler.chunk.lone = script.lone.clone();
     // §11.2.1 — a Script is strict only if its own Directive Prologue says so, and everything nested
     // inherits that. A Module always is, which is M7's to record.
     compiler.chunk.strict = script.is_strict;
@@ -808,6 +807,7 @@ pub fn compile_direct_eval(
     // direct eval answered the empty String, because an unseeded chunk has an empty source
     // and every body below inherits it.
     compiler.chunk.source = script.source.clone();
+    compiler.chunk.lone = script.lone.clone();
     // §14.11 — the call is inside a `with`, so every free name in this text is a run-time question.
     // The chain above cannot say it: an object environment has no names to list and arrives as an
     // empty level, indistinguishable from one the engine made for a temporary. One flag rather than

@@ -24,7 +24,11 @@ pub(in crate::parser) fn render(expr: &Expr) -> String {
         ExprKind::BigInt(literal) => render_bigint(literal),
         ExprKind::Identifier(name) => name.clone(),
         ExprKind::String(units) => format!("{units:?}"),
-        ExprKind::RegExp(literal) => format!("/{}/{}", literal.body, literal.flags),
+        ExprKind::RegExp(literal) => format!(
+            "/{}/{}",
+            String::from_utf16_lossy(&literal.body),
+            literal.flags
+        ),
         ExprKind::Unary { operator, argument } => {
             format!("({} {})", operator.as_str(), render(argument))
         }

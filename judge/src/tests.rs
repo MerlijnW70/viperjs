@@ -18,7 +18,7 @@ fn input(source: &str, cases: Vec<Case>) -> Input {
 
 fn text_case(text: &str, expected: f64) -> Case {
     Case {
-        arguments: vec![Primitive::String(text.to_string())],
+        arguments: vec![Primitive::text(text)],
         expected: Primitive::Number(expected),
     }
 }
@@ -110,9 +110,10 @@ fn the_same_input_gives_the_same_verdicts_on_every_run() {
     }];
     let first = verdicts(reads, case.clone());
     assert_eq!(first, verdicts(reads, case));
-    let Some(Verdict::Wrong(Primitive::String(text))) = first.first() else {
+    let Some(Verdict::Wrong(Primitive::String(units))) = first.first() else {
         panic!("{first:?}");
     };
+    let text = String::from_utf16_lossy(units);
     assert!(
         text.ends_with("|1700000000000|2023-11-14T22:13:20.000Z"),
         "{text}"
@@ -179,15 +180,12 @@ fn nothing_of_the_host_is_there_to_reach() {
          typeof WebAssembly, typeof setTimeout, typeof Deno, typeof console].join(','); }";
     assert_eq!(
         one(probe),
-        Verdict::Wrong(Primitive::String(
-            "undefined,undefined,undefined,undefined,undefined,undefined,undefined".into()
+        Verdict::Wrong(Primitive::text(
+            "undefined,undefined,undefined,undefined,undefined,undefined,undefined"
         ))
     );
     let escape = "export default function () { return Function('return typeof process')(); }";
-    assert_eq!(
-        one(escape),
-        Verdict::Wrong(Primitive::String("undefined".into()))
-    );
+    assert_eq!(one(escape), Verdict::Wrong(Primitive::text("undefined")));
     let dynamic = "export default async function () { await import('node:fs'); return 2; }";
     assert_eq!(one(dynamic), Verdict::NotPrimitive);
 }
@@ -199,7 +197,8 @@ fn a_delivery_cannot_make_a_verdict_large() {
     let long = "export default function () { return 'é'.repeat(1e6); }";
     assert!(matches!(
         one(long),
-        Verdict::Wrong(Primitive::String(text)) if text.len() <= DETAIL_BYTES && !text.is_empty()
+        Verdict::Wrong(Primitive::String(units))
+            if to_wtf8(&units).len() <= DETAIL_BYTES && !units.is_empty()
     ));
 }
 
@@ -208,9 +207,10 @@ fn numbers_compare_as_answers_and_not_as_bits() {
     assert!(Primitive::Number(0.0).answers(&Primitive::Number(-0.0)));
     assert!(Primitive::Number(f64::NAN).answers(&Primitive::Number(f64::NAN)));
     assert!(!Primitive::Number(1.0).answers(&Primitive::Number(f64::NAN)));
-    assert!(!Primitive::Number(1.0).answers(&Primitive::String("1".into())));
+    assert!(!Primitive::Number(1.0).answers(&Primitive::text("1")));
     assert!(!Primitive::Null.answers(&Primitive::Undefined));
-    assert!(Primitive::String("a".into()).answers(&Primitive::String("a".into())));
+    assert!(Primitive::text("a").answers(&Primitive::text("a")));
+    assert!(!Primitive::String(vec![0xd800]).answers(&Primitive::text("\u{fffd}")));
 }
 
 #[test]
@@ -223,9 +223,10 @@ fn the_wire_format_round_trips_and_refuses_anything_else() {
                 Primitive::Boolean(true),
                 Primitive::Boolean(false),
                 Primitive::Number(-1.5),
-                Primitive::String("é\u{0}".into()),
+                Primitive::text("é\u{0}"),
+                Primitive::String(vec![0xdbff, 0x61, 0xdc00, 0xd83d, 0xde00]),
             ],
-            expected: Primitive::String("x".into()),
+            expected: Primitive::text("x"),
         },
         text_case("a", 1.0),
     ];
@@ -252,8 +253,8 @@ fn the_output_carries_each_verdict_and_its_detail() {
     let source =
         "export default function (x) { if (x === 'throw') throw new Error('no'); return x; }";
     let case = |argument: &str, expected: &str| Case {
-        arguments: vec![Primitive::String(argument.into())],
-        expected: Primitive::String(expected.into()),
+        arguments: vec![Primitive::text(argument)],
+        expected: Primitive::text(expected),
     };
     let out = judge(&write_input(&input(
         source,
@@ -277,4 +278,164 @@ fn the_output_carries_each_verdict_and_its_detail() {
     refused.push(1);
     refused.extend_from_slice(&0_u32.to_le_bytes());
     assert_eq!(judge(b"nonsense"), refused);
+}
+
+// The expected values below that are a JavaScript engine's answers were computed once with V8
+// (Node 22.23.3) and are written in as numbers, so that these tests say what ECMAScript says and
+// not what ViperJS happens to do.
+
+#[test]
+fn an_unpaired_surrogate_is_an_answer_of_its_own_and_not_the_replacement_character() {
+    let from_code = "export default (unit) => String.fromCharCode(unit);";
+    let lone = |unit: f64, expected: Primitive| Case {
+        arguments: vec![Primitive::Number(unit)],
+        expected,
+    };
+    assert_eq!(
+        verdicts(
+            from_code,
+            vec![
+                lone(55296.0, Primitive::String(vec![0xd800])),
+                lone(55296.0, Primitive::text("\u{fffd}")),
+                lone(65533.0, Primitive::text("\u{fffd}")),
+                lone(65533.0, Primitive::String(vec![0xd800])),
+            ]
+        ),
+        vec![
+            Verdict::Pass,
+            Verdict::Wrong(Primitive::String(vec![0xd800])),
+            Verdict::Pass,
+            Verdict::Wrong(Primitive::text("\u{fffd}")),
+        ]
+    );
+}
+
+#[test]
+fn an_argument_reaches_the_delivery_unit_for_unit() {
+    // V8: "\udc00".length + ":" + "\udc00".charCodeAt(0) is "1:56320", and the two halves of
+    // U+1F600 joined are the character, of length 2 and code point 128512.
+    let describe = "export default (a, b) => { const s = a + b; \
+         return s.length + ':' + s.charCodeAt(0) + ':' + s.codePointAt(0) + ':' + s.isWellFormed(); }";
+    let case = |a: Vec<u16>, b: Vec<u16>, expected: &str| Case {
+        arguments: vec![Primitive::String(a), Primitive::String(b)],
+        expected: Primitive::text(expected),
+    };
+    assert_eq!(
+        verdicts(
+            describe,
+            vec![
+                case(vec![0xdc00], vec![], "1:56320:56320:false"),
+                case(vec![0xd83d], vec![0xde00], "2:55357:128512:true"),
+                case(vec![0x61, 0xd800], vec![0x62], "3:97:97:false"),
+            ]
+        ),
+        vec![Verdict::Pass, Verdict::Pass, Verdict::Pass]
+    );
+    let echo = "export default (s) => s;";
+    let back = Case {
+        arguments: vec![Primitive::String(vec![0xd800, 0x61, 0xdfff])],
+        expected: Primitive::String(vec![0xd800, 0x61, 0xdfff]),
+    };
+    assert_eq!(verdicts(echo, vec![back]), vec![Verdict::Pass]);
+}
+
+#[test]
+fn the_output_writes_an_unpaired_surrogate_as_its_three_wtf8_bytes() {
+    let source = "export default () => 'a' + String.fromCharCode(0xdc00) + '\\ufffd';";
+    let out = judge(&write_input(&input(
+        source,
+        vec![Case {
+            arguments: vec![],
+            expected: Primitive::Null,
+        }],
+    )));
+    let mut expected = Vec::new();
+    expected.extend_from_slice(&VERSION.to_le_bytes());
+    expected.push(0);
+    expected.extend_from_slice(&1_u32.to_le_bytes());
+    expected.push(1);
+    expected.push(5);
+    expected.extend_from_slice(&7_u32.to_le_bytes());
+    expected.extend_from_slice(&[b'a', 0xed, 0xb0, 0x80, 0xef, 0xbf, 0xbd]);
+    assert_eq!(out, expected);
+}
+
+#[test]
+fn wtf8_is_utf8_for_every_character_and_three_bytes_for_every_unpaired_surrogate() {
+    for point in 0..=0x10_ffff_u32 {
+        let Some(ch) = char::from_u32(point) else {
+            continue;
+        };
+        let units: Vec<u16> = ch.to_string().encode_utf16().collect();
+        assert_eq!(to_wtf8(&units), ch.to_string().into_bytes(), "{point:#x}");
+        assert_eq!(
+            from_wtf8(ch.to_string().as_bytes()),
+            Some(units),
+            "{point:#x}"
+        );
+    }
+    for unit in 0xd800..=0xdfff_u16 {
+        let bytes = to_wtf8(&[unit]);
+        assert_eq!(bytes.len(), 3);
+        assert_eq!(bytes[0], 0xed);
+        assert_eq!(from_wtf8(&bytes), Some(vec![unit]));
+    }
+    assert_eq!(to_wtf8(&[0xd800]), [0xed, 0xa0, 0x80]);
+    assert_eq!(to_wtf8(&[0xdfff]), [0xed, 0xbf, 0xbf]);
+    assert_eq!(to_wtf8(&[0xd83d, 0xde00]), "\u{1f600}".as_bytes());
+    // A trail before a lead is two unpaired surrogates, and stays two.
+    assert_eq!(
+        from_wtf8(&[0xed, 0xb0, 0x80, 0xed, 0xa0, 0x80]),
+        Some(vec![0xdc00, 0xd800])
+    );
+}
+
+#[test]
+fn wtf8_refuses_a_pair_written_as_two_surrogates_and_everything_utf8_refuses() {
+    for bytes in [
+        &[0xed, 0xa0, 0xbd, 0xed, 0xb8, 0x80][..],
+        &[0xc0, 0x80],
+        &[0xc1, 0xbf],
+        &[0xe0, 0x9f, 0xbf],
+        &[0xf0, 0x8f, 0xbf, 0xbf],
+        &[0xf4, 0x90, 0x80, 0x80],
+        &[0xf5, 0x80, 0x80, 0x80],
+        &[0x80],
+        &[0xed, 0xa0],
+        &[0xe2, 0x82],
+        &[0xe2, 0x28, 0xa1],
+        &[0xff],
+    ] {
+        assert_eq!(from_wtf8(bytes), None, "{bytes:x?}");
+    }
+    let written = write_input(&input("", vec![text_case("abcdef", 1.0)]));
+    let at = written
+        .windows(6)
+        .position(|window| window == b"abcdef")
+        .unwrap_or_default();
+    let mut lone = written.clone();
+    lone[at..at + 6].copy_from_slice(&[0xed, 0xa0, 0xbd, b'd', b'e', b'f']);
+    let read = read_input(&lone).map(|read| read.cases[0].arguments.clone());
+    assert_eq!(
+        read,
+        Some(vec![Primitive::String(vec![0xd83d, 0x64, 0x65, 0x66])])
+    );
+    let mut split = written;
+    split[at..at + 6].copy_from_slice(&[0xed, 0xa0, 0xbd, 0xed, 0xb8, 0x80]);
+    assert_eq!(read_input(&split), None);
+}
+
+#[test]
+fn a_long_answer_is_cut_before_a_unit_and_never_inside_a_pair() {
+    let lone = "export default () => String.fromCharCode(0xd800).repeat(1000);";
+    let Verdict::Wrong(Primitive::String(units)) = one(lone) else {
+        panic!("a string answer");
+    };
+    assert_eq!(units, vec![0xd800; DETAIL_BYTES / 3]);
+    let astral = "export default () => 'a' + '\\u{1f600}'.repeat(1000);";
+    let Verdict::Wrong(Primitive::String(units)) = one(astral) else {
+        panic!("a string answer");
+    };
+    assert_eq!(units.len(), 1 + 2 * ((DETAIL_BYTES - 1) / 4));
+    assert_eq!(units.last(), Some(&0xde00));
 }

@@ -22,7 +22,7 @@ use crate::heap::{Heap, NativeCall, ObjectId, PropertyDescriptor, PropertyKey};
 use crate::value::{Abrupt, Completion, Value};
 use crate::vm::Vm;
 
-use super::{define_method, delete_or_throw, key, set_or_throw};
+use super::{append_units, assembled, define_method, delete_or_throw, key, set_or_throw};
 
 /// §7.3.18 `LengthOfArrayLike` — the `length` of anything, as a count.
 ///
@@ -332,25 +332,25 @@ pub fn join(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
     let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let separator = match call.argument(0) {
-        Value::Undefined => ",".to_string(),
+        Value::Undefined => vec![u16::from(b',')],
         value => {
             let id = vm.to_string(value, heap)?;
-            String::from_utf16_lossy(heap.string(id).unwrap_or(&[]))
+            heap.string(id).unwrap_or(&[]).to_vec()
         }
     };
-    let mut joined = String::new();
+    let mut joined = Vec::new();
     for index in 0..length {
         if index > 0 {
-            joined.push_str(&separator);
+            append_units(heap, &mut joined, &separator)?;
         }
         let element = get_index(vm, heap, object, index)?;
         if matches!(element, Value::Undefined | Value::Null) {
             continue;
         }
         let id = vm.to_string(element, heap)?;
-        joined.push_str(&String::from_utf16_lossy(heap.string(id).unwrap_or(&[])));
+        append_units(heap, &mut joined, heap.string(id).unwrap_or(&[]))?;
     }
-    Ok(super::text(heap, &joined))
+    assembled(heap, joined)
 }
 
 /// §23.1.3.31 `Array.prototype.toString` — `join` with no separator, or the object's own `join`.

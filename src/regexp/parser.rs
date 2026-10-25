@@ -96,7 +96,10 @@ fn identifier_of(units: &[u32]) -> String {
             at += 2;
             continue;
         }
-        out.extend(char::from_u32(first));
+        // An unpaired surrogate is no identifier character, and U+FFFD — which is none either —
+        // stands in for it so that [`is_identifier`] refuses the name. Dropping it instead made
+        // `(?<a` and U+D801 `>` a group named `a`, which test262 asks to be a Syntax Error.
+        out.push(char::from_u32(first).unwrap_or(char::REPLACEMENT_CHARACTER));
         at += 1;
     }
     out
@@ -911,6 +914,9 @@ impl Reader<'_> {
             return Ok(ClassItem::Single(next as u32));
         }
         self.at += 1;
+        if let Some(unit) = self.escaped_surrogate() {
+            return unit.map(ClassItem::Single);
+        }
         let Some(letter) = self.peek() else {
             return Err(Error::at("a regular expression ends after a backslash"));
         };
@@ -1017,6 +1023,9 @@ impl Reader<'_> {
     /// §22.2.1 `AtomEscape` — everything a `\` can begin outside a class.
     fn escape(&mut self) -> Result<Node, Error> {
         self.at += 1;
+        if let Some(unit) = self.escaped_surrogate() {
+            return unit.map(Node::Character);
+        }
         let Some(letter) = self.peek() else {
             return Err(Error::at("a regular expression ends after a backslash"));
         };
@@ -1101,6 +1110,9 @@ impl Reader<'_> {
     /// and the other caller inside a class — the alternatives of a `\q{…}` — needs `v`, under which
     /// §B.1.2's wider reading does not exist to choose.
     fn character_escape(&mut self) -> Result<u32, Error> {
+        if let Some(unit) = self.escaped_surrogate() {
+            return unit;
+        }
         let Some(letter) = self.peek() else {
             return Err(Error::at("a regular expression ends after a backslash"));
         };
@@ -1162,6 +1174,28 @@ impl Reader<'_> {
                 Ok(letter as u32)
             }
         }
+    }
+
+    /// A lone surrogate after a `\`, which [`Reader::peek`] cannot name and so would read as the
+    /// end of the pattern. `None` when what follows is anything else.
+    ///
+    /// Outside Unicode mode it is §B.1.2's `SourceCharacterIdentityEscape` and stands for itself:
+    /// that production takes every source character but `c`, and `k` once there is a group name,
+    /// and a surrogate is neither — nor a `UnicodeIDContinue`, which its other form excludes. In
+    /// Unicode mode only a `SyntaxCharacter` or `/` may be escaped, and a surrogate that is still
+    /// lone after the pattern was read as code points is not one.
+    fn escaped_surrogate(&mut self) -> Option<Result<u32, Error>> {
+        let unit = self.unit(self.at)?;
+        if char::from_u32(unit).is_some() {
+            return None;
+        }
+        self.at += 1;
+        Some(match self.flags.unicode_mode() {
+            true => Err(Error::at(
+                "this character may not be escaped in a Unicode pattern",
+            )),
+            false => Ok(unit),
+        })
     }
 
     /// §22.2.1's `CharacterEscape :: c ControlLetter`, and the two things Annex B does with it.

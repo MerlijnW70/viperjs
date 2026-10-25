@@ -245,6 +245,25 @@ impl Parser<'_> {
     /// Neither alternative is a binding, so every reserved word is allowed — the name belongs to
     /// the module being imported from, which spells it however it likes.
     pub(super) fn parse_module_export_name(&mut self) -> Result<ModuleExportName, ParseError> {
+        let span = self.current.span;
+        let name = self.parse_name_or_string()?;
+        // §16.2.2.1 — `IsStringWellFormedUnicode` of a string literal's SV. Only here and not in
+        // [`Self::parse_name_or_string`]: an import attribute's key is the same shape and has no
+        // such rule.
+        if let ModuleExportName::String(units) = &name
+            && char::decode_utf16(units.iter().copied()).any(|decoded| decoded.is_err())
+        {
+            return Err(ParseError {
+                kind: ParseErrorKind::ExportNameNotWellFormed,
+                span,
+            });
+        }
+        Ok(name)
+    }
+
+    /// `IdentifierName | StringLiteral`, the shape a `ModuleExportName` and an `AttributeKey`
+    /// share, with neither's early errors.
+    fn parse_name_or_string(&mut self) -> Result<ModuleExportName, ParseError> {
         let token = self.current;
         match token.kind {
             TokenKind::String { .. } => {
@@ -299,7 +318,7 @@ impl Parser<'_> {
         self.eat(TokenKind::LBrace, Goal::RegExp, "`{`")?;
         let mut attributes = Vec::new();
         while self.current.kind != TokenKind::RBrace {
-            let key = self.parse_module_export_name()?;
+            let key = self.parse_name_or_string()?;
             self.eat(TokenKind::Colon, Goal::RegExp, "`:`")?;
             let token = self.current;
             if !matches!(token.kind, TokenKind::String { .. }) {
@@ -684,5 +703,25 @@ mod tests {
         }
         // An empty module is a `Module : [empty]` and parses to nothing at all.
         assert_eq!(items(""), 0);
+    }
+
+    #[test]
+    fn an_export_name_may_not_hold_an_unpaired_surrogate() {
+        // §16.2.2.1 — `IsStringWellFormedUnicode`, on every `ModuleExportName` that is a string.
+        for source in [
+            r#"export { a as "\uD800" }; var a;"#,
+            r#"export { "\uDC00" as b } from "c";"#,
+            r#"export * as "a\uD83D" from "c";"#,
+            r#"import { "\uDBFF" as d } from "c";"#,
+        ] {
+            assert_eq!(
+                kind(source),
+                ParseErrorKind::ExportNameNotWellFormed,
+                "{source}"
+            );
+        }
+        // A pair is well formed, and an import attribute's key has no such rule.
+        assert_eq!(items(r#"export { a as "\uD83D\uDE00" }; var a;"#), 2);
+        assert_eq!(items(r#"import a from "b" with { "\uD800": "c" };"#), 1);
     }
 }

@@ -47,6 +47,7 @@
 //! - `symbols` — §6.1.5 and §20.4, and the one primitive whose identity is itself.
 //! - `templates` — §13.2.8, and the conversion a substitution gets that `+` does not.
 //! - `string_methods` — the rest of §22.1.3, and the four rules for taking a piece of a string.
+//! - `lone_surrogates` — DR-0004 through every operation, and the unit U+FFFD is not.
 //! - `case_mapping` — §22.1.3.28 and §22.1.3.30's full case mappings and `Final_Sigma`, against V8.
 //! - `arguments` — §10.4.4, and the map that makes an index and a parameter one variable.
 //! - `lexical` — §14.3.1's `let` and `const`, and the temporal dead zone.
@@ -124,6 +125,7 @@ mod iterator_lazy;
 mod iterators;
 mod json;
 mod lexical;
+mod lone_surrogates;
 mod math;
 mod modules;
 mod names;

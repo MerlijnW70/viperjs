@@ -50,11 +50,13 @@
 //! - `regexp` — where a regular expression literal ends (§12.9.5).
 //! - `template` — template components and their two values (§12.9.6).
 //! - `escape` — `UnicodeEscapeSequence` and UTF-16 encoding, shared by `name` and `string`.
+//! - `lone` — a source that was a String, and the unpaired surrogates the text cannot hold.
 //! - here — the cursor, the [`Goal`] symbol, and [`Lexer::next_token`]: the one place that
 //!   decides which of the above a character belongs to.
 
 mod error;
 mod escape;
+mod lone;
 mod name;
 mod number;
 mod number_value;
@@ -68,6 +70,8 @@ mod token;
 mod trivia;
 
 pub use self::error::{LexError, LexErrorKind};
+pub(crate) use self::lone::unit_at;
+pub use self::lone::{LoneSurrogate, UnitSource, source_units};
 pub use self::name::identifier_value;
 pub use self::number_value::{bigint_digits, numeric_value};
 // Shared with [`crate::value`], which needs the same three productions rather than three of
@@ -77,8 +81,8 @@ pub use self::number_value::{bigint_digits, numeric_value};
 pub(crate) use self::number_value::power_of_two_value;
 pub use self::regexp::{RegExpParts, regexp_parts};
 pub use self::reserved::ReservedWord;
-pub use self::string::string_value;
-pub use self::template::{TemplatePart, TemplateValue, template_value};
+pub use self::string::{string_value, string_value_in};
+pub use self::template::{TemplatePart, TemplateValue, template_value, template_value_in};
 pub use self::token::{Token, TokenKind};
 pub(crate) use self::trivia::{is_line_terminator, is_whitespace};
 

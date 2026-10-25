@@ -153,6 +153,35 @@ pub(crate) fn text(heap: &mut Heap, contents: &str) -> Value {
     Value::String(heap.new_string(contents.encode_utf16().collect()))
 }
 
+/// Add `piece` to the units of a String being assembled, or refuse once they could no longer
+/// become one.
+///
+/// The pieces are Strings, so the assembly is in code units and never through Rust text: a
+/// `String` would have to replace an unpaired surrogate, and `[s].join()` must be `s` whatever `s`
+/// holds (DR-0004). The units are not on the heap until the end, so DR-0012's cap and DR-0013's
+/// budget are asked of them as they grow — the same two questions [`Heap::new_string_checked`]
+/// asks of the finished String, asked before an allocation that would fail instead of after.
+pub(crate) fn append_units(heap: &Heap, assembled: &mut Vec<u16>, piece: &[u16]) -> Completion<()> {
+    let length = assembled.len().saturating_add(piece.len()) as f64;
+    if !crate::heap::fits_in_a_string(length) || !heap.affords_string(length) {
+        return Err(Abrupt::range_error(
+            "the resulting string would be too long",
+        ));
+    }
+    assembled.extend_from_slice(piece);
+    Ok(())
+}
+
+/// The String a list of assembled units is, refused the way [`append_units`] refuses.
+pub(crate) fn assembled(heap: &mut Heap, units: Vec<u16>) -> Completion<Value> {
+    match heap.new_string_checked(units) {
+        Some(id) => Ok(Value::String(id)),
+        None => Err(Abrupt::range_error(
+            "the resulting string would be too long",
+        )),
+    }
+}
+
 /// Give `object` a property that cannot be written, seen or removed.
 ///
 /// What §17 gives a *constant* — `Math.PI`, `Number.MAX_VALUE` — and what §20.2.2.2 gives a

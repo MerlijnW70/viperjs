@@ -50,7 +50,7 @@ pub(super) fn shape(source: &str) -> String {
 /// A regular expression node, spelled the way the tests want to read it.
 pub(super) fn regexp(body: &str, flags: &str) -> ExprKind {
     ExprKind::RegExp(Box::new(RegExpLiteral {
-        body: body.to_string(),
+        body: body.encode_utf16().collect(),
         flags: flags.to_string(),
     }))
 }

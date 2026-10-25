@@ -188,3 +188,6 @@ amendment is worth more here than a code comment.
   answers U+FFFD, because the parser reads Rust `char`s and a lone surrogate is not one. That is
   DR-0004's seam and a slice of its own; it is recorded here because §B.1.2 is what made it
   reachable, not because this decision has anything to say about it.
+  **Closed since:** a pattern is read as code units, a literal's body reaches the parser as units
+  even from a source handed to `eval` (`lexer::UnitSource`), and an escaped lone surrogate is
+  §B.1.2's identity escape, so `.source` answers the unit itself.

@@ -29,7 +29,7 @@
 use super::expression::AllowIn;
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{DeclarationKind, Script, Stmt, StmtKind};
-use crate::lexer::{Goal, ReservedWord, TokenKind};
+use crate::lexer::{Goal, LoneSurrogate, ReservedWord, TokenKind};
 use crate::span::Span;
 
 /// Parse `source` as a `Script` (§16.1).
@@ -43,7 +43,22 @@ use crate::span::Span;
 /// assert!(matches!(script.body[0].kind, StmtKind::Expression(_)));
 /// ```
 pub fn parse_script(source: &str) -> Result<Script, ParseError> {
-    let script = parse_script_before_label_rules(source)?;
+    parse_script_in(source, &[])
+}
+
+/// [`parse_script`] for a source that was a String, whose unpaired surrogates `lone` records.
+///
+/// What §20.2.1.1's `Function` and an indirect `eval` hand over: a String, which may hold a
+/// surrogate no Rust text can. [`crate::lexer::UnitSource`] makes the text and the table; every
+/// literal, template and regular expression read from it gets its surrogates back.
+pub fn parse_script_in(source: &str, lone: &[LoneSurrogate]) -> Result<Script, ParseError> {
+    let script = parse_script_seeded(
+        source,
+        lone,
+        false,
+        super::body::BodyContext::SCRIPT,
+        &std::collections::HashSet::new(),
+    )?;
     // §16.1.1's other five rules, about labels and the jumps that name them. Apart from the rest
     // because the walk that answers them has its own tests, and those need a tree that broke the
     // rules — which is the one thing this function will not hand back.
@@ -63,12 +78,14 @@ pub fn parse_script(source: &str) -> Result<Script, ParseError> {
 /// the same reason: the goal decides what the first token may be.
 pub fn parse_eval(
     source: &str,
+    lone: &[LoneSurrogate],
     strict_caller: bool,
     context: super::body::EvalContext,
     private: &std::collections::HashSet<Box<str>>,
 ) -> Result<Script, ParseError> {
     let (script, arguments) = parse_script_seeded_recording_arguments(
         source,
+        lone,
         strict_caller,
         super::body::BodyContext::eval(context),
         private,
@@ -98,9 +115,11 @@ pub fn parse_eval(
 }
 
 /// [`parse_script`] up to but not including §16.1.1's label rules.
+#[cfg(test)]
 fn parse_script_before_label_rules(source: &str) -> Result<Script, ParseError> {
     parse_script_seeded(
         source,
+        &[],
         false,
         super::body::BodyContext::SCRIPT,
         &std::collections::HashSet::new(),
@@ -112,11 +131,12 @@ fn parse_script_before_label_rules(source: &str) -> Result<Script, ParseError> {
 /// execution it was called from has.
 fn parse_script_seeded(
     source: &str,
+    lone: &[LoneSurrogate],
     strict: bool,
     body_context: super::body::BodyContext,
     private: &std::collections::HashSet<Box<str>>,
 ) -> Result<Script, ParseError> {
-    parse_script_seeded_recording_arguments(source, strict, body_context, private)
+    parse_script_seeded_recording_arguments(source, lone, strict, body_context, private)
         .map(|(script, _)| script)
 }
 
@@ -128,11 +148,13 @@ fn parse_script_seeded(
 /// nothing ever read.
 fn parse_script_seeded_recording_arguments(
     source: &str,
+    lone: &[LoneSurrogate],
     strict: bool,
     body_context: super::body::BodyContext,
     private: &std::collections::HashSet<Box<str>>,
 ) -> Result<(Script, Option<Span>), ParseError> {
     let mut parser = Parser::new(source)?;
+    parser.lone = lone;
     parser.strict = strict;
     parser.body_context = body_context;
     // §11.2.1: a `ScriptBody` may open with a Directive Prologue, and `"use strict"` in it makes
@@ -166,6 +188,7 @@ fn parse_script_seeded_recording_arguments(
             body,
             span: Span::new(0, source.len() as u32),
             source: source.into(),
+            lone: lone.into(),
         },
         parser.arguments_reference,
     ))
@@ -185,16 +208,18 @@ mod dead_zone_probe {
             in_field_initializer: true,
         };
         let empty = std::collections::HashSet::new();
-        assert!(super::parse_eval("arguments;", true, context, &empty).is_err());
-        assert!(super::parse_eval("() => arguments;", true, context, &empty).is_err());
+        assert!(super::parse_eval("arguments;", &[], true, context, &empty).is_err());
+        assert!(super::parse_eval("() => arguments;", &[], true, context, &empty).is_err());
         // `Contains` stops at a function boundary, so this one is an ordinary read.
-        assert!(super::parse_eval("(function () { arguments });", true, context, &empty).is_ok());
+        assert!(
+            super::parse_eval("(function () { arguments });", &[], true, context, &empty).is_ok()
+        );
         // …and without the flag none of the three is refused.
         let outside = crate::parser::EvalContext {
             in_field_initializer: false,
             ..context
         };
-        assert!(super::parse_eval("arguments;", true, outside, &empty).is_ok());
+        assert!(super::parse_eval("arguments;", &[], true, outside, &empty).is_ok());
     }
 }
 

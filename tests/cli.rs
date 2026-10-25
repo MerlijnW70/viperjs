@@ -176,6 +176,24 @@ fn the_host_binds_print_and_console_and_nothing_else() {
 }
 
 #[test]
+fn an_unpaired_surrogate_is_written_as_the_replacement_character_the_help_names() {
+    // Standard output is UTF-8 and cannot carry one, so `--help` says what is written instead. Read
+    // as bytes and decoded strictly: the helper above decodes lossily, and would show U+FFFD
+    // whatever the binary wrote — bytes that are not UTF-8 included.
+    let done = Command::new(env!("CARGO_BIN_EXE_viper"))
+        .args([
+            "-e",
+            "print('a' + String.fromCharCode(0xd800) + 'b'); String.fromCharCode(0xdc00).charCodeAt(0)",
+        ])
+        .output()
+        .expect("the binary was built");
+    let out = String::from_utf8(done.stdout).expect("standard output is UTF-8");
+    assert_eq!(out.replace("\r\n", "\n"), "a\u{fffd}b\n56320\n");
+    let (help, _, _) = viper(&["--help"], "");
+    assert!(help.contains("each one is\nwritten as U+FFFD"), "{help}");
+}
+
+#[test]
 fn module_code_is_named_as_module_code_rather_than_as_a_puzzling_token() {
     // A Script parse of Module code trips on whatever token comes first, and the message is then
     // true and useless: `export` reads as "expected an expression". The goal symbol is the actual

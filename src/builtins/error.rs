@@ -21,7 +21,7 @@ use crate::realm::Realm;
 use crate::value::{Abrupt, Completion, Value};
 use crate::vm::Vm;
 
-use super::{define_method, define_value, key, text};
+use super::{append_units, assembled, define_method, define_value, key};
 
 /// §20.5.1.1 `Error(message)`, and §20.5.6.1.1 for every native error.
 ///
@@ -174,15 +174,23 @@ pub fn to_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
     let name = inherited_string(vm, heap, object, "name", "Error")?;
     let message = inherited_string(vm, heap, object, "message", "")?;
     let joined = match (name.is_empty(), message.is_empty()) {
-        (true, true) => String::new(),
+        (true, true) => Vec::new(),
         (true, false) => message,
         (false, true) => name,
-        (false, false) => format!("{name}: {message}"),
+        (false, false) => {
+            let mut joined = name;
+            append_units(heap, &mut joined, &[u16::from(b':'), u16::from(b' ')])?;
+            append_units(heap, &mut joined, &message)?;
+            joined
+        }
     };
-    Ok(text(heap, &joined))
+    assembled(heap, joined)
 }
 
-/// A property of `object` or its prototypes, as Rust text, with a default when it is `undefined`.
+/// A property of `object` or its prototypes, as code units, with a default when it is `undefined`.
+///
+/// Units and not Rust text, so that a `name` or `message` holding an unpaired surrogate prints
+/// with it rather than with U+FFFD.
 ///
 /// **A real `Get` and a real `ToString`, and both halves were once neither.** §20.5.3.4 steps 3 and
 /// 5 are `Get(O, "name")` and `Get(O, "message")`, and step 4 and 6 are `ToString` of each. What was
@@ -204,14 +212,14 @@ fn inherited_string(
     object: ObjectId,
     name: &str,
     default: &str,
-) -> Completion<String> {
+) -> Completion<Vec<u16>> {
     let key = key(heap, name);
     let value = vm.get_property_key(Value::Object(object), key, heap)?;
     if matches!(value, Value::Undefined) {
-        return Ok(default.to_string());
+        return Ok(default.encode_utf16().collect());
     }
     let id = vm.to_string(value, heap)?;
-    Ok(String::from_utf16_lossy(heap.string(id).unwrap_or(&[])))
+    Ok(heap.string(id).unwrap_or(&[]).to_vec())
 }
 
 /// Build `Error` and the five native errors into `heap`, and answer their prototypes.

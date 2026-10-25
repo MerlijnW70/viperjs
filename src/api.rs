@@ -144,6 +144,10 @@ impl<'a> Host<'a> {
 
     /// `String(value)` — §7.1.17, so an object's `toString` runs and may throw.
     ///
+    /// As Rust text, which cannot hold an unpaired surrogate: each one becomes U+FFFD, the
+    /// replacement character, which is what a lossy decoding writes. [`Engine::units`] is the exact
+    /// reading.
+    ///
     /// # Errors
     ///
     /// Whatever the conversion threw, as the script's own throw: a Symbol always refuses, and an
@@ -231,6 +235,7 @@ impl<'a> Host<'a> {
             self.vm,
             self.heap,
             source,
+            &[],
             crate::builtins::eval::Goal::Script,
         )
     }
@@ -385,7 +390,28 @@ impl Engine {
     ///
     /// [`Error::Thrown`] with a `RangeError` if the text is longer than DR-0012 lets a String be.
     pub fn string(&mut self, text: &str) -> Result<Value, Error> {
-        let units: Vec<u16> = text.encode_utf16().collect();
+        self.string_from_units(text.encode_utf16().collect())
+    }
+
+    /// A JavaScript String from code units — [`Engine::string`] for a host whose text is UTF-16,
+    /// and the only way to hand over a String holding an unpaired surrogate, which Rust text
+    /// cannot (DR-0004).
+    ///
+    /// ```
+    /// use viperjs::api::Engine;
+    ///
+    /// let mut engine = Engine::new();
+    /// let lone = engine.string_from_units(vec![0xd800]).expect("one unit is short enough");
+    /// engine.set_global("lone", lone).expect("a global can be set");
+    /// let length = engine.eval("lone.length + ':' + lone.charCodeAt(0)").expect("this runs");
+    /// assert_eq!(engine.text(length).as_deref(), Ok("1:55296"));
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// [`Error::Thrown`] with a `RangeError` if there are more units than DR-0012 lets a String
+    /// hold.
+    pub fn string_from_units(&mut self, units: Vec<u16>) -> Result<Value, Error> {
         self.heap
             .new_string_checked(units)
             .map(Value::String)
@@ -488,11 +514,34 @@ impl Engine {
 
     /// `String(value)` — §7.1.17, so an object's `toString` runs and may itself throw.
     ///
+    /// As Rust text, which cannot hold an unpaired surrogate: each one becomes U+FFFD, the
+    /// replacement character, so `"\ud800"` and `"\ufffd"` read the same here.
+    /// [`Engine::units`] is the exact reading, for a host that has to tell them apart.
+    ///
     /// # Errors
     ///
     /// [`Error::Thrown`] if the conversion threw, which a `Symbol` always does and an object with a
     /// hostile `toString` may.
     pub fn text(&mut self, value: Value) -> Result<String, Error> {
+        self.units(value)
+            .map(|units| String::from_utf16_lossy(&units))
+    }
+
+    /// `String(value)` as the code units it is — [`Engine::text`] without the replacement.
+    ///
+    /// ```
+    /// use viperjs::api::Engine;
+    ///
+    /// let mut engine = Engine::new();
+    /// let lone = engine.eval("String.fromCharCode(0xd800)").expect("this runs");
+    /// assert_eq!(engine.units(lone), Ok(vec![0xd800]));
+    /// assert_eq!(engine.text(lone).as_deref(), Ok("\u{fffd}"));
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::text`]: [`Error::Thrown`] if the conversion threw.
+    pub fn units(&mut self, value: Value) -> Result<Vec<u16>, Error> {
         if !self.live(value) {
             return Err(Error::Collected);
         }
@@ -500,7 +549,7 @@ impl Engine {
         Ok(self
             .heap
             .string(id)
-            .map(String::from_utf16_lossy)
+            .map(<[u16]>::to_vec)
             // A String the heap does not hold is a handle the collector has taken, which DR-0019
             // makes answerable rather than dangerous. Empty is the honest reading: there is no text
             // there.

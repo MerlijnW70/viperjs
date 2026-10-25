@@ -26,6 +26,9 @@ pub struct Script {
     /// text has to outlive the parse — and an `Rc` shared by every function compiled from this
     /// script is the whole of what that costs — see the `source` field on `compile::Chunk`.
     pub source: std::rc::Rc<str>,
+    /// The unpaired surrogates [`Self::source`] stands in for, when it was a String handed to
+    /// `eval` or `Function` — see [`crate::lexer::UnitSource`]. Empty otherwise.
+    pub lone: std::rc::Rc<[crate::lexer::LoneSurrogate]>,
 }
 
 /// A statement, with where it was written.

@@ -21,10 +21,6 @@ annexB/built-ins/Function/createdynfn-no-line-terminator-html-close-comment-body
 annexB/built-ins/Function/createdynfn-no-line-terminator-html-close-comment-body.js (strict) :: it threw SyntaxError: the source of a dynamic function does not parse
 annexB/built-ins/Object/is/emulates-undefined.js :: it threw an object with no name: SameValue with `undefined` Expected SameValue(«true», «false») to be true
 annexB/built-ins/Object/is/emulates-undefined.js (strict) :: it threw an object with no name: SameValue with `undefined` Expected SameValue(«true», «false») to be true
-annexB/built-ins/RegExp/RegExp-leading-escape-BMP.js :: it threw an object with no name: Code unit: d800 Expected SameValue(«"\\�"», «"\\\ud800"») to be true
-annexB/built-ins/RegExp/RegExp-leading-escape-BMP.js (strict) :: it threw an object with no name: Code unit: d800 Expected SameValue(«"\\�"», «"\\\ud800"») to be true
-annexB/built-ins/RegExp/RegExp-trailing-escape-BMP.js :: it threw an object with no name: Code unit: d800 Expected SameValue(«"a\\�"», «"a\\\ud800"») to be true
-annexB/built-ins/RegExp/RegExp-trailing-escape-BMP.js (strict) :: it threw an object with no name: Code unit: d800 Expected SameValue(«"a\\�"», «"a\\\ud800"») to be true
 annexB/built-ins/RegExp/legacy-accessors/index/prop-desc.js :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/index/prop-desc.js (strict) :: it threw TypeError: cannot read a property of something that is not an object
 annexB/built-ins/RegExp/legacy-accessors/index/this-cross-realm-constructor.js :: it threw an object with no name: RegExp.$1 getter throws for cross-realm receiver Expected a TypeError to be thrown but no exception was thrown at all
@@ -12027,23 +12023,11 @@ language/line-terminators/comment-single-ls.js :: expected a Test262Error and it
 language/line-terminators/comment-single-ls.js (strict) :: expected a Test262Error and it threw an object with no name
 language/line-terminators/comment-single-ps.js :: expected a Test262Error and it threw an object with no name
 language/line-terminators/comment-single-ps.js (strict) :: expected a Test262Error and it threw an object with no name
-language/literals/regexp/S7.8.5_A1.1_T2.js :: it threw an object with no name: Code unit: d800 Expected SameValue(«"�"», «"\ud800"») to be true
-language/literals/regexp/S7.8.5_A1.1_T2.js (strict) :: it threw an object with no name: Code unit: d800 Expected SameValue(«"�"», «"\ud800"») to be true
-language/literals/regexp/S7.8.5_A1.4_T2.js :: it threw an object with no name: Code unit: d800 Expected SameValue(«"\\�"», «"\\\ud800"») to be true
-language/literals/regexp/S7.8.5_A1.4_T2.js (strict) :: it threw an object with no name: Code unit: d800 Expected SameValue(«"\\�"», «"\\\ud800"») to be true
-language/literals/regexp/S7.8.5_A2.1_T2.js :: it threw an object with no name: Code unit: d800 Expected SameValue(«"nnnn�"», «"nnnn\ud800"») to be true
-language/literals/regexp/S7.8.5_A2.1_T2.js (strict) :: it threw an object with no name: Code unit: d800 Expected SameValue(«"nnnn�"», «"nnnn\ud800"») to be true
-language/literals/regexp/S7.8.5_A2.4_T2.js :: it threw an object with no name: Code unit: d800 Expected SameValue(«"a\\�"», «"a\\\ud800"») to be true
-language/literals/regexp/S7.8.5_A2.4_T2.js (strict) :: it threw an object with no name: Code unit: d800 Expected SameValue(«"a\\�"», «"a\\\ud800"») to be true
 language/module-code/ambiguous-export-bindings/namespace-unambiguous-if-export-star-as-from-and-import-star-as-and-export.js :: it did not parse: "./namespace-unambiguous-if-import-star-as-and-export.js" does not export "foo"
 language/module-code/ambiguous-export-bindings/namespace-unambiguous-if-import-star-as-and-export.js :: it did not parse: "./namespace-unambiguous-if-import-star-as-and-export.js" does not export "foo"
 language/module-code/eval-export-dflt-expr-err-eval.js :: expected a Test262Error and it threw an object with no name
 language/module-code/eval-rqstd-order.js :: it threw an object with no name: Expected SameValue(«"undefined23468597"», «"123456789"») to be true
 language/module-code/eval-self-abrupt.js :: expected a Test262Error and it threw an object with no name
-language/module-code/export-expname-from-as-unpaired-surrogate.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
-language/module-code/export-expname-from-unpaired-surrogate.js :: expected a SyntaxError at parse time, and it was a SyntaxError before anything ran: "\0entry" does not export "�"
-language/module-code/export-expname-import-unpaired-surrogate.js :: expected a SyntaxError at parse time, and it was a SyntaxError before anything ran: "./export-expname_FIXTURE.js" does not export "�"
-language/module-code/export-expname-unpaired-surrogate.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/module-code/import-attributes/early-dup-attribute-key-export.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/module-code/import-attributes/early-dup-attribute-key-import-nobinding.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running
 language/module-code/import-attributes/early-dup-attribute-key-import-withbinding.js :: expected a SyntaxError at parse time, and it threw the string Test262: This statement should not be evaluated. while running

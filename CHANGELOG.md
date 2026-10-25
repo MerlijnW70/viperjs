@@ -36,6 +36,21 @@ suite revision the expectations file names, up from 86.01% at 0.3.0.
 
 ### Fixed
 
+- **An unpaired surrogate survives every operation on a String.** The heap always held code units
+  (DR-0004), but six places built a String by way of Rust text, which replaced a lone surrogate
+  with U+FFFD: `Array.prototype.join` and `toString`, `toLocaleString`, `%TypedArray%.prototype.join`'s
+  separator, `Error.prototype.toString`, a bound function's `name`, and every source handed to
+  `eval` or `Function`. They assemble code units now. A source that was a String is read through
+  `lexer::UnitSource`, which gives the lexer text with U+FFFD in each surrogate's place and a table
+  of where each one stood, so a string literal, a template's cooked and raw values, a regular
+  expression literal's `source` and `Function.prototype.toString` all get the unit back.
+- **An escaped lone surrogate in a pattern is an identity escape** without `u` or `v` (§B.1.2), where
+  it read as the end of the pattern; and a group name holding one is refused rather than shortened.
+- **A `ModuleExportName` that holds an unpaired surrogate is a Syntax Error** (§16.2.2.1's
+  `IsStringWellFormedUnicode`), where the lossy conversion had made it a well-formed name.
+- A String assembled out of Strings by `join` asks DR-0012's cap and DR-0013's budget as it grows,
+  rather than being built outside the budget and charged once whole.
+
 - **`toLowerCase` and `toUpperCase` follow the full Unicode case mappings, `Final_Sigma`
   included.** `'ΟΔΟΣ'.toLowerCase()` was `"οδοσ"` and is `"οδος"`: §22.1.3.30 names
   `SpecialCasing.txt`, whose one locale-independent conditional mapping lowers `Σ` to `ς` at
@@ -95,6 +110,12 @@ suite revision the expectations file names, up from 86.01% at 0.3.0.
 - The nesting bound was lower than real code asks for; eight repositories said so.
 
 ### Changed
+
+- **The judge's string values are WTF-8.** `viperjs-judge` reads and writes a string argument, an
+  expected answer and a wrong answer as the code units they are, an unpaired surrogate as the three
+  bytes `ED A0 80`–`ED BF BF`, so `"\ud800"` and `"\ufffd"` are different answers. Well-formed
+  UTF-8 is read as before, and the wire format's version is unchanged. `api::Engine` gains
+  `units` and `string_from_units`, the exact counterparts of `text` and `string`.
 
 - **The no-panic invariant has an instrument.** `cargo run --release -p conformance -- --fuzz <n>`
   mutates test262 rather than random bytes, because random bytes are refused in the first few

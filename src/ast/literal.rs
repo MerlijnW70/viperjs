@@ -202,8 +202,11 @@ pub struct BigIntLiteral {
 /// an unparsable pattern is a perfectly good node, and stops being one later.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RegExpLiteral {
-    /// `BodyText` (§12.9.5.1) — everything between the slashes.
-    pub body: String,
+    /// `BodyText` (§12.9.5.1) — everything between the slashes, as the code units it is.
+    ///
+    /// Units rather than text because a source handed to `eval` may hold an unpaired surrogate
+    /// here, and `/…/.source` answers it exactly — see [`crate::lexer::UnitSource`].
+    pub body: Vec<u16>,
     /// `FlagText` (§12.9.5.2) — everything after the closing slash. Often empty.
     pub flags: String,
 }

@@ -1095,3 +1095,41 @@ fn a_property_escape_written_wrongly_says_which_way() {
         Err("a property of strings needs the v flag")
     );
 }
+#[test]
+fn an_escaped_lone_surrogate_is_itself_without_u_and_an_error_with_it() {
+    // §B.1.2's `SourceCharacterIdentityEscape` takes any character but `c`, and a surrogate is
+    // not `c`. It used to read as the end of the pattern, because it is not a `char`.
+    let escaped = [0x5c, 0xd800];
+    let pattern = super::parse(&escaped, Flags::default()).map(|pattern| pattern.node);
+    assert_eq!(pattern, Ok(Node::Character(0xd800)));
+    let in_class = [0x5b, 0x5c, 0xdc00, 0x5d];
+    assert!(super::parse(&in_class, Flags::default()).is_ok());
+    let unicode = Flags {
+        unicode: true,
+        ..Flags::default()
+    };
+    assert_eq!(
+        super::parse(&escaped, unicode)
+            .err()
+            .map(|error| error.message),
+        Some("this character may not be escaped in a Unicode pattern")
+    );
+    // A pair after a `\` under `u` is one code point and an identity escape no more than a
+    // letter would be.
+    assert!(super::parse(&[0x5c, 0xd83d, 0xde00], unicode).is_err());
+}
+
+#[test]
+fn a_group_name_holding_a_lone_surrogate_is_not_an_identifier() {
+    // §22.2.1's `RegExpIdentifierName` takes a surrogate *pair* as one character and an unpaired
+    // half as nothing at all. The half used to be dropped, which named the group `a`.
+    let lone: Vec<u16> = [0x28, 0x3f, 0x3c, 0x61, 0xd801, 0x3e, 0x2e, 0x29].to_vec();
+    assert_eq!(
+        super::parse(&lone, Flags::default())
+            .err()
+            .map(|error| error.message),
+        Some("a group name is not an identifier")
+    );
+    let paired: Vec<u16> = [0x28, 0x3f, 0x3c, 0x61, 0xd801, 0xdc00, 0x3e, 0x2e, 0x29].to_vec();
+    assert!(super::parse(&paired, Flags::default()).is_ok());
+}

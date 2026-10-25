@@ -46,14 +46,16 @@ impl Vm {
         let Some(Value::String(id)) = source else {
             return Ok(source.unwrap_or(Value::Undefined));
         };
-        let text = String::from_utf16_lossy(heap.string(id).unwrap_or(&[]));
+        // A String and not text: it may hold an unpaired surrogate, which a literal in it keeps.
+        let read = crate::lexer::UnitSource::new(heap.string(id).unwrap_or(&[]));
         // §19.2.1.1 step 5's strictness, and it is the *parser* that has to be told: it decides
         // §11.2.1's early errors and settles `is_strict` for every function written inside the
         // text before the tree comes back. Set on the finished tree instead, a strict caller's
         // `eval("(function () { return this; })()")` still substituted the global object.
         let private = self.private_names_in_scope(heap);
         let script = match crate::parser::parse_eval(
-            &text,
+            &read.text,
+            &read.lone,
             strict_caller,
             self.eval_context(heap),
             &private,
