@@ -25,7 +25,7 @@
 use super::expression::AllowIn;
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{Expr, ExprKind, TemplateElement, TemplateLiteral};
-use crate::lexer::{Goal, TemplatePart, TokenKind, template_value};
+use crate::lexer::{Goal, TemplatePart, TokenKind, template_value_in};
 
 /// Whether a template is being read for a tag function or for itself.
 ///
@@ -97,8 +97,8 @@ impl Parser<'_> {
                 span: token.span,
             });
         }
-        let value =
-            template_value(self.source, token.span).ok_or_else(|| self.value_missing(token))?;
+        let value = template_value_in(self.source, token.span, self.lone)
+            .ok_or_else(|| self.value_missing(token))?;
         quasis.push(TemplateElement {
             cooked: value.cooked,
             raw: value.raw,

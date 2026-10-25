@@ -97,10 +97,10 @@ pub use self::error::{ParseError, ParseErrorKind};
 pub use self::module::parse_module;
 #[cfg(test)]
 pub(crate) use self::statement::parse_script_with_label_rules_unchecked;
-pub use self::statement::{parse_eval, parse_script};
+pub use self::statement::{parse_eval, parse_script, parse_script_in};
 
 use crate::ast::Expr;
-use crate::lexer::{Goal, Lexer, ReservedWord, Token, TokenKind};
+use crate::lexer::{Goal, Lexer, LoneSurrogate, ReservedWord, Token, TokenKind};
 use crate::span::Span;
 
 /// How deeply the grammar may nest before the parser gives up.
@@ -344,6 +344,9 @@ pub(super) struct CoverRecord {
 /// A recursive-descent parser over one source text.
 struct Parser<'a> {
     pub(super) source: &'a str,
+    /// The unpaired surrogates of a source that was a String — see [`crate::lexer::UnitSource`].
+    /// Empty for every source a host hands over, which is Rust text and cannot hold one.
+    pub(super) lone: &'a [LoneSurrogate],
     lexer: Lexer<'a>,
     /// The token under consideration. Always already lexed — see the module documentation on how
     /// its goal was chosen.
@@ -499,6 +502,7 @@ impl<'a> Parser<'a> {
         let current = lexer.next_token(Goal::RegExp)?;
         Ok(Self {
             source,
+            lone: &[],
             lexer,
             current,
             depth: 0,

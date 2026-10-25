@@ -33,7 +33,7 @@
 //! it is a BigInt. A walk that assumed otherwise would read a `BigInt64Array` as having no
 //! elements at all.
 
-use super::{define_method, key};
+use super::{append_units, assembled, define_method, key};
 use crate::heap::{
     Element, Heap, Iterated, Iteration, Native, NativeCall, Numeric, ObjectId, PropertyKey, View,
 };
@@ -707,16 +707,13 @@ fn join(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
     // Step 3, before anything a program controls can run.
     let count = view.count();
     let separator = match call.argument(0) {
-        Value::Undefined => ",".to_string(),
+        Value::Undefined => vec![u16::from(b',')],
         given => {
             // Through the machine: §23.2.3.16 step 5 is `ToString`, and a separator is the one
             // argument here a program controls — `join({ toString() { … } })` refused before this.
             // The element loop below is the opposite case and stays heap-only, deliberately.
             let id = vm.to_string(given, heap)?;
-            let units = heap.string(id).unwrap_or(&[]).to_vec();
-            char::decode_utf16(units)
-                .map(|found| found.unwrap_or(char::REPLACEMENT_CHARACTER))
-                .collect()
+            heap.string(id).unwrap_or(&[]).to_vec()
         }
     };
     // Read again: the conversion may have left a different buffer behind the same object, and the
@@ -724,20 +721,22 @@ fn join(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<Value
     let now = heap
         .typed_view(object)
         .filter(|_| !heap.view_out_of_bounds(object));
-    let mut joined: Vec<String> = Vec::with_capacity(count);
+    let mut joined = Vec::new();
     for at in 0..count {
+        if at > 0 {
+            append_units(heap, &mut joined, &separator)?;
+        }
         // §23.2.3.16 step 6.b — an element that is no longer there is `undefined`, and step 6.c
         // makes `undefined` the empty string rather than the word.
         let Some(value) = now.and_then(|view| heap.element_at(view, at)) else {
-            joined.push(String::new());
             continue;
         };
         // Neither a Number nor a BigInt can throw here, and neither can call a program: `?` is the
         // shape `to_string` has for the types that can, not a case this one reaches.
         let id = value.to_string(heap)?;
-        joined.push(String::from_utf16_lossy(heap.string(id).unwrap_or(&[])));
+        append_units(heap, &mut joined, heap.string(id).unwrap_or(&[]))?;
     }
-    Ok(super::text(heap, &joined.join(&separator)))
+    assembled(heap, joined)
 }
 
 /// §23.2.3.14 — `indexOf`.

@@ -14,9 +14,8 @@ use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{BigIntLiteral, Expr, ExprKind, RegExpLiteral};
 use crate::lexer::{
     Goal, ReservedWord, Token, TokenKind, bigint_digits, identifier_value, numeric_value,
-    regexp_parts, string_value,
+    regexp_parts, source_units, string_value_in,
 };
-use crate::span::Span;
 
 impl Parser<'_> {
     /// `PrimaryExpression` (§13.2), for the forms that need no other production.
@@ -132,7 +131,7 @@ impl Parser<'_> {
             } => {
                 self.legacy_strings.push(token.span);
                 self.advance(Goal::Div)?;
-                let value = string_value(self.source, token.span)
+                let value = string_value_in(self.source, token.span, self.lone)
                     .ok_or_else(|| self.value_missing(token))?;
                 literal(ExprKind::String(value))
             }
@@ -148,7 +147,7 @@ impl Parser<'_> {
             }
             TokenKind::String { .. } => {
                 self.advance(Goal::Div)?;
-                let value = string_value(self.source, token.span)
+                let value = string_value_in(self.source, token.span, self.lone)
                     .ok_or_else(|| self.value_missing(token))?;
                 literal(ExprKind::String(value))
             }
@@ -156,11 +155,16 @@ impl Parser<'_> {
                 self.advance(Goal::Div)?;
                 let parts = regexp_parts(self.source, token.span)
                     .ok_or_else(|| self.value_missing(token))?;
-                let text = |span: Span| span.slice(self.source).unwrap_or_default().to_string();
-                literal(ExprKind::RegExp(Box::new(RegExpLiteral {
-                    body: text(parts.body),
-                    flags: text(parts.flags),
-                })))
+                // The body as units, because a source `eval` was handed may hold an unpaired
+                // surrogate there and §22.2.1 reads a pattern as code units anyway.
+                let body = source_units(self.source, parts.body, self.lone)
+                    .ok_or_else(|| self.value_missing(token))?;
+                let flags = parts
+                    .flags
+                    .slice(self.source)
+                    .unwrap_or_default()
+                    .to_string();
+                literal(ExprKind::RegExp(Box::new(RegExpLiteral { body, flags })))
             }
             _ => Err(self.unexpected("an expression")),
         }
@@ -306,6 +310,7 @@ pub(super) fn begins_an_expression(kind: TokenKind) -> bool {
 mod tests {
     use super::*;
     use crate::parser::test_support::*;
+    use crate::span::Span;
     #[test]
     fn every_primary_expression_the_grammar_reaches_today() {
         assert_eq!(parse("this").kind, ExprKind::This);

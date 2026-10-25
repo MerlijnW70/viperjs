@@ -39,13 +39,9 @@ pub(super) fn eval(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Compl
     let Value::String(source) = call.argument(0) else {
         return Ok(call.argument(0));
     };
-    let text = String::from_utf16_lossy(heap.string(source).unwrap_or(&[]));
-    perform(vm, heap, &text)
-}
-
-/// §19.2.1.1 for a text that is certainly a String — the indirect mode's whole body.
-fn perform(vm: &mut Vm, heap: &mut Heap, text: &str) -> Completion<Value> {
-    source_as(vm, heap, text, Goal::Eval)
+    // A String and not text: it may hold an unpaired surrogate, which a literal in it keeps.
+    let read = crate::lexer::UnitSource::new(heap.string(source).unwrap_or(&[]));
+    source_as(vm, heap, &read.text, &read.lone, Goal::Eval)
 }
 
 /// Which of the two clauses is running this text — they differ in one argument.
@@ -71,8 +67,14 @@ pub(crate) enum Goal {
 /// one, and ViperJS decides some of §22.2.1's early errors in the compiler rather than the parser —
 /// so a compile refusal has to arrive as the same error a parse refusal does, or a program could
 /// tell where ViperJS happens to have put the check.
-pub(crate) fn source_as(vm: &mut Vm, heap: &mut Heap, text: &str, goal: Goal) -> Completion<Value> {
-    let script = match crate::parser::parse_script(text) {
+pub(crate) fn source_as(
+    vm: &mut Vm,
+    heap: &mut Heap,
+    text: &str,
+    lone: &[crate::lexer::LoneSurrogate],
+    goal: Goal,
+) -> Completion<Value> {
+    let script = match crate::parser::parse_script_in(text, lone) {
         Ok(script) => script,
         Err(error) => return Err(syntax_error(vm, heap, &error.kind.to_string())),
     };

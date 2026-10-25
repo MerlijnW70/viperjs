@@ -722,12 +722,12 @@ pub(crate) fn make(
 pub fn from_literal(
     vm: &mut Vm,
     heap: &mut Heap,
-    source: &str,
-    spelled: &str,
+    source: &[u16],
+    spelled: &[u16],
 ) -> Completion<ObjectId> {
     let object = heap.new_object(Some(vm.realm().regexp_prototype()));
-    let pattern = Value::String(heap.intern(&source.encode_utf16().collect::<Vec<_>>()));
-    let flags = Value::String(heap.intern(&spelled.encode_utf16().collect::<Vec<_>>()));
+    let pattern = Value::String(heap.intern(source));
+    let flags = Value::String(heap.intern(spelled));
     initialize(vm, heap, object, pattern, flags)?;
     Ok(object)
 }

@@ -459,7 +459,7 @@ impl Compiler<'_> {
                 let flags = crate::regexp::Flags::parse(&literal.flags).map_err(refused)?;
                 // The pattern is read as code units — see [`crate::regexp::parse`] — and the
                 // same units are what the `RegExp` object keeps, so they are made once.
-                let units: Vec<u16> = literal.body.encode_utf16().collect();
+                let units = literal.body.clone();
                 crate::regexp::parse(&units, flags).map_err(refused)?;
                 let source = self.heap.new_string(units);
                 self.constant(Value::String(source))?;

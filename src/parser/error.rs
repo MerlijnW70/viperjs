@@ -289,6 +289,13 @@ pub enum ParseErrorKind {
     /// never the enclosing function's — which is nobody's idea of what it means. `Contains` stops
     /// at a function boundary and not at an arrow.
     ArgumentsInClassInitializer,
+    /// §16.2.2.1: a `ModuleExportName` written as a string literal that holds an unpaired
+    /// surrogate.
+    ///
+    /// `export { a as "\uD800" }`. The name crosses into other modules, which match it against
+    /// their own `ModuleExportName`s, and `IsStringWellFormedUnicode` keeps it to something every
+    /// one of them can spell.
+    ExportNameNotWellFormed,
     /// §15.7.1: `await` anywhere in a static block.
     ///
     /// `ClassStaticBlockStatementList` is `[+Await]` purely so that the word is a keyword and
@@ -606,6 +613,9 @@ impl fmt::Display for ParseErrorKind {
                 f,
                 "`arguments` is not allowed in a class field initialiser or static block"
             ),
+            Self::ExportNameNotWellFormed => {
+                write!(f, "an export name may not hold an unpaired surrogate")
+            }
             Self::AwaitInStaticBlock => {
                 write!(f, "`await` is not allowed in a class static block")
             }

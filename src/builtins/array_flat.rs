@@ -33,7 +33,7 @@ use super::array_methods::{
     array_species_create, callback, create_index, get_index, has_index, length_of, this_object,
     within_budget,
 };
-use super::{key, set_or_throw};
+use super::{append_units, assembled, key, set_or_throw};
 use crate::heap::{Heap, NativeCall, ObjectId};
 use crate::value::{Abrupt, Completion, Value};
 use crate::vm::Vm;
@@ -217,10 +217,10 @@ pub fn to_locale_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> 
     let object = this_object(vm, heap, call)?;
     let length = length_of(vm, heap, object)?;
     let name = key(heap, "toLocaleString");
-    let mut joined = String::new();
+    let mut joined = Vec::new();
     for index in 0..length {
         if index > 0 {
-            joined.push(',');
+            append_units(heap, &mut joined, &[u16::from(b',')])?;
         }
         // Step 6.b is a plain `Get`, so a hole reads as `undefined` and step 6.c then skips it —
         // which is why a hole and an `undefined` both contribute nothing but still take a comma.
@@ -231,8 +231,8 @@ pub fn to_locale_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> 
         let method = vm.get_property_key(element, name, heap)?;
         let text = vm.call_value(method, element, &[], heap)?;
         let id = vm.to_string(text, heap)?;
-        joined.push_str(&String::from_utf16_lossy(heap.string(id).unwrap_or(&[])));
+        append_units(heap, &mut joined, heap.string(id).unwrap_or(&[]))?;
         within_budget(vm, heap)?;
     }
-    Ok(super::text(heap, &joined))
+    assembled(heap, joined)
 }

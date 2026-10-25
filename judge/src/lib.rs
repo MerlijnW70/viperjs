@@ -21,7 +21,18 @@
 //!
 //! Little-endian throughout. A *string* is a `u32` byte length and that many bytes of UTF-8. A
 //! *value* is a tag byte: `0` undefined, `1` null, `2` false, `3` true, `4` a number followed by
-//! its `f64`, `5` a string.
+//! its `f64`, `5` a string whose bytes are [WTF-8](https://simonsapin.github.io/wtf-8/).
+//!
+//! WTF-8 is UTF-8 that can also carry an unpaired surrogate, which a JavaScript String may hold
+//! and UTF-8 cannot: the unit is written as the three bytes it would take if it were a code
+//! point, `ED A0 80` for U+D800 through `ED BF BF` for U+DFFF. A surrogate *pair* is always the
+//! four bytes of the character it encodes and never two such triples; an input that writes one as
+//! two is refused, so every String has exactly one spelling. A string value is therefore exactly
+//! the code units the delivery's String held: an answer of `"\ufffd"` is `EF BF BD` and an answer
+//! of `"\ud800"` is `ED A0 80`, and a host tells them apart by those bytes. Well-formed UTF-8 is
+//! WTF-8 as it stands, so a host that never sends a lone surrogate sends exactly what it always
+//! has; a host that decodes an answer as UTF-8 meets an unpaired surrogate as bytes UTF-8 refuses,
+//! which a replacing decoder turns into U+FFFD.
 //!
 //! The input is: `u32` version (`1`), `u64` step budget, `u64` heap budget in bytes, `u64` seed,
 //! `f64` the time `Date` reads, the module source as a string, a `u32` count of cases, and for each
@@ -30,8 +41,10 @@
 //! The output is: `u32` version (`1`), a `u8` that is `0` when the input was read and `1` when it
 //! was not, a `u32` count of verdicts, and for each a `u8` [`Verdict`] code followed by its detail:
 //! the answer as a value for [`Verdict::Wrong`], a string for [`Verdict::Threw`] and
-//! [`Verdict::NoModule`], nothing for the rest. A detail string is at most [`DETAIL_BYTES`] long
-//! and is the delivery's own text — a host prints it escaped or not at all.
+//! [`Verdict::NoModule`], nothing for the rest. A detail is at most [`DETAIL_BYTES`] long, cut
+//! before a character and never inside one, and is the delivery's own text — a host prints it
+//! escaped or not at all. A [`Verdict::Threw`] or [`Verdict::NoModule`] detail is a message rather
+//! than an answer and is plain UTF-8, with U+FFFD for any unpaired surrogate in it.
 
 #![deny(unsafe_code)]
 
@@ -61,14 +74,21 @@ pub enum Primitive {
     Boolean(bool),
     /// A Number. Two are the same answer when they are equal or both NaN.
     Number(f64),
-    /// A String, as UTF-8 — a lone surrogate the delivery produced becomes U+FFFD.
-    String(String),
+    /// A String, as the UTF-16 code units it is — an unpaired surrogate included, so that
+    /// `"\ud800"` and `"\ufffd"` are different answers here as they are in JavaScript.
+    String(Vec<u16>),
 }
 
 impl Primitive {
+    /// A String primitive spelling `text`.
+    #[must_use]
+    pub fn text(text: &str) -> Self {
+        Self::String(text.encode_utf16().collect())
+    }
+
     /// Whether `self` is the answer `expected` asked for.
     ///
-    /// Exact for strings and booleans. Numbers are equal when `==` says so, which makes `0` and
+    /// Exact for strings, unit for unit, and for booleans. Numbers are equal when `==` says so, which makes `0` and
     /// `-0` the same answer, or when both are NaN, which `==` would never say.
     #[must_use]
     pub fn answers(&self, expected: &Self) -> bool {
@@ -213,9 +233,9 @@ fn judge_case(input: &Input, case: &Case) -> Verdict {
         Value::Null => Primitive::Null,
         Value::Boolean(flag) => Primitive::Boolean(flag),
         Value::Number(number) => Primitive::Number(number),
-        // A String primitive's text is read, not computed: no code runs for it.
-        Value::String(_) => match engine.text(answer) {
-            Ok(text) => Primitive::String(text),
+        // A String primitive's units are read, not computed: no code runs for it.
+        Value::String(_) => match engine.units(answer) {
+            Ok(units) => Primitive::String(units),
             Err(error) => return failed(error),
         },
         Value::Symbol(_) | Value::Object(_) | Value::BigInt(_) => return Verdict::NotPrimitive,
@@ -244,7 +264,7 @@ fn to_value(engine: &mut Engine, primitive: &Primitive) -> Result<Value, Error> 
         Primitive::Null => Value::Null,
         Primitive::Boolean(flag) => Value::Boolean(*flag),
         Primitive::Number(number) => Value::Number(*number),
-        Primitive::String(text) => engine.string(text)?,
+        Primitive::String(units) => engine.string_from_units(units.clone())?,
     })
 }
 
@@ -258,9 +278,27 @@ fn cut(text: &str) -> String {
 }
 
 /// An answer cut the way a detail is, so a wrong answer cannot be a megabyte of output.
+///
+/// Cut by its WTF-8 length, before a character or an unpaired surrogate and never between the two
+/// halves of a pair, so the bytes written are a prefix of the whole answer's.
 fn cut_primitive(answer: Primitive) -> Primitive {
     match answer {
-        Primitive::String(text) => Primitive::String(cut(&text)),
+        Primitive::String(units) => {
+            let mut bytes = 0;
+            let mut end = 0;
+            for decoded in char::decode_utf16(units.iter().copied()) {
+                let (width, length) = match decoded {
+                    Ok(ch) => (ch.len_utf8(), ch.len_utf16()),
+                    Err(_) => (3, 1),
+                };
+                if bytes + width > DETAIL_BYTES {
+                    break;
+                }
+                bytes += width;
+                end += length;
+            }
+            Primitive::String(units.get(..end).unwrap_or_default().to_vec())
+        }
         other => other,
     }
 }
@@ -298,6 +336,11 @@ impl Reader<'_> {
         String::from_utf8(self.take(length)?.to_vec()).ok()
     }
 
+    fn units(&mut self) -> Option<Vec<u16>> {
+        let length = usize::try_from(self.u32()?).ok()?;
+        from_wtf8(self.take(length)?)
+    }
+
     fn primitive(&mut self) -> Option<Primitive> {
         Some(match self.u8()? {
             0 => Primitive::Undefined,
@@ -305,7 +348,7 @@ impl Reader<'_> {
             2 => Primitive::Boolean(false),
             3 => Primitive::Boolean(true),
             4 => Primitive::Number(self.f64()?),
-            5 => Primitive::String(self.string()?),
+            5 => Primitive::String(self.units()?),
             _ => return None,
         })
     }
@@ -353,9 +396,88 @@ pub fn read_input(bytes: &[u8]) -> Option<Input> {
     })
 }
 
+/// The code units well-formed WTF-8 spells, or `None` for bytes that are not.
+///
+/// UTF-8's own rules — the shortest form, nothing past U+10FFFF, no stray continuation byte — with
+/// the one change WTF-8 makes: `ED` may be followed by `A0` to `BF`, which spells a surrogate. A
+/// lead surrogate spelled that way and followed at once by a trail surrogate spelled that way is
+/// refused, because that pair has a four-byte spelling and WTF-8 allows only that one.
+#[must_use]
+pub fn from_wtf8(bytes: &[u8]) -> Option<Vec<u16>> {
+    let mut units = Vec::with_capacity(bytes.len());
+    let mut at = 0;
+    let mut after_lead = false;
+    while let Some(&first) = bytes.get(at) {
+        let (width, low, high, initial) = match first {
+            0x00..=0x7f => (1, 0x80, 0xbf, u32::from(first)),
+            0xc2..=0xdf => (2, 0x80, 0xbf, u32::from(first & 0x1f)),
+            0xe0 => (3, 0xa0, 0xbf, 0),
+            0xe1..=0xef => (3, 0x80, 0xbf, u32::from(first & 0x0f)),
+            0xf0 => (4, 0x90, 0xbf, 0),
+            0xf1..=0xf3 => (4, 0x80, 0xbf, u32::from(first & 0x07)),
+            0xf4 => (4, 0x80, 0x8f, 4),
+            _ => return None,
+        };
+        let mut point = initial;
+        for (index, &byte) in bytes.get(at + 1..at + width)?.iter().enumerate() {
+            let (floor, ceiling) = if index == 0 {
+                (low, high)
+            } else {
+                (0x80, 0xbf)
+            };
+            if !(floor..=ceiling).contains(&byte) {
+                return None;
+            }
+            point = (point << 6) | u32::from(byte & 0x3f);
+        }
+        at += width;
+        match point {
+            0xdc00..=0xdfff if after_lead => return None,
+            0xd800..=0xdfff => {
+                after_lead = point < 0xdc00;
+                units.push(u16::try_from(point).ok()?);
+            }
+            _ => {
+                after_lead = false;
+                let ch = char::from_u32(point)?;
+                let mut pair = [0; 2];
+                units.extend_from_slice(ch.encode_utf16(&mut pair));
+            }
+        }
+    }
+    Some(units)
+}
+
+/// `units` as WTF-8: UTF-8 for every character, and three bytes for each unpaired surrogate.
+#[must_use]
+pub fn to_wtf8(units: &[u16]) -> Vec<u8> {
+    let mut out = Vec::with_capacity(units.len());
+    for decoded in char::decode_utf16(units.iter().copied()) {
+        match decoded {
+            Ok(ch) => {
+                let mut buffer = [0; 4];
+                out.extend_from_slice(ch.encode_utf8(&mut buffer).as_bytes());
+            }
+            Err(unpaired) => {
+                let unit = unpaired.unpaired_surrogate();
+                out.extend_from_slice(&[
+                    0xe0 | (unit >> 12) as u8,
+                    0x80 | ((unit >> 6) & 0x3f) as u8,
+                    0x80 | (unit & 0x3f) as u8,
+                ]);
+            }
+        }
+    }
+    out
+}
+
+fn write_bytes(out: &mut Vec<u8>, bytes: &[u8]) {
+    out.extend_from_slice(&u32::try_from(bytes.len()).unwrap_or(0).to_le_bytes());
+    out.extend_from_slice(bytes);
+}
+
 fn write_string(out: &mut Vec<u8>, text: &str) {
-    out.extend_from_slice(&u32::try_from(text.len()).unwrap_or(0).to_le_bytes());
-    out.extend_from_slice(text.as_bytes());
+    write_bytes(out, text.as_bytes());
 }
 
 fn write_primitive(out: &mut Vec<u8>, primitive: &Primitive) {
@@ -368,9 +490,9 @@ fn write_primitive(out: &mut Vec<u8>, primitive: &Primitive) {
             out.push(4);
             out.extend_from_slice(&number.to_le_bytes());
         }
-        Primitive::String(text) => {
+        Primitive::String(units) => {
             out.push(5);
-            write_string(out, text);
+            write_bytes(out, &to_wtf8(units));
         }
     }
 }

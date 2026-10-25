@@ -20,6 +20,38 @@ function check(what, ok, detail = "") {
 check("the module imports nothing", WebAssembly.Module.imports(module).length === 0,
   JSON.stringify(WebAssembly.Module.imports(module)));
 
+// A string value is WTF-8: UTF-8, plus three bytes for an unpaired surrogate, which TextEncoder
+// would replace and TextDecoder would refuse. Written out here so the host can send and read one.
+function toWtf8(text) {
+  const out = [];
+  for (let i = 0; i < text.length; i += 1) {
+    let c = text.charCodeAt(i);
+    const next = text.charCodeAt(i + 1);
+    if (c >= 0xd800 && c < 0xdc00 && next >= 0xdc00 && next < 0xe000) {
+      c = 0x10000 + ((c - 0xd800) << 10) + (next - 0xdc00);
+      i += 1;
+    }
+    if (c < 0x80) out.push(c);
+    else if (c < 0x800) out.push(0xc0 | (c >> 6), 0x80 | (c & 63));
+    else if (c < 0x10000) out.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
+    else out.push(0xf0 | (c >> 18), 0x80 | ((c >> 12) & 63), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
+  }
+  return out;
+}
+
+function fromWtf8(bytes) {
+  let text = "";
+  for (let i = 0; i < bytes.length;) {
+    const first = bytes[i];
+    const width = first < 0x80 ? 1 : first < 0xe0 ? 2 : first < 0xf0 ? 3 : 4;
+    let c = width === 1 ? first : first & (0xff >> (width + 1));
+    for (let k = 1; k < width; k += 1) c = (c << 6) | (bytes[i + k] & 63);
+    text += String.fromCodePoint(c);
+    i += width;
+  }
+  return text;
+}
+
 function encode({ steps, heap, seed, clock, source, cases }) {
   const bytes = [];
   const u32 = (n) => { const b = new Uint8Array(4); new DataView(b.buffer).setUint32(0, n, true); bytes.push(...b); };
@@ -32,7 +64,7 @@ function encode({ steps, heap, seed, clock, source, cases }) {
     else if (v === false) bytes.push(2);
     else if (v === true) bytes.push(3);
     else if (typeof v === "number") { bytes.push(4); f64(v); }
-    else { bytes.push(5); str(v); }
+    else { bytes.push(5); const b = toWtf8(v); u32(b.length); bytes.push(...b); }
   };
   u32(1); u64(steps); u64(heap); u64(seed); f64(clock); str(source); u32(cases.length);
   for (const [args, expected] of cases) { u32(args.length); args.forEach(value); value(expected); }
@@ -48,7 +80,7 @@ function decode(bytes) {
   const value = () => {
     const tag = u8();
     if (tag === 4) { const n = view.getFloat64(at, true); at += 8; return n; }
-    if (tag === 5) return str();
+    if (tag === 5) { const n = u32(); const s = fromWtf8(bytes.subarray(at, at + n)); at += n; return s; }
     return [undefined, null, false, true][tag];
   };
   const version = u32();
@@ -110,6 +142,16 @@ const twice = [await judge({ ...base, source: "export default () => Math.random(
   await judge({ ...base, source: "export default () => Math.random() + '|' + Date.now();", cases: [[[], null]] })];
 check("the same input gives the same verdict twice", JSON.stringify(twice[0].verdicts) === JSON.stringify(twice[1].verdicts),
   JSON.stringify(twice[0].verdicts));
+
+const lone = await judge({ ...base, source: "export default (unit) => String.fromCharCode(unit);",
+  cases: [[[0xd800], "\ufffd"], [[0xd800], "\ud800"]] });
+check("an unpaired surrogate is an answer of its own, not U+FFFD",
+  lone.verdicts[0]?.[0] === "wrong" && lone.verdicts[0]?.[1] === "\ud800" && lone.verdicts[1]?.[0] === "pass",
+  JSON.stringify(lone.verdicts));
+const halves = await judge({ ...base, source: "export default (a, b) => (a + b).codePointAt(0);",
+  cases: [[["\ud83d", "\ude00"], 0x1f600]] });
+check("two halves sent apart join into the character", halves.verdicts[0]?.[0] === "pass",
+  JSON.stringify(halves.verdicts));
 
 const garbage = await judge({ ...base, source: "", cases: [] });
 check("a well-formed empty input is read", garbage.refused === 0 && garbage.verdicts.length === 0);

@@ -16,7 +16,7 @@
 //! line terminators of §12.3 do not act alike.
 
 use super::escape::{CodeUnits, hex_value, utf16_encode};
-use super::{LexError, LexErrorKind, Lexer, TokenKind};
+use super::{LexError, LexErrorKind, Lexer, LoneSurrogate, TokenKind, unit_at};
 use crate::span::Span;
 
 /// The code units a string literal denotes (§12.9.4's `SV`), or `None` if `span` does not cover
@@ -38,12 +38,24 @@ use crate::span::Span;
 /// assert_eq!(string_value(source, token.span), Some(vec![0x63, 0x61, 0x66, 0xe9]));
 /// ```
 pub fn string_value(source: &str, span: Span) -> Option<Vec<u16>> {
+    string_value_in(source, span, &[])
+}
+
+/// [`string_value`] for a source that was a String, with each of its unpaired surrogates put back.
+///
+/// See [`super::UnitSource`]: `lone` says which U+FFFD in `source` stands for which unit. A
+/// surrogate stands in a literal either as itself or after a `\`, which §12.9.4 reads as a
+/// `NonEscapeCharacter` — so `"\` followed by U+D800 `"` is U+D800 as well.
+#[must_use]
+pub fn string_value_in(source: &str, span: Span, lone: &[LoneSurrogate]) -> Option<Vec<u16>> {
     let text = span.slice(source)?;
     let quote = text.chars().next()?;
     if quote != '"' && quote != '\'' {
         return None;
     }
     let body = text.strip_prefix(quote)?.strip_suffix(quote)?;
+    // Both quotes are one byte, so the body starts one byte into the span.
+    let base = span.start.saturating_add(1);
 
     // Re-read the body with the same escape readers the scan used, so a value can never disagree
     // with what was validated. `body` cannot itself be a `"` — `strip_suffix` would have taken
@@ -52,14 +64,24 @@ pub fn string_value(source: &str, span: Span) -> Option<Vec<u16>> {
     let mut lexer = Lexer::new(body);
     let mut units = Vec::with_capacity(body.len());
     while !lexer.cursor.is_eof() {
+        let at = base.saturating_add(lexer.cursor.offset());
         if lexer.cursor.peek() == Some('\\') {
+            if let Some(unit) = unit_at(lone, at.saturating_add(1)) {
+                let _ = lexer.cursor.bump();
+                let _ = lexer.cursor.bump();
+                units.push(unit);
+                continue;
+            }
             match lexer.read_string_escape() {
                 Ok(escape) => escape.units.push_onto(&mut units),
                 Err(_) => return None,
             }
         } else {
             let ch = lexer.cursor.bump()?;
-            utf16_encode(ch as u32).push_onto(&mut units);
+            match unit_at(lone, at) {
+                Some(unit) => units.push(unit),
+                None => utf16_encode(ch as u32).push_onto(&mut units),
+            }
         }
     }
     Some(units)
@@ -570,6 +592,26 @@ mod tests {
         assert_eq!(
             value(&format!("\"{}\"", "\\u0041".repeat(2000))).len(),
             2000
+        );
+    }
+
+    #[test]
+    fn a_source_that_was_a_string_gets_its_unpaired_surrogates_back() {
+        // `eval` hands over code units; the text the lexer reads has U+FFFD in each one's place,
+        // and the value puts the unit back whether it stood alone or after a `\`.
+        let mut given: Vec<u16> = "'a".encode_utf16().collect();
+        given.extend([0xd800, 0x5c, 0xdc00, 0x5c, 0x5c, 0xdbff]);
+        given.extend("\u{fffd}'".encode_utf16());
+        let read = crate::lexer::UnitSource::new(&given);
+        let token = first(&read.text);
+        assert_eq!(
+            string_value_in(&read.text, token.span, &read.lone),
+            Some(vec![0x61, 0xd800, 0xdc00, 0x5c, 0xdbff, 0xfffd])
+        );
+        // Without the table the same text is what it says: four replacement characters.
+        assert_eq!(
+            string_value(&read.text, token.span),
+            Some(vec![0x61, 0xfffd, 0xfffd, 0x5c, 0xfffd, 0xfffd])
         );
     }
 }

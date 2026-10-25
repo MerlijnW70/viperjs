@@ -188,6 +188,9 @@ The host binds `print` and a `console` of six logging methods — log, info and 
 output, warn, error and trace to standard error. There is no `require`, no `fs` and no module
 loading: GOAL.md §3 says the host provides I/O and this host provides almost none of it.
 
+Everything written is UTF-8, which cannot hold the unpaired surrogate a String may: each one is
+written as U+FFFD. `s.charCodeAt(i)` prints the unit itself where that difference matters.
+
 exit status: 0 ran, 1 the script threw or would not parse, 2 the arguments made no sense.
 ";
 

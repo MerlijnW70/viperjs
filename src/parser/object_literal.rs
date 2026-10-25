@@ -37,7 +37,7 @@ use super::body::SuperAllowed;
 use super::expression::AllowIn;
 use super::{ParseError, ParseErrorKind, Parser};
 use crate::ast::{Expr, ExprKind, PropertyDefinition, PropertyKey};
-use crate::lexer::{Goal, TokenKind, identifier_value, numeric_value, string_value};
+use crate::lexer::{Goal, TokenKind, identifier_value, numeric_value, string_value_in};
 
 impl Parser<'_> {
     /// `ObjectLiteral` (§13.2.5), with the cursor on the `{`.
@@ -220,7 +220,7 @@ impl Parser<'_> {
             }
             TokenKind::String { .. } => {
                 self.advance(Goal::Div)?;
-                let value = string_value(self.source, token.span)
+                let value = string_value_in(self.source, token.span, self.lone)
                     .ok_or_else(|| self.value_missing(token))?;
                 Ok(PropertyKey::String(value.into_boxed_slice()))
             }

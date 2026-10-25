@@ -29,7 +29,7 @@
 //! one. An explicit escape is the only way to get a real carriage return into either.
 
 use super::escape::{CodeUnits, hex_value, utf16_encode};
-use super::{LexError, LexErrorKind, Lexer, TokenKind};
+use super::{LexError, LexErrorKind, Lexer, LoneSurrogate, TokenKind, unit_at};
 use crate::span::Span;
 
 /// Which of §12.9.6's four components a template token is.
@@ -90,10 +90,24 @@ pub struct TemplateValue {
 /// assert_eq!(value.raw, vec![0x61, 0x5c, 0x6e]);
 /// ```
 pub fn template_value(source: &str, span: Span) -> Option<TemplateValue> {
+    template_value_in(source, span, &[])
+}
+
+/// [`template_value`] for a source that was a String, with each of its unpaired surrogates put
+/// back — in `TRV` as written, and in `TV` whether it stood alone or after a `\`, which §12.9.6
+/// reads as a `NonEscapeCharacter` exactly as §12.9.4 does. See [`super::UnitSource`].
+#[must_use]
+pub fn template_value_in(
+    source: &str,
+    span: Span,
+    lone: &[LoneSurrogate],
+) -> Option<TemplateValue> {
     let body = component_body(span.slice(source)?)?;
+    // Each opening delimiter, a backtick or a `}`, is one byte.
+    let base = span.start.saturating_add(1);
     Some(TemplateValue {
-        cooked: cooked_value(body),
-        raw: raw_value(body),
+        cooked: cooked_value(body, base, lone),
+        raw: raw_value(body, base, lone),
     })
 }
 
@@ -113,30 +127,48 @@ fn component_body(text: &str) -> Option<&str> {
 /// contributes its own source text to the raw value, escapes included. The line terminator rule
 /// is the single exception, and it is why `` `a\r\nb`.raw `` has one code unit between the
 /// letters rather than two.
-fn raw_value(body: &str) -> Vec<u16> {
+fn raw_value(body: &str, base: u32, lone: &[LoneSurrogate]) -> Vec<u16> {
     let mut out = Vec::with_capacity(body.len());
-    let mut chars = body.chars().peekable();
-    while let Some(ch) = chars.next() {
+    let mut chars = body.char_indices().peekable();
+    while let Some((at, ch)) = chars.next() {
         if ch == '\r' {
             // `LineTerminatorSequence :: <CR> [lookahead ≠ <LF>]` and `<CR> <LF>` are separate
             // productions with the same TRV, so both collapse to one line feed.
-            if chars.peek() == Some(&'\n') {
+            if chars.peek().map(|&(_, next)| next) == Some('\n') {
                 let _ = chars.next();
             }
             out.push(0x000a);
             continue;
         }
-        utf16_encode(ch as u32).push_onto(&mut out);
+        let offset = base.saturating_add(u32::try_from(at).unwrap_or(u32::MAX));
+        match unit_at(lone, offset) {
+            Some(unit) => out.push(unit),
+            None => utf16_encode(ch as u32).push_onto(&mut out),
+        }
     }
     out
 }
 
 /// `TV` (§12.9.6.1): the cooked value, or `None` if any `NotEscapeSequence` appears.
-fn cooked_value(body: &str) -> Option<Vec<u16>> {
+fn cooked_value(body: &str, base: u32, lone: &[LoneSurrogate]) -> Option<Vec<u16>> {
     let mut out = Vec::with_capacity(body.len());
     let mut lexer = Lexer::new(body);
     let mut well_formed = true;
     while let Some(ch) = lexer.cursor.peek() {
+        let at = base.saturating_add(lexer.cursor.offset());
+        if ch == '\\'
+            && let Some(unit) = unit_at(lone, at.saturating_add(1))
+        {
+            let _ = lexer.cursor.bump();
+            let _ = lexer.cursor.bump();
+            out.push(unit);
+            continue;
+        }
+        if let Some(unit) = unit_at(lone, at) {
+            let _ = lexer.cursor.bump();
+            out.push(unit);
+            continue;
+        }
         if ch == '\\' {
             let escape = lexer.read_template_escape();
             well_formed &= escape.well_formed;
@@ -714,5 +746,20 @@ mod tests {
         let many = format!("`{}`", "\r\n".repeat(2000));
         assert_eq!(values(&many).1.len(), 2000);
         assert_eq!(values(&many).0.map(|c| c.len()), Some(2000));
+    }
+
+    #[test]
+    fn a_source_that_was_a_string_gets_its_unpaired_surrogates_back_in_both_values() {
+        let mut given: Vec<u16> = "`".encode_utf16().collect();
+        given.extend([0xdc00, 0x5c, 0xd800, 0x0d, 0x0a, 0xdbff]);
+        given.extend("`".encode_utf16());
+        let read = crate::lexer::UnitSource::new(&given);
+        let token = first(&read.text);
+        let value =
+            template_value_in(&read.text, token.span, &read.lone).expect("a template component"); // the assertions are about it
+        // §12.9.6.1 — the `\` before a surrogate is a `NonEscapeCharacter` and goes; §12.9.6.2
+        // keeps it in the raw value. Both normalize the line break.
+        assert_eq!(value.cooked, Some(vec![0xdc00, 0xd800, 0x0a, 0xdbff]));
+        assert_eq!(value.raw, vec![0xdc00, 0x5c, 0xd800, 0x0a, 0xdbff]);
     }
 }

@@ -82,7 +82,7 @@ fn to_string(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<
         && let Some(crate::heap::Callable::Bytecode { code, .. }) =
             heap.object(object).and_then(crate::heap::Object::call)
     {
-        let units: Vec<u16> = code.source_text().encode_utf16().collect();
+        let units = code.source_units();
         return Ok(Value::String(heap.intern(&units)));
     }
     let name = key(heap, "name");
@@ -280,11 +280,12 @@ pub fn bind(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Completion<V
     // `get` trap decides it. Anything that is not a String is the empty String rather than
     // coerced, which is why a `name` of `5` gives `"bound "` and not `"bound 5"`.
     let found = vm.get_property_key(Value::Object(target), name_key, heap)?;
-    let target_name = match found {
-        Value::String(name) => String::from_utf16_lossy(heap.string(name).unwrap_or(&[])),
-        _ => String::new(),
-    };
-    let name = crate::builtins::text(heap, &format!("bound {target_name}"));
+    // The target's name as units, so an unpaired surrogate in it survives into the bound one.
+    let mut spelled: Vec<u16> = "bound ".encode_utf16().collect();
+    if let Value::String(name) = found {
+        spelled.extend_from_slice(heap.string(name).unwrap_or(&[]));
+    }
+    let name = Value::String(heap.new_string(spelled));
     crate::builtins::define_metadata(heap, bound, Value::Number(remaining), name);
     Ok(Value::Object(bound))
 }
@@ -399,22 +400,26 @@ fn dynamic_function(
         Some((body, parameters)) => (parameters, *body),
         None => (&[] as &[Value], Value::Undefined),
     };
-    let mut written = String::new();
+    // Assembled as code units, because each piece is a String and may hold an unpaired surrogate
+    // that a literal in the body keeps — see [`crate::lexer::UnitSource`].
+    let mut source: Vec<u16> = kind.prefix().encode_utf16().collect();
+    source.extend(" anonymous(".encode_utf16());
     for (at, parameter) in parameters.iter().enumerate() {
         if at > 0 {
-            written.push(',');
+            source.push(u16::from(b','));
         }
-        written.push_str(&text_of(vm, heap, *parameter)?);
+        source.extend(text_of(vm, heap, *parameter)?);
     }
-    let body = match call.arguments.is_empty() {
-        true => String::new(),
-        false => text_of(vm, heap, body)?,
-    };
-    let source = format!("{} anonymous({written}\n) {{\n{body}\n}}", kind.prefix());
+    source.extend("\n) {\n".encode_utf16());
+    if !call.arguments.is_empty() {
+        source.extend(text_of(vm, heap, body)?);
+    }
+    source.extend("\n}".encode_utf16());
+    let read = crate::lexer::UnitSource::new(&source);
 
     // Step 20's assertion, as a real check. A refusal here is a **SyntaxError**, which is what the
     // clause says and is also the one a program tests for.
-    let script = crate::parser::parse_script(&source).map_err(|_| {
+    let script = crate::parser::parse_script_in(&read.text, &read.lone).map_err(|_| {
         Abrupt::Raised(
             crate::value::ErrorKind::Syntax,
             "the source of a dynamic function does not parse",
@@ -493,9 +498,9 @@ fn leaked(message: String) -> &'static str {
 }
 
 /// §7.1.17 `ToString`, for one of the arguments a dynamic function is assembled from.
-fn text_of(vm: &mut Vm, heap: &mut Heap, value: Value) -> Completion<String> {
+fn text_of(vm: &mut Vm, heap: &mut Heap, value: Value) -> Completion<Vec<u16>> {
     let text = vm.to_string(value, heap)?;
-    Ok(String::from_utf16_lossy(heap.string(text).unwrap_or(&[])))
+    Ok(heap.string(text).unwrap_or(&[]).to_vec())
 }
 
 /// Build `Function`, and `Function.prototype`'s methods, into `heap`.

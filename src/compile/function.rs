@@ -242,7 +242,7 @@ impl Compiler<'_> {
                 field_initializer: self.chunk.field_initializer,
             },
             span,
-            &self.chunk.source,
+            (&self.chunk.source, &self.chunk.lone),
         )
     }
 
@@ -733,7 +733,7 @@ fn compile_body(
     outer: Vec<Vec<Local>>,
     nesting: Nesting<'_>,
     span: Span,
-    source: &std::rc::Rc<str>,
+    source: Source<'_>,
 ) -> Result<Chunk, CompileError> {
     // §19.2.1.1 — a **direct** `eval` in this body may add a `var` to this body's own variable
     // scope, so a name here cannot be pinned to a slot at compile time: the binding it should
@@ -767,6 +767,13 @@ fn compile_body(
     Ok(compile_body_once(heap, parameters, body, outer, told, span, source)?.chunk)
 }
 
+/// §20.2.3.5's `[[SourceText]]` as a body inherits it: the text, and the unpaired surrogates it
+/// stands in for.
+type Source<'a> = (
+    &'a std::rc::Rc<str>,
+    &'a std::rc::Rc<[crate::lexer::LoneSurrogate]>,
+);
+
 /// What one pass of [`compile_body`] produced, and the one thing it learned on the way.
 struct Compiled {
     /// The body.
@@ -787,7 +794,7 @@ fn compile_body_once(
     outer: Vec<Vec<Local>>,
     nesting: Nesting<'_>,
     span: Span,
-    source: &std::rc::Rc<str>,
+    source: Source<'_>,
 ) -> Result<Compiled, CompileError> {
     let lexical = nesting.lexical;
     let mut compiler = Compiler::new(heap);
@@ -796,7 +803,8 @@ fn compile_body_once(
     // `span` threaded through this function is for a diagnostic, and for a method or an arrow it is
     // the span of whatever *contains* the production rather than of the production. A body nobody
     // sets it for has none, which is right for the three ViperJS synthesises.
-    compiler.chunk.source = source.clone();
+    compiler.chunk.source = source.0.clone();
+    compiler.chunk.lone = source.1.clone();
     // §10.2.9 — interned, so that the hundred `function f` in a program share one String and so that
     // the key made from it is the one the object already has.
     compiler.chunk.method = nesting.method;
