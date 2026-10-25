@@ -372,8 +372,10 @@ fn to_upper_case(vm: &mut Vm, heap: &mut Heap, call: &NativeCall<'_>) -> Complet
 /// §22.1.3.29 `ToLowerCase`/`ToUpperCase` — the Unicode Default Case Conversion.
 ///
 /// Not a per-unit table. The mapping is defined over code *points* and is not one-to-one: `ß`
-/// uppercases to `SS`, and `İ` lowercases to two code points. So the units are decoded, mapped,
-/// and encoded again, and the result may be longer than what went in.
+/// uppercases to `SS`, `İ` lowercases to two code points, and `Σ` lowercases to `ς` or `σ`
+/// depending on what is around it. So the units are decoded, mapped by
+/// [`crate::unicode_case_map::recase`], and encoded again, and the result may be longer than what
+/// went in.
 ///
 /// The locale-sensitive variants share this. §22.1.3.26 permits an implementation with no locale
 /// data to answer the locale-independent mapping, and ViperJS has none — so `toLocaleUpperCase` is
@@ -385,21 +387,15 @@ fn recased(
     upwards: bool,
 ) -> Completion<Value> {
     let units = characters(vm, heap, call)?;
+    let points = super::string_edit::code_points(&units);
     let mut built: Vec<u16> = Vec::with_capacity(units.len());
     let mut encoded = [0u16; 2];
-    for point in char::decode_utf16(units.iter().copied()) {
-        // A lone surrogate has no case and no `char` — it is copied through, which is what keeps
-        // `"\ud800".toUpperCase().length` at one rather than replacing it with U+FFFD.
-        let Ok(point) = point else {
-            built.push(point.unwrap_err().unpaired_surrogate());
-            continue;
-        };
-        let mapped = match upwards {
-            true => Cased::Up(point.to_uppercase()),
-            false => Cased::Down(point.to_lowercase()),
-        };
-        for point in mapped {
-            built.extend_from_slice(point.encode_utf16(&mut encoded));
+    for point in crate::unicode_case_map::recase(&points, upwards) {
+        match char::from_u32(point) {
+            Some(point) => built.extend_from_slice(point.encode_utf16(&mut encoded)),
+            // A lone surrogate has no case and no `char` — it is copied through, which is what
+            // keeps `"\ud800".toUpperCase().length` at one rather than replacing it with U+FFFD.
+            None => built.push(point as u16),
         }
     }
     let Some(id) = heap.new_string_checked(built) else {
@@ -408,25 +404,6 @@ fn recased(
         ));
     };
     Ok(Value::String(id))
-}
-
-/// One code point's case mapping, either way — the two have different types and the same shape.
-enum Cased {
-    /// What §22.1.3.28 maps a code point to.
-    Up(std::char::ToUppercase),
-    /// What §22.1.3.30 maps it to.
-    Down(std::char::ToLowercase),
-}
-
-impl Iterator for Cased {
-    type Item = char;
-
-    fn next(&mut self) -> Option<char> {
-        match self {
-            Self::Up(points) => points.next(),
-            Self::Down(points) => points.next(),
-        }
-    }
 }
 
 #[cfg(test)]
