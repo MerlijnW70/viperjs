@@ -10,6 +10,7 @@ in.
 
 ## Index
 
+- [An address is not an identity, and a freed `eval` handed its template object to the next — DR-0032](#an-address-is-not-an-identity-and-a-freed-eval-handed-its-template-object-to-the-next--dr-0032)
 - [Fifty repositories: no parser gap, and the one cap that cannot be raised](#fifty-repositories-no-parser-gap-and-the-one-cap-that-cannot-be-raised)
 - [Splitting a file removes it from the coverage ratchet, and an audit found four more](#splitting-a-file-removes-it-from-the-coverage-ratchet-and-an-audit-found-four-more)
 - [One clause, two implementations, and only one of them was fixed — §10.1.13 and §10.3.1](#one-clause-two-implementations-and-only-one-of-them-was-fixed--10113-and-1031)
@@ -55,6 +56,27 @@ in.
 - [What is left, in the order the numbers put it](#what-is-left-in-the-order-the-numbers-put-it)
 
 ---
+
+### An address is not an identity, and a freed `eval` handed its template object to the next — DR-0032
+
+§13.2.8.3's cache was a map on the machine keyed by the running chunk's address. The comment over
+the key said the address was "exactly as stable as it needs to be" because a function object holds
+its chunk alive — true for a function, and false for the three kinds of code nothing holds once it
+has run: an `eval`'s, a `new Function` that has been swept, and a host's script. Of 3,000 `eval`s
+in a loop, 2,999 got the previous site's object; the allocator reuses a freed block that reliably.
+
+Nothing in test262 failed, which is the part worth keeping. Its template tests evaluate a handful of
+sites that all stay alive, and the identity tests compare two evaluations of one site — so the
+ratchet saw a correct cache. Address reuse needs a loop that frees code, and a suite that reads one
+file and exits never writes one. **Anything keyed by `ptr::from_ref` is suspect for the same
+reason**; the fix was to put the cache *on* the chunk, where the identity and the entry die
+together, and the collector then frees the objects with the code for nothing.
+
+**One more such key is still there.** `Vm::run_module` files its module record under
+`ptr::from_ref(chunk)` and never removes it, so a host that runs two module chunks one after another
+from the same local hands the second the first one's record: its `import.meta` is a
+`Fault::ImportMetaOutsideModule` rather than an object. Found while writing this up and not fixed
+by it; the linker's own key is an `Rc`'s address held for the whole link, which is sound.
 
 ### Fifty repositories: no parser gap, and the one cap that cannot be raised
 

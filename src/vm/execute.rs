@@ -887,22 +887,20 @@ impl Vm {
                     self.regexp_literal(heap, root, current, at)?;
                 }
                 Instruction::TemplateObject(index) => {
-                    let site = TemplateSite {
-                        chunk: std::ptr::from_ref(running) as usize,
-                        index,
-                    };
                     // §13.2.8.3 — **cached per site**, so the same tagged template hands the tag the
                     // same object every time it is evaluated. That identity is the only thing about
                     // the object a program can detect that its contents do not already say, and it is
-                    // what lets a tag use it as a key into a table of its own.
-                    let object = match self.templates.get(&site) {
-                        Some(held) => *held,
+                    // what lets a tag use it as a key into a table of its own. The cache is the
+                    // running chunk's own, because the chunk is the Parse Node — DR-0032.
+                    let realm = self.realm.global();
+                    let object = match running.template_object(index, realm) {
+                        Some(held) => held,
                         None => {
                             let Some(template) = running.template(index) else {
                                 return Err(Fault::MissingConstant);
                             };
                             let built = self.build_template_object(&template.clone(), heap);
-                            self.templates.insert(site, built);
+                            running.remember_template_object(index, realm, built);
                             built
                         }
                     };
@@ -1321,20 +1319,6 @@ impl Vm {
             }
         }
     }
-}
-
-/// Which tagged template a cached object belongs to — §13.2.8.3's "same Parse Node".
-///
-/// The chunk's address stands for the Parse Node, which is exactly as stable as it needs to be: a
-/// chunk is immutable once compiled and is held alive by the function object that owns it, so two
-/// evaluations of one site are two runs of the same address. The index distinguishes the sites within
-/// it. Not a `Chunk` reference, because the map outlives any one borrow of one.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub(super) struct TemplateSite {
-    /// The chunk the site is in, by address.
-    chunk: usize,
-    /// Which site in that chunk.
-    index: u32,
 }
 
 impl Vm {

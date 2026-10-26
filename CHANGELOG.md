@@ -36,6 +36,12 @@ suite revision the expectations file names, up from 86.01% at 0.3.0.
 
 ### Fixed
 
+- **Every tagged-template site gets its own template object** (§13.2.8.3), including one whose code
+  was compiled where freed code had been. The cache was keyed by the running chunk's address, so a
+  later `eval`, `new Function` or host script allocated into the same block was handed an earlier
+  site's object and its strings. It lives on the chunk now, and its objects are collected with the
+  code instead of being held for the life of the machine — a loop that keeps compiling sites stays
+  inside the heap budget. See DR-0032.
 - **An unpaired surrogate survives every operation on a String.** The heap always held code units
   (DR-0004), but six places built a String by way of Rust text, which replaced a lone surrogate
   with U+FFFD: `Array.prototype.join` and `toString`, `toLocaleString`, `%TypedArray%.prototype.join`'s
