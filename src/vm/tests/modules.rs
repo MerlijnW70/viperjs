@@ -1500,6 +1500,11 @@ fn a_modules_import_meta_survives_a_collection() {
     // The second module is not decoration. §14.2.2's completion register is itself a root, so an
     // object a module has just answered with is reachable through it; running something else first
     // is what makes this measure the record rather than the register.
+    //
+    // The collection is told of the *first* chunk, which the host is still holding and may run
+    // again. DR-0033 keeps a record exactly as long as the module's code can run, and code held
+    // somewhere the collector is not told about is code it cannot keep — the root set's contract
+    // for a chunk's constants and its template objects, and now for its module record too.
     let mut heap = Heap::new();
     let first = crate::parser::parse_module("import.meta").expect("it parses"); // a VM test needs a chunk
     let first = crate::compile::compile_module(&first, &mut heap).expect("it compiles"); // same
@@ -1512,7 +1517,7 @@ fn a_modules_import_meta_survives_a_collection() {
         panic!("import.meta answered with {outcome:?}"); // a VM test needs the object
     };
     vm.run_module(&second, &mut heap).expect("it runs"); // a VM test needs a chunk
-    vm.collect(&second, &mut heap);
+    vm.collect(&first, &mut heap);
     assert!(
         heap.object(meta).is_some(),
         "the module record no longer keeps its import.meta alive"

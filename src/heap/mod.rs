@@ -65,6 +65,8 @@
 //! - `matches` — §22.2.9's RegExp String Iterator, the state `matchAll` walks with.
 //! - `namespace` — §10.4.6's module namespace exotic object, whose properties are a module's
 //!   slots read live.
+//! - `module_record` — §16.2.1.4's module record, filed under the module's environment and kept
+//!   exactly as long as it is.
 //! - `weak_ref` — §26.1 and §26.2, the one reference the collector does not follow.
 //! - here — the arenas, their handles, and the intern table property keys need.
 
@@ -81,6 +83,7 @@ mod environment;
 mod helper;
 mod iteration;
 mod matches;
+mod module_record;
 mod namespace;
 mod object;
 mod ordinary;
@@ -131,6 +134,7 @@ pub use self::collection::{Collection, CollectionKind};
 pub use self::environment::{Binding, Declared, Environment, EnvironmentId, Mutability};
 pub use self::helper::{Helper, Step};
 pub use self::matches::Matches;
+pub(crate) use self::module_record::ModuleRecord;
 pub(crate) use self::object::MAX_PROTOTYPE_CHAIN;
 pub use self::object::{Lexical, Object, ObjectId, PrivateElement, Suspendable};
 pub use self::promise::{
@@ -346,6 +350,13 @@ pub struct Heap {
     /// a namespace arrives once per imported module. Membership *is* the marker — see
     /// [`namespace::Namespace`].
     namespaces: std::collections::BTreeMap<ObjectId, namespace::Namespace>,
+    /// §16.2.1.4's module records, each filed under the environment of the module it describes.
+    ///
+    /// Beside the environments for the reason the import bindings are, and keyed by one because the
+    /// environment is what everything that can still reach a module names — see the
+    /// `module_record` module. The collector keeps a record while its environment is reachable and
+    /// drops it in the sweep that frees the environment. DR-0033.
+    modules: std::collections::BTreeMap<EnvironmentId, module_record::ModuleRecord>,
     /// Every Symbol ever made — §6.1.5, where a handle is the value rather than a name for one.
     ///
     /// Its own arena for the reason the others have theirs: a [`SymbolId`] cannot address a String

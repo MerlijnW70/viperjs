@@ -7,7 +7,7 @@
 
 use crate::ast::{BinaryOperator, UnaryOperator, UpdateOperator};
 use crate::compile::{CompileError, ErrorKind};
-use crate::heap::{Binding, ObjectId};
+use crate::heap::{Binding, EnvironmentId, ObjectId};
 use crate::span::Span;
 use crate::value::Value;
 use std::cell::RefCell;
@@ -177,6 +177,20 @@ pub struct Chunk {
     /// filled in by running it. Neither borrow outlives the method that takes it and neither calls
     /// out, so two can never overlap.
     reached: RefCell<Vec<Reached>>,
+    /// The module records this chunk is the code of, one per machine that has run it as a module —
+    /// DR-0033.
+    ///
+    /// Here for DR-0032's reason. The machine used to file its records under the chunk's
+    /// *address*, and a chunk a host has let go of leaves its address to the next one: a host
+    /// running one module chunk after another from the same local handed the second the first one's
+    /// record, already evaluated and holding the first one's environment. Held here, the entry is
+    /// inside the code it describes, so no other code can be mistaken for it and it goes when the
+    /// code does. The record itself is on the heap, under the environment named here — see
+    /// [`crate::heap::Heap::module_record`].
+    ///
+    /// A `RefCell` for the reason `reached` has one, and with the same guarantee: no borrow
+    /// outlives the method that takes it and none calls out, so two can never overlap.
+    modules: RefCell<Vec<Linked>>,
     /// The bodies of the functions written inside this one, in the order they were met.
     ///
     /// An `Rc` because a function object has to outlive the code that made it — `var f = g()`
@@ -349,6 +363,62 @@ impl Chunk {
             object,
         });
     }
+
+    /// The environment of the module record the machine `machine` keeps for this chunk, if it has
+    /// made one — DR-0033.
+    ///
+    /// `machine` is the global object of the machine's first realm, which no other machine sharing
+    /// the heap can have. The environment may be one the collector has since freed, when the chunk
+    /// was somewhere it could not see; the caller asks the heap whether the record is still there.
+    pub(crate) fn module_environment(&self, machine: ObjectId) -> Option<EnvironmentId> {
+        self.modules
+            .borrow()
+            .iter()
+            .find(|linked| linked.machine == machine)
+            .map(|linked| linked.environment)
+    }
+
+    /// Record `environment` as where `machine` runs this chunk as a module from now on.
+    ///
+    /// Replaces the entry `machine` already had, which only exists when its record has been freed:
+    /// the chunk was held where the collector could not see it, which frees its module exactly as
+    /// it frees its template objects — the root set's contract, see DR-0032. So there is never more
+    /// than one entry per machine, which is the bound.
+    pub(crate) fn remember_module(&self, machine: ObjectId, environment: EnvironmentId) {
+        let mut modules = self.modules.borrow_mut();
+        modules.retain(|linked| linked.machine != machine);
+        modules.push(Linked {
+            machine,
+            environment,
+        });
+    }
+
+    /// The environments of this chunk's module records, for the collector — DR-0033.
+    ///
+    /// Apart from [`Chunk::names`] because an environment is not a value, and the root set keeps
+    /// the two in different lists. Not recursive: only the outermost chunk of a module is ever run
+    /// as one, and a function body never is.
+    pub(crate) fn environments(&self, into: &mut Vec<EnvironmentId>) {
+        into.extend(
+            self.modules
+                .borrow()
+                .iter()
+                .map(|linked| linked.environment),
+        );
+    }
+}
+
+/// One module record a chunk is the code of — DR-0033.
+///
+/// The machine is named by the global object of its first realm, for the reason [`Reached`] names a
+/// realm that way: a handle is never issued twice, so a machine that is gone cannot be mistaken for
+/// a later one on the same heap.
+#[derive(Debug, Clone, Copy)]
+struct Linked {
+    /// The global object of the first realm of the machine that made the record.
+    machine: ObjectId,
+    /// The module's environment, which the record is filed under.
+    environment: EnvironmentId,
 }
 
 /// One template object a site has handed out — an entry of §13.2.8.3's `[[TemplateMap]]`.

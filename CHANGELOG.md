@@ -36,6 +36,15 @@ suite revision the expectations file names, up from 86.01% at 0.3.0.
 
 ### Fixed
 
+- **Every module gets its own module record** (§16.2.1.4), including one whose chunk was compiled
+  where a freed one had been. Records were filed under the chunk's address and never removed, so a
+  host running one module chunk after another from the same local handed the second the first one's
+  record — its `import.meta` was a `Fault` — and a graph whose chunk landed on a freed module's
+  address was found already evaluated and skipped. A record is filed under its module's environment
+  now and found through the chunk, so it is collected once nothing can run the module's code, and
+  the heap's import-binding and namespace tables are pruned with it. Running the same module chunk
+  again evaluates nothing, as §16.2.1.6 says, and throws again what it threw the first time. See
+  DR-0033.
 - **Every tagged-template site gets its own template object** (§13.2.8.3), including one whose code
   was compiled where freed code had been. The cache was keyed by the running chunk's address, so a
   later `eval`, `new Function` or host script allocated into the same block was handed an earlier

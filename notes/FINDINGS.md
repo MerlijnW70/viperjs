@@ -11,6 +11,7 @@ in.
 ## Index
 
 - [An address is not an identity, and a freed `eval` handed its template object to the next — DR-0032](#an-address-is-not-an-identity-and-a-freed-eval-handed-its-template-object-to-the-next--dr-0032)
+- [The other address, and why a module record is filed under an environment — DR-0033](#the-other-address-and-why-a-module-record-is-filed-under-an-environment--dr-0033)
 - [Fifty repositories: no parser gap, and the one cap that cannot be raised](#fifty-repositories-no-parser-gap-and-the-one-cap-that-cannot-be-raised)
 - [Splitting a file removes it from the coverage ratchet, and an audit found four more](#splitting-a-file-removes-it-from-the-coverage-ratchet-and-an-audit-found-four-more)
 - [One clause, two implementations, and only one of them was fixed — §10.1.13 and §10.3.1](#one-clause-two-implementations-and-only-one-of-them-was-fixed--10113-and-1031)
@@ -77,6 +78,36 @@ together, and the collector then frees the objects with the code for nothing.
 from the same local hands the second the first one's record: its `import.meta` is a
 `Fault::ImportMetaOutsideModule` rather than an object. Found while writing this up and not fixed
 by it; the linker's own key is an `Rc`'s address held for the whole link, which is sound.
+
+**That last clause was wrong, and DR-0033 is the rest.** The linker's address was sound for the
+`seen` lists, which live for one walk; it was not sound for the record map, which lived for the
+machine, and a later graph whose chunk landed on a freed module's address was found evaluated. See
+the next section.
+
+### The other address, and why a module record is filed under an environment — DR-0033
+
+The module map was the same bug as the template cache, and the same fix — *on the chunk* — was only
+half of it. A template object belongs to its site and to nothing else, so the chunk's lifetime is
+its lifetime. A module record does not: a function the module made is code of the module and reads
+`import.meta` through it long after the host has let go of the chunk, and §10.2.1.1 gives that
+function the module as its `[[ScriptOrModule]]`. So the record lives on the heap under the module's
+environment — the one thing every holder of a module already names — and the chunk names that
+environment. The collector marks the record's objects with the environment, which is the only way to
+keep an `import.meta` object nothing else names exactly as long as the module and no longer.
+
+Two things fell out. **The heap's import-binding and namespace tables had never been pruned**,
+which cost nothing while no module could be collected; they are pruned in the sweep now. **And the
+records' own test of a collection was told the wrong chunk**:
+`a_modules_import_meta_survives_a_collection` collected with the *second* chunk as the root and asserted the first one's `import.meta` survived,
+which held only because nothing was ever freed. It is told the chunk the host is still holding now,
+which is the root set's contract.
+
+A check worth repeating before believing a collection test: after a run, `Vm::environment` still
+names the environment the run ended in, and it is a root. A test that collects straight after
+running a module keeps that module's record through the register, whatever the record's own
+reachability, and asserts nothing about it. Running something else first is what makes a test
+measure the record, which is why every row in `vm::tests::module_records` that asserts a record
+survived a collection does.
 
 ### Fifty repositories: no parser gap, and the one cap that cannot be raised
 

@@ -133,10 +133,9 @@ impl Vm {
     ) -> Result<Result<Outcome, LinkError>, Fault> {
         // A host that supplies the whole program registers each module under the specifier it
         // chose, and DR-0020's edges stay empty — so every specifier resolves to itself, which is
-        // what such a host meant and is exactly the behaviour that predates that record. The keys
-        // are still recorded, because linking asks a chunk what it is called.
+        // what such a host meant and is exactly the behaviour that predates that record. What each
+        // module is called is put on its record when the link reaches it.
         for (specifier, chunk) in graph.entries() {
-            self.keys.insert(identity(chunk), specifier.to_string());
             self.resolved.insert(specifier, Rc::clone(chunk));
         }
         // …and then ask the loader for whatever the graph did not contain — DR-0020, and the piece
@@ -207,7 +206,7 @@ impl Vm {
         // post-order the walk produced, which is exactly that.
         let mut outcome = Outcome::Value(crate::value::Value::Undefined);
         for chunk in &order {
-            let Some(record) = self.modules.get_mut(&identity(chunk)) else {
+            let Some((environment, record)) = self.record_of(chunk, heap) else {
                 continue;
             };
             // §16.2.1.6 step 4 — a module that has already run is not run again, whichever entry
@@ -219,7 +218,6 @@ impl Vm {
             if record.evaluated {
                 continue;
             }
-            let environment = record.environment;
             // Marked before the body runs, so that a module reached again *while* it is running —
             // which a cycle does, and which a dynamic `import()` of an ancestor does — is not
             // started a second time.
@@ -234,7 +232,7 @@ impl Vm {
             // §16.2.1.6 step 12 — a module that throws stops the evaluation, and the throw is the
             // answer. Nothing after it runs, including the entry.
             if let Outcome::Thrown(thrown) = outcome {
-                if let Some(record) = self.modules.get_mut(&identity(chunk)) {
+                if let Some(record) = heap.module_record_mut(environment) {
                     record.failure = Some(thrown);
                 }
                 return Ok(Ok(outcome));
@@ -324,7 +322,7 @@ impl Vm {
                     // evaluated. The edge is still in the graph, which is what makes that happen.
                     continue;
                 };
-                let Some(from) = self.module_from(chunk, &entry.specifier) else {
+                let Some(from) = self.module_from(chunk, &entry.specifier, heap) else {
                     return Err(LinkError::Unresolved(entry.specifier.to_string()));
                 };
                 let Some(here) = self.environment_of(chunk) else {
@@ -375,25 +373,26 @@ impl Vm {
     /// here. Every name this answers is handed straight to §16.2.1.6.3, whose step 4 refuses to reach
     /// a `default` through a star export — so a second copy of the rule changes no answer, and a rule
     /// stated twice is one that can be half-changed. It is stated where a test can reach it.
-    fn exported_names(&self, chunk: &Rc<Chunk>) -> Vec<Box<str>> {
+    fn exported_names(&self, chunk: &Rc<Chunk>, heap: &Heap) -> Vec<Box<str>> {
         let mut names: Vec<Box<str>> = Vec::new();
-        let mut seen: Vec<usize> = Vec::new();
+        let mut seen: Vec<Rc<Chunk>> = Vec::new();
         let mut pending: Vec<Rc<Chunk>> = vec![Rc::clone(chunk)];
         while let Some(module) = pending.pop() {
             // §16.2.1.6.2 step 1 — a module reached twice is a cycle, and stopping is what makes the
-            // walk terminate. Two modules that `export *` from each other is a legal graph.
-            if seen.contains(&identity(&module)) {
+            // walk terminate. Two modules that `export *` from each other is a legal graph. By
+            // allocation, held in `seen` so that it cannot be another's — see `visit`.
+            if seen.iter().any(|reached| Rc::ptr_eq(reached, &module)) {
                 continue;
             }
-            seen.push(identity(&module));
             for export in module.exports() {
                 names.push(export.export_name.clone());
             }
             for specifier in module.star_exports() {
-                if let Some(from) = self.module_from(&module, specifier) {
+                if let Some(from) = self.module_from(&module, specifier, heap) {
                     pending.push(from);
                 }
             }
+            seen.push(module);
         }
         names
     }
@@ -525,21 +524,21 @@ impl Vm {
     /// The prototype is **null**, which is step 4.a's `OrdinaryObjectCreate(null)` and is
     /// deliberate: a host property called `toString` must not read as `Object.prototype`'s.
     pub(super) fn import_meta(&mut self, heap: &mut Heap) -> Option<crate::heap::ObjectId> {
+        // The record is filed under that environment — DR-0033 — so finding it is one lookup, and
+        // it is there exactly while the module's code can still run, which is while anything can
+        // be reading `import.meta` in it.
         let outermost = heap.environment_root(self.environment);
-        let identity = *self
-            .modules
-            .iter()
-            .find(|(_, record)| record.environment == outermost)
-            .map(|(identity, _)| identity)?;
-        if let Some(made) = self.modules.get(&identity).and_then(|r| r.import_meta) {
+        let record = heap.module_record(outermost)?;
+        if let Some(made) = record.import_meta {
             return Some(made);
         }
+        let key = record.key.clone();
         let object = heap.new_object(None);
         // §16.2.1.9, and the key is the module's resolved identity because that is the only thing
         // a host can answer a URL from. Taken before the properties are defined so that the borrow
         // of the loader is finished by the time the heap is written to.
-        let supplied = match (self.loader.as_mut(), self.keys.get(&identity)) {
-            (Some(loader), Some(key)) => loader.import_meta_properties(key),
+        let supplied = match (self.loader.as_mut(), key) {
+            (Some(loader), Some(key)) => loader.import_meta_properties(&key),
             _ => Vec::new(),
         };
         for (name, value) in supplied {
@@ -555,7 +554,7 @@ impl Vm {
                 &crate::heap::PropertyDescriptor::data(value),
             );
         }
-        if let Some(record) = self.modules.get_mut(&identity) {
+        if let Some(record) = heap.module_record_mut(outermost) {
             record.import_meta = Some(object);
         }
         Some(object)
@@ -607,7 +606,6 @@ impl Vm {
             for next in requested_modules(&chunk) {
                 pending.push((Some(key.clone()), next));
             }
-            self.keys.insert(identity(&chunk), key.clone());
             self.resolved.insert(&key, chunk);
         }
         Ok(())
@@ -628,15 +626,16 @@ impl Vm {
             .unwrap_or_else(|| specifier.to_string())
     }
 
-    /// What a chunk is called, for resolving the specifiers *it* wrote.
-    fn key_of(&self, chunk: &Rc<Chunk>) -> Option<&str> {
-        self.keys.get(&identity(chunk)).map(String::as_str)
+    /// What a chunk is called, for resolving the specifiers *it* wrote — the key on its record.
+    fn key_of(&self, chunk: &Chunk, heap: &Heap) -> Option<Rc<str>> {
+        let environment = self.environment_of(chunk)?;
+        heap.module_record(environment)?.key.clone()
     }
 
     /// The chunk `specifier` names as written inside `chunk`.
-    fn module_from(&self, chunk: &Rc<Chunk>, specifier: &str) -> Option<Rc<Chunk>> {
+    fn module_from(&self, chunk: &Chunk, specifier: &str, heap: &Heap) -> Option<Rc<Chunk>> {
         self.resolved
-            .get(&self.edge(self.key_of(chunk), specifier))
+            .get(&self.edge(self.key_of(chunk, heap).as_deref(), specifier))
             .cloned()
     }
 
@@ -650,11 +649,62 @@ impl Vm {
             .error(heap, crate::realm::NativeError::Syntax, why)
     }
 
-    /// The environment a linked module was given, if this machine has linked it.
-    fn environment_of(&self, chunk: &Rc<Chunk>) -> Option<EnvironmentId> {
-        self.modules
-            .get(&identity(chunk))
-            .map(|record| record.environment)
+    /// The environment of the module record this machine keeps for `chunk`, if it keeps one.
+    ///
+    /// Asked of the chunk, which is the only identity for a module's code that cannot be handed to
+    /// other code while the record exists — DR-0033.
+    ///
+    /// Not asked of the heap as well. Every caller is linking a module the walk has just given a
+    /// live record, so the entry it reads is that record's; and an environment the collector has
+    /// freed reads as no slot at all, which is the answer an unlinked module gets. A check here
+    /// would be a branch whose two sides no input can tell apart.
+    fn environment_of(&self, chunk: &Chunk) -> Option<EnvironmentId> {
+        chunk.module_environment(self.machine())
+    }
+
+    /// The same, with the record itself, for the writes evaluating makes.
+    fn record_of<'heap>(
+        &self,
+        chunk: &Chunk,
+        heap: &'heap mut Heap,
+    ) -> Option<(EnvironmentId, &'heap mut crate::heap::ModuleRecord)> {
+        let environment = chunk.module_environment(self.machine())?;
+        heap.module_record_mut(environment)
+            .map(|record| (environment, record))
+    }
+
+    /// The module record this machine keeps for `chunk`, made now if it keeps none.
+    ///
+    /// `key` is what a host called the module, when one did. A record that has none yet takes it,
+    /// which is a module the host first ran on its own and a graph then reached under a name.
+    pub(super) fn module_record_for(
+        &self,
+        chunk: &Chunk,
+        key: Option<&str>,
+        heap: &mut Heap,
+    ) -> EnvironmentId {
+        if let Some((environment, record)) = self.record_of(chunk, heap) {
+            if record.key.is_none() {
+                record.key = key.map(Rc::from);
+            }
+            return environment;
+        }
+        let environment = heap.new_module_environment(
+            chunk.locals(),
+            Rc::clone(chunk.bindings()),
+            key.map(Rc::from),
+        );
+        chunk.remember_module(self.machine(), environment);
+        environment
+    }
+
+    /// Which machine a chunk's module records belong to — the global object of its first realm.
+    ///
+    /// The records were the machine's before DR-0033 and still are: one graph, linked once, however
+    /// many realms the machine has built. A second machine on the same heap has a first realm of
+    /// its own, so it keeps records of its own, as it kept a map of its own before.
+    fn machine(&self) -> crate::heap::ObjectId {
+        self.realm_by_id(crate::heap::RealmId(0)).global()
     }
 
     /// Walk the graph depth-first, giving each module an environment and recording the order.
@@ -672,7 +722,7 @@ impl Vm {
     fn visit(
         &mut self,
         key: &str,
-        seen: &mut Vec<usize>,
+        seen: &mut Vec<Rc<Chunk>>,
         order: &mut Vec<Rc<Chunk>>,
         heap: &mut Heap,
     ) -> Result<(), LinkError> {
@@ -681,32 +731,24 @@ impl Vm {
         };
         // A diamond, a cycle, or a module that imports itself — all three the same answer: this
         // walk has been here, and the module is either placed already or still descending.
-        if seen.contains(&identity(&chunk)) {
+        //
+        // Compared by allocation, and sound because `seen` holds each `Rc` it compares against: an
+        // allocation cannot be freed, and so cannot be handed to other code, while the list that
+        // remembers it is holding it — DR-0033.
+        if seen.iter().any(|reached| Rc::ptr_eq(reached, &chunk)) {
             return Ok(());
         }
-        seen.push(identity(&chunk));
+        seen.push(Rc::clone(&chunk));
         // §16.2.1.5.1 step 9 — the environment exists before anything is bound and before the
         // dependencies are walked, because a cycle means a module's imports may name one the walk
         // has not reached yet. Only for a module nothing has linked: a second environment for one
         // already linked would leave every binding of the first unreachable.
-        if let std::collections::btree_map::Entry::Vacant(slot) =
-            self.modules.entry(identity(&chunk))
-        {
-            let environment =
-                heap.new_named_environment(None, chunk.locals(), Rc::clone(chunk.bindings()));
-            slot.insert(super::loader::ModuleRecord {
-                environment,
-                namespace: None,
-                import_meta: None,
-                evaluated: false,
-                failure: None,
-            });
-        }
+        self.module_record_for(&chunk, Some(key), heap);
         // Resolved against **this** chunk before descending — DR-0020. Recursing on the raw
         // specifier walks whatever else happens to be filed under that text, which for a graph of
         // unique names is the same module and for a real directory tree is a different one.
         for dependency in requested_modules(&chunk) {
-            let key = self.edge(self.key_of(&chunk), &dependency);
+            let key = self.edge(self.key_of(&chunk, heap).as_deref(), &dependency);
             self.visit(&key, seen, order, heap)?;
         }
         order.push(chunk);
@@ -758,9 +800,8 @@ impl Vm {
         heap: &mut Heap,
     ) -> crate::heap::ObjectId {
         if let Some(made) = self
-            .modules
-            .get(&identity(chunk))
-            .and_then(|record| record.namespace)
+            .record_of(chunk, heap)
+            .and_then(|(_, record)| record.namespace)
         {
             return made;
         }
@@ -773,13 +814,13 @@ impl Vm {
             .unwrap_or_else(|| heap.new_environment(None, 0));
         let tag = heap.well_known(crate::builtins::well_known_at("toStringTag"));
         let object = heap.new_namespace(environment, tag);
-        if let Some(record) = self.modules.get_mut(&identity(chunk)) {
+        if let Some((_, record)) = self.record_of(chunk, heap) {
             record.namespace = Some(object);
         }
         // §16.2.1.10 step 7 — a name that resolves to nothing, or ambiguously, is simply not a
         // property of the namespace. Only a *direct* import of it is an error.
         let mut exports = Vec::new();
-        for name in self.exported_names(chunk) {
+        for name in self.exported_names(chunk, heap) {
             match self.resolve_export(chunk, &name, heap) {
                 ExportResolution::Slot(environment, slot) => {
                     exports.push((name, crate::heap::NamespaceBinding::Slot(environment, slot)));
@@ -806,7 +847,7 @@ impl Vm {
         name: &str,
         heap: &mut Heap,
     ) -> ExportResolution {
-        let mut seen: Vec<(usize, String)> = Vec::new();
+        let mut seen: Vec<(Rc<Chunk>, String)> = Vec::new();
         self.resolve_seen(chunk, name, &mut seen, heap)
     }
 
@@ -815,18 +856,19 @@ impl Vm {
         &mut self,
         chunk: &Rc<Chunk>,
         name: &str,
-        seen: &mut Vec<(usize, String)>,
+        seen: &mut Vec<(Rc<Chunk>, String)>,
         heap: &mut Heap,
     ) -> ExportResolution {
         // §16.2.1.6.3 step 1 — asked this of this module already, so the graph is circular here and
-        // the answer is that this path finds nothing. Another path may still find something.
+        // the answer is that this path finds nothing. Another path may still find something. The
+        // module is compared by allocation, which `seen` holds — see `visit`.
         if seen
             .iter()
-            .any(|(module, asked)| *module == identity(chunk) && asked == name)
+            .any(|(module, asked)| Rc::ptr_eq(module, chunk) && asked == name)
         {
             return ExportResolution::Missing;
         }
-        seen.push((identity(chunk), name.to_string()));
+        seen.push((Rc::clone(chunk), name.to_string()));
         for export in chunk.exports() {
             if *export.export_name != *name {
                 continue;
@@ -843,7 +885,7 @@ impl Vm {
                     specifier,
                     import_name,
                 } => {
-                    let Some(from) = self.module_from(chunk, specifier) else {
+                    let Some(from) = self.module_from(chunk, specifier, heap) else {
                         return ExportResolution::Missing;
                     };
                     return match import_name {
@@ -870,7 +912,7 @@ impl Vm {
         // list is a handful of names settled when the module was compiled.
         let stars: Vec<Box<str>> = chunk.star_exports().to_vec();
         for specifier in &stars {
-            let Some(from) = self.module_from(chunk, specifier) else {
+            let Some(from) = self.module_from(chunk, specifier, heap) else {
                 continue;
             };
             let answer = self.resolve_seen(&from, name, seen, heap);
@@ -913,13 +955,4 @@ fn requested_modules(chunk: &Rc<Chunk>) -> Vec<String> {
         )
         .chain(chunk.star_exports().iter().map(ToString::to_string))
         .collect()
-}
-
-/// Which module a chunk *is*, for a map that must not tell two names for one module apart./// Which module a chunk *is*, for a map that must not tell two names for one module apart.
-///
-/// The address, which is stable because a `Graph` holds every chunk by `Rc` for the whole link and
-/// evaluation — nothing here creates or drops one. It is never dereferenced and never outlives the
-/// call; it is only an identity.
-fn identity(chunk: &Rc<Chunk>) -> usize {
-    Rc::as_ptr(chunk) as usize
 }
