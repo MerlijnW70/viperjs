@@ -449,12 +449,6 @@ pub struct Vm {
     /// when a run begins, so an interrupted machine is usable again and a host does not have to
     /// build a new one.
     stopped: bool,
-    /// §13.2.8.3's template objects, one per tagged-template site that has been reached.
-    ///
-    /// Kept on the machine rather than on the chunk because the object belongs to a *realm*: a chunk
-    /// is immutable and may run in two of them, and each needs its own. Not cleared between runs of
-    /// the same machine, which is what makes the identity survive — that is the whole point of it.
-    templates: std::collections::HashMap<execute::TemplateSite, crate::heap::ObjectId>,
     /// What the resumption that is about to revive a generator asked for — §27.5.1.3's completion.
     ///
     /// Read by exactly one instruction, `ResumeMode`, which the compiler emits immediately after
@@ -568,7 +562,6 @@ impl Vm {
             step_budget: None,
             steps_left: None,
             stopped: false,
-            templates: std::collections::HashMap::new(),
             reentries: 0,
             // **A full sweep of this file reports this line as a survivor, and it is an equivalent
             // mutant** — recorded here so the next one does not spend an hour re-deriving it.
@@ -1656,7 +1649,6 @@ impl Vm {
         values.extend(self.stack.iter().copied());
         values.extend([self.this_value, self.new_target, self.completion]);
         values.extend(self.escaped);
-        values.extend(self.templates.values().copied().map(Value::Object));
         // Everything the realm built before a script ran. Not the individual intrinsics, because a
         // list of those is one an intrinsic added later is left out of — see `Realm::intrinsics`.
         // Every realm, not only the running one. Each has its own range rather than a ceiling, so a

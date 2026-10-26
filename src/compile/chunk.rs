@@ -7,9 +7,10 @@
 
 use crate::ast::{BinaryOperator, UnaryOperator, UpdateOperator};
 use crate::compile::{CompileError, ErrorKind};
-use crate::heap::Binding;
+use crate::heap::{Binding, ObjectId};
 use crate::span::Span;
 use crate::value::Value;
+use std::cell::RefCell;
 use std::rc::Rc;
 
 /// One unit of compiled code — the instructions and the values they refer to.
@@ -163,6 +164,19 @@ pub struct Chunk {
     /// a *realm*: the same chunk may run in two of them, and each needs its own. See
     /// [`Instruction::TemplateObject`], which builds one and caches it per site.
     pub(super) templates: Vec<Template>,
+    /// The template objects this chunk's sites have handed out — §13.2.8.3's `[[TemplateMap]]`,
+    /// held by the code the sites are in. DR-0032.
+    ///
+    /// Here and not on the machine, because only the chunk itself is an identity for its sites
+    /// that lasts exactly as long as they can run. The machine used to key a map by the chunk's
+    /// *address*, and a freed `eval` chunk's address is the next one's: the second `eval` was handed
+    /// the first one's object, strings and all. Held here, the entry dies with the code, and so the
+    /// object stops being reachable through it at the moment no evaluation can ask for it again.
+    ///
+    /// A `RefCell` because a chunk is shared and immutable once compiled and this is the one thing
+    /// filled in by running it. Neither borrow outlives the method that takes it and neither calls
+    /// out, so two can never overlap.
+    reached: RefCell<Vec<Reached>>,
     /// The bodies of the functions written inside this one, in the order they were met.
     ///
     /// An `Rc` because a function object has to outlive the code that made it — `var f = g()`
@@ -293,6 +307,9 @@ impl Chunk {
     ///
     /// Nested functions are included because a closure's body is reachable through the outer chunk
     /// long before any function object for it exists — `MakeFunction` reads it out of here.
+    ///
+    /// The template objects its sites have handed out are included too, which is what keeps one
+    /// alive exactly as long as its site can be evaluated again — DR-0032.
     pub fn names(&self, into: &mut Vec<Value>) {
         into.extend(self.constants.iter().copied());
         into.extend(self.name.map(Value::String));
@@ -300,10 +317,53 @@ impl Chunk {
             into.extend(template.cooked.iter().flatten().copied().map(Value::String));
             into.extend(template.raw.iter().copied().map(Value::String));
         }
+        into.extend(
+            self.reached
+                .borrow()
+                .iter()
+                .map(|reached| Value::Object(reached.object)),
+        );
         for nested in &self.functions {
             nested.names(into);
         }
     }
+
+    /// The template object site `index` of this chunk has already handed out in the realm whose
+    /// global object is `realm`, if it has — §13.2.8.3 steps 3 and 4.
+    pub(crate) fn template_object(&self, index: u32, realm: ObjectId) -> Option<ObjectId> {
+        self.reached
+            .borrow()
+            .iter()
+            .find(|reached| reached.site == index && reached.realm == realm)
+            .map(|reached| reached.object)
+    }
+
+    /// Record `object` as what site `index` hands out in `realm` from now on — §13.2.8.3 step 12.
+    ///
+    /// The caller has just asked [`Chunk::template_object`] and been told there is none, so this
+    /// only ever adds: one entry per site and realm, which is the bound on how many there can be.
+    pub(crate) fn remember_template_object(&self, index: u32, realm: ObjectId, object: ObjectId) {
+        self.reached.borrow_mut().push(Reached {
+            site: index,
+            realm,
+            object,
+        });
+    }
+}
+
+/// One template object a site has handed out — an entry of §13.2.8.3's `[[TemplateMap]]`.
+///
+/// The realm is named by its global object, which no other realm sharing the heap can have: a
+/// [`crate::heap::RealmId`] is only an index into one machine's table, and DR-0019's generation
+/// means a handle is never issued twice even after the realm is gone.
+#[derive(Debug, Clone, Copy)]
+struct Reached {
+    /// Which site in the chunk — the operand of [`Instruction::TemplateObject`].
+    site: u32,
+    /// The global object of the realm the object was made in.
+    realm: ObjectId,
+    /// The frozen Array the site evaluates to there.
+    object: ObjectId,
 }
 
 /// Whether a binding created on the global object may be deleted again — §9.1.1.4.17's `D`.
