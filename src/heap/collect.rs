@@ -635,6 +635,15 @@ impl Heap {
             for (from, _) in self.environment_aliases(id) {
                 self.mark_environment(from, marked);
             }
+            // §16.2.1.4's record, when this is a module's environment — DR-0033. Its `import.meta`
+            // object is often named by nothing else at all: a module that read it once and let it
+            // go must be handed the same object on the next read, so the record keeps it for as
+            // long as anything can still run the module's code, and not one collection longer.
+            if let Some(record) = self.modules.get(&id) {
+                for value in record.reaches() {
+                    self.mark_value(value, marked);
+                }
+            }
             next = self.environment_parent(id);
         }
     }
@@ -696,6 +705,20 @@ impl Heap {
         // DR-0019 — the arena frees, bumps the generation and remembers the slot. An environment
         // gives nothing else back: its slots are inside the record and go with it.
         freed.environments += self.environments.sweep(&marked.environments, |_| {});
+        // DR-0033 — the three tables filed under an environment or an object lose every entry whose
+        // key this sweep freed, through the generation-checked accessor for the reason the intern
+        // table below gives. The handles could not have named anything else — DR-0019 never issues
+        // one twice — so what this prevents is not a wrong answer but a table that grows with every
+        // module a program ever ran: before module records could be collected nothing here was ever
+        // freed, and none of the three was ever pruned.
+        let environments = &self.environments;
+        self.modules
+            .retain(|environment, _| environments.get(*environment).is_some());
+        self.imports
+            .retain(|(importer, _), _| environments.get(*importer).is_some());
+        let objects = &self.objects;
+        self.namespaces
+            .retain(|object, _| objects.get(*object).is_some());
         // The units go back to DR-0013's budget, because they are genuinely given back: the `Box`
         // is dropped. That is what the arena's farewell hook is for, and Strings are the only
         // arena that has anything to give back besides the slot itself. Counted into a local and
@@ -819,6 +842,65 @@ mod tests {
         assert!(heap.set_variable(unreached, 0, Value::Object(orphan)));
         heap.collect(&Roots::default());
         assert!(heap.object(orphan).is_none());
+    }
+
+    #[test]
+    fn a_module_record_is_kept_exactly_as_long_as_its_environment() {
+        // DR-0033. The record is filed under the module's environment, so the environment is the
+        // whole of what keeps it — and with it the three objects it may be the only holder of.
+        let mut heap = Heap::new();
+        let environment = heap.new_module_environment(0, std::rc::Rc::from(Vec::new()), None);
+        let namespace = heap.new_object(None);
+        let meta = heap.new_object(None);
+        let thrown = heap.new_object(None);
+        let record = heap
+            .module_record_mut(environment)
+            .expect("the record was just made"); // a heap test needs the record
+        record.namespace = Some(namespace);
+        record.import_meta = Some(meta);
+        record.failure = Some(Value::Object(thrown));
+        let roots = Roots {
+            environments: vec![environment],
+            ..Roots::default()
+        };
+        assert_eq!(heap.collect(&roots).objects, 0);
+        for held in [namespace, meta, thrown] {
+            assert!(heap.object(held).is_some());
+        }
+        assert!(heap.module_record(environment).is_some());
+        // …and once nothing reaches the environment, the record goes in the same sweep, and so does
+        // everything only it was holding.
+        assert_eq!(heap.collect(&Roots::default()).objects, 3);
+        assert!(heap.module_record(environment).is_none());
+        assert!(heap.modules.is_empty());
+        // A new environment may take the freed slot, and it is not a module: the handle it is
+        // issued is a different one, and the record did not wait for it.
+        let next = heap.new_environment(None, 0);
+        assert!(heap.module_record(next).is_none());
+    }
+
+    #[test]
+    fn the_tables_filed_under_a_handle_lose_its_entries_when_it_is_freed() {
+        // DR-0033's audit. The import bindings are filed under the importing environment and the
+        // namespace objects under the object, and neither table was ever pruned: harmless while no
+        // module could be collected, and a table growing with every module a program ran once one
+        // could. The handles could not be confused with later ones — DR-0019 — so the only thing to
+        // assert is that the entries go.
+        let mut heap = Heap::new();
+        let exporter = heap.new_environment(None, 1);
+        let importer = heap.new_environment(None, 1);
+        assert!(heap.bind_import(importer, 0, exporter, 0));
+        let namespace = heap.new_namespace(exporter, None);
+        let roots = Roots {
+            values: vec![Value::Object(namespace)],
+            environments: vec![importer],
+        };
+        heap.collect(&roots);
+        assert_eq!(heap.imports.len(), 1);
+        assert_eq!(heap.namespaces.len(), 1);
+        heap.collect(&Roots::default());
+        assert!(heap.imports.is_empty());
+        assert!(heap.namespaces.is_empty());
     }
 
     #[test]

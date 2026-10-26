@@ -79,36 +79,3 @@ pub trait ModuleLoader {
         Vec::new()
     }
 }
-
-/// What the engine remembers about one module — as much of §16.2.1's Cyclic Module Record as it has.
-///
-/// Kept on the [`Vm`](super::Vm) rather than in a local of the link, because §16.2.1.6's "each body
-/// once" is a fact about the whole execution: a dynamic `import()` arriving later has to find what
-/// an earlier one evaluated, and find the *same* namespace object for it.
-#[derive(Debug)]
-pub(super) struct ModuleRecord {
-    /// `[[Environment]]` — made at link time, before any body runs, because a cycle means a
-    /// module's imports may name one the walk has not reached yet.
-    pub(super) environment: crate::heap::EnvironmentId,
-    /// §16.2.1.10's memo — the one namespace object this module will ever have.
-    pub(super) namespace: Option<crate::heap::ObjectId>,
-    /// §13.3.12's `[[ImportMeta]]` — the one `import.meta` object this module will ever have.
-    ///
-    /// Made on first read rather than at link time, which is what step 4's "if importMeta is empty"
-    /// says: a module that never writes `import.meta` never costs an object, and a host is never
-    /// asked what to put on one nobody looked at.
-    pub(super) import_meta: Option<crate::heap::ObjectId>,
-    /// Whether the body has run — §16.2.1.6's "each body once".
-    ///
-    /// Set **before** the body runs rather than after, so that a module reached again while it is
-    /// still running is not started a second time. That is what §16.2.1.6.2's `[[Status]]` of
-    /// `evaluating` is for, and one flag serves both because the only thing either answer decides
-    /// here is whether to run the body.
-    pub(super) evaluated: bool,
-    /// What the body threw, if it did — §16.2.1.6 step 9's `[[EvaluationError]]`.
-    ///
-    /// Kept because a module that threw must throw the **same** value at every later importer
-    /// rather than being run again: `import("m")` twice over a module whose body failed rejects
-    /// twice with one error object.
-    pub(super) failure: Option<crate::value::Value>,
-}

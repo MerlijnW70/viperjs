@@ -315,9 +315,9 @@ pub struct Vm {
     completion: Value,
     /// §25.4.1.2's waiter records — the agent's own `Atomics.waitAsync` parks, still unwoken.
     ///
-    /// On the machine for the same reason the modules below are: a waiter outlives the call that
-    /// made it, and the promise it is holding is reachable from nothing else the collector walks
-    /// until a notify or a `then` finds it.
+    /// On the machine because a waiter outlives the call that made it, and the promise it is
+    /// holding is reachable from nothing else the collector walks until a notify or a `then` finds
+    /// it.
     waiters: Vec<Waiter>,
     /// §9.13's rejections nothing has asked for, in the order they were rejected.
     ///
@@ -332,12 +332,10 @@ pub struct Vm {
     /// different rates, and sharing one would let a long native walk postpone the interpreter's
     /// next check.
     until_native_check: u32,
-    /// Every module this execution has linked, by chunk identity — §16.2.1's records.
-    ///
-    /// On the machine rather than in a local of the link, because §16.2.1.6's "each body once" is a
-    /// fact about the whole execution and not about one call: a dynamic `import()` arriving later
-    /// has to find what an earlier one evaluated, and find the *same* namespace object for it.
-    modules: std::collections::BTreeMap<usize, loader::ModuleRecord>,
+    // §16.2.1's records are not on the machine. Each is on the heap, filed under its module's
+    // environment, and each chunk names the environments of the records made for it — DR-0033. A
+    // map here keyed by the chunk's address, which is what there was, handed a freed chunk's record
+    // to whatever was compiled into its place, and kept every record for the life of the machine.
     /// Every specifier that has been answered, and the module it answered with.
     ///
     /// The memo in front of [`ModuleLoader`], so a host is never asked twice for one specifier. A
@@ -352,12 +350,6 @@ pub struct Vm {
     /// that is absent resolves to the specifier itself, which is what a host that supplied a whole
     /// `Graph` of unique names meant and is exactly the behaviour that predates this record.
     edges: std::collections::BTreeMap<(String, String), String>,
-    /// Which key each chunk was registered under, so a module can be asked what it is called.
-    ///
-    /// Keyed by the chunk's address, which is what `identity` already uses for cycle detection.
-    /// Needed because linking walks *chunks* and a specifier has to be resolved against the one
-    /// that wrote it.
-    keys: std::collections::BTreeMap<usize, String>,
     // No `Debug` on the machine any more: a host's loader is the host's type and cannot be made to
     // have one, so a derive here would demand it of every embedder. What a debug print of the field
     // would say is "there is one", which is not worth that.
@@ -526,10 +518,8 @@ impl Vm {
             waiters: Vec::new(),
             unhandled: Vec::new(),
             until_native_check: NATIVE_CHECK_INTERVAL,
-            modules: std::collections::BTreeMap::new(),
             resolved: Graph::new(),
             edges: std::collections::BTreeMap::new(),
-            keys: std::collections::BTreeMap::new(),
             loader: None,
             realm: first,
             realms: vec![first],
@@ -588,32 +578,43 @@ impl Vm {
     /// about: a Module's `this` is **`undefined`** where a Script's is the global object. Every
     /// other difference between the two goal symbols is decided when the body is compiled — see
     /// [`crate::compile::compile_module`] — and none of it reaches here.
+    ///
+    /// The chunk **is** the module, for as long as it lives — DR-0033. Running it again is
+    /// §16.2.1.6's `Evaluate` of a module already evaluated, which runs nothing: it answers
+    /// `undefined`, or throws again what the body threw the first time. A different chunk is a
+    /// different module, wherever it was compiled.
     pub fn run_module(&mut self, chunk: &Chunk, heap: &mut Heap) -> Result<Outcome, Fault> {
         // §16.2.1 — a module that runs **is** a module record, even when nothing imported it and
-        // there is no graph to link. Registering one here is what gives `import.meta` a module to
-        // belong to: without it a lone module reading `import.meta` would find no record and report
-        // a Fault, which is an engine-bug channel and not an answer to an ordinary program.
+        // there is no graph to link. Making one here is what gives `import.meta` a module to belong
+        // to: without it a lone module reading `import.meta` would find no record and report a
+        // Fault, which is an engine-bug channel and not an answer to an ordinary program.
         //
-        // Keyed by the chunk's address, which is what the linker uses too, and with no entry in
-        // `keys` — this module has no resolved identity because no host resolved it, so §16.2.1.9
-        // is not asked and the object is the empty one it describes.
-        let environment =
-            heap.new_named_environment(None, chunk.locals(), Rc::clone(chunk.bindings()));
-        self.modules
-            .entry(std::ptr::from_ref(chunk) as usize)
-            .or_insert_with(|| loader::ModuleRecord {
-                environment,
-                namespace: None,
-                import_meta: None,
-                // `true`, and it is read: §16.2.1.6's "each body once" is a fact about the
-                // machine and not about the link, so a graph that later imports this same chunk
-                // finds it evaluated and does not run the body again. The linker's own insert is
-                // guarded on the entry being *vacant*, which is what makes this record the one it
-                // then reads.
-                evaluated: true,
-                failure: None,
-            });
-        self.run_prepared(chunk, environment, Value::Undefined, heap)
+        // With no key, because no host resolved this module: §16.2.1.9 is not asked and the object
+        // is the empty one it describes. The record was filed under the chunk's *address*, and a
+        // host running one module chunk after another from the same local hands each the same
+        // address — so the second found the first one's record, whose environment was not the one
+        // its body ran in, and its `import.meta` was a Fault. It is found through the chunk now.
+        let environment = self.module_record_for(chunk, None, heap);
+        let record = heap.module_record(environment);
+        // §16.2.1.6 steps 4 and 5 — and a graph that later imports this same chunk reads the same
+        // two answers, which is what makes the two entry points agree about a module both have
+        // seen.
+        if let Some(thrown) = record.and_then(|record| record.failure) {
+            return Ok(Outcome::Thrown(thrown));
+        }
+        if record.is_some_and(|record| record.evaluated) {
+            return Ok(Outcome::Value(Value::Undefined));
+        }
+        if let Some(record) = heap.module_record_mut(environment) {
+            record.evaluated = true;
+        }
+        let outcome = self.run_prepared(chunk, environment, Value::Undefined, heap)?;
+        if let Outcome::Thrown(thrown) = outcome
+            && let Some(record) = heap.module_record_mut(environment)
+        {
+            record.failure = Some(thrown);
+        }
+        Ok(outcome)
     }
 
     /// Run one module's body in an environment the link step already made — §16.2.1.6.
@@ -1644,6 +1645,7 @@ impl Vm {
         // why no frame names it.
         if let Some(chunk) = running {
             chunk.names(&mut values); // no program distinguishes it — see `collect_running`
+            chunk.environments(&mut environments); // the same
         }
 
         values.extend(self.stack.iter().copied());
@@ -1657,6 +1659,10 @@ impl Vm {
             values.extend(realm.intrinsics().map(Value::Object));
         }
         root.names(&mut values);
+        // …and the environments of its module records, which is the only thing keeping a module a
+        // host has run and is holding on to: between two runs nothing else names it, and a record
+        // freed here would make running the same chunk again a second module — DR-0033.
+        root.environments(&mut environments);
 
         for frame in &self.frames {
             values.extend([frame.this_value, frame.new_target]);
@@ -1666,6 +1672,10 @@ impl Vm {
             environments.push(frame.environment);
             if let Some(code) = &frame.code {
                 code.names(&mut values);
+                // A module body that called a function is this frame's code, and its environment is
+                // already named a few lines up — so no program distinguishes this either, and it is
+                // here for the asymmetry `collect_running` gives.
+                code.environments(&mut environments);
             }
         }
         // A handler remembers the environment it was installed in, and a throw is going to restore
@@ -1680,23 +1690,26 @@ impl Vm {
         // that is the definition of the list — so without this it is swept between the rejection
         // and the host reading it, and the host is handed an id addressing whatever took the slot.
         values.extend(self.unhandled.iter().copied().map(Value::Object));
-        // §16.2.1's *chunks*, which is a different claim from its records below and the one a
-        // script never has to make. A graph is a set of compiled bodies the machine is holding, and
-        // evaluating it runs them one after another — so while the first is executing, the ones
-        // that have not started are reachable from nothing else the collector walks. Their constant
-        // tables are Strings, and freeing those hands the next module a `'c'` that is no longer a
-        // `'c'`.
+        // §16.2.1's *chunks*, which is a different claim from their records inside the loop and the
+        // one a script never has to make. A graph is a set of compiled bodies the machine is
+        // holding, and evaluating it runs them one after another — so while the first is executing,
+        // the ones that have not started are reachable from nothing else the collector walks. Their
+        // constant tables are Strings, and freeing those hands the next module a `'c'` that is no
+        // longer a `'c'`.
         //
         // Found by collecting at *every* check over a two-module graph, where the answer came back
         // `undefined`. A threshold large enough to be sensible hides it completely, which is why
         // `vm::tests::collecting` forces the schedule rather than trusting a default.
         for (_, chunk) in self.resolved.entries() {
             chunk.names(&mut values);
+            // §16.2.1's records, through the environments they are filed under — DR-0033. A module
+            // a host's specifier answered is reachable for the rest of the execution whether or not
+            // anything is running it: a later `import()` of the same specifier must find the same
+            // namespace and must not run the body again. A module whose code nothing can reach any
+            // more — a chunk the host let go of, and nothing it made still alive — is not here, and
+            // goes.
+            chunk.environments(&mut environments);
         }
-        // §16.2.1's records. A module that has been linked is reachable for the rest of the
-        // execution whether or not anything is currently running it — a later `import()` of the same
-        // specifier must find the same namespace and must not run the body again. Freeing an
-        // environment here would leave a namespace object reading slots that are gone.
         // §25.4.1's waiter records. A parked `waitAsync` holds the only reference to the promise
         // it answered with until a notify or a `then` reaches it, so a collection in between would
         // free a promise a later `Atomics.notify` is about to settle.
@@ -1706,15 +1719,6 @@ impl Vm {
                 waiter.capability.resolve,
                 waiter.capability.reject,
             ]);
-        }
-        for record in self.modules.values() {
-            environments.push(record.environment);
-            values.extend(record.namespace.map(Value::Object));
-            values.extend(record.failure);
-            // §13.3.12 caches this on the record and answers with it for ever, so it is reachable
-            // for as long as the module is — a collection that freed it would hand the next read a
-            // different object, which is the one thing the clause promises cannot happen.
-            values.extend(record.import_meta.map(Value::Object));
         }
         crate::heap::Roots {
             values,

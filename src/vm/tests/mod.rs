@@ -31,6 +31,8 @@
 //! - `inheritance` — §15.7's `extends` and `super`, and a `this` that starts out unbound.
 //! - `private` — §15.7's `#x`, which is not a property by any test a program can make.
 //! - `modules` — §16.2's goal symbol, and the four things it does not share with a Script.
+//! - `module_records` — §16.2.1.4's record, one per module however its code was compiled, and kept
+//!   only as long as the module's code can run.
 //! - `names` — §10.2.9 and §8.6.3, and the positions that do *not* name a function.
 //! - `normalize` — UAX #15's algorithm underneath `String.prototype.normalize`: decomposition,
 //!   canonical ordering, composition and the Hangul arithmetic that bypasses the tables.
@@ -127,6 +129,7 @@ mod json;
 mod lexical;
 mod lone_surrogates;
 mod math;
+mod module_records;
 mod modules;
 mod names;
 mod normalize;
