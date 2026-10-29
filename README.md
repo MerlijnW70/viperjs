@@ -80,7 +80,7 @@ Exit status is `0` ran, `1` the script threw or would not parse, `2` the argumen
 
 ## Embed it
 
-The whole surface fits on a screen. Run the real thing with `cargo run --example embed`:
+The whole surface fits on a screen. Run the real thing with `cargo run --release --example embed`:
 
 ```rust
 use viperjs::api::{Engine, Error, Host};
